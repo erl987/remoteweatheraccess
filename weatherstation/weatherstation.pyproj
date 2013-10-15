@@ -22,6 +22,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="lastdata.py" />
     <Compile Include="stationdata.py" />
     <Compile Include="te923ToCSV.py" />
     <Compile Include="utilities.py" />

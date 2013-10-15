@@ -1,13 +1,13 @@
-# Read in data from a TE923-compatible weather station via USB and store the data in a CSV-file compatible to PC-Wetterstation
+"""Read in data from a TE923-compatible weather station via USB and store the data in a CSV-file compatible to PC-Wetterstation."""
 import string
 import csv
 import sys
 import datetime
-import pickle
 from collections import OrderedDict
 
 import utilities
 import stationdata
+import lastdata
 
 data_folder = './data/'
 station_data_file_name = 'stationData.dat'
@@ -55,11 +55,7 @@ data_sets_list = ['1381578982:21.75:51:7.30:92:i:i:i:i:i:i:i:i:1016.4:3.4:5:0:13
 
 # Read station data
 try:
-    data = pickle.load( open( data_folder + station_data_file_name, 'rb' ) );
-    rain_calib_factor = data['rain_calib_factor']
-    station_name = data['station_name']
-    station_height = data['station_height']
-    storage_interval = data['storage_interval'] # in min
+    rain_calib_factor, station_name, station_height, storage_interval = stationdata.read( data_folder + station_data_file_name )
     settings_file_name = 'settings_' + station_name + '.dat'
 except Exception:
     sys.exit('Station data file ' + station_data_file_name + ' could not be opened!')
@@ -77,24 +73,17 @@ firstNewTime = datetime.datetime.fromtimestamp( int( importedData[ firstNewDataI
 
 # Read settings file
 try:
-    data = pickle.load( open( data_folder + settings_file_name, 'rb' )  )
-    lastOldTime = data[ 'lastOldTime' ]  
-    lastOldRainCounter = data[ 'lastOldRainCounter' ]
+    lastOldTime, lastOldRainCounter = lastdata.read( data_folder + settings_file_name )
 except Exception:
     # If this is first date the program is executed the only choice is to start with the data from the earliest new reading
     lastOldTime = firstNewTime
+    lastOldRainCounter = firstNewRainCounter
 
 # Ensure that the last rain counter value is not too old and valid
 if ( firstNewTime - lastOldTime ) > datetime.timedelta( minutes = storage_interval ) or ( lastOldTime >= firstNewTime ):
     lastOldRainCounter = firstNewRainCounter
 if lastOldRainCounter > firstNewRainCounter:
     lastOldRainCounter = firstNewRainCounter
-
-# Generate file name # TODO: requires generalization for handling different months in one dataset
-dataFileName = 'EXP' + firstNewTime.strftime('%m_%y') + '.csv'
-
-# Generate settings line for the CSV-file
-settingsLine = '#Calibrate=' + str( '%1.3f' % rain_calib_factor ) + ' #Regen0=' + str( int( lastOldRainCounter ) ) + 'mm #Location=' + str( station_name ) + '/' + str( int( station_height ) ) + 'm #Station=' + station_type
 
 # Generate export data collection
 exportData = []
@@ -129,6 +118,12 @@ rainAmounts = [ x - rainCounters[i-1] for i, x in enumerate( rainCounters ) ][1:
 for exportLine, amount in zip( exportData[:], rainAmounts ):
     exportLine['rainCounter'] = str( amount );                      # replace by rain amount differences
 
+# Generate file name # TODO: requires generalization for handling different months in one dataset
+dataFileName = 'EXP' + firstNewTime.strftime('%m_%y') + '.csv'
+
+# Generate settings line for the CSV-file
+settingsLine = '#Calibrate=' + str( '%1.3f' % rain_calib_factor ) + ' #Regen0=' + str( int( lastOldRainCounter ) ) + 'mm #Location=' + str( station_name ) + '/' + str( int( station_height ) ) + 'm #Station=' + station_type
+
 # Write header lines in a PC-Wetterstation compatible CSV-file
 # TODO: try / catch
 f = open( data_folder + dataFileName, 'w' )
@@ -159,7 +154,7 @@ with open( data_folder + dataFileName, 'a', newline='') as f:
         writer.writerows( [ dataOutputLine ] )
 
 # Refresh settings file
-lastOldRainCounter = rainCounters.pop()
-lastOldTime = datetime.datetime.fromtimestamp( int( importedData.pop()[ sensor_list['date'][import_index] ] ) )
-with open( data_folder + settings_file_name, 'wb') as f:
-    pickle.dump( dict( lastOldRainCounter = lastOldRainCounter, lastOldTime = lastOldTime ), f )
+try:
+    lastdata.write( data_folder + settings_file_name, datetime.datetime.fromtimestamp( int( importedData.pop()[ sensor_list['date'][import_index] ] ) ) , rainCounters.pop())
+except Exception:
+    sys.exit('Station data file ' + settings_file_name + ' could not be opened!')
