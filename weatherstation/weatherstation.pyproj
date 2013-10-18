@@ -22,10 +22,13 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="constants.py" />
     <Compile Include="lastdata.py" />
+    <Compile Include="pcwetterstation.py" />
     <Compile Include="stationdata.py" />
     <Compile Include="te923ToCSV.py" />
     <Compile Include="utilities.py" />
+    <Compile Include="te923station.py" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>
