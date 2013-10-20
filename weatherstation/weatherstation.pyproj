@@ -27,6 +27,8 @@
     <Compile Include="pcwetterstation.py" />
     <Compile Include="stationdata.py" />
     <Compile Include="te923ToCSV.py" />
+    <Compile Include="te923ToCSVreader.py" />
+    <Compile Include="te923ToCSV_test.py" />
     <Compile Include="utilities.py" />
     <Compile Include="te923station.py" />
   </ItemGroup>
