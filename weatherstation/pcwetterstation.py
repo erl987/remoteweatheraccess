@@ -6,6 +6,7 @@ writesinglemonth:               writes a weather data CSV-file compatible to PC-
 convertTo:                      Converts weather data into units and format compatible to PC-Wetterstation.
 """
 import csv
+import os
 from datetime import datetime as dt
 from collections import OrderedDict
 
@@ -108,7 +109,7 @@ def writesinglemonth( data_folder, rain_calib_factor, last_old_rain_counter, sta
     settings_line = '#Calibrate=' + str( '%1.3f' % rain_calib_factor ) + ' #Regen0=' + str( int( last_old_rain_counter ) ) + 'mm #Location=' + str( station_name ) + '/' + str( int( station_height ) ) + 'm #Station=' + station_type
 
     # Write header lines in a PC-Wetterstation compatible CSV-file
-    with open( data_file_name, 'w' ) as f:
+    with open( data_file_name, 'w', newline = '\r\n', encoding='latin-1' ) as f:
         for index, key in enumerate( export_data[0] ):
             if index > 0:
                 f.write(',')
@@ -122,8 +123,8 @@ def writesinglemonth( data_folder, rain_calib_factor, last_old_rain_counter, sta
         f.write( settings_line + '\n' )
 
     # Store all valid data in a PC-Wetterstation compatible CSV-file
-    with open( data_file_name, 'a', newline='' ) as f:
-        writer = csv.writer( f )    
+    with open( data_file_name, 'a', newline='', encoding='latin-1' ) as f:
+        writer = csv.writer( f, lineterminator="\r\n" )    
 
         # Write sensor indices line
         sensor_index_list = [ sensor_list[key][constants.export_index] for key in export_data[0] ]

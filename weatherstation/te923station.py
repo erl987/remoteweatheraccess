@@ -3,12 +3,14 @@
 Functions:
 readdata:                   Read all new data from the weatherstation.
 """
+import os
 
-def readdata():
+
+def readdata(is_read_all_datasets):
     """Reads all new data from the weatherstation
 
     Args:
-    None
+    is_read_all_datasets:   Flag stating if only the latest (False) or all datasets should be read from the weatherstation (True)
 
     Returns:
     data:                   List containing the new data read from the station for each timepoint separately.
@@ -45,15 +47,21 @@ def readdata():
 
 
     Raises:
-    None
+    EnvironmentError:       No connection to the weather station was possible.
     """
+    # Call the C-program for reading the data from the weather station
+    output_stream = []
+    if ( is_read_all_datasets ):
+        output_stream = os.popen( 'sudo te923tool-0.6.1/te923con -b' ) # TODO: is sudo here the best solution???
+    else:
+        ouptut_stream = os.popen( 'sudo te923tool-0.6.1/te923con' )
 
-    data_sets_list = ['1381578982:21.75:51:7.30:92:i:i:i:i:i:i:i:i:1016.4:3.4:5:0:13:15.2:23.2:5.2:920',
-                 '1381578920:22.34:59:8.30:91:i:i:i:i:i:i:i:i:1014.4:2.1:5:0:1:7.8:20.9:23.4:900',
-                '1380577982:21.32:62:6.30:95:i:i:i:i:i:i:i:i:1012.4:6.4:5:0:15:43.5:3.4:2.1:882']
+    # check for reading errors
+    if not output_stream:
+        raise EnvironmentError( 'No connection to the weather station was possible.' )
 
-    data = list()
-    for curr_data_set in data_sets_list:
-        data.append( str.split( curr_data_set, ":" ) )
+    # Reformat the output data
+    data_sets_list = [ line.strip() for line in output_stream ]
+    data = [ str.split( line, ":" ) for line in data_sets_list ]
 
     return data

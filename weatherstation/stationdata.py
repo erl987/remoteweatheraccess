@@ -39,9 +39,6 @@ def read(station_data_file_name):
     station_height:         Altitude of the station (in meters).
     storage_interval:       Interval of data storage at the station (in minutes).
 
-    Returns:
-    None
-
     Raises:
     IOError:                An error occurred accessing the file.
     """

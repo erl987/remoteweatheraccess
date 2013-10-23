@@ -1,4 +1,5 @@
-import datetime
+from datetime import datetime as dt
+from datetime import timedelta as timedelta
 from collections import OrderedDict
 
 import constants
@@ -40,33 +41,42 @@ sensor_list = OrderedDict( [
 
 
 def te923ToCSVreader(data_folder, station_data_file_name):
+    firstNewDataIndex = 0
+
     # Read station data
     rain_calib_factor, station_name, station_height, storage_interval = stationdata.read( data_folder + station_data_file_name )
     settings_file_name = 'settings_' + station_name + '.dat'
-    imported_data = te923station.readdata()
-
-    # Get data for the earliest new reading
-    firstNewDataIndex = 0
-    firstNewRainCounter = float( imported_data[ firstNewDataIndex ][ sensor_list[ 'rainCounter' ][ constants.import_index ] ] )
-    firstNewTime = datetime.datetime.fromtimestamp( int( imported_data[ firstNewDataIndex ] [ sensor_list[ 'date' ][ constants.import_index ] ] ) )
-
-    # Read settings file
     try:
-        lastOldTime, last_old_rain_counter = lastdata.read( data_folder + settings_file_name )
+        last_read_dataset_time, last_read_dataset_raincounter = lastdata.read( data_folder + settings_file_name )
     except Exception:
-        # If this is first date the program is executed the only choice is to start with the data from the earliest new reading
-        lastOldTime = firstNewTime
-        last_old_rain_counter = firstNewRainCounter
+        # In this case it is assumed that the program is executed for the first time and all datasets should be read
+        last_read_dataset_time = dt.min
 
-    # Ensure that the last rain counter value is not too old and valid
-    if ( firstNewTime - lastOldTime ) > datetime.timedelta( minutes = storage_interval ) or ( lastOldTime >= firstNewTime ):
-        last_old_rain_counter = firstNewRainCounter
-    if last_old_rain_counter > firstNewRainCounter:
-        last_old_rain_counter = firstNewRainCounter
+    # Determine if one or all datasets will be read # TODO: consider inaccuracies in time!!!
+    if ( dt.now() - last_read_dataset_time ) > ( 2 * timedelta( minutes = storage_interval ) ):
+        # read all datasets
+        imported_data = te923station.readdata( True )
+    else:
+        # read only the latest dataset
+        imported_data = te923station.readdata( False )
 
-    # Write weather data to PC-Wetterstation CSV-file
-    export_data, last_dataset_time, last_dataset_rain_counter = pcwetterstation.convertTo( imported_data, last_old_rain_counter, sensor_list )
-    pcwetterstation.write( data_folder, rain_calib_factor, last_old_rain_counter, station_name, station_height, station_type, export_data, sensor_list )
+    if ( len( imported_data ) == 0 ):
+        print( 'No new weather data found.' )
+    else:
+        # If this is the first execution of the program there is no other choice than using the rain counter value of the first dataset as reference
+        if last_read_dataset_time == dt.min:
+            last_read_dataset_raincounter = float( imported_data[ firstNewDataIndex ][ sensor_list[ 'rainCounter' ][ constants.import_index ] ] )
+  
+        # Reduce datasets to unsaved new datasets (it is assumed that the read data is sorted according to time)
+        date_index = sensor_list[ 'date' ][ constants.import_index ]
+        imported_data = [ x for x in imported_data if ( dt.fromtimestamp( int( x[ date_index ] ) ) > last_read_dataset_time ) ]
 
-    # Refresh settings file
-    lastdata.write( data_folder + settings_file_name, last_dataset_time, last_dataset_rain_counter )
+        if ( len( imported_data ) > 0 ):
+            # Write weather data to PC-Wetterstation CSV-files
+            export_data, last_dataset_time, last_dataset_rain_counter = pcwetterstation.convertTo( imported_data, last_read_dataset_raincounter, sensor_list )
+            pcwetterstation.write( data_folder, rain_calib_factor, last_read_dataset_raincounter, station_name, station_height, station_type, export_data, sensor_list )
+
+            # Refresh settings file
+            lastdata.write( data_folder + settings_file_name, last_dataset_time, last_dataset_rain_counter )
+        else:
+            print( 'No new weather data found.' )
