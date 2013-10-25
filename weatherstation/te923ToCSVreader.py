@@ -52,26 +52,21 @@ def te923ToCSVreader(data_folder, station_data_file_name):
         # In this case it is assumed that the program is executed for the first time and all datasets should be read
         last_read_dataset_time = dt.min
 
-    # Determine if one or all datasets will be read # TODO: consider inaccuracies in time!!!
-    if ( dt.now() - last_read_dataset_time ) > ( 2 * timedelta( minutes = storage_interval ) ):
-        # read all datasets
-        imported_data = te923station.readdata( True )
-    else:
-        # read only the latest dataset
-        imported_data = te923station.readdata( False )
+    # Read all datasets from the weatherstation
+    imported_data = te923station.readdata( True )
 
     if ( len( imported_data ) == 0 ):
-        print( 'No new weather data found.' )
+        print( 'No data could be read from the weather station.' )
     else:
+        # Reduce datasets to unsaved new datasets (it is assumed that the read data is sorted according to time)
+        date_index = sensor_list[ 'date' ][ constants.import_index ]
+        imported_data = [ x for x in imported_data if ( dt.fromtimestamp( int( x[ date_index ] ) ) > last_read_dataset_time ) ]
+        
         # If this is the first execution of the program or the last stored data is older than one storage step, there is no other choice than using the rain counter value of the first dataset as reference
         new_first_read_dataset_time = dt.fromtimestamp( int( imported_data[ firstNewDataIndex ][ sensor_list[ 'date' ][ constants.import_index ] ] ) );
         if last_read_dataset_time == dt.min or ( new_first_read_dataset_time - last_read_dataset_time ) > timedelta( minutes = storage_interval ):
             last_read_dataset_raincounter = float( imported_data[ firstNewDataIndex ][ sensor_list[ 'rainCounter' ][ constants.import_index ] ] )
   
-        # Reduce datasets to unsaved new datasets (it is assumed that the read data is sorted according to time)
-        date_index = sensor_list[ 'date' ][ constants.import_index ]
-        imported_data = [ x for x in imported_data if ( dt.fromtimestamp( int( x[ date_index ] ) ) > last_read_dataset_time ) ]
-
         if ( len( imported_data ) > 0 ):
             # Write weather data to PC-Wetterstation CSV-files
             export_data, last_dataset_time, last_dataset_rain_counter = pcwetterstation.convertTo( imported_data, last_read_dataset_raincounter, sensor_list )
