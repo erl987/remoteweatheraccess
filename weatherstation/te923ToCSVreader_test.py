@@ -5,6 +5,7 @@ test_first_execution:           Tests the behviour in case of first execution wi
 test_single_data_read:          Test the behaviour if one new dataset has been read (i.e. a call between [1.0 ... 2.0[ * storage_interval).
 test_no_new_data_read:          Test the behaviour if no new dataset has been read (i.e. a call between [0.0 ... 1.0[ * storage_interval).
 test_multiple_data_read:        Test the behaviour if multiple new datasets have been read (i.e. a call > 1.0 * storage_interval).
+distant_data_read:              Test the behaviour if datasets with time gaps in between are read (this requires special handling of rain counters).
 
 Global variables:
 data_folder:                    Temporary folder containing the test data. It will be deleted after the tests.
@@ -111,6 +112,24 @@ class TestProcessToCSV(unittest.TestCase):
                                             [ str( int( time_last + 2 * storage_interval * 60 ) ), '22.34',' 59', '8.30', '91', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1014.4', '2.1', '5', '0', '1', '7.8', '20.9', '23.4', '900' ],
                                             [ str( int( time_last + 3 * storage_interval * 60 ) ), '21.32', '62', '6.30', '95', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1012.4', '6.4', '5', '0', '15', '43.5', '3.4', '2.1', '920'] ] )
         SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last ) + 3.8 * timedelta( minutes = storage_interval ) )
+        te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name )
+        self.assertTrue( os.path.isfile( data_folder + 'EXP10_13.csv' ) ) ## TODO: improve the assert
+
+
+    @patch('te923ToCSVreader.dt', SpoofDate)
+    def test_distant_data_read(self):
+        '''Test the behaviour if datasets with time gaps in between are read (this requires special handling of rain counters).'''
+        time_last = 1381578982 # in seconds since epoch (CET including possible daylight saving)      
+         
+        # Generate last data file consistent to the test case
+        lastdata.write( data_folder + settings_file_name, dt.fromtimestamp( time_last ), 880 )
+
+        # Simulate reading of weather data
+        te923station.readdata = Mock( return_value = 
+                                          [ [ str( int( time_last + 2 * storage_interval * 60 ) ), '21.75', '51', '7.30', '92', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1016.4', '3.4', '5', '0', '13', '15.2', '23.2', '5.2', '882' ],
+                                            [ str( int( time_last + 3 * storage_interval * 60 ) ), '22.34',' 59', '8.30', '91', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1014.4', '2.1', '5', '0', '1', '7.8', '20.9', '23.4', '886' ],
+                                            [ str( int( time_last + 4 * storage_interval * 60 ) ), '21.32', '62', '6.30', '95', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1012.4', '6.4', '5', '0', '15', '43.5', '3.4', '2.1', '887'] ] )
+        SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last ) + 4.2 * timedelta( minutes = storage_interval ) )
         te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name )
         self.assertTrue( os.path.isfile( data_folder + 'EXP10_13.csv' ) ) ## TODO: improve the assert
 

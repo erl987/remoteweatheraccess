@@ -63,8 +63,9 @@ def te923ToCSVreader(data_folder, station_data_file_name):
     if ( len( imported_data ) == 0 ):
         print( 'No new weather data found.' )
     else:
-        # If this is the first execution of the program there is no other choice than using the rain counter value of the first dataset as reference
-        if last_read_dataset_time == dt.min:
+        # If this is the first execution of the program or the last stored data is older than one storage step, there is no other choice than using the rain counter value of the first dataset as reference
+        new_first_read_dataset_time = dt.fromtimestamp( int( imported_data[ firstNewDataIndex ][ sensor_list[ 'date' ][ constants.import_index ] ] ) );
+        if last_read_dataset_time == dt.min or ( new_first_read_dataset_time - last_read_dataset_time ) > timedelta( minutes = storage_interval ):
             last_read_dataset_raincounter = float( imported_data[ firstNewDataIndex ][ sensor_list[ 'rainCounter' ][ constants.import_index ] ] )
   
         # Reduce datasets to unsaved new datasets (it is assumed that the read data is sorted according to time)
@@ -74,7 +75,7 @@ def te923ToCSVreader(data_folder, station_data_file_name):
         if ( len( imported_data ) > 0 ):
             # Write weather data to PC-Wetterstation CSV-files
             export_data, last_dataset_time, last_dataset_rain_counter = pcwetterstation.convertTo( imported_data, last_read_dataset_raincounter, sensor_list )
-            pcwetterstation.write( data_folder, rain_calib_factor, last_read_dataset_raincounter, station_name, station_height, station_type, export_data, sensor_list )
+            pcwetterstation.write( data_folder, rain_calib_factor, station_name, station_height, station_type, export_data, sensor_list )
 
             # Refresh settings file
             lastdata.write( data_folder + settings_file_name, last_dataset_time, last_dataset_rain_counter )

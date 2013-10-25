@@ -16,7 +16,7 @@ def read(settings_file_name):
     Returns:
     last_old_time:          Datetime object containing the time in the last dataset stored (as Central 
                             European Time considering daylight saving).
-    last_old_rain_counter:  Rain counter in that last dataset (in mm, integer format).
+    last_old_rain_counter:  Rain counter in that last dataset (in tipping bucket counts, integer format).
 
     Raises:
     IOError:                An error occurred accessing the file.
@@ -24,7 +24,7 @@ def read(settings_file_name):
     with open( settings_file_name, 'rb') as f:
         data = pickle.load( f )
         last_old_time = data[ 'last_old_time' ]  
-        last_old_rain_counter = data[ 'last_old_rain_counter' ]     # in mm
+        last_old_rain_counter = data[ 'last_old_rain_counter' ]     # in tipping bucket counts
 
     return last_old_time, last_old_rain_counter
 
@@ -36,7 +36,7 @@ def write(settings_file_name, last_old_time, last_old_rain_counter):
     settings_file_name:     The filename of the settings file (relative to the current path).
     last_old_time:          Datetime object containing the time in the last dataset to be 
                             stored (as Central European Time considering daylight saving).
-    last_old_rain_counter:  Rain counter in that last dataset to be stored (in mm, integer format).
+    last_old_rain_counter:  Rain counter in that last dataset to be stored (in tipping bucket counts, integer format).
 
     Returns:
     None

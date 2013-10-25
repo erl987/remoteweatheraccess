@@ -15,14 +15,13 @@ import utilities
 
 
 
-def write( data_folder, rain_calib_factor, last_old_rain_counter, station_name, station_height, station_type, export_data, sensor_list ):
+def write( data_folder, rain_calib_factor, station_name, station_height, station_type, export_data, sensor_list ):
     """Writes a CSV-file with the weather data compatible to PC-Wetterstation for arbitrary data.
     
     Args:
     data_folder:                Folder where the CSV-file for PC-Wetterstation will be stored. It must be given relative to the current path.
                                 The file names will be automatically "EXP_MM_YY.CSV" with MM and YY being the months and the years of the datasets.
     rain_calib_factor:          Calibration factor of the rain sensor (1.000 if the rain sensor has the original area).
-    last_old_rain_counter:      Last rain counter setting before the first dataset of this file (in mm).
     station_name:               ID of the station (typically three letters, for example ERL).
     station_height:             Altitude of the station (in meters).
     station_type:               Information string on the detailed type of the weather station (producer, ...).
@@ -56,17 +55,16 @@ def write( data_folder, rain_calib_factor, last_old_rain_counter, station_name, 
     # write the data separately for each month into a file
     for curr_month in months_set:
         monthly_export_data = [ x for x in export_data if ( getmonth(x).month == curr_month[0] and getmonth(x).year == curr_month[1] ) ]
-        writesinglemonth( data_folder, rain_calib_factor, last_old_rain_counter, station_name, station_height, station_type, monthly_export_data, sensor_list )
+        writesinglemonth( data_folder, rain_calib_factor, station_name, station_height, station_type, monthly_export_data, sensor_list )
 
 
-def writesinglemonth( data_folder, rain_calib_factor, last_old_rain_counter, station_name, station_height, station_type, export_data, sensor_list ):
+def writesinglemonth( data_folder, rain_calib_factor, station_name, station_height, station_type, export_data, sensor_list ):
     """Writes a CSV-file with the weather data compatible to PC-Wetterstation for a certain single month.
     
     Args:
     data_folder:                Folder where the CSV-file for PC-Wetterstation will be stored. It must be given relative to the current path.
                                 The file name will be automatically "EXP_MM_YY.CSV" with MM and YY being the month and the year of the datasets.
     rain_calib_factor:          Calibration factor of the rain sensor (1.000 if the rain sensor has the original area).
-    last_old_rain_counter:      Last rain counter setting before the first dataset of this file (in mm).
     station_name:               ID of the station (typically three letters, for example ERL).
     station_height:             Altitude of the station (in meters).
     station_type:               Information string on the detailed type of the weather station (producer, ...).
@@ -106,7 +104,7 @@ def writesinglemonth( data_folder, rain_calib_factor, last_old_rain_counter, sta
     data_file_name = data_folder + '/EXP' + firstDate.strftime('%m_%y') + '.csv'
 
     # Generate settings line for the CSV-file
-    settings_line = '#Calibrate=' + str( '%1.3f' % rain_calib_factor ) + ' #Regen0=' + str( int( last_old_rain_counter ) ) + 'mm #Location=' + str( station_name ) + '/' + str( int( station_height ) ) + 'm #Station=' + station_type
+    settings_line = '#Calibrate=' + str( '%1.3f' % rain_calib_factor ) + ' #Regen0=0mm #Location=' + str( station_name ) + '/' + str( int( station_height ) ) + 'm #Station=' + station_type
 
     # Write header lines in a PC-Wetterstation compatible CSV-file
     with open( data_file_name, 'w', newline = '\r\n', encoding='latin-1' ) as f:
@@ -145,12 +143,12 @@ def convertTo(read_data, last_old_rain_counter, sensor_list):
                                 The units of the data must be as follows:
                                     * time of measurement as standard c-time in seconds since epoch (CET considering daylight saving)
                                     * wind speeds in m/s
-                                    * rain as absolute rain counter since the last reset at the measurement time (in mm)
+                                    * rain as absolute rain counter since the last reset at the measurement time (in tipping bucket counts)
                                     * temperatures in degree Celsius
                                     * pressure in hPa
                                     * humidities in percent
                                 Invalid data is specified as 'i'.
-    last_old_rain_counter:      Last rain counter setting before the first dataset of the new read data (in mm).
+    last_old_rain_counter:      Last rain counter setting before the first dataset of the new read data (in tipping bucket counts).
     sensor_list:                Ordered dict containing the mapping of all sensors to the index of the sensor in 'read_data'.
                                 The keys must be identical to that used in the 'export_data'.
     
@@ -168,7 +166,7 @@ def convertTo(read_data, last_old_rain_counter, sensor_list):
                                             * humidities in percent
                                 Not measured data is given as zero.
     last_dataset_time:          Time of the last measurement in the dataset (with an accuracy of minutes).
-    last_dataset_rain_counter:  Rain counter setting of the last read dataset (in mm).
+    last_dataset_rain_counter:  Rain counter setting of the last read dataset (in tipping bucket counts).
 
     Raises:
     None
@@ -211,10 +209,10 @@ def convertTo(read_data, last_old_rain_counter, sensor_list):
     # Calculate rain amount differences
     rain_counters = [ float( line['rainCounter'] ) for line in export_data ]
     rain_counters.insert( 0, last_old_rain_counter )
-    rain_amounts = [ x - rain_counters[i-1] for i, x in enumerate( rain_counters ) ][1:]
+    rain_amounts = [ 0.685 * ( x - rain_counters[i-1] ) for i, x in enumerate( rain_counters ) ][1:]    # convert from tipping bucket counts to mm
     for export_line, amount in zip( export_data[:], rain_amounts ):
         export_line['rainCounter'] = str( amount );                      # set to rain amount differences since the last dataset before the current (in mm)
 
     last_dataset_time = dt.strptime( export_data[-1]['date'] + ' ' + export_data[-1]['time'], '%d.%m.%Y %H:%M') # the accuracy is minutes
-    last_dataset_rain_counter = rain_counters.pop()
+    last_dataset_rain_counter = rain_counters[-1]
     return export_data, last_dataset_time, last_dataset_rain_counter

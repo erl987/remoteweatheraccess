@@ -42,7 +42,7 @@ def readdata(is_read_all_datasets):
                                 - average wind speed            [m/s]
                                 - wind gusts                    [m/s]
                                 - temperature of wind sensor    [deg C]
-                                - rain counter                  [mm since last resetting]
+                                - rain counter                  [tipping bucket counts since last resetting]
                             Invalid data members are marked with 'i'
 
 
