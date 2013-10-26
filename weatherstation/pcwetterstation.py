@@ -4,6 +4,8 @@ Functions:
 write:                          Writes a weather data CSV-file compatible to PC-Wetterstation for arbitrary data.
 writesinglemonth:               writes a weather data CSV-file compatible to PC-Wetterstation for a single month.
 convertTo:                      Converts weather data into units and format compatible to PC-Wetterstation.
+finddatafiles:                  Finds all PC-Wetterstation files in a given folder.
+deletedatafiles:                Deletes all given files from a given folder.
 """
 import csv
 import os
@@ -13,6 +15,8 @@ from collections import OrderedDict
 import constants
 import utilities
 
+
+data_file_tag = 'EXP'       # indicating a PC-Wetterstation data file
 
 
 def write( data_folder, rain_calib_factor, station_name, station_height, station_type, export_data, sensor_list ):
@@ -101,7 +105,7 @@ def writesinglemonth( data_folder, rain_calib_factor, station_name, station_heig
 
     # Generate file name assuming that all datasets are from one month
     firstDate = dt.strptime( export_data[0]['date'], '%d.%m.%Y')
-    data_file_name = data_folder + '/EXP' + firstDate.strftime('%m_%y') + '.csv'
+    data_file_name = data_folder + '/' + data_file_tag + firstDate.strftime('%m_%y') + '.csv'
 
     # Generate settings line for the CSV-file
     settings_line = '#Calibrate=' + str( '%1.3f' % rain_calib_factor ) + ' #Regen0=0mm #Location=' + str( station_name ) + '/' + str( int( station_height ) ) + 'm #Station=' + station_type
@@ -209,10 +213,44 @@ def convertTo(read_data, last_old_rain_counter, sensor_list):
     # Calculate rain amount differences
     rain_counters = [ float( line['rainCounter'] ) for line in export_data ]
     rain_counters.insert( 0, last_old_rain_counter )
-    rain_amounts = [ 0.685 * ( x - rain_counters[i-1] ) for i, x in enumerate( rain_counters ) ][1:]    # convert from tipping bucket counts to mm
+    rain_amounts = [ 0.685 * ( x - rain_counters[i-1] ) for i, x in enumerate( rain_counters ) ][1:]            # convert from tipping bucket counts to mm
     for export_line, amount in zip( export_data[:], rain_amounts ):
         export_line['rainCounter'] = str( amount );                      # set to rain amount differences since the last dataset before the current (in mm)
 
     last_dataset_time = dt.strptime( export_data[-1]['date'] + ' ' + export_data[-1]['time'], '%d.%m.%Y %H:%M') # the accuracy is minutes
     last_dataset_rain_counter = rain_counters[-1]
     return export_data, last_dataset_time, last_dataset_rain_counter
+
+
+def finddatafiles(data_folder):
+    """Finds all PC-Wetterstation files in a given folder.
+    
+    Args:
+    data_folder:                Folder in which the data files are searched. It can be a relative path to the current working directory. 
+                                
+    Returns:
+    returns file_names:         A list containing all found PC-Wetterstation file names relative to 'data_folder' 
+                               
+    Raises:
+    FileNotFoundError:          Risen if the data folder is not existing.
+    """
+    file_names = [ x for x in os.listdir( data_folder ) if x.find( data_file_tag ) != -1 ]
+
+    return file_names
+
+
+def deletedatafiles(data_folder, data_file_list):
+    """Deletes all given files from a given folder.
+    
+    Args:
+    data_folder:                Folder in which the data files are deleted. It can be a relative path to the current working directory. 
+    data_file_list:             All files to be deleted in the folder 'data_folder'
+                                
+    Returns:
+    None
+                               
+    Raises:
+    FileNotFoundError:          Risen if the data folder is not existing.
+    """
+    for data_file in data_file_list:
+        os.remove( data_folder + data_file )

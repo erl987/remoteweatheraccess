@@ -35,6 +35,8 @@ rain_calib_factor = 1.0
 station_name = 'TES'
 station_height = 100.0
 storage_interval = 10.0
+ftp_passwd = 'weatherstation#10'
+ftp_server = 'h1864277.stratoserver.net' 
 settings_file_name = 'settings_TES.dat' # TODO: no ideal solution!!!!!!
 
 
@@ -51,7 +53,7 @@ class TestProcessToCSV(unittest.TestCase):
         os.makedirs( data_folder, exist_ok = True )
 
         # Generate station data file
-        stationdata.write( data_folder + station_data_file_name, rain_calib_factor, station_name, station_height, storage_interval )
+        stationdata.write( data_folder + station_data_file_name, rain_calib_factor, station_name, station_height, storage_interval, ftp_passwd, ftp_server )
 
 
     @patch('te923ToCSVreader.dt', SpoofDate)
@@ -65,7 +67,7 @@ class TestProcessToCSV(unittest.TestCase):
                                               [ str( int( time_last + 3 * storage_interval * 60 ) ), '10.00', '63', '14.50','87', 'i','i','i','i','i','i','i','i', '1017.1', 'i', 0, 0, 'i','i', 'i', 'i', 906 ] ] )
         SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last ) + 3.2 * timedelta( minutes = storage_interval ) )
         te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name )
-        self.assertTrue( os.path.isfile( data_folder + 'EXP10_13.csv' ) ) ## TODO: improve the assert
+        # TODO: implement useful assert
 
 
     @patch('te923ToCSVreader.dt', SpoofDate)
@@ -80,22 +82,27 @@ class TestProcessToCSV(unittest.TestCase):
         te923station.readdata = Mock( return_value = [ [ str( int( time_last + 1 * storage_interval * 60 ) ), '21.75', '51', '7.30', '92', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1016.4', '3.4', '5', '0', '13', '15.2', '23.2', '5.2', '882' ] ] )
         SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last) + 1.2 * timedelta( minutes = storage_interval ) )
         te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name )
-        self.assertTrue( os.path.isfile( data_folder + 'EXP10_13.csv' ) ) ## TODO: improve the assert
+        # TODO: implement useful assert
 
 
     @patch('te923ToCSVreader.dt', SpoofDate)
     def test_no_new_data_read(self):
         '''Test the behaviour if no new dataset has been read (i.e. a call between [0.0 ... 1.0[ * storage_interval).'''
-        time_last = 1381578982 # in seconds since epoch (CET including possible daylight saving)      
+        time_last = 1381578982 # in seconds since epoch (CET including possible daylight saving)   
+        set_last_old_rain_counter = 880   
          
         # Generate last data file consistent to the test case
-        lastdata.write( data_folder + settings_file_name, dt.fromtimestamp( time_last ), 880 )
+        lastdata.write( data_folder + settings_file_name, dt.fromtimestamp( time_last ), set_last_old_rain_counter )
 
         # Simulate reading of weather data
         te923station.readdata = Mock( return_value = [] )
         SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last ) + 0.8 * timedelta( minutes = storage_interval ) )
         te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name )
-        self.assertFalse( os.path.isfile( data_folder + 'EXP10_13.csv' ) ) ## TODO: improve the assert
+        
+        # Check if the last stored dataset remained unchanged
+        read_last_old_time, read_last_old_rain_counter = lastdata.read( data_folder + settings_file_name )
+        self.assertEqual( read_last_old_time, dt.fromtimestamp( time_last ) )
+        self.assertEqual( read_last_old_rain_counter, set_last_old_rain_counter )
 
 
     @patch('te923ToCSVreader.dt', SpoofDate)
@@ -113,7 +120,7 @@ class TestProcessToCSV(unittest.TestCase):
                                             [ str( int( time_last + 3 * storage_interval * 60 ) ), '21.32', '62', '6.30', '95', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1012.4', '6.4', '5', '0', '15', '43.5', '3.4', '2.1', '920'] ] )
         SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last ) + 3.8 * timedelta( minutes = storage_interval ) )
         te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name )
-        self.assertTrue( os.path.isfile( data_folder + 'EXP10_13.csv' ) ) ## TODO: improve the assert
+        # TODO: implement useful assert
 
 
     @patch('te923ToCSVreader.dt', SpoofDate)
@@ -131,7 +138,7 @@ class TestProcessToCSV(unittest.TestCase):
                                             [ str( int( time_last + 4 * storage_interval * 60 ) ), '21.32', '62', '6.30', '95', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1012.4', '6.4', '5', '0', '15', '43.5', '3.4', '2.1', '887'] ] )
         SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last ) + 4.2 * timedelta( minutes = storage_interval ) )
         te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name )
-        self.assertTrue( os.path.isfile( data_folder + 'EXP10_13.csv' ) ) ## TODO: improve the assert
+        # TODO: implement useful assert
 
 
     def tearDown(self):

@@ -25,6 +25,7 @@
     <Compile Include="constants.py" />
     <Compile Include="lastdata.py" />
     <Compile Include="pcwetterstation.py" />
+    <Compile Include="server.py" />
     <Compile Include="stationdata.py" />
     <Compile Include="te923ToCSV.py" />
     <Compile Include="te923ToCSVreader.py" />

@@ -7,6 +7,7 @@ import stationdata
 import lastdata
 import te923station
 import pcwetterstation
+import server
 
 
 station_type = 'TE923/924 (Mebus,Irox,Honeywell,Cresta)'
@@ -44,7 +45,7 @@ def te923ToCSVreader(data_folder, station_data_file_name):
     firstNewDataIndex = 0
 
     # Read station data
-    rain_calib_factor, station_name, station_height, storage_interval = stationdata.read( data_folder + station_data_file_name )
+    rain_calib_factor, station_name, station_height, storage_interval, ftp_passwd, ftp_server = stationdata.read( data_folder + station_data_file_name )
     settings_file_name = 'settings_' + station_name + '.dat'
     try:
         last_read_dataset_time, last_read_dataset_raincounter = lastdata.read( data_folder + settings_file_name )
@@ -72,7 +73,19 @@ def te923ToCSVreader(data_folder, station_data_file_name):
             export_data, last_dataset_time, last_dataset_rain_counter = pcwetterstation.convertTo( imported_data, last_read_dataset_raincounter, sensor_list )
             pcwetterstation.write( data_folder, rain_calib_factor, station_name, station_height, station_type, export_data, sensor_list )
 
-            # Refresh settings file
-            lastdata.write( data_folder + settings_file_name, last_dataset_time, last_dataset_rain_counter )
+            # Transfer all CSV-files to the server
+            data_file_list = pcwetterstation.finddatafiles( data_folder )
+            try:
+                server.transferto( ftp_server, station_name, ftp_passwd, data_folder, data_file_list )
+                isSuccessfullTransfer = True;
+            except Exception:
+                isSuccessfullTransfer = False;
+
+            # Delete the CSV-files in any situation
+            pcwetterstation.deletedatafiles( data_folder, data_file_list )
+
+            # Store the nex latest dataset only if the transfer to the server was successfull, otherwise there is a rollback
+            if ( isSuccessfullTransfer ):
+                lastdata.write( data_folder + settings_file_name, last_dataset_time, last_dataset_rain_counter )
         else:
             print( 'No new weather data found.' )

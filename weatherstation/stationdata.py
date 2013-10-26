@@ -7,7 +7,7 @@ write:              Writes the storage file.
 import pickle
 
 
-def write(station_data_file_name, rain_calib_factor, station_name, station_height, storage_interval):
+def write(station_data_file_name, rain_calib_factor, station_name, station_height, storage_interval, ftp_passwd, ftp_server):
     """Writes the data of the weather station.
 
     Args:
@@ -16,6 +16,8 @@ def write(station_data_file_name, rain_calib_factor, station_name, station_heigh
     station_name:           ID of the station (typically three letters, for example ERL).
     station_height:         Altitude of the station (in meters).
     storage_interval:       Interval of data storage at the station (in minutes).
+    ftp_passwd:             Password for the FTP-server where the weather data is transferred (the user name is identical to the station name)
+    ftp_server:             Address of the FTP-server where the weather data is transferred
 
     Returns:
     None
@@ -24,7 +26,8 @@ def write(station_data_file_name, rain_calib_factor, station_name, station_heigh
     IOError:                An error occurred accessing the file.
     """
     with open( station_data_file_name, 'wb' ) as f:
-        pickle.dump( dict( rain_calib_factor = rain_calib_factor, station_name = station_name, station_height = station_height, storage_interval = storage_interval ), f )
+        pickle.dump( dict( rain_calib_factor = rain_calib_factor, station_name = station_name, station_height = station_height, 
+                          storage_interval = storage_interval, ftp_passwd = ftp_passwd, ftp_server = ftp_server ), f )
 
 
 def read(station_data_file_name):
@@ -38,6 +41,8 @@ def read(station_data_file_name):
     station_name:           ID of the station (typically three letters, for example ERL).
     station_height:         Altitude of the station (in meters).
     storage_interval:       Interval of data storage at the station (in minutes).
+    ftp_passwd:             Password for the FTP-server where the weather data is transferred (the user name is identical to the station name)
+    ftp_server:             Address of the FTP-server where the weather data is transferred
 
     Raises:
     IOError:                An error occurred accessing the file.
@@ -48,5 +53,7 @@ def read(station_data_file_name):
         station_name = data['station_name']
         station_height = data['station_height']             # in m
         storage_interval = data['storage_interval']         # in min
+        ftp_passwd = data['ftp_passwd']
+        ftp_server = data['ftp_server']
 
-        return rain_calib_factor, station_name, station_height, storage_interval
+        return rain_calib_factor, station_name, station_height, storage_interval, ftp_passwd, ftp_server
