@@ -1,6 +1,7 @@
 from datetime import datetime as dt
 from datetime import timedelta as timedelta
 from collections import OrderedDict
+import logging
 
 import constants
 import stationdata
@@ -41,8 +42,12 @@ sensor_list = OrderedDict( [
     ] )
 
 
-def te923ToCSVreader(data_folder, station_data_file_name):
+def te923ToCSVreader(data_folder, station_data_file_name, log_file_name):
     firstNewDataIndex = 0
+
+    # Start the logger
+    logger = logging.getLogger()
+    logging.basicConfig( filename= data_folder + log_file_name, level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s', datefmt='%b %d %H:%M:%S' )
 
     # Read station data
     rain_calib_factor, station_name, station_height, storage_interval, ftp_passwd, ftp_server = stationdata.read( data_folder + station_data_file_name )
@@ -57,21 +62,23 @@ def te923ToCSVreader(data_folder, station_data_file_name):
     imported_data = te923station.readdata( True )
 
     if ( len( imported_data ) == 0 ):
-        print( 'No data could be read from the weather station.' )
+        logging.warning( 'No data could be read from the weather station. Maybe no USB-connection is possible' )
     else:
         # Reduce datasets to unsaved new datasets (it is assumed that the read data is sorted according to time)
         date_index = sensor_list[ 'date' ][ constants.import_index ]
         imported_data = [ x for x in imported_data if ( dt.fromtimestamp( int( x[ date_index ] ) ) > last_read_dataset_time ) ]
         
-        # If this is the first execution of the program or the last stored data is older than one storage step, there is no other choice than using the rain counter value of the first dataset as reference
-        new_first_read_dataset_time = dt.fromtimestamp( int( imported_data[ firstNewDataIndex ][ sensor_list[ 'date' ][ constants.import_index ] ] ) );
-        if last_read_dataset_time == dt.min or ( new_first_read_dataset_time - last_read_dataset_time ) > timedelta( minutes = storage_interval ):
-            last_read_dataset_raincounter = float( imported_data[ firstNewDataIndex ][ sensor_list[ 'rainCounter' ][ constants.import_index ] ] )
+        if ( len( imported_data ) > 0 ):         
+            # If this is the first execution of the program or the last stored data is older than one storage step, there is no other choice than using the rain counter value of the first dataset as reference
+            new_first_read_dataset_time = dt.fromtimestamp( int( imported_data[ firstNewDataIndex ][ sensor_list[ 'date' ][ constants.import_index ] ] ) );
+            if last_read_dataset_time == dt.min or ( new_first_read_dataset_time - last_read_dataset_time ) > timedelta( minutes = storage_interval ):
+                last_read_dataset_raincounter = float( imported_data[ firstNewDataIndex ][ sensor_list[ 'rainCounter' ][ constants.import_index ] ] )
   
-        if ( len( imported_data ) > 0 ):
             # Write weather data to PC-Wetterstation CSV-files
             export_data, last_dataset_time, last_dataset_rain_counter = pcwetterstation.convertTo( imported_data, last_read_dataset_raincounter, sensor_list )
             pcwetterstation.write( data_folder, rain_calib_factor, station_name, station_height, station_type, export_data, sensor_list )
+            logging.info( 'Found %i new weather datasets from %s - %s', len( export_data ), 
+                         ( last_read_dataset_time + timedelta( minutes = storage_interval) ).strftime('%d.%m.%Y %H:%M'), last_dataset_time.strftime('%d.%m.%Y %H:%M') )
 
             # Transfer all CSV-files to the server
             data_file_list = pcwetterstation.finddatafiles( data_folder )
@@ -87,5 +94,12 @@ def te923ToCSVreader(data_folder, station_data_file_name):
             # Store the nex latest dataset only if the transfer to the server was successfull, otherwise there is a rollback
             if ( isSuccessfullTransfer ):
                 lastdata.write( data_folder + settings_file_name, last_dataset_time, last_dataset_rain_counter )
+                logging.info( 'Weather data was successfully transfered to FTP-server \'%s\' (user: \'%s\')', ftp_server, station_name )
+            else:
+                logging.error( 'Weather data transfer to FTP-server \'%s\' (user: \'%s\') failed. Read weather data was discarded', ftp_server, station_name )
         else:
-            print( 'No new weather data found.' )
+            logging.info( 'No weather data found which was unprocessed' )
+
+    # Close the logger
+    logger.handlers[0].stream.close()
+    logger.removeHandler(logger.handlers[0])
