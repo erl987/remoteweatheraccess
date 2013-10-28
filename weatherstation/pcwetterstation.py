@@ -3,6 +3,8 @@
 Functions:
 write:                          Writes a weather data CSV-file compatible to PC-Wetterstation for arbitrary data.
 writesinglemonth:               writes a weather data CSV-file compatible to PC-Wetterstation for a single month.
+read:                           Reads a CSV-file with the weather data compatible to PC-Wetterstation.
+merge:                          Merges two CSV-files compatible to PC-Wetterstation.
 convertTo:                      Converts weather data into units and format compatible to PC-Wetterstation.
 finddatafiles:                  Finds all PC-Wetterstation files in a given folder.
 deletedatafiles:                Deletes all given files from a given folder.
@@ -45,7 +47,7 @@ def write( data_folder, rain_calib_factor, station_name, station_height, station
                                 the name and the units of the sensors. The keys must be identical to that used in the 'export_data'.
 
     Returns:
-    None
+    file_list:                  List containing the names of all written files
 
     Raises:
     IOError:                    An error occurred accessing the file.
@@ -57,9 +59,12 @@ def write( data_folder, rain_calib_factor, station_name, station_height, station
     months_set = { ( getmonth(x).month, getmonth(x).year ) for x in export_data }
     
     # write the data separately for each month into a file
+    file_list = []
     for curr_month in months_set:
         monthly_export_data = [ x for x in export_data if ( getmonth(x).month == curr_month[0] and getmonth(x).year == curr_month[1] ) ]
-        writesinglemonth( data_folder, rain_calib_factor, station_name, station_height, station_type, monthly_export_data, sensor_list )
+        file_list.append( writesinglemonth( data_folder, rain_calib_factor, station_name, station_height, station_type, monthly_export_data, sensor_list ) )
+
+    return file_list
 
 
 def writesinglemonth( data_folder, rain_calib_factor, station_name, station_height, station_type, export_data, sensor_list ):
@@ -88,7 +93,7 @@ def writesinglemonth( data_folder, rain_calib_factor, station_name, station_heig
                                 the name and the units of the sensors. The keys must be identical to that used in the 'export_data'.
 
     Returns:
-    None
+    file_name:                  Name of the written file
 
     Raises:
     IOError:                    An error occurred accessing the file.
@@ -105,7 +110,8 @@ def writesinglemonth( data_folder, rain_calib_factor, station_name, station_heig
 
     # Generate file name assuming that all datasets are from one month
     firstDate = dt.strptime( export_data[0]['date'], '%d.%m.%Y')
-    data_file_name = data_folder + '/' + data_file_tag + firstDate.strftime('%m_%y') + '.csv'
+    file_name = data_file_tag + firstDate.strftime('%m_%y') + '.csv'
+    data_file_name = data_folder + '/' + file_name
 
     # Generate settings line for the CSV-file
     settings_line = '#Calibrate=' + str( '%1.3f' % rain_calib_factor ) + ' #Regen0=0mm #Location=' + str( station_name ) + '/' + str( int( station_height ) ) + 'm #Station=' + station_type
@@ -137,6 +143,8 @@ def writesinglemonth( data_folder, rain_calib_factor, station_name, station_heig
             data_output_line = [ line[key] for key in line ]
             writer.writerows( [ data_output_line ] )
 
+    return file_name
+
 
 def convertTo(read_data, last_old_rain_counter, sensor_list):
     """Converts weather data to units and format compatible to PC-Wetterstation.
@@ -158,7 +166,7 @@ def convertTo(read_data, last_old_rain_counter, sensor_list):
     
     Returns:
     export_data:                List containing the weather data compatible to PC-Wetterstation. The format is a list of ordered dicts 
-                                with the key being registered in sensor_list. It contains at least the following information in this order 
+                                with the key being registered in sensor_list. It contains at least the following information as strings in this order 
                                 and is sorted according to date and time:
                                     - date of the data in the format dd.mm.yyyy
                                     - time of the data (CET time considering daylight saving) in the format mm:hh
@@ -254,3 +262,142 @@ def deletedatafiles(data_folder, data_file_list):
     """
     for data_file in data_file_list:
         os.remove( data_folder + data_file )
+
+
+def read( data_folder, file_name, sensor_list ):
+    """Reads a CSV-file with the weather data compatible to PC-Wetterstation.
+    
+    Args:
+    data_folder:                Folder where the CSV-file for PC-Wetterstation is be stored. It must be given relative to the current path.
+    file_name:                  Name of the CSV-file, there are no requirements regarding the name.
+    sensor_list:                Ordered dict containing the mapping of all sensors to the index of the sensor in the weatherstation and the software PC-Wetterstation,
+                                the name and the units of the sensors. The keys must be identical to that used in the 'export_data'.  
+    
+    Returns:                             
+    data_data:                  All data from the file. The format is a list of ordered dicts with the key being registered in sensor_list. It contains at least 
+                                the following information as strings in this order:
+                                    - date of the data in the format dd.mm.yyyy
+                                    - time of the data (local time) in the format mm:hh
+                                    - all measured data according to PC-Wetterstation specification with:
+                                            * wind speeds in km/h
+                                            * rain in mm since last recording
+                                            * temperatures in degree Celsius
+                                            * pressure in hPa
+                                            * humidities in percent
+    rain_calib_factor:          Calibration factor of the rain sensor (1.000 if the rain sensor has the original area).
+    rain_counter_base:          Reference value of the rain counter before the start of the present data (in mm).
+    station_name:               ID of the station (typically three letters, for example ERL).
+    station_height:             Altitude of the station (in meters).
+    station_type:               Information string on the detailed type of the weather station (producer, ...).
+
+    Raises:
+    IOError:                    The file could not be opened.
+    ImportError:                The file is not compatible to PC-Wetterstation
+    """
+    # Determine the sensors present in the file    
+    file_name = data_folder + '/' + file_name
+    with open( file_name, 'r', newline='', encoding='latin-1' ) as f:
+        file_reader = csv.reader( f )
+
+        # Read the three header lines
+        sensor_descriptions = next( file_reader )
+        sensor_units = next( file_reader )
+        metadata = ','.join( next( file_reader ) )
+
+        # Read first data line containing the sensor indices
+        indices_list = next( file_reader )
+
+    key_list = []
+    for index in indices_list:
+        curr_key = ''
+        for key, sensor in sensor_list.items():
+            if utilities.isFloat( index ):
+                if sensor[constants.export_index] == int( index ):
+                    curr_key = key
+                    break
+            else:
+                break
+        key_list.append( curr_key )
+
+    # parse header lines # TODO: not all metadata entries must be present according to the specification!!!
+    splitted_line = str.split( metadata, '#' )
+    for line in splitted_line:
+        line_pair = str.split( line, '=' )
+        if line_pair[0] == 'Calibrate':
+            rain_calib_factor = float( line_pair[1] )
+        elif line_pair[0] == 'Regen0':
+            line_pair[1].index( 'mm' )      # will raise an exception if the format is wrong
+            rain_counter_base = float( line_pair[1].replace( 'mm', '' ) )
+        elif line_pair[0] == 'Location':
+            location_pair = str.split( line_pair[1], '/' )
+            station_name = location_pair[0]
+            location_pair[1].index( 'm' )   # will raise an exception if the format is wrong
+            station_height = int( location_pair[1].replace( 'm', '' ) )
+        elif line_pair[0] == 'Station':
+            station_type = line_pair[1]
+
+    # Handle the entries for date and time (by specification the first two entries)
+    empty_entries = [ i for i, x in enumerate( key_list ) if x == '' ]
+    if ( len( empty_entries ) != 2 ) or ( 0 not in empty_entries ) or ( 1 not in empty_entries ):
+        raise ImportError( 'The file is no PC-Wetterstation compatible file' )
+    key_list[0] = list( sensor_list.keys() )[0]
+    key_list[1] = list( sensor_list.keys() )[1]
+              
+    # Read all weather data from the file
+    with open( file_name, 'r', newline='', encoding='latin-1' ) as f:
+        file_reader = csv.DictReader( f, key_list )
+
+        # Skip all header lines
+        next( file_reader )
+        next( file_reader )
+        next( file_reader )
+        next( file_reader )
+
+        # Read data
+        data = []
+        for row in file_reader:
+            data.append( OrderedDict( ( f, row[f] ) for f in file_reader.fieldnames ) )
+
+    return data, rain_calib_factor, rain_counter_base, station_name, station_height, station_type
+
+
+def merge( data_folder, input_file_name_1, input_file_name_2, sensor_list ):
+    """Merges two CSV-files compatible to PC-Wetterstation.
+    
+    Args:
+    data_folder:                Folder where the CSV-file for PC-Wetterstation is be stored. It must be given relative to the current path.
+    input_file_name_1:          Name of the first input CSV-file to be merged, there are no requirements regarding the name.
+    input_file_name_2:          Name of the second input CSV-file to be merged, there are no requirements regarding the name.
+    sensor_list:                Ordered dict containing the mapping of all sensors to the index of the sensor in the weatherstation and the software PC-Wetterstation,
+                                the name and the units of the sensors. The keys must be identical to that used in the 'export_data'.  
+    
+    Returns:                             
+    output_data_file_list:      List containing all output files written. They are automatically named following the specification: 'EXP_MM_YY.csv'.
+                                For each month an own file is written according to the specification. 
+                                
+    Raises:
+    IOError:                    A file could not be opened.
+    ImportError:                A file is not compatible to PC-Wetterstation or the files are inconsistent regarding sensor types or units.
+    """
+    # Import data files
+    data_1, rain_calib_factor_1, rain_counter_base_1, station_name_1, station_height_1, station_type_1 = read( data_folder, input_file_name_1, sensor_list )
+    data_2, rain_calib_factor_2, rain_counter_base_2, station_name_2, station_height_2, station_type_2 = read( data_folder, input_file_name_2, sensor_list )
+
+    # Check if the files are from the identical station (the rain counter base does not need to be identical)
+    if rain_calib_factor_1 != rain_calib_factor_2 or station_name_1 != station_name_2 or station_height_1 != station_height_2 or station_type_1 != station_type_2:
+        raise ImportError( 'The stations are not identical.' )
+
+    # Merge data to a unique list
+    merged_data = data_1 + data_2
+
+    unique_merged_data = []
+    seen_times = []
+    for line in merged_data: # TODO: is this an efficient solution???
+        if ( ( line['date'] + ' ' + line['time'] ) not in seen_times ): # TODO: This will delete data during shift of daylight saving!!!
+            unique_merged_data.append( line )
+            seen_times.append( line['date'] + ' ' + line['time'] )
+
+    # Write merged data in data files (one for each month)
+    output_data_file_list = write( data_folder, rain_calib_factor_1, station_name_1, station_height_1, station_type_1, unique_merged_data, sensor_list )
+
+    return output_data_file_list
