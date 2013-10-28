@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """Merging all PC-Wetterstation CSV-files in a folder into the monthly files.
 Functions:
 extractdate:                    Extracting the month and the year of the file data from the file name.

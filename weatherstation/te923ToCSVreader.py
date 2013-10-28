@@ -69,9 +69,9 @@ def te923ToCSVreader(data_folder, station_data_file_name, log_file_name):
         imported_data = [ x for x in imported_data if ( dt.fromtimestamp( int( x[ date_index ] ) ) > last_read_dataset_time ) ]
         
         if ( len( imported_data ) > 0 ):         
-            # If this is the first execution of the program or the last stored data is older than one storage step, there is no other choice than using the rain counter value of the first dataset as reference
+            # If this is the first execution of the program or the last stored data is older than three storage steps, there is no other choice than using the rain counter value of the first dataset as reference
             new_first_read_dataset_time = dt.fromtimestamp( int( imported_data[ firstNewDataIndex ][ sensor_list[ 'date' ][ constants.import_index ] ] ) );
-            if last_read_dataset_time == dt.min or ( new_first_read_dataset_time - last_read_dataset_time ) > timedelta( minutes = storage_interval ):
+            if last_read_dataset_time == dt.min or ( new_first_read_dataset_time - last_read_dataset_time ) > 3 * timedelta( minutes = storage_interval ):
                 last_read_dataset_raincounter = float( imported_data[ firstNewDataIndex ][ sensor_list[ 'rainCounter' ][ constants.import_index ] ] )
   
             # Write weather data to PC-Wetterstation CSV-files
