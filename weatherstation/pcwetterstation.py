@@ -221,7 +221,7 @@ def convertTo(read_data, last_old_rain_counter, sensor_list):
     # Calculate rain amount differences
     rain_counters = [ float( line['rainCounter'] ) for line in export_data ]
     rain_counters.insert( 0, last_old_rain_counter )
-    rain_amounts = [ 0.685 * ( x - rain_counters[i-1] ) for i, x in enumerate( rain_counters ) ][1:]            # convert from tipping bucket counts to mm
+    rain_amounts = [ 0.68685 * ( x - rain_counters[i-1] ) for i, x in enumerate( rain_counters ) ][1:]            # convert from tipping bucket counts to mm
     for export_line, amount in zip( export_data[:], rain_amounts ):
         export_line['rainCounter'] = str( amount );                      # set to rain amount differences since the last dataset before the current (in mm)
 
