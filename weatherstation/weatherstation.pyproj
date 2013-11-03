@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{b068adb5-3853-469d-ace6-d55368b7e486}</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>pcwetterstation_test.py</StartupFile>
+    <StartupFile>graphs_test.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -24,6 +24,9 @@
   <ItemGroup>
     <Compile Include="constants.py" />
     <Compile Include="csvfilemerger.py" />
+    <Compile Include="generate_weathergraphs.py" />
+    <Compile Include="graphs.py" />
+    <Compile Include="graphs_test.py" />
     <Compile Include="lastdata.py" />
     <Compile Include="pcwetterstation.py" />
     <Compile Include="pcwetterstation_test.py" />
