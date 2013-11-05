@@ -22,7 +22,7 @@ class Test_graphs(unittest.TestCase):
 
     def test_plot_of_last_n_days(self):
         sensors_to_plot = [ 'pressure', 'rainCounter', 'tempOutside1', 'humidOutside1' ]
-        graphs.plot_of_last_n_days( 7, data_folder, sensors_to_plot, data_folder, graph_file_name )     
+        graphs.plot_of_last_n_days( 7, data_folder, sensors_to_plot, data_folder, graph_file_name, False )     
 
 
     def tearDown(self):
