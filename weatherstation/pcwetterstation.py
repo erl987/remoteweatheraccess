@@ -289,6 +289,8 @@ def read( data_folder, file_name, sensor_list ):
     station_name:               ID of the station (typically three letters, for example ERL).
     station_height:             Altitude of the station (in meters).
     station_type:               Information string on the detailed type of the weather station (producer, ...).
+    sensor_descriptions_dict:   OrderedDict containing the read descriptions of all sensors in the file. The keys are those from the sensor_list.
+    sensor_units_dict:          OrderedDict containing the read units of all sensors in the file. The keys are those from the sensor_list. 
 
     Raises:
     IOError:                    The file could not be opened.
@@ -358,7 +360,11 @@ def read( data_folder, file_name, sensor_list ):
         for row in file_reader:
             data.append( OrderedDict( ( f, row[f] ) for f in file_reader.fieldnames ) )
 
-    return data, rain_calib_factor, rain_counter_base, station_name, station_height, station_type
+    # Export sensor informations
+    sensor_descriptions_dict = OrderedDict( [ ( key, sensor_descriptions[index] ) for index, key in enumerate( key_list ) ] )
+    sensor_units_dict = OrderedDict( [ ( key, sensor_units[index] ) for index, key in enumerate( key_list ) ] )
+
+    return data, rain_calib_factor, rain_counter_base, station_name, station_height, station_type, sensor_descriptions_dict, sensor_units_dict
 
 
 def merge( data_folder, input_file_name_1, input_file_name_2, sensor_list ):
@@ -380,11 +386,11 @@ def merge( data_folder, input_file_name_1, input_file_name_2, sensor_list ):
     ImportError:                A file is not compatible to PC-Wetterstation or the files are inconsistent regarding sensor types or units.
     """
     # Import data files
-    data_1, rain_calib_factor_1, rain_counter_base_1, station_name_1, station_height_1, station_type_1 = read( data_folder, input_file_name_1, sensor_list )
-    data_2, rain_calib_factor_2, rain_counter_base_2, station_name_2, station_height_2, station_type_2 = read( data_folder, input_file_name_2, sensor_list )
+    data_1, rain_calib_factor_1, rain_counter_base_1, station_name_1, station_height_1, station_type_1, sensor_descriptions_dict_1, sensor_units_dict_1 = read( data_folder, input_file_name_1, sensor_list )
+    data_2, rain_calib_factor_2, rain_counter_base_2, station_name_2, station_height_2, station_type_2, sensor_descriptions_dict_2, sensor_units_dict_2 = read( data_folder, input_file_name_2, sensor_list )
 
     # Check if the files are from the identical station (the rain counter base does not need to be identical)
-    if rain_calib_factor_1 != rain_calib_factor_2 or station_name_1 != station_name_2 or station_height_1 != station_height_2 or station_type_1 != station_type_2:
+    if rain_calib_factor_1 != rain_calib_factor_2 or station_name_1 != station_name_2 or station_height_1 != station_height_2 or station_type_1 != station_type_2 or sensor_descriptions_dict_1 != sensor_descriptions_dict_2 or sensor_units_dict_1 != sensor_units_dict_2:
         raise ImportError( 'The stations are not identical.' )
 
     # Merge data to a unique list

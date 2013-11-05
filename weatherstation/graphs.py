@@ -38,9 +38,11 @@ def get_last_n_days_data( data_folder, num_days ):
     Returns:                             
     limited_data:               Weather dataset of the last 'num_days' before the the last entry in the specified folder containing all sensors stored. 
                                 If rain data is present, the rain data will be returned as a cumulative sum starting from the first timepoint in the data with 0 mm.
+    sensor_descriptions:        OrderedDict containing the read descriptions of all sensors in the file. The keys are those from the sensor_list.
+    sensor_units:               OrderedDict containing the read units of all sensors in the file. The keys are those from the sensor_list. 
                                 
     Raises:
-    None
+    ValueError                  Risen if the different loaded weather data files have inconsistent sensor descriptions or units
     """
     # Find all monthly PC-Wetterstation CSV-files in the specified folder
     file_list = pcwetterstation.finddatafiles( data_folder )
@@ -66,6 +68,14 @@ def get_last_n_days_data( data_folder, num_days ):
         all_data = pcwetterstation.read( data_folder, file[1], te923ToCSVreader.sensor_list )
         data = all_data[0] + data
 
+        # Store sensor information
+        if 'sensor_descriptions' in locals() and sensor_descriptions != all_data[6]:
+            raise ValueError( 'The data files have inconsistent sensor descriptions.' )
+        sensor_descriptions = all_data[6]
+        if 'sensor_units' in locals() and sensor_units != all_data[7]:
+            raise ValueError( 'The data files have inconsistent sensor units.' )
+        sensor_units = all_data[7]
+
         # Abort reading of data if enough data has been read (the file order and properties guarantee sorted data)
         if ( time_import( data[-1] ) - time_import( data[0] ) ) > timedelta( days = num_days ):
             break
@@ -83,7 +93,7 @@ def get_last_n_days_data( data_folder, num_days ):
             else:
                 line['rainCounter'] = limited_data[ index - 1 ]['rainCounter'] + float( line['rainCounter'] )
 
-    return limited_data
+    return limited_data, sensor_descriptions, sensor_units
 
 
 def GetScalings( min_max_sensors ):
@@ -170,7 +180,7 @@ def plot_of_last_n_days( num_days, data_folder, sensors_to_plot, graph_folder, g
     None
     """
     # Find data for the last n days in the data folder
-    data = get_last_n_days_data( data_folder, num_days )
+    data, sensor_descriptions, sensor_units = get_last_n_days_data( data_folder, num_days )
 
     # Calculate secondary y-axis positions
     yAxisPos = []
@@ -200,7 +210,7 @@ def plot_of_last_n_days( num_days, data_folder, sensors_to_plot, graph_folder, g
 
         # Set data axis settings
         sensor_color = ax[index].lines[0].get_color()
-        ax[index].set_ylabel( sensor, color = sensor_color )
+        ax[index].set_ylabel( sensor_descriptions[ sensor ] + ' / ' + sensor_units[ sensor ], color = sensor_color )
         ax[index].axis[ yAxisPos[index][0] ].label.set_font_properties( fonts.FontProperties( weight='bold', size=13 ) )
         ax[index].yaxis.set_minor_locator( ticker.AutoMinorLocator( 5 ) ) 
         ax[index].axis[ yAxisPos[index][0] ].minor_ticks.set_color( sensor_color )

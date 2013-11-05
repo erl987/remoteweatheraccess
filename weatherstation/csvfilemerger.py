@@ -31,10 +31,7 @@ def extractdate( filename ):
     Raises:
     None
     """
-    filename = filename.upper()
-    filename = str.replace( filename, 'EXP', '' )
-    filename = str.replace( filename, '.CSV', '' )
-    splitted_id = str.split( filename, '_' )
+    splitted_id = str.split( re.search( '\d\d_\d\d', filename ).group(0), '_' )
     month = int( splitted_id[0] )
     year = int( splitted_id[1] )
 
