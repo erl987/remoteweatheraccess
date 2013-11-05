@@ -237,6 +237,9 @@ def plot_of_last_n_days( num_days, data_folder, sensors_to_plot, graph_folder, g
     ax[0].axis['bottom'].major_ticklabels.set_pad( 20 )
     ax[0].axis['bottom'].major_ticklabels.set_horizontalalignment( 'left' )
     ax[0].axis['bottom'].major_ticklabels.set_fontproperties( fonts.FontProperties( weight='bold', size=13 ) )
+
+    # Add information on last data
+    plt.text( 0.99, 0.999, 'Letzte Daten: ' + dt.strftime( times[-1], '%d.%m.%Y %H:%M' ), horizontalalignment='right', verticalalignment='bottom', transform = ax[0].transAxes, fontproperties = fonts.FontProperties( weight='bold', size=12 ) )
     plt.tight_layout()
 
     # Save plot to file
