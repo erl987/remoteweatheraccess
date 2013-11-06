@@ -110,7 +110,6 @@ def GetScalings( min_max_sensors ):
     None
     """
     delta_T = 5.0       # °C by definition
-    delta_rain = 2.0    # mm by definition
     delta_p = 5.0       # hPa by definition
 
     all_num_ticks = []
@@ -126,6 +125,16 @@ def GetScalings( min_max_sensors ):
                 max_T = curr_max_T
             all_num_ticks.append( int( ( max_T - min_T ) / delta_T + 1 ) )
         elif 'rainCounter' in key:
+            if sensor['max'] < 20:
+                delta_rain = 2.5
+            elif sensor['max'] < 40:
+                delta_rain = 5.0
+            elif sensor['max'] < 80:
+                delta_rain = 10.0
+            elif sensor['max'] < 160:
+                delta_rain = 20.0
+            else:
+                delta_rain = 50.0
             max_rain_counter = utilities.ceil_to_n( sensor['max'], delta_rain )
             all_num_ticks.append( int( ( max_rain_counter - 0 ) / delta_rain + 1 ) )
         elif 'pressure' in key:
