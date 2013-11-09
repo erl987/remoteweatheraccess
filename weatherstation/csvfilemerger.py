@@ -11,15 +11,10 @@ import os
 import os.path
 import shutil
 import re
-import sys
 from datetime import datetime as dt
 
 import pcwetterstation
 import te923ToCSVreader
-
-data_storage_folder = './data/merge_test/'
-new_data_folder = './data/merge_test/new_data/'
-temp_data_folder = './data/merge_test/new_data/temp/'
 
 
 def extractdate( filename ):
@@ -42,14 +37,21 @@ def extractdate( filename ):
     return month, year
 
 
-def main():
-    """Main function merging the data files."""
-    # Load new data files from the command line arguments
-    if ( len(sys.argv) == 1 ):
-        raise RuntimeError( 'The new files must be given as command line arguments.' )
-    new_data_file_list = sys.argv
-    new_data_file_list.pop(0)
+def merge( new_data_file_list, new_data_folder, temp_data_folder, data_storage_folder ):
+    """Merging CSV-weather data files compatible to PC-Wetterstation into the existing storage files
+    
+    Args:
+    new_data_file_list:         List of CSV-data files to be merged.
+    new_data_folder:            Path to the folder where the new data files are stored.
+    temp_data_folder:           Path to the folder where the merger can store temporary files (must be different to the 'new_data_folder' and the 'data_storage_folder'.
+    data_storage_folder:        Path to the folder where the storage (database-like) CSV-files are stored.
 
+    Returns:
+    None
+
+    Raises:
+    None
+    """
     # Load all new data and write it to temporary monthly files
     new_data =  []
     for file in new_data_file_list:
@@ -72,7 +74,3 @@ def main():
 
     # Delete the processed monthly data files in the new data folder
     pcwetterstation.deletedatafiles( temp_data_folder, new_monthly_file_list )
-
-
-if __name__ == "__main__":
-    main()

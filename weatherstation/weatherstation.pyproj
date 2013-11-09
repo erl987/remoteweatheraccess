@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{b068adb5-3853-469d-ace6-d55368b7e486}</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>csvfilemerger.py</StartupFile>
+    <StartupFile>te923ToCSV.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -13,7 +13,8 @@
     <Name>weatherstation</Name>
     <RootNamespace>weatherstation</RootNamespace>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>261013_1714_EXP10_13.CSV</CommandLineArguments>
+    <CommandLineArguments>
+    </CommandLineArguments>
     <InterpreterPath />
     <InterpreterArguments />
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
@@ -29,19 +30,20 @@
   <ItemGroup>
     <Compile Include="constants.py" />
     <Compile Include="csvfilemerger.py" />
-    <Compile Include="generate_weathergraphs.py" />
     <Compile Include="graphs.py" />
     <Compile Include="graphs_test.py" />
     <Compile Include="lastdata.py" />
     <Compile Include="pcwetterstation.py" />
     <Compile Include="pcwetterstation_test.py" />
     <Compile Include="server.py" />
+    <Compile Include="serverdata.py" />
     <Compile Include="stationdata.py" />
     <Compile Include="te923ToCSV.py" />
     <Compile Include="te923ToCSVreader.py" />
     <Compile Include="te923ToCSVreader_test.py" />
     <Compile Include="utilities.py" />
     <Compile Include="te923station.py" />
+    <Compile Include="weatherserver.py" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

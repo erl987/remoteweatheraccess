@@ -109,7 +109,7 @@ def GetScalings( min_max_sensors ):
     Raises:
     None
     """
-    delta_T = 5.0       # °C by definition
+    delta_T = 5.0       # degree C by definition
     delta_p = 5.0       # hPa by definition
 
     all_num_ticks = []
@@ -150,7 +150,7 @@ def GetScalings( min_max_sensors ):
     min_max_axis = dict()
     for key, sensor in min_max_sensors.items():
         if 'temp' in key:
-            # temperature minimum is always the next lower temperature dividable by 5 °C (already calculated)
+            # temperature minimum is always the next lower temperature dividable by 5 degree C (already calculated)
             max_T = min_T + delta_T * ( num_ticks - 1 )
             min_max_axis[key] = { 'min' : min_T, 'max' : max_T };
         elif 'humid' in key:
