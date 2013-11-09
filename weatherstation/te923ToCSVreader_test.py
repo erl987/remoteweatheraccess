@@ -39,6 +39,7 @@ station_height = 100.0
 storage_interval = 10.0
 ftp_passwd = 'weatherstation#10'
 ftp_server = 'h1864277.stratoserver.net' 
+ftp_folder = 'newData'
 settings_file_name = 'settings_TES.dat' # TODO: no ideal solution!!!!!!
 
 
@@ -68,7 +69,7 @@ class TestProcessToCSV(unittest.TestCase):
                                               [ str( int( time_last + 2 * storage_interval * 60 ) ), '15.00', '63', '14.50','87', 'i','i','i','i','i','i','i','i', '1017.1', 'i', 0, 0, 'i','i', 'i', 'i', 906 ],
                                               [ str( int( time_last + 3 * storage_interval * 60 ) ), '10.00', '63', '14.50','87', 'i','i','i','i','i','i','i','i', '1017.1', 'i', 0, 0, 'i','i', 'i', 'i', 906 ] ] )
         SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last ) + 3.2 * timedelta( minutes = storage_interval ) )
-        te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name, log_file_name )
+        te923ToCSVreader.te923ToCSVreader( data_folder, ftp_folder, station_data_file_name, log_file_name )
         # TODO: implement useful assert
 
 
@@ -83,7 +84,7 @@ class TestProcessToCSV(unittest.TestCase):
         # Simulate reading of weather data
         te923station.readdata = Mock( return_value = [ [ str( int( time_last + 1 * storage_interval * 60 ) ), '21.75', '51', '7.30', '92', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1016.4', '3.4', '5', '0', '13', '15.2', '23.2', '5.2', '882' ] ] )
         SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last) + 1.2 * timedelta( minutes = storage_interval ) )
-        te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name, log_file_name )
+        te923ToCSVreader.te923ToCSVreader( data_folder, ftp_folder, station_data_file_name, log_file_name )
         # TODO: implement useful assert
 
 
@@ -99,7 +100,7 @@ class TestProcessToCSV(unittest.TestCase):
         # Simulate reading of weather data
         te923station.readdata = Mock( return_value = [] )
         SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last ) + 0.8 * timedelta( minutes = storage_interval ) )
-        te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name, log_file_name )
+        te923ToCSVreader.te923ToCSVreader( data_folder, ftp_folder, station_data_file_name, log_file_name )
         
         # Check if the last stored dataset remained unchanged
         read_last_old_time, read_last_old_rain_counter = lastdata.read( data_folder + settings_file_name )
@@ -121,7 +122,7 @@ class TestProcessToCSV(unittest.TestCase):
                                             [ str( int( time_last + 2 * storage_interval * 60 ) ), '22.34',' 59', '8.30', '91', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1014.4', '2.1', '5', '0', '1', '7.8', '20.9', '23.4', '900' ],
                                             [ str( int( time_last + 3 * storage_interval * 60 ) ), '21.32', '62', '6.30', '95', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1012.4', '6.4', '5', '0', '15', '43.5', '3.4', '2.1', '920'] ] )
         SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last ) + 3.8 * timedelta( minutes = storage_interval ) )
-        te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name, log_file_name )
+        te923ToCSVreader.te923ToCSVreader( data_folder, ftp_folder, station_data_file_name, log_file_name )
         # TODO: implement useful assert
 
 
@@ -139,7 +140,7 @@ class TestProcessToCSV(unittest.TestCase):
                                             [ str( int( time_last + 3 * storage_interval * 60 ) ), '22.34',' 59', '8.30', '91', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1014.4', '2.1', '5', '0', '1', '7.8', '20.9', '23.4', '886' ],
                                             [ str( int( time_last + 4 * storage_interval * 60 ) ), '21.32', '62', '6.30', '95', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1012.4', '6.4', '5', '0', '15', '43.5', '3.4', '2.1', '887'] ] )
         SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last ) + 4.2 * timedelta( minutes = storage_interval ) )
-        te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name, log_file_name )
+        te923ToCSVreader.te923ToCSVreader( data_folder, ftp_folder, station_data_file_name, log_file_name )
         # TODO: implement useful assert
 
 

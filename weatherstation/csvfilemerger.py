@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/opt/python3.3/bin/python3.3
 """Merging all PC-Wetterstation CSV-files in a folder into the monthly files.
 Functions:
 extractdate:                    Extracting the month and the year of the file data from the file name.
@@ -11,11 +11,15 @@ import os
 import os.path
 import shutil
 import re
+import sys
+from datetime import datetime as dt
 
 import pcwetterstation
 import te923ToCSVreader
 
-data_folder = './data/merge_test/'
+data_storage_folder = './data/merge_test/'
+new_data_folder = './data/merge_test/new_data/'
+temp_data_folder = './data/merge_test/new_data/temp/'
 
 
 def extractdate( filename ):
@@ -40,43 +44,34 @@ def extractdate( filename ):
 
 def main():
     """Main function merging the data files."""
-    # Find all weather data files potentially compatible to PC-Wetterstation
-    file_list = pcwetterstation.finddatafiles( data_folder )
+    # Load new data files from the command line arguments
+    if ( len(sys.argv) == 1 ):
+        raise RuntimeError( 'The new files must be given as command line arguments.' )
+    new_data_file_list = sys.argv
+    new_data_file_list.pop(0)
 
-    # Find all monthly data files
-    monthly_file_list = []
-    for file in file_list:
-        pcwetterstation_id = re.search( 'EXP\d\d_\d\d.CSV', file.upper() )
-        if pcwetterstation_id is not None:
-            if len( str.replace( file.upper(), pcwetterstation_id.group(0), '' ) ) == 0:
-                monthly_file_list.append( file ) 
-            
-    # Delete all monthly files from the list
-    file_list = [ x for x in file_list if not x in monthly_file_list ]        
+    # Load all new data and write it to temporary monthly files
+    new_data =  []
+    for file in new_data_file_list:
+        curr_data, rain_calib_factor, rain_counter_base, station_name, station_height, station_type, sensor_descriptions_dict, sensor_units_dict = pcwetterstation.read( new_data_folder, file, te923ToCSVreader.sensor_list )
+        new_data = new_data + curr_data
+    
+    pcwetterstation.write( temp_data_folder, rain_calib_factor, station_name, station_height, station_type, new_data, te923ToCSVreader.sensor_list )
 
-    # Analyse all files for their month of validity
-    analyzed_file_list = []
-    months_set = set()
-    for file in file_list:
-        pcwetterstation_id = re.search( 'EXP\d\d_\d\d.CSV', file.upper() )
-        month, year = extractdate( pcwetterstation_id.group(0) )
-        analyzed_file_list.append( ( ( month, year ), file ) )
-        months_set.add( ( month, year ) )
+    # Delete the read new data files
+    pcwetterstation.deletedatafiles( new_data_folder, new_data_file_list )
 
-        # Copy the first file to generate a monthly file if it is not yet existing
-        total_month_file = 'EXP%02i_%02i.csv' % ( month, year )
-        if not os.path.exists( data_folder + '/' + total_month_file ):
-            shutil.copyfile( data_folder + '/' + file, data_folder + '/' + total_month_file )
+    # Merge the monthly data files with those in the storage folder
+    new_monthly_file_list = pcwetterstation.finddatafiles( temp_data_folder )
+    existing_monthly_file_list = pcwetterstation.finddatafiles( data_storage_folder )
+    for file in new_monthly_file_list:
+        if not os.path.exists( data_storage_folder + '/' + file ):
+            shutil.copyfile( temp_data_folder + '/' + file, data_storage_folder + '/' + file )
+        else:
+            pcwetterstation.merge( data_storage_folder, temp_data_folder, file, data_storage_folder, file, te923ToCSVreader.sensor_list ) 
 
-    # merge all new data files into the monthly files
-    for month in months_set:
-        total_month_file = 'EXP%02i_%02i.csv' % month
-        for file in analyzed_file_list:
-            if ( file[0] == month ):
-                pcwetterstation.merge( data_folder, file[1], total_month_file, te923ToCSVreader.sensor_list )      
-
-    # Delete the processed new data files
-    pcwetterstation.deletedatafiles( data_folder, file_list )
+    # Delete the processed monthly data files in the new data folder
+    pcwetterstation.deletedatafiles( temp_data_folder, new_monthly_file_list )
 
 
 if __name__ == "__main__":

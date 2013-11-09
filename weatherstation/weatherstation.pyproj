@@ -5,13 +5,18 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{b068adb5-3853-469d-ace6-d55368b7e486}</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>generate_weathergraphs.py</StartupFile>
+    <StartupFile>csvfilemerger.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>weatherstation</Name>
     <RootNamespace>weatherstation</RootNamespace>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <CommandLineArguments>261013_1714_EXP10_13.CSV</CommandLineArguments>
+    <InterpreterPath />
+    <InterpreterArguments />
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>

@@ -29,7 +29,7 @@ class Test_pcwetterstation(unittest.TestCase):
     def test_merge(self):
         test_file_name_1 = '1_EXP10_13.csv'
         test_file_name_2 = '2_EXP10_13.csv'
-        merged_files = pcwetterstation.merge( data_folder, test_file_name_1, test_file_name_2, te923ToCSVreader.sensor_list )
+        merged_files = pcwetterstation.merge( data_folder, data_folder, test_file_name_1, data_folder, test_file_name_2, te923ToCSVreader.sensor_list )
 
 
     def tearDown(self):

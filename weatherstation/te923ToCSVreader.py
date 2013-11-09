@@ -42,7 +42,7 @@ sensor_list = OrderedDict( [
     ] )
 
 
-def te923ToCSVreader(data_folder, station_data_file_name, log_file_name):
+def te923ToCSVreader(data_folder, ftp_folder, station_data_file_name, log_file_name):
     firstNewDataIndex = 0
 
     # Start the logger
@@ -83,7 +83,7 @@ def te923ToCSVreader(data_folder, station_data_file_name, log_file_name):
             # Transfer all CSV-files to the server
             data_file_list = pcwetterstation.finddatafiles( data_folder )
             try:
-                server.transferto( ftp_server, station_name, ftp_passwd, data_folder, data_file_list )
+                server.transferto( ftp_server, station_name, ftp_passwd, ftp_folder, data_folder, data_file_list )
                 isSuccessfullTransfer = True;
             except Exception:
                 isSuccessfullTransfer = False;

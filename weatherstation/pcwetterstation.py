@@ -261,7 +261,7 @@ def deletedatafiles(data_folder, data_file_list):
     FileNotFoundError:          Risen if the data folder is not existing.
     """
     for data_file in data_file_list:
-        os.remove( data_folder + data_file )
+        os.remove( data_folder + '/' + data_file )
 
 
 def read( data_folder, file_name, sensor_list ):
@@ -367,12 +367,14 @@ def read( data_folder, file_name, sensor_list ):
     return data, rain_calib_factor, rain_counter_base, station_name, station_height, station_type, sensor_descriptions_dict, sensor_units_dict
 
 
-def merge( data_folder, input_file_name_1, input_file_name_2, sensor_list ):
+def merge( out_data_folder, in_data_folder_1, input_file_name_1, in_data_folder_2, input_file_name_2, sensor_list ):
     """Merges two CSV-files compatible to PC-Wetterstation.
     
     Args:
-    data_folder:                Folder where the CSV-file for PC-Wetterstation is be stored. It must be given relative to the current path.
+    out_data_folder:            Folder where the merged CSV-file for PC-Wetterstation is be stored. It must be given relative to the current path.
+    in_data_folder_1:           Folder of the first input CSV-file to be merged.
     input_file_name_1:          Name of the first input CSV-file to be merged, there are no requirements regarding the name.
+    in_data_folder_2:           Folder of the second input CSV-file to be merged.
     input_file_name_2:          Name of the second input CSV-file to be merged, there are no requirements regarding the name.
     sensor_list:                Ordered dict containing the mapping of all sensors to the index of the sensor in the weatherstation and the software PC-Wetterstation,
                                 the name and the units of the sensors. The keys must be identical to that used in the 'export_data'.  
@@ -386,8 +388,8 @@ def merge( data_folder, input_file_name_1, input_file_name_2, sensor_list ):
     ImportError:                A file is not compatible to PC-Wetterstation or the files are inconsistent regarding sensor types or units.
     """
     # Import data files
-    data_1, rain_calib_factor_1, rain_counter_base_1, station_name_1, station_height_1, station_type_1, sensor_descriptions_dict_1, sensor_units_dict_1 = read( data_folder, input_file_name_1, sensor_list )
-    data_2, rain_calib_factor_2, rain_counter_base_2, station_name_2, station_height_2, station_type_2, sensor_descriptions_dict_2, sensor_units_dict_2 = read( data_folder, input_file_name_2, sensor_list )
+    data_1, rain_calib_factor_1, rain_counter_base_1, station_name_1, station_height_1, station_type_1, sensor_descriptions_dict_1, sensor_units_dict_1 = read( in_data_folder_1, input_file_name_1, sensor_list )
+    data_2, rain_calib_factor_2, rain_counter_base_2, station_name_2, station_height_2, station_type_2, sensor_descriptions_dict_2, sensor_units_dict_2 = read( in_data_folder_2, input_file_name_2, sensor_list )
 
     # Check if the files are from the identical station (the rain counter base does not need to be identical)
     if rain_calib_factor_1 != rain_calib_factor_2 or station_name_1 != station_name_2 or station_height_1 != station_height_2 or station_type_1 != station_type_2 or sensor_descriptions_dict_1 != sensor_descriptions_dict_2 or sensor_units_dict_1 != sensor_units_dict_2:
@@ -404,6 +406,6 @@ def merge( data_folder, input_file_name_1, input_file_name_2, sensor_list ):
             seen_times.append( line['date'] + ' ' + line['time'] )
 
     # Write merged data in data files (one for each month)
-    output_data_file_list = write( data_folder, rain_calib_factor_1, station_name_1, station_height_1, station_type_1, unique_merged_data, sensor_list )
+    output_data_file_list = write( out_data_folder, rain_calib_factor_1, station_name_1, station_height_1, station_type_1, unique_merged_data, sensor_list )
 
     return output_data_file_list
