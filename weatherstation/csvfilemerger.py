@@ -47,7 +47,9 @@ def merge( new_data_file_list, new_data_folder, temp_data_folder, data_storage_f
     data_storage_folder:        Path to the folder where the storage (database-like) CSV-files are stored.
 
     Returns:
-    None
+    num_new_datasets:           Number of the new datasets merged into the existing data
+    first_time:                 Timepoint of the first merged new dataset (datetime-object)
+    last_time:                  Timepoint of the last merged new dataset (datetime-object)
 
     Raises:
     None
@@ -58,7 +60,7 @@ def merge( new_data_file_list, new_data_folder, temp_data_folder, data_storage_f
         curr_data, rain_calib_factor, rain_counter_base, station_name, station_height, station_type, sensor_descriptions_dict, sensor_units_dict = pcwetterstation.read( new_data_folder, file, te923ToCSVreader.sensor_list )
         new_data = new_data + curr_data
     
-    pcwetterstation.write( temp_data_folder, rain_calib_factor, station_name, station_height, station_type, new_data, te923ToCSVreader.sensor_list )
+    written_file_list, num_new_datasets, first_time, last_time = pcwetterstation.write( temp_data_folder, rain_calib_factor, station_name, station_height, station_type, new_data, te923ToCSVreader.sensor_list )
 
     # Delete the read new data files
     pcwetterstation.deletedatafiles( new_data_folder, new_data_file_list )
@@ -74,3 +76,5 @@ def merge( new_data_file_list, new_data_folder, temp_data_folder, data_storage_f
 
     # Delete the processed monthly data files in the new data folder
     pcwetterstation.deletedatafiles( temp_data_folder, new_monthly_file_list )
+
+    return num_new_datasets, first_time, last_time

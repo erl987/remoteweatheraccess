@@ -14,6 +14,7 @@ import matplotlib.dates as mdates
 import matplotlib.ticker as ticker
 import matplotlib.font_manager as fonts
 import numpy as np
+import datetime
 from datetime import datetime as dt
 from datetime import timedelta
 import re
@@ -183,7 +184,9 @@ def plot_of_last_n_days( num_days, data_folder, sensors_to_plot, graph_folder, g
     is_save_to_fig:             Flag stating if the graph will be written to file (True) or to a GUI (False)
     
     Returns:                             
-    None
+    num_plot_datasets:          Number of datasets plotted
+    first_plot_time:            Timepoint of the beginning of the plotted dataset
+    last_plot_time:             Timepoint of the end of the plotted dataset
                                 
     Raises:
     None
@@ -256,3 +259,13 @@ def plot_of_last_n_days( num_days, data_folder, sensors_to_plot, graph_folder, g
         plt.savefig( graph_folder + '/' + graph_file_name )
     else:
         plt.show()
+
+    # Set return data
+    if len( times ) > 0:
+        first_plot_time =  times[0]
+        last_plot_time = times[-1]
+    else:
+        first_plot_time = dt( datetime.MINYEAR, 1, 1, 0, 0, 0, 0 )
+        last_plot_time = dt( datetime.MINYEAR, 1, 1, 0, 0, 0, 0 )
+
+    return len( times ), first_plot_time, last_plot_time

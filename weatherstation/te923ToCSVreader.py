@@ -76,16 +76,16 @@ def te923ToCSVreader(data_folder, ftp_folder, station_data_file_name, log_file_n
   
             # Write weather data to PC-Wetterstation CSV-files
             export_data, last_dataset_time, last_dataset_rain_counter = pcwetterstation.convertTo( imported_data, last_read_dataset_raincounter, sensor_list )
-            pcwetterstation.write( data_folder, rain_calib_factor, station_name, station_height, station_type, export_data, sensor_list )
-            logging.info( 'Found %i new weather datasets from %s - %s', len( export_data ), 
-                         ( last_read_dataset_time + timedelta( minutes = storage_interval) ).strftime('%d.%m.%Y %H:%M'), last_dataset_time.strftime('%d.%m.%Y %H:%M') )
+            new_data_file_list, num_new_datasets, first_time, last_time = pcwetterstation.write( data_folder, rain_calib_factor, station_name, station_height, station_type, export_data, sensor_list )
+            logging.info( 'Found %i new weather datasets from %s - %s', num_new_datasets, first_time.strftime('%d.%m.%Y %H:%M'), last_time.strftime('%d.%m.%Y %H:%M') )
 
             # Transfer all CSV-files to the server
             data_file_list = pcwetterstation.finddatafiles( data_folder )
             try:
                 server.transferto( ftp_server, station_name, ftp_passwd, ftp_folder, data_folder, data_file_list )
                 isSuccessfullTransfer = True;
-            except Exception:
+            except Exception as e:
+                error_text = repr( e )
                 isSuccessfullTransfer = False;
 
             # Delete the CSV-files in any situation
@@ -96,7 +96,7 @@ def te923ToCSVreader(data_folder, ftp_folder, station_data_file_name, log_file_n
                 lastdata.write( data_folder + settings_file_name, last_dataset_time, last_dataset_rain_counter )
                 logging.info( 'Weather data was successfully transfered to FTP-server \'%s\' (user: \'%s\')', ftp_server, station_name )
             else:
-                logging.error( 'Weather data transfer to FTP-server \'%s\' (user: \'%s\') failed. Read weather data was discarded', ftp_server, station_name )
+                logging.error( 'Weather data transfer to FTP-server \'%s\' (user: \'%s\') failed. Read weather data was discarded. Error description: %s.', ftp_server, station_name, error_text )
         else:
             logging.info( 'No weather data found which was unprocessed' )
 

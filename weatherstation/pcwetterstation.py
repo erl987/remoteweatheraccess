@@ -11,6 +11,7 @@ deletedatafiles:                Deletes all given files from a given folder.
 """
 import csv
 import os
+import datetime
 from datetime import datetime as dt
 from collections import OrderedDict
 
@@ -48,14 +49,18 @@ def write( data_folder, rain_calib_factor, station_name, station_height, station
 
     Returns:
     file_list:                  List containing the names of all written files
+    num_new_datasets:           Number of the new datasets merged into the existing data
+    first_time:                 Timepoint of the first merged new dataset (datetime-object)
+    last_time:                  Timepoint of the last merged new dataset (datetime-object)
 
     Raises:
     IOError:                    An error occurred accessing the file.
     """
     getmonth = lambda x: dt.strptime( x['date'], '%d.%m.%Y' )
+    getdate = lambda k: dt.strptime( k['date'] + ' ' + k['time'], '%d.%m.%Y %H:%M')
     
     # determine the months existing in the data
-    export_data = sorted( export_data, key = lambda k: dt.strptime( k['date'] + ' ' + k['time'], '%d.%m.%Y %H:%M') )
+    export_data = sorted( export_data, key = getdate )
     months_set = { ( getmonth(x).month, getmonth(x).year ) for x in export_data }
     
     # write the data separately for each month into a file
@@ -64,7 +69,14 @@ def write( data_folder, rain_calib_factor, station_name, station_height, station
         monthly_export_data = [ x for x in export_data if ( getmonth(x).month == curr_month[0] and getmonth(x).year == curr_month[1] ) ]
         file_list.append( writesinglemonth( data_folder, rain_calib_factor, station_name, station_height, station_type, monthly_export_data, sensor_list ) )
 
-    return file_list
+    if len( export_data ) > 0:
+        first_time = getdate( export_data[0] )
+        last_time = getdate( export_data[-1] )
+    else:
+        first_time = dt( datetime.MINYEAR, 1, 1, 0, 0, 0, 0 )
+        last_time = dt( datetime.MINYEAR, 1, 1, 0, 0, 0, 0 )
+
+    return file_list, len( export_data ), first_time, last_time
 
 
 def writesinglemonth( data_folder, rain_calib_factor, station_name, station_height, station_type, export_data, sensor_list ):

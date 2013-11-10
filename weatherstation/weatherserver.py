@@ -9,13 +9,14 @@ server_data_file_name:          Name of the server configuration file. It must b
 import locale
 import sys
 import os.path
+import syslog
 
 import csvfilemerger
 import graphs
 import serverdata
 
 
-server_data_file_name = '/home/ernbg/csvfilemerger/serverdata.dat'
+server_data_file_name = '/opt/weatherstation/configData/serverdata.dat'
 
 
 def main():
@@ -28,13 +29,17 @@ def main():
     Calling this program multiple while another instance of it is still processing data on a certain folder may lead to race conditions and must be prevented by the user.    
 
     Raises:
-    RuntimeError:               Risen if the command-line parameters are not correct.
+    None
     """
     # Load new data files from the command line arguments
     if ( len(sys.argv) == 1 ):
-        raise RuntimeError( 'The new files must be given as command line arguments.' )
+        syslog.syslog( syslog.LOG_ERR, 'Starting via command line: No data files were passed.' )
+        return
     input_list = sys.argv
-    input_list.pop(0)   # remove script name
+    script_name = input_list.pop(0)   # remove script name
+
+    # Initiate looger
+    syslog.openlog( ident = script_name )
 
     # Read server configuration data
     data_storage_folder, new_data_folder, temp_data_folder, graph_folder, graph_file_name, sensors_to_plot = serverdata.read( server_data_file_name )
@@ -45,7 +50,8 @@ def main():
     new_dir_set = { str.replace( path, new_data_folder, '' ) for path in new_dir_set }
     new_dir_set = { os.path.dirname( path ) for path in new_dir_set }
     if ( len( new_dir_set ) > 1 ):
-        raise RuntimeError( 'The files given via command line must be from one single station.' )
+        syslog.syslog( syslog.LOG_ERR, 'Starting via command line: Data from more than one station was passed.' )
+        return
     station_name = os.path.basename( new_dir_set.pop() )
 
     # Construct the directory paths for the station
@@ -55,7 +61,13 @@ def main():
     graph_folder = graph_folder + '/' + station_name
 
     # Merge the new data files into the existing storage CSV-files
-    csvfilemerger.merge( new_data_file_list, new_data_folder, temp_data_folder, data_storage_folder )
+    try:
+        num_new_datasets, first_time, last_time = csvfilemerger.merge( new_data_file_list, new_data_folder, temp_data_folder, data_storage_folder )
+        syslog.syslog( syslog.LOG_INFO, 'Merged %i new received dataset(s) (%s - %s) from the station \'%s\' (file(s): %s) into the data folder \'%s\'.' % ( num_new_datasets, 
+                     first_time.strftime('%d.%m.%Y %H:%M'), last_time.strftime('%d.%m.%Y %H:%M'), station_name, new_data_file_list, data_storage_folder ) )
+    except Exception as e:
+        syslog.syslog( syslog.LOG_ERR, 'Merging new received dataset(s) from the station \'%s\' (file(s) %s) into the folder \'%s\' failed. Error description: %s.' % ( station_name, new_data_file_list, data_storage_folder, repr(e) ) )
+        return
 
     # Set German locale
     if sys.platform == 'linux':
@@ -64,7 +76,13 @@ def main():
         locale.setlocale( locale.LC_ALL, 'german' )
 
     # Update the weather graphs in the station's folder
-    graphs.plot_of_last_n_days( 7, data_storage_folder, sensors_to_plot, graph_folder, graph_file_name, True )        
+    try:
+        num_plot_datasets, first_plot_time, last_plot_time = graphs.plot_of_last_n_days( 7, data_storage_folder, sensors_to_plot, graph_folder, graph_file_name, True )        
+        syslog.syslog( syslog.LOG_INFO, 'Plotted %i dataset(s) (%s - %s) from the station \'%s\' into the graphics file \'%s\' in the folder \'%s\'.' % ( num_plot_datasets, 
+                     first_plot_time.strftime('%d.%m.%Y %H:%M'), last_plot_time.strftime('%d.%m.%Y %H:%M'), station_name, graph_file_name, graph_folder ) )
+    except Exception as e:
+        syslog.syslog( syslog.LOG_ERR, 'Plotting the graph \'%s\' from the station \'%s\' into the plot graph folder \'%s\' with the data in \'%s\' failed. Error description: %s.' % ( graph_file_name, station_name, graph_folder, data_storage_folder, repr(e) ) )
+        return
 
     
 if __name__ == "__main__":
