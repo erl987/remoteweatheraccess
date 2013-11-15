@@ -10,6 +10,7 @@ import locale
 import sys
 import os.path
 import syslog
+from zipfile import ZipFile
 
 import csvfilemerger
 import graphs
@@ -38,14 +39,14 @@ def main():
     input_list = sys.argv
     script_name = input_list.pop(0)   # remove script name
 
-    # Initiate looger
+    # Initiate logger
     syslog.openlog( ident = script_name )
 
     # Read server configuration data
     data_storage_folder, new_data_folder, temp_data_folder, graph_folder, graph_file_name, sensors_to_plot = serverdata.read( server_data_file_name )
 
     # Determine the weather station name and the file names
-    new_data_file_list = [ os.path.basename( path ) for path in input_list ]
+    new_zip_data_file_list = [ os.path.basename( path ) for path in input_list ]
     new_dir_set = { os.path.dirname( path ) for path in input_list }
     new_dir_set = { str.replace( path, new_data_folder, '' ) for path in new_dir_set }
     new_dir_set = { os.path.dirname( path ) for path in new_dir_set }
@@ -60,14 +61,25 @@ def main():
     temp_data_folder = data_storage_folder + temp_data_folder
     graph_folder = graph_folder + '/' + station_name
 
+    # Extract data from the ZIP-file(s)
+    new_data_file_list = []
+    for file in new_zip_data_file_list:
+        with ZipFile( new_data_folder + '/' + file, 'r' ) as zip_file:
+            new_data_file_list = new_data_file_list + zip_file.namelist()
+            zip_file.extractall( temp_data_folder )
+
     # Merge the new data files into the existing storage CSV-files
     try:
-        num_new_datasets, first_time, last_time = csvfilemerger.merge( new_data_file_list, new_data_folder, temp_data_folder, data_storage_folder )
-        syslog.syslog( syslog.LOG_INFO, 'Merged %i new received dataset(s) (%s - %s) from the station \'%s\' (file(s): %s) into the data folder \'%s\'.' % ( num_new_datasets, 
-                     first_time.strftime('%d.%m.%Y %H:%M'), last_time.strftime('%d.%m.%Y %H:%M'), station_name, new_data_file_list, data_storage_folder ) )
+        num_new_datasets, first_time, last_time = csvfilemerger.merge( new_data_file_list, temp_data_folder, temp_data_folder, data_storage_folder )
+        syslog.syslog( syslog.LOG_INFO, 'Merged %i new received dataset(s) (%s - %s) from the station \'%s\' (file(s): %s -> %s) into the data folder \'%s\'.' % ( num_new_datasets, 
+                     first_time.strftime('%d.%m.%Y %H:%M'), last_time.strftime('%d.%m.%Y %H:%M'), station_name, new_zip_data_file_list, new_data_file_list, data_storage_folder ) )
     except Exception as e:
-        syslog.syslog( syslog.LOG_ERR, 'Merging new received dataset(s) from the station \'%s\' (file(s) %s) into the folder \'%s\' failed. Error description: %s.' % ( station_name, new_data_file_list, data_storage_folder, repr(e) ) )
+        syslog.syslog( syslog.LOG_ERR, 'Merging new received dataset(s) from the station \'%s\' (file(s) %s -> %s) into the folder \'%s\' failed. Error description: %s.' % ( station_name, new_zip_data_file_list, new_data_file_list, data_storage_folder, repr(e) ) )
         return
+
+    # Delete the ZIP-file(s)
+    for file in new_zip_data_file_list:
+        os.remove( new_data_folder + '/' + file )
 
     # Set German locale
     if sys.platform == 'linux':

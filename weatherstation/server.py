@@ -6,6 +6,7 @@ transferto:                 Transfers the given data files to the server.
 import os
 from datetime import datetime as dt
 from ftplib import FTP
+from zipfile import ZipFile
 
 
 def transferto(ftp_server, user_name, passwd, ftp_folder, data_folder, data_file_list):
@@ -26,16 +27,22 @@ def transferto(ftp_server, user_name, passwd, ftp_folder, data_folder, data_file
     The function will raise errors in case of network failures. See ftp-lib documentation for details depending on the type of error.
     """
     with FTP( ftp_server ) as ftp:
+        # Compress all files into a single ZIP-file
+        zip_file_name = dt.now().strftime( '%d%m%y_%H%M' ) + '_' + user_name + '.zip'
+        with ZipFile( data_folder + '/' + zip_file_name, 'w' ) as zip_file:
+            for data_file in data_file_list:
+                # generate unique file name containing the modification date of the file
+                file_timestamp = dt.fromtimestamp( os.path.getmtime( data_folder + '/' + data_file ) )
+                server_file_name = file_timestamp.strftime( '%d%m%y_%H%M' ) + "_" + data_file
+                zip_file.write( data_folder + '/' + data_file, server_file_name )
+
+        # Send single ZIP-file to the server
         ftp.login( user = user_name, passwd = passwd )
+        ftp.cwd( ftp_folder )
+        with open( data_folder + '/' + zip_file_name, 'rb' ) as f:
+            ftp.storbinary( "STOR " + zip_file_name, f )
+
+        # Delete the ZIP-file
+        os.remove( data_folder + '/' + zip_file_name )
+
         
-        for data_file in data_file_list:
-            # generate unique file name containing the modification date of the file
-            file_timestamp = dt.fromtimestamp( os.path.getmtime( data_folder + data_file ) )
-            server_file_name = file_timestamp.strftime( '%d%m%y_%H%M' ) + "_" + data_file
-
-            # change to the subfolder
-            ftp.cwd( ftp_folder )
-
-            # send file to the server
-            with open( data_folder +  data_file, 'rb' ) as f:
-                ftp.storbinary( "STOR " + server_file_name, f )

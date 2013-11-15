@@ -144,6 +144,25 @@ class TestProcessToCSV(unittest.TestCase):
         # TODO: implement useful assert
 
 
+    @patch('te923ToCSVreader.dt', SpoofDate)
+    @patch('server.dt', SpoofDate)
+    def test_two_months_read(self):
+        '''Test the behaviour in case of a month change during the reading.'''
+        time_last = 1383259782 # in seconds since epoch (CET including possible daylight saving)      
+         
+        # Generate last data file consistent to the test case
+        lastdata.write( data_folder + settings_file_name, dt.fromtimestamp( time_last ), 880 )
+
+        # Simulate reading of weather data
+        te923station.readdata = Mock( return_value = 
+                                          [ [ str( int( time_last + 1 * storage_interval * 60 ) ), '21.75', '51', '7.30', '92', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1016.4', '3.4', '5', '0', '13', '15.2', '23.2', '5.2', '882' ],
+                                            [ str( int( time_last + 2 * storage_interval * 60 ) ), '22.34',' 59', '8.30', '91', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1014.4', '2.1', '5', '0', '1', '7.8', '20.9', '23.4', '886' ],
+                                            [ str( int( time_last + 3 * storage_interval * 60 ) ), '21.32', '62', '6.30', '95', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1012.4', '6.4', '5', '0', '15', '43.5', '3.4', '2.1', '887'] ] )
+        SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last ) + 3.2 * timedelta( minutes = storage_interval ) )
+        te923ToCSVreader.te923ToCSVreader( data_folder, ftp_folder, station_data_file_name, log_file_name )
+        # TODO: implement useful assert
+
+
     def tearDown(self):
         '''Finishes each unit test.'''
         # Remove test folder and all test files

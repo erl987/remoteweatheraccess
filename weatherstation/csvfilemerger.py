@@ -43,7 +43,7 @@ def merge( new_data_file_list, new_data_folder, temp_data_folder, data_storage_f
     Args:
     new_data_file_list:         List of CSV-data files to be merged.
     new_data_folder:            Path to the folder where the new data files are stored.
-    temp_data_folder:           Path to the folder where the merger can store temporary files (must be different to the 'new_data_folder' and the 'data_storage_folder'.
+    temp_data_folder:           Path to the folder where the merger can store temporary files (must be different to the 'data_storage_folder').
     data_storage_folder:        Path to the folder where the storage (database-like) CSV-files are stored.
 
     Returns:
