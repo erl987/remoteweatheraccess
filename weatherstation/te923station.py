@@ -1,9 +1,15 @@
 """Management of TE923-weather station data transfer.
 
 Functions:
-readdata:                   Read all new data from the weatherstation.
+readdata:                       Read all new data from the weatherstation.
+
+Constants:
+weather_station_reader_path:    Path to the weather station reader tool.
 """
 import os
+
+# the weatherstation reader tool must be called using root privileges
+weather_station_reader_path = 'sudo /opt/weatherstation/te923tool-0.6.1/te923con'
 
 
 def readdata(is_read_all_datasets):
@@ -52,9 +58,9 @@ def readdata(is_read_all_datasets):
     # Call the C-program for reading the data from the weather station
     output_stream = []
     if is_read_all_datasets:
-        output_stream = os.popen( 'sudo /home/pi/weatherstation/te923tool-0.6.1/te923con -b' ) # TODO: is sudo here the best solution???
+        output_stream = os.popen( weather_station_reader_path + ' -b' )
     else:
-        output_stream = os.popen( 'sudo /home/pi/weatherstation/te923tool-0.6.1/te923con' )		# TODO: are absolute directories the best solution???
+        output_stream = os.popen( weather_station_reader_path )
 
     # check for reading errors
     if not output_stream:

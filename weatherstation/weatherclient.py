@@ -3,7 +3,7 @@ import sys
 
 import te923ToCSVreader
 
-data_folder = '/home/pi/weatherstation/data/'
+data_folder = '/opt/weatherstation/data/'
 station_data_file_name = 'stationData.dat'
 
 input_list = sys.argv

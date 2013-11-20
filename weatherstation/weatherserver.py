@@ -38,7 +38,7 @@ def main():
 
     # Initiate logger
     syslog.openlog( ident = script_name )
-    if ( len(sys.argv) == 1 ):
+    if len( input_list ) < 1:
         syslog.syslog( syslog.LOG_ERR, 'Starting via command line: No data files were passed.' )
         return
 
