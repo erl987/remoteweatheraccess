@@ -7,7 +7,7 @@ write:              Writes the storage file.
 import pickle
 
 
-def write(station_data_file_name, rain_calib_factor, station_name, station_height, storage_interval, ftp_passwd, ftp_server):
+def write(station_data_file_name, rain_calib_factor, station_name, station_height, storage_interval, ftp_passwd, ftp_server, ftp_folder):
     """Writes the data of the weather station.
 
     Args:
@@ -18,6 +18,7 @@ def write(station_data_file_name, rain_calib_factor, station_name, station_heigh
     storage_interval:       Interval of data storage at the station (in minutes).
     ftp_passwd:             Password for the FTP-server where the weather data is transferred (the user name is identical to the station name)
     ftp_server:             Address of the FTP-server where the weather data is transferred
+    ftp_folder:             Directory on the server where the data is stored
 
     Returns:
     None
@@ -27,7 +28,7 @@ def write(station_data_file_name, rain_calib_factor, station_name, station_heigh
     """
     with open( station_data_file_name, 'wb' ) as f:
         pickle.dump( dict( rain_calib_factor = rain_calib_factor, station_name = station_name, station_height = station_height, 
-                          storage_interval = storage_interval, ftp_passwd = ftp_passwd, ftp_server = ftp_server ), f )
+                          storage_interval = storage_interval, ftp_passwd = ftp_passwd, ftp_server = ftp_server, ftp_folder = ftp_folder ), f )
 
 
 def read(station_data_file_name):
@@ -43,6 +44,7 @@ def read(station_data_file_name):
     storage_interval:       Interval of data storage at the station (in minutes).
     ftp_passwd:             Password for the FTP-server where the weather data is transferred (the user name is identical to the station name)
     ftp_server:             Address of the FTP-server where the weather data is transferred
+    ftp_folder:             Directory on the server where the data is stored
 
     Raises:
     IOError:                An error occurred accessing the file.
@@ -55,5 +57,6 @@ def read(station_data_file_name):
         storage_interval = data['storage_interval']         # in min
         ftp_passwd = data['ftp_passwd']
         ftp_server = data['ftp_server']
+        ftp_folder = data['ftp_folder']
 
-        return rain_calib_factor, station_name, station_height, storage_interval, ftp_passwd, ftp_server
+        return rain_calib_factor, station_name, station_height, storage_interval, ftp_passwd, ftp_server, ftp_folder

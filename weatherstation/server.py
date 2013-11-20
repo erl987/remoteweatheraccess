@@ -21,19 +21,19 @@ def transferto(ftp_server, user_name, passwd, ftp_folder, data_folder, data_file
     data_file_list:         String list with all files in 'data_folder' to be transfered to the server.
 
     Returns:
-    None
+    zip_file_name:          Name of the temporary ZIP-file transfered to the server
 
     Raises:
     The function will raise errors in case of network failures. See ftp-lib documentation for details depending on the type of error.
     """
     with FTP( ftp_server ) as ftp:
         # Compress all files into a single ZIP-file
-        zip_file_name = dt.now().strftime( '%d%m%y_%H%M' ) + '_' + user_name + '.zip'
+        zip_file_name = dt.now().strftime( '%d%m%y_%H%M%S_%f' ) + '_' + user_name + '.zip'
         with ZipFile( data_folder + '/' + zip_file_name, 'w' ) as zip_file:
             for data_file in data_file_list:
                 # generate unique file name containing the modification date of the file
                 file_timestamp = dt.fromtimestamp( os.path.getmtime( data_folder + '/' + data_file ) )
-                server_file_name = file_timestamp.strftime( '%d%m%y_%H%M' ) + "_" + data_file
+                server_file_name = file_timestamp.strftime( '%d%m%y_%H%M%S_%f' ) + "_" + data_file
                 zip_file.write( data_folder + '/' + data_file, server_file_name )
 
         # Send single ZIP-file to the server
@@ -44,5 +44,7 @@ def transferto(ftp_server, user_name, passwd, ftp_folder, data_folder, data_file
 
         # Delete the ZIP-file
         os.remove( data_folder + '/' + zip_file_name )
+
+        return zip_file_name
 
         

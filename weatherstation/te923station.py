@@ -51,10 +51,10 @@ def readdata(is_read_all_datasets):
     """
     # Call the C-program for reading the data from the weather station
     output_stream = []
-    if ( is_read_all_datasets ):
+    if is_read_all_datasets:
         output_stream = os.popen( 'sudo /home/pi/weatherstation/te923tool-0.6.1/te923con -b' ) # TODO: is sudo here the best solution???
     else:
-        ouptut_stream = os.popen( 'sudo /home/pi/weatherstation/te923tool-0.6.1/te923con' )		# TODO: are absolute directories the best solution???
+        output_stream = os.popen( 'sudo /home/pi/weatherstation/te923tool-0.6.1/te923con' )		# TODO: are absolute directories the best solution???
 
     # check for reading errors
     if not output_stream:

@@ -14,6 +14,9 @@ rain_calib_factor:              Rain calibration factor of the test station. Dum
 station_name:                   Name of the test weather station. Dummy value.
 station_height:                 Height of the test weather station (in meters). Dummy value
 storage_interval:               Storage interval of the test weather station (in minutes)
+ftp_passwd:                     Password for the FTP-server
+ftp_server:                     Name of the FTP-server where the data is transfered to
+ftp_folder:                     Directory on the FTP-server where the data is stored
 settings_file_name:             Name of the settings file name in the test data folder
 """
 import unittest
@@ -32,7 +35,6 @@ import te923station
 
 data_folder = './test_data/'
 station_data_file_name = 'stationData.dat'
-log_file_name = 'test.log'
 rain_calib_factor = 1.0
 station_name = 'TES'
 station_height = 100.0
@@ -56,7 +58,7 @@ class TestProcessToCSV(unittest.TestCase):
         os.makedirs( data_folder, exist_ok = True )
 
         # Generate station data file
-        stationdata.write( data_folder + station_data_file_name, rain_calib_factor, station_name, station_height, storage_interval, ftp_passwd, ftp_server )
+        stationdata.write( data_folder + station_data_file_name, rain_calib_factor, station_name, station_height, storage_interval, ftp_passwd, ftp_server, ftp_folder )
 
 
     @patch('te923ToCSVreader.dt', SpoofDate)
@@ -69,7 +71,7 @@ class TestProcessToCSV(unittest.TestCase):
                                               [ str( int( time_last + 2 * storage_interval * 60 ) ), '15.00', '63', '14.50','87', 'i','i','i','i','i','i','i','i', '1017.1', 'i', 0, 0, 'i','i', 'i', 'i', 906 ],
                                               [ str( int( time_last + 3 * storage_interval * 60 ) ), '10.00', '63', '14.50','87', 'i','i','i','i','i','i','i','i', '1017.1', 'i', 0, 0, 'i','i', 'i', 'i', 906 ] ] )
         SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last ) + 3.2 * timedelta( minutes = storage_interval ) )
-        te923ToCSVreader.te923ToCSVreader( data_folder, ftp_folder, station_data_file_name, log_file_name )
+        te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name, 'testScript' )
         # TODO: implement useful assert
 
 
@@ -84,7 +86,7 @@ class TestProcessToCSV(unittest.TestCase):
         # Simulate reading of weather data
         te923station.readdata = Mock( return_value = [ [ str( int( time_last + 1 * storage_interval * 60 ) ), '21.75', '51', '7.30', '92', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1016.4', '3.4', '5', '0', '13', '15.2', '23.2', '5.2', '882' ] ] )
         SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last) + 1.2 * timedelta( minutes = storage_interval ) )
-        te923ToCSVreader.te923ToCSVreader( data_folder, ftp_folder, station_data_file_name, log_file_name )
+        te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name, 'testScript' )
         # TODO: implement useful assert
 
 
@@ -100,12 +102,14 @@ class TestProcessToCSV(unittest.TestCase):
         # Simulate reading of weather data
         te923station.readdata = Mock( return_value = [] )
         SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last ) + 0.8 * timedelta( minutes = storage_interval ) )
-        te923ToCSVreader.te923ToCSVreader( data_folder, ftp_folder, station_data_file_name, log_file_name )
+        with self.assertRaises(SystemExit):
+            te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name, 'testScript' )
         
         # Check if the last stored dataset remained unchanged
-        read_last_old_time, read_last_old_rain_counter = lastdata.read( data_folder + settings_file_name )
+        is_reading, read_last_old_time, read_last_old_rain_counter = lastdata.read( data_folder + settings_file_name )
         self.assertEqual( read_last_old_time, dt.fromtimestamp( time_last ) )
-        self.assertEqual( read_last_old_rain_counter, set_last_old_rain_counter, log_file_name )
+        self.assertEqual( read_last_old_rain_counter, set_last_old_rain_counter )
+        self.assertFalse( is_reading )
 
 
     @patch('te923ToCSVreader.dt', SpoofDate)
@@ -122,7 +126,7 @@ class TestProcessToCSV(unittest.TestCase):
                                             [ str( int( time_last + 2 * storage_interval * 60 ) ), '22.34',' 59', '8.30', '91', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1014.4', '2.1', '5', '0', '1', '7.8', '20.9', '23.4', '900' ],
                                             [ str( int( time_last + 3 * storage_interval * 60 ) ), '21.32', '62', '6.30', '95', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1012.4', '6.4', '5', '0', '15', '43.5', '3.4', '2.1', '920'] ] )
         SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last ) + 3.8 * timedelta( minutes = storage_interval ) )
-        te923ToCSVreader.te923ToCSVreader( data_folder, ftp_folder, station_data_file_name, log_file_name )
+        te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name, 'testScript' )
         # TODO: implement useful assert
 
 
@@ -140,7 +144,7 @@ class TestProcessToCSV(unittest.TestCase):
                                             [ str( int( time_last + 3 * storage_interval * 60 ) ), '22.34',' 59', '8.30', '91', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1014.4', '2.1', '5', '0', '1', '7.8', '20.9', '23.4', '886' ],
                                             [ str( int( time_last + 4 * storage_interval * 60 ) ), '21.32', '62', '6.30', '95', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1012.4', '6.4', '5', '0', '15', '43.5', '3.4', '2.1', '887'] ] )
         SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last ) + 4.2 * timedelta( minutes = storage_interval ) )
-        te923ToCSVreader.te923ToCSVreader( data_folder, ftp_folder, station_data_file_name, log_file_name )
+        te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name, 'testScript' )
         # TODO: implement useful assert
 
 
@@ -159,7 +163,7 @@ class TestProcessToCSV(unittest.TestCase):
                                             [ str( int( time_last + 2 * storage_interval * 60 ) ), '22.34',' 59', '8.30', '91', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1014.4', '2.1', '5', '0', '1', '7.8', '20.9', '23.4', '886' ],
                                             [ str( int( time_last + 3 * storage_interval * 60 ) ), '21.32', '62', '6.30', '95', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', '1012.4', '6.4', '5', '0', '15', '43.5', '3.4', '2.1', '887'] ] )
         SpoofDate.now = classmethod( lambda cls : dt.fromtimestamp( time_last ) + 3.2 * timedelta( minutes = storage_interval ) )
-        te923ToCSVreader.te923ToCSVreader( data_folder, ftp_folder, station_data_file_name, log_file_name )
+        te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name, 'testScript' )
         # TODO: implement useful assert
 
 

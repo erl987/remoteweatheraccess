@@ -33,14 +33,14 @@ def main():
     None
     """
     # Load new data files from the command line arguments
-    if ( len(sys.argv) == 1 ):
-        syslog.syslog( syslog.LOG_ERR, 'Starting via command line: No data files were passed.' )
-        return
     input_list = sys.argv
     script_name = input_list.pop(0)   # remove script name
 
     # Initiate logger
     syslog.openlog( ident = script_name )
+    if ( len(sys.argv) == 1 ):
+        syslog.syslog( syslog.LOG_ERR, 'Starting via command line: No data files were passed.' )
+        return
 
     # Read server configuration data
     data_storage_folder, new_data_folder, temp_data_folder, graph_folder, graph_file_name, sensors_to_plot = serverdata.read( server_data_file_name )
