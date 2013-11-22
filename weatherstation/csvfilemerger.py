@@ -72,7 +72,8 @@ def merge( new_data_file_list, new_data_folder, temp_data_folder, data_storage_f
         if not os.path.exists( data_storage_folder + '/' + file ):
             shutil.copyfile( temp_data_folder + '/' + file, data_storage_folder + '/' + file )
         else:
-            pcwetterstation.merge( data_storage_folder, temp_data_folder, file, data_storage_folder, file, te923ToCSVreader.sensor_list ) 
+            # Only the data which is newer than the already stored data will be merged
+            pcwetterstation.merge( data_storage_folder, data_storage_folder, file, temp_data_folder, file, te923ToCSVreader.sensor_list, True ) 
 
     # Delete the processed monthly data files in the new data folder
     pcwetterstation.deletedatafiles( temp_data_folder, new_monthly_file_list )

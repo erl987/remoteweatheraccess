@@ -379,7 +379,7 @@ def read( data_folder, file_name, sensor_list ):
     return data, rain_calib_factor, rain_counter_base, station_name, station_height, station_type, sensor_descriptions_dict, sensor_units_dict
 
 
-def merge( out_data_folder, in_data_folder_1, input_file_name_1, in_data_folder_2, input_file_name_2, sensor_list ):
+def merge( out_data_folder, in_data_folder_1, input_file_name_1, in_data_folder_2, input_file_name_2, sensor_list, is_merge_only_new_data ):
     """Merges two CSV-files compatible to PC-Wetterstation.
     
     Args:
@@ -390,6 +390,7 @@ def merge( out_data_folder, in_data_folder_1, input_file_name_1, in_data_folder_
     input_file_name_2:          Name of the second input CSV-file to be merged, there are no requirements regarding the name.
     sensor_list:                Ordered dict containing the mapping of all sensors to the index of the sensor in the weatherstation and the software PC-Wetterstation,
                                 the name and the units of the sensors. The keys must be identical to that used in the 'export_data'.  
+    is_merge_only_new_data:     Flag stating if only data in file 2 which is newer than the last entry in file 1 will be considered during the merging.
     
     Returns:                             
     output_data_file_list:      List containing all output files written. They are automatically named following the specification: 'EXP_MM_YY.csv'.
@@ -399,6 +400,8 @@ def merge( out_data_folder, in_data_folder_1, input_file_name_1, in_data_folder_
     IOError:                    A file could not be opened.
     ImportError:                A file is not compatible to PC-Wetterstation or the files are inconsistent regarding sensor types or units.
     """
+    getdate = lambda k: dt.strptime( k['date'] + ' ' + k['time'], '%d.%m.%Y %H:%M')
+
     # Import data files
     data_1, rain_calib_factor_1, rain_counter_base_1, station_name_1, station_height_1, station_type_1, sensor_descriptions_dict_1, sensor_units_dict_1 = read( in_data_folder_1, input_file_name_1, sensor_list )
     data_2, rain_calib_factor_2, rain_counter_base_2, station_name_2, station_height_2, station_type_2, sensor_descriptions_dict_2, sensor_units_dict_2 = read( in_data_folder_2, input_file_name_2, sensor_list )
@@ -406,6 +409,11 @@ def merge( out_data_folder, in_data_folder_1, input_file_name_1, in_data_folder_
     # Check if the files are from the identical station (the rain counter base does not need to be identical)
     if rain_calib_factor_1 != rain_calib_factor_2 or station_name_1 != station_name_2 or station_height_1 != station_height_2 or station_type_1 != station_type_2 or sensor_descriptions_dict_1 != sensor_descriptions_dict_2 or sensor_units_dict_1 != sensor_units_dict_2:
         raise ImportError( 'The stations are not identical.' )
+
+    if is_merge_only_new_data:
+        # Delete all datasets from file 2 which are not newer than the last timepoint in file 1 (assuming sorted files)
+        last_time_1 = getdate( data_1[-1] ) 
+        data_2 = [ line for line in data_2 if getdate( line ) > last_time_1 ]
 
     # Merge data to a unique list
     merged_data = data_1 + data_2
