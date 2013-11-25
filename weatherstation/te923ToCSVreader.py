@@ -155,7 +155,7 @@ def te923ToCSVreader(data_folder, station_data_file_name, script_name):
   
                 # Write weather data to PC-Wetterstation CSV-files
                 export_data, last_dataset_time, last_dataset_rain_counter = pcwetterstation.convertTo( imported_data, last_read_dataset_raincounter, sensor_list )
-                new_data_file_list, num_new_datasets, first_time, last_time = pcwetterstation.write( data_folder, rain_calib_factor, station_name, station_height, station_type, export_data, sensor_list )
+                new_data_file_list, num_new_datasets, first_time, last_time = pcwetterstation.write( data_folder, rain_calib_factor, station_name, station_height, station_type, export_data, list( export_data[0].keys() ), sensor_list )
                 logger.info( 'Found %i new weather datasets from %s - %s', num_new_datasets, first_time.strftime('%d.%m.%Y %H:%M'), last_time.strftime('%d.%m.%Y %H:%M') )
 
                 # Transfer all CSV-files to the server

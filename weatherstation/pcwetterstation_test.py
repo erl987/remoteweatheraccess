@@ -23,7 +23,7 @@ class Test_pcwetterstation(unittest.TestCase):
     def test_read(self):
         test_file_name = 'EXP10_13.csv'
 
-        data, rain_calib_factor, rain_counter_base, station_name, station_height, station_type, sensor_descriptions, sensor_units = pcwetterstation.read( data_folder, test_file_name, te923ToCSVreader.sensor_list )
+        data, key_list, rain_calib_factor, rain_counter_base, station_name, station_height, station_type, sensor_descriptions, sensor_units = pcwetterstation.read( data_folder, test_file_name, te923ToCSVreader.sensor_list )
 
 
     def test_merge(self):

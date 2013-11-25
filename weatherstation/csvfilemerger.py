@@ -57,10 +57,10 @@ def merge( new_data_file_list, new_data_folder, temp_data_folder, data_storage_f
     # Load all new data and write it to temporary monthly files
     new_data =  []
     for file in new_data_file_list:
-        curr_data, rain_calib_factor, rain_counter_base, station_name, station_height, station_type, sensor_descriptions_dict, sensor_units_dict = pcwetterstation.read( new_data_folder, file, te923ToCSVreader.sensor_list )
+        curr_data, key_list, rain_calib_factor, rain_counter_base, station_name, station_height, station_type, sensor_descriptions_dict, sensor_units_dict = pcwetterstation.read( new_data_folder, file, te923ToCSVreader.sensor_list )
         new_data = new_data + curr_data
     
-    written_file_list, num_new_datasets, first_time, last_time = pcwetterstation.write( temp_data_folder, rain_calib_factor, station_name, station_height, station_type, new_data, te923ToCSVreader.sensor_list )
+    written_file_list, num_new_datasets, first_time, last_time = pcwetterstation.write( temp_data_folder, rain_calib_factor, station_name, station_height, station_type, new_data, key_list, te923ToCSVreader.sensor_list )
 
     # Delete the read new data files
     pcwetterstation.deletedatafiles( new_data_folder, new_data_file_list )
@@ -75,7 +75,7 @@ def merge( new_data_file_list, new_data_folder, temp_data_folder, data_storage_f
             # Only the data which is newer than the already stored data will be merged
             pcwetterstation.merge( data_storage_folder, data_storage_folder, file, temp_data_folder, file, te923ToCSVreader.sensor_list, True ) 
 
-    # Delete the processed monthly data files in the new data folder
+    # Delete the processed monthly data files in the temporary data folder
     pcwetterstation.deletedatafiles( temp_data_folder, new_monthly_file_list )
 
     return num_new_datasets, first_time, last_time

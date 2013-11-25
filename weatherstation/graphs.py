@@ -70,12 +70,12 @@ def get_last_n_days_data( data_folder, num_days ):
         data = all_data[0] + data
 
         # Store sensor information
-        if 'sensor_descriptions' in locals() and sensor_descriptions != all_data[6]:
+        if 'sensor_descriptions' in locals() and sensor_descriptions != all_data[7]:
             raise ValueError( 'The data files have inconsistent sensor descriptions.' )
-        sensor_descriptions = all_data[6]
-        if 'sensor_units' in locals() and sensor_units != all_data[7]:
+        sensor_descriptions = all_data[7]
+        if 'sensor_units' in locals() and sensor_units != all_data[8]:
             raise ValueError( 'The data files have inconsistent sensor units.' )
-        sensor_units = all_data[7]
+        sensor_units = all_data[8]
 
         # Abort reading of data if enough data has been read (the file order and properties guarantee sorted data)
         if ( time_import( data[-1] ) - time_import( data[0] ) ) > timedelta( days = num_days ):

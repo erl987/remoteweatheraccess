@@ -22,7 +22,7 @@ import utilities
 data_file_tag = 'EXP'       # indicating a PC-Wetterstation data file
 
 
-def write( data_folder, rain_calib_factor, station_name, station_height, station_type, export_data, sensor_list ):
+def write( data_folder, rain_calib_factor, station_name, station_height, station_type, export_data, key_list, sensor_list ):
     """Writes a CSV-file with the weather data compatible to PC-Wetterstation for arbitrary data.
     
     Args:
@@ -43,7 +43,7 @@ def write( data_folder, rain_calib_factor, station_name, station_height, station
                                             * temperatures in degree Celsius
                                             * pressure in hPa
                                             * humidities in percent
-                                
+    key_list:                   List containing the order in which the datasets have to be written                            
     sensor_list:                Ordered dict containing the mapping of all sensors to the index of the sensor in the weatherstation and the software PC-Wetterstation,
                                 the name and the units of the sensors. The keys must be identical to that used in the 'export_data'.
 
@@ -56,18 +56,20 @@ def write( data_folder, rain_calib_factor, station_name, station_height, station
     Raises:
     IOError:                    An error occurred accessing the file.
     """
-    getmonth = lambda x: dt.strptime( x['date'], '%d.%m.%Y' )
+    getmonth = lambda x: dt.strptime( x[3:], '%m.%Y' )
     getdate = lambda k: dt.strptime( k['date'] + ' ' + k['time'], '%d.%m.%Y %H:%M')
     
     # determine the months existing in the data
-    export_data = sorted( export_data, key = getdate )
-    months_set = { ( getmonth(x).month, getmonth(x).year ) for x in export_data }
-    
+    export_data.sort( key = getdate )
+    days_set = { line['date'] for line in export_data }
+    months_set = { getmonth(x) for x in days_set }
+
     # write the data separately for each month into a file
     file_list = []
     for curr_month in months_set:
-        monthly_export_data = [ x for x in export_data if ( getmonth(x).month == curr_month[0] and getmonth(x).year == curr_month[1] ) ]
-        file_list.append( writesinglemonth( data_folder, rain_calib_factor, station_name, station_height, station_type, monthly_export_data, sensor_list ) )
+        monthly_days_set = { day for day in days_set if getmonth( day ) == curr_month }
+        monthly_export_data = [ x for x in export_data if x['date'] in monthly_days_set ]
+        file_list.append( writesinglemonth( data_folder, rain_calib_factor, station_name, station_height, station_type, monthly_export_data, key_list, sensor_list ) )
 
     if len( export_data ) > 0:
         first_time = getdate( export_data[0] )
@@ -79,7 +81,7 @@ def write( data_folder, rain_calib_factor, station_name, station_height, station
     return file_list, len( export_data ), first_time, last_time
 
 
-def writesinglemonth( data_folder, rain_calib_factor, station_name, station_height, station_type, export_data, sensor_list ):
+def writesinglemonth( data_folder, rain_calib_factor, station_name, station_height, station_type, export_data, key_list, sensor_list ):
     """Writes a CSV-file with the weather data compatible to PC-Wetterstation for a certain single month.
     
     Args:
@@ -89,7 +91,7 @@ def writesinglemonth( data_folder, rain_calib_factor, station_name, station_heig
     station_name:               ID of the station (typically three letters, for example ERL).
     station_height:             Altitude of the station (in meters).
     station_type:               Information string on the detailed type of the weather station (producer, ...).
-    export_data:                Data to be written on file. It must be only from one single month. It is not required to be sorted regarding time.
+    export_data:                Data to be written on file. It must be only from one single month. It is required to be sorted regarding time.
                                 The required format is a list of ordered dicts with the key being registered in sensor_list. It must contain at least 
                                 the following information in this order:
                                     - date of the data in the format dd.mm.yyyy
@@ -100,7 +102,7 @@ def writesinglemonth( data_folder, rain_calib_factor, station_name, station_heig
                                             * temperatures in degree Celsius
                                             * pressure in hPa
                                             * humidities in percent
-                                
+    key_list:                   List containing the order in which the datasets have to be written                                      
     sensor_list:                Ordered dict containing the mapping of all sensors to the index of the sensor in the weatherstation and the software PC-Wetterstation,
                                 the name and the units of the sensors. The keys must be identical to that used in the 'export_data'.
 
@@ -111,15 +113,6 @@ def writesinglemonth( data_folder, rain_calib_factor, station_name, station_heig
     IOError:                    An error occurred accessing the file.
     AssertionError:             The data in 'export_data' is from more than one month.
     """
-    # Sort data
-    export_data = sorted( export_data, key = lambda k: dt.strptime( k['date'] + ' ' + k['time'], '%d.%m.%Y %H:%M') )
-
-    # Check if data is really only from one month
-    getmonth = lambda x: dt.strptime( x['date'], '%d.%m.%Y' )
-    months_set = { ( getmonth(x).month, getmonth(x).year ) for x in export_data }
-    if len( months_set ) > 1:
-        raise AssertionError( 'The data is from more than one month.' )
-
     # Generate file name assuming that all datasets are from one month
     firstDate = dt.strptime( export_data[0]['date'], '%d.%m.%Y')
     file_name = data_file_tag + firstDate.strftime('%m_%y') + '.csv'
@@ -130,12 +123,12 @@ def writesinglemonth( data_folder, rain_calib_factor, station_name, station_heig
 
     # Write header lines in a PC-Wetterstation compatible CSV-file
     with open( data_file_name, 'w', newline = '\r\n', encoding='latin-1' ) as f:
-        for index, key in enumerate( export_data[0] ):
+        for index, key in enumerate( key_list ):
             if index > 0:
                 f.write(',')
             f.write( sensor_list[key][constants.name] )
         f.write( '\n' )
-        for index, key in enumerate( export_data[0] ):
+        for index, key in enumerate( key_list ):
             if index > 0:
                 f.write( ',' )
             f.write( sensor_list[key][constants.unit] )
@@ -147,12 +140,12 @@ def writesinglemonth( data_folder, rain_calib_factor, station_name, station_heig
         writer = csv.writer( f, lineterminator="\r\n" )    
 
         # Write sensor indices line
-        sensor_index_list = [ sensor_list[key][constants.export_index] for key in export_data[0] ]
+        sensor_index_list = [ sensor_list[key][constants.export_index] for key in key_list ]
         writer.writerows( [ sensor_index_list ] );
 
         # Write data
         for line in export_data:
-            data_output_line = [ line[key] for key in line ]
+            data_output_line = [ line[key] for key in key_list ]
             writer.writerows( [ data_output_line ] )
 
     return file_name
@@ -286,8 +279,8 @@ def read( data_folder, file_name, sensor_list ):
                                 the name and the units of the sensors. The keys must be identical to that used in the 'export_data'.  
     
     Returns:                             
-    data_data:                  All data from the file. The format is a list of ordered dicts with the key being registered in sensor_list. It contains at least 
-                                the following information as strings in this order:
+    data:                       All data from the file. The format is a list of dicts with the keys being registered in sensor_list and given in 'key_list'. It contains at least 
+                                the following information as strings:
                                     - date of the data in the format dd.mm.yyyy
                                     - time of the data (local time) in the format mm:hh
                                     - all measured data according to PC-Wetterstation specification with:
@@ -296,13 +289,14 @@ def read( data_folder, file_name, sensor_list ):
                                             * temperatures in degree Celsius
                                             * pressure in hPa
                                             * humidities in percent
+    key_list:                   List containing all keys of 'data' in the order they are read from the file
     rain_calib_factor:          Calibration factor of the rain sensor (1.000 if the rain sensor has the original area).
     rain_counter_base:          Reference value of the rain counter before the start of the present data (in mm).
     station_name:               ID of the station (typically three letters, for example ERL).
     station_height:             Altitude of the station (in meters).
     station_type:               Information string on the detailed type of the weather station (producer, ...).
-    sensor_descriptions_dict:   OrderedDict containing the read descriptions of all sensors in the file. The keys are those from the sensor_list.
-    sensor_units_dict:          OrderedDict containing the read units of all sensors in the file. The keys are those from the sensor_list. 
+    sensor_descriptions_dict:   Dict containing the read descriptions of all sensors in the file. The keys are those from the sensor_list and are given in 'key_list'.
+    sensor_units_dict:          Dict containing the read units of all sensors in the file. The keys are those from the sensor_list and are given in 'key_list'. 
 
     Raises:
     IOError:                    The file could not be opened.
@@ -368,15 +362,13 @@ def read( data_folder, file_name, sensor_list ):
         next( file_reader )
 
         # Read data
-        data = []
-        for row in file_reader:
-            data.append( OrderedDict( ( f, row[f] ) for f in file_reader.fieldnames ) )
+        data = list( file_reader )
 
     # Export sensor informations
-    sensor_descriptions_dict = OrderedDict( [ ( key, sensor_descriptions[index] ) for index, key in enumerate( key_list ) ] )
-    sensor_units_dict = OrderedDict( [ ( key, sensor_units[index] ) for index, key in enumerate( key_list ) ] )
+    sensor_descriptions_dict = dict( [ ( key, sensor_descriptions[index] ) for index, key in enumerate( key_list ) ] )
+    sensor_units_dict = dict( [ ( key, sensor_units[index] ) for index, key in enumerate( key_list ) ] )
 
-    return data, rain_calib_factor, rain_counter_base, station_name, station_height, station_type, sensor_descriptions_dict, sensor_units_dict
+    return data, key_list, rain_calib_factor, rain_counter_base, station_name, station_height, station_type, sensor_descriptions_dict, sensor_units_dict
 
 
 def merge( out_data_folder, in_data_folder_1, input_file_name_1, in_data_folder_2, input_file_name_2, sensor_list, is_merge_only_new_data ):
@@ -403,11 +395,11 @@ def merge( out_data_folder, in_data_folder_1, input_file_name_1, in_data_folder_
     getdate = lambda k: dt.strptime( k['date'] + ' ' + k['time'], '%d.%m.%Y %H:%M')
 
     # Import data files
-    data_1, rain_calib_factor_1, rain_counter_base_1, station_name_1, station_height_1, station_type_1, sensor_descriptions_dict_1, sensor_units_dict_1 = read( in_data_folder_1, input_file_name_1, sensor_list )
-    data_2, rain_calib_factor_2, rain_counter_base_2, station_name_2, station_height_2, station_type_2, sensor_descriptions_dict_2, sensor_units_dict_2 = read( in_data_folder_2, input_file_name_2, sensor_list )
+    data_1, key_list_1, rain_calib_factor_1, rain_counter_base_1, station_name_1, station_height_1, station_type_1, sensor_descriptions_dict_1, sensor_units_dict_1 = read( in_data_folder_1, input_file_name_1, sensor_list )
+    data_2, key_list_2, rain_calib_factor_2, rain_counter_base_2, station_name_2, station_height_2, station_type_2, sensor_descriptions_dict_2, sensor_units_dict_2 = read( in_data_folder_2, input_file_name_2, sensor_list )
 
     # Check if the files are from the identical station (the rain counter base does not need to be identical)
-    if rain_calib_factor_1 != rain_calib_factor_2 or station_name_1 != station_name_2 or station_height_1 != station_height_2 or station_type_1 != station_type_2 or sensor_descriptions_dict_1 != sensor_descriptions_dict_2 or sensor_units_dict_1 != sensor_units_dict_2:
+    if key_list_1 != key_list_2 or rain_calib_factor_1 != rain_calib_factor_2 or station_name_1 != station_name_2 or station_height_1 != station_height_2 or station_type_1 != station_type_2 or sensor_descriptions_dict_1 != sensor_descriptions_dict_2 or sensor_units_dict_1 != sensor_units_dict_2:
         raise ImportError( 'The stations are not identical.' )
 
     if is_merge_only_new_data:
@@ -426,6 +418,6 @@ def merge( out_data_folder, in_data_folder_1, input_file_name_1, in_data_folder_
             seen_times.append( line['date'] + ' ' + line['time'] )
 
     # Write merged data in data files (one for each month)
-    output_data_file_list = write( out_data_folder, rain_calib_factor_1, station_name_1, station_height_1, station_type_1, unique_merged_data, sensor_list )
+    output_data_file_list = write( out_data_folder, rain_calib_factor_1, station_name_1, station_height_1, station_type_1, unique_merged_data, key_list_1, sensor_list )
 
-    return output_data_file_list
+    return output_data_file_list[0]
