@@ -7,6 +7,8 @@ plot_of_last_days:              Plots the weather data of the last n days from a
 Global variables:
 delta:                          Assumed width of a single y-axis label set (in pixel).
 """
+import matplotlib
+matplotlib.use( 'Agg' )
 from mpl_toolkits.axes_grid1 import host_subplot
 import mpl_toolkits.axisartist as AA
 import matplotlib.pyplot as plt
