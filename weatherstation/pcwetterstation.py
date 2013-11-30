@@ -57,12 +57,13 @@ def write( data_folder, rain_calib_factor, station_name, station_height, station
     IOError:                    An error occurred accessing the file.
     """
     getmonth = lambda x: dt.strptime( x[3:], '%m.%Y' )
-    getdate = lambda k: dt.strptime( k['date'] + ' ' + k['time'], '%d.%m.%Y %H:%M')
+    getdate = lambda k: dt.strptime( k['date'] + ' ' + k['time'], '%d.%m.%Y %H:%M' )
+    getdatestring = lambda k: k['date'] + ' ' + k['time']
     
     # determine the months existing in the data
-    export_data.sort( key = getdate )
+    export_data.sort( key = getdatestring )
     days_set = { line['date'] for line in export_data }
-    months_set = { getmonth(x) for x in days_set }
+    months_set = { getmonth(x) for x in days_set } 
 
     # write the data separately for each month into a file
     file_list = []
@@ -407,17 +408,14 @@ def merge( out_data_folder, in_data_folder_1, input_file_name_1, in_data_folder_
         last_time_1 = getdate( data_1[-1] ) 
         data_2 = [ line for line in data_2 if getdate( line ) > last_time_1 ]
 
-    # Merge data to a unique list
-    merged_data = data_1 + data_2
-
-    unique_merged_data = []
-    seen_times = []
-    for line in merged_data: # TODO: is this an efficient solution???
-        if ( ( line['date'] + ' ' + line['time'] ) not in seen_times ): # TODO: This will delete data during shift of daylight saving!!!
-            unique_merged_data.append( line )
-            seen_times.append( line['date'] + ' ' + line['time'] )
+    # Merge data unique but unsorted (during shifting of daylight saving the data in this time will be overwritten)
+    merged_data = data_1 + data_2    
+    temp_dict = {}   
+    for line in merged_data:
+        temp_dict[ line['date'] + ' ' + line['time'] ] = line
+    merged_data = list( temp_dict.values() )
 
     # Write merged data in data files (one for each month)
-    output_data_file_list = write( out_data_folder, rain_calib_factor_1, station_name_1, station_height_1, station_type_1, unique_merged_data, key_list_1, sensor_list )
+    output_data_file_list = write( out_data_folder, rain_calib_factor_1, station_name_1, station_height_1, station_type_1, merged_data, key_list_1, sensor_list )
 
     return output_data_file_list[0]
