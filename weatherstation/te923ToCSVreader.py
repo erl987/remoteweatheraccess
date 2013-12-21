@@ -106,8 +106,7 @@ def te923ToCSVreader(data_folder, station_data_file_name, script_name):
         try:
             rain_calib_factor, station_name, station_height, storage_interval, ftp_passwd, ftp_server, ftp_folder = stationdata.read( data_folder + '/' + station_data_file_name )
         except Exception as e:
-            logger.error( 'Station data file could not be read. Error description: %s.', repr(e) )
-            raise RuntimeError( 'Program aborted.' )
+            raise RuntimeError( 'Station data file could not be read. Error description: %s.', repr(e) )
         settings_file_name = 'settings_' + station_name + '.dat'
         try:
             is_reading, last_read_dataset_time, last_read_dataset_raincounter = lastdata.read( data_folder + '/' + settings_file_name )
@@ -118,8 +117,7 @@ def te923ToCSVreader(data_folder, station_data_file_name, script_name):
 
         # Check if the station currently reads
         if is_reading:
-            logger.warning( 'Another instance is already reading from the weatherstation TE923. Skipping reading.' )
-            raise RuntimeError( 'Program aborted.' )
+            raise RuntimeError( 'Another instance is already reading from the weatherstation TE923. Skipping reading.' )
 
         # Notify other processes via the settings file of the reading in progress
         lastdata.set_reading( data_folder + settings_file_name, True )
@@ -136,12 +134,10 @@ def te923ToCSVreader(data_folder, station_data_file_name, script_name):
                 imported_data = te923station.readdata( True )
                 imported_data = imported_data + te923station.readdata( False )
         except Exception as e:
-            logger.error( 'Error accessing weatherstation TE923. Error description: %s.', repr(e) )
-            raise RuntimeError( 'Program aborted.' )
+            raise RuntimeError( 'Error accessing weatherstation TE923. Error description: %s.', repr(e) )
 
         if ( len( imported_data ) == 0 ):
-            logger.warning( 'No data could be read from the weather station. Maybe no USB-connection is possible' )
-            raise RuntimeError( 'Program aborted.' )
+            raise RuntimeError( 'No data could be read from the weather station. Maybe no USB-connection is possible.' )
         else:
             # Reduce datasets to unsaved new datasets (it is assumed that the read data is sorted according to time)
             date_index = sensor_list[ 'date' ][ constants.import_index ]
@@ -174,15 +170,14 @@ def te923ToCSVreader(data_folder, station_data_file_name, script_name):
                 if ( isSuccessfullTransfer ):
                     # The reading flag is also resetted here by default
                     lastdata.write( data_folder + '/' + settings_file_name, last_dataset_time, last_dataset_rain_counter )
-                    logger.info( 'Weather data in the files %s (%s) was successfully transfered to FTP-server \'%s\' (user: \'%s\')', data_file_list, transfered_file_name, ftp_server, station_name )
+                    logger.info( 'Weather data in the files %s (%s) was successfully transfered to FTP-server \'%s\' (user: \'%s\').', data_file_list, transfered_file_name, ftp_server, station_name )
                 else:
-                    logger.error( 'Weather data transfer to FTP-server \'%s\' (user: \'%s\') failed. Read weather data in the files %s (%s) was discarded. Error description: %s.', ftp_server, station_name, data_file_list, transfered_file_name, error_text )
-                    raise RuntimeError( 'Program aborted.' )
+                    raise RuntimeError( 'Weather data transfer to FTP-server \'%s\' (user: \'%s\') failed. Read weather data in the files %s (%s) was discarded. Error description: %s.', ftp_server, station_name, data_file_list, transfered_file_name, error_text )
             else:
-                logger.info( 'No weather data found which was unprocessed' )
-                raise RuntimeError( 'Program aborted.' )
-    except Exception:
+                raise RuntimeError( 'No weather data found which was unprocessed.' )
+    except Exception as e:
         lastdata.set_reading( data_folder + '/' + settings_file_name, False )
+        logger.error( repr(e) )
         reset_logger(logger)
         sys.exit()
 
