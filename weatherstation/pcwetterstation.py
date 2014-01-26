@@ -220,26 +220,25 @@ def convertTo(read_data, last_old_rain_counter, sensor_list):
 
     # Perform required unit convertions
     for line in export_data[:]:
-        line['windGusts'] = str( float( line['windGusts'] ) * 3.6 );    # convert from m/s to km/h
-        line['windSpeed'] = str( float( line['windSpeed'] ) * 3.6 );    # convert from m/s to km/h
-        line['windDir'] = str( float( line['windDir'] ) * 22.5 );       # convert to degree
+        line['windGusts'] = str( float( line['windGusts'] ) * 3.6 )     # convert from m/s to km/h
+        line['windSpeed'] = str( float( line['windSpeed'] ) * 3.6 )     # convert from m/s to km/h
+        line['windDir'] = str( float( line['windDir'] ) * 22.5 )        # convert to degree
 
     # Calculate rain amount differences
     rain_counters = [ float( line['rainCounter'] ) for line in export_data ]
     rain_counters.insert( 0, last_old_rain_counter )
-    rain_amounts = [ 0.68685 * ( x - rain_counters[i-1] ) for i, x in enumerate( rain_counters ) ][1:]            # convert from tipping bucket counts to mm
 
     # Handle possible bug from the wetherstation giving occasionally invalid rain counter values
-    error_list = [ i for i, x in enumerate( rain_amounts ) if x < 0 ];
-    for index in error_list:
-        rain_amounts[index] = 0;
-        if ( index + 1 ) < len( rain_amounts ):
-            rain_amounts[index+1] = 0;
+    for index, counter in enumerate( rain_counters[:] ):
+        if index > 0:
+            if ( counter - rain_counters[index-1] ) < 0:
+                rain_counters[index] = rain_counters[index-1];
 
+    rain_amounts = [ 0.68685 * ( x - rain_counters[i-1] ) for i, x in enumerate( rain_counters ) ][1:]              # convert from tipping bucket counts to mm
     for export_line, amount in zip( export_data[:], rain_amounts ):
-        export_line['rainCounter'] = str( amount );                      # set to rain amount differences since the last dataset before the current (in mm)
+        export_line['rainCounter'] = str( amount );                                                                 # set to rain amount differences since the last dataset before the current (in mm)
 
-    last_dataset_time = dt.strptime( export_data[-1]['date'] + ' ' + export_data[-1]['time'], '%d.%m.%Y %H:%M') # the accuracy is minutes
+    last_dataset_time = dt.strptime( export_data[-1]['date'] + ' ' + export_data[-1]['time'], '%d.%m.%Y %H:%M')     # the accuracy is minutes
     last_dataset_rain_counter = rain_counters[-1]
     return export_data, last_dataset_time, last_dataset_rain_counter
 
