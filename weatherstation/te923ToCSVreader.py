@@ -53,6 +53,8 @@ sensor_list = OrderedDict( [
     ('rainCounter',    (21,       'Regen',                                            34,     'mm'                ))
     ] )
 
+delta_t_tol = timedelta( minutes = 60 ); # All datasets read from the weather station with a timestamp being more than this tolerance time in the future are dismissed
+
 
 def reset_logger(logger):
     """Resets a logger instance.
@@ -142,6 +144,10 @@ def te923ToCSVreader(data_folder, station_data_file_name, script_name):
             # Reduce datasets to unsaved new datasets (it is assumed that the read data is sorted according to time)
             date_index = sensor_list[ 'date' ][ constants.import_index ]
             imported_data = [ x for x in imported_data if ( dt.fromtimestamp( int( x[ date_index ] ) ) > last_read_dataset_time ) ]
+
+            # Ensure that the data contains no timestamps in the future
+            curr_time = dt.now() # Compare to the current system time
+            imported_data = [ x for x in imported_data if ( dt.fromtimestamp( int( x[ date_index ] ) ) < curr_time + delta_t_tol ) ];
         
             if ( len( imported_data ) > 0 ):         
                 # If this is the first execution of the program or the last stored data is older than three storage steps, there is no other choice than using the rain counter value of the first dataset as reference
