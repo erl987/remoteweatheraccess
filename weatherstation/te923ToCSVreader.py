@@ -131,10 +131,18 @@ def te923ToCSVreader(data_folder, station_data_file_name, script_name):
             if ( trunc_curr_time - trunc_last_read_dataset_time ) < 2 * timedelta( minutes = storage_interval ):
                 # Read only the current data
                 imported_data = te923station.readdata( False )
+
+                # Replace the timestamp by the current system time (required because the weatherstation occasionally generates wrong timestamps)
+                imported_data[0][ sensor_list[ 'date' ][ constants.import_index ] ] = int( dt.now().timestamp() )
             else:
                 # Read all datasets from the weatherstation and after this the current dataset - as the reading of the full dataset usually takes longer than one storage cycle
                 imported_data = te923station.readdata( True )
-                imported_data = imported_data + te923station.readdata( False )
+                latest_data = te923station.readdata( False )
+
+                # Replace the timestamp by the current system time (required because the stations occasionally generate wrong timestamps)
+                latest_data[0][ sensor_list[ 'date' ][ constants.import_index ] ] = int( dt.now().timestamp() )
+
+                imported_data = imported_data + latest_data
         except Exception as e:
             raise RuntimeError( 'Error accessing weatherstation TE923. Error description: %s.', repr(e) )
 
