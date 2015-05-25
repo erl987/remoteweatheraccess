@@ -39,7 +39,7 @@ def main():
 
     # Start the logger
     logger = logging.getLogger()
-    if sys.platform == 'linux':
+    if sys.platform.startswith('linux'):
         from logging.handlers import SysLogHandler
         syslog = SysLogHandler(address='/dev/log')
         formatter = logging.Formatter('%(name)s - %(app_name)s - %(levelname)s : %(message)s')
@@ -94,7 +94,7 @@ def main():
         os.remove( new_data_folder + '/' + file )
 
     # Set German locale
-    if sys.platform == 'linux':
+    if sys.platform.startswith('linux'):
         locale.setlocale( locale.LC_ALL, 'de_DE.utf8' )
     elif sys.platform.startswith( 'win' ):
         locale.setlocale( locale.LC_ALL, 'german' )

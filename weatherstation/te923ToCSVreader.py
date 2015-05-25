@@ -68,7 +68,7 @@ def reset_logger(logger):
     Raises:
     None
     """
-    if sys.platform != 'linux':
+    if not sys.platform.startswith('linux'):
         # Close the logger
         logger.handlers[0].stream.close()
         logger.removeHandler(logger.handlers[0])
@@ -92,7 +92,7 @@ def te923ToCSVreader(data_folder, station_data_file_name, script_name):
 
     # Start the logger
     logger = logging.getLogger()
-    if sys.platform == 'linux':
+    if sys.platform.startswith('linux'):
         from logging.handlers import SysLogHandler
         syslog = SysLogHandler(address='/dev/log')
         formatter = logging.Formatter('%(name)s - %(app_name)s - %(levelname)s : %(message)s')
