@@ -55,7 +55,7 @@ def main():
         return
 
     # Read server configuration data
-    data_storage_folder, new_data_folder, temp_data_folder, graph_folder, graph_file_name, sensors_to_plot = serverdata.read( server_data_file_name )
+    data_storage_folder, ftp_base_folder, new_data_folder, temp_data_folder, graph_folder, graph_file_name, sensors_to_plot = serverdata.read( server_data_file_name )
 
     # Determine the weather station name and the file names
     new_zip_data_file_list = [ os.path.basename( path ) for path in input_list ]
@@ -69,9 +69,10 @@ def main():
 
     # Construct the directory paths for the station
     data_storage_folder = data_storage_folder + '/' + station_name + '/'
-    new_data_folder = data_storage_folder + new_data_folder
-    temp_data_folder = data_storage_folder + temp_data_folder
-    graph_folder = graph_folder + '/' + station_name
+    ftp_station_folder = ftp_base_folder + '/' + station_name + '/'
+    new_data_folder = ftp_station_folder + '/' + new_data_folder + '/'
+    temp_data_folder = new_data_folder + '/' + temp_data_folder + '/'
+    graph_folder = graph_folder + '/' + station_name + '/'
 
     # Extract data from the ZIP-file(s)
     new_data_file_list = []

@@ -106,7 +106,7 @@ def te923ToCSVreader(data_folder, station_data_file_name, script_name):
     try:
         # Read station data
         try:
-            rain_calib_factor, station_name, station_height, storage_interval, ftp_passwd, ftp_server, ftp_folder = stationdata.read( data_folder + '/' + station_data_file_name )
+            rain_calib_factor, station_name, station_height, storage_interval, ftp_passwd, ftp_server, port, ftp_folder = stationdata.read( data_folder + '/' + station_data_file_name )
         except Exception as e:
             raise RuntimeError( 'Station data file could not be read. Error description: %s.', repr(e) )
         settings_file_name = 'settings_' + station_name + '.dat'
@@ -171,7 +171,7 @@ def te923ToCSVreader(data_folder, station_data_file_name, script_name):
                 # Transfer all CSV-files to the server
                 data_file_list = pcwetterstation.finddatafiles( data_folder )
                 try:
-                    transfered_file_name = server.transferto( ftp_server, station_name, ftp_passwd, ftp_folder, data_folder, data_file_list )
+                    transfered_file_name = server.transferto( ftp_server, station_name, ftp_passwd, ftp_folder, data_folder, data_file_list, port )
                     isSuccessfullTransfer = True;
                 except Exception as e:
                     error_text = repr( e )
