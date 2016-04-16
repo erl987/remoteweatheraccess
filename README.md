@@ -43,4 +43,4 @@ Install a new Raspberry for a new station:
 	incrontab -e -u weatherstation
 	Add the line: /srv/ftp/virtual/'station name'/newData IN_CLOSE_WRITE python3 /opt/weatherstation/weatherserver.py $@/$#
 
--> The weather data can be obtained from http://wetter.radixproductions.selfhost.me/'station name'
+-> The weather data can be obtained from http://station.com/'station name'
