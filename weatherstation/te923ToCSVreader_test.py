@@ -1,3 +1,20 @@
+# RemoteWeatherAccess - Weather network connecting to remote stations
+# Copyright(C) 2013-2016 Ralf Rettig (info@personalfme.de)
+#
+# This program is free software: you can redistribute it and / or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.If not, see <http://www.gnu.org/licenses/>
+
+
 """Provides unit tests for the module te923ToCSVreader.
 
 Unit tests:
@@ -39,8 +56,8 @@ rain_calib_factor = 1.0
 station_name = 'TES'
 station_height = 100.0
 storage_interval = 10.0
-ftp_passwd = 'weatherstation#10'
-ftp_server = 'h1864277.stratoserver.net' 
+ftp_passwd = 'password'
+ftp_server = 'server.com' 
 ftp_folder = 'newData'
 settings_file_name = 'settings_TES.dat' # TODO: no ideal solution!!!!!!
 
