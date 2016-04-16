@@ -3,6 +3,12 @@ Weather network software (client + server) for collecting data from remote weath
 
 This project contains a client and a server software and is written in Python. It currently supported weatherstations derived from the type TE923 (for example IROX PRO-X USB).
 
+The programs are written in Python and require Python 3.3.
+
+You will require the driver from that project:
+http://te923.fukz.org/
+
+Install it in the directory te923con.
 
 Install a new Raspberry for a new station:
 
