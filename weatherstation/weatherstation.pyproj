@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>af61fea6-0374-4031-aa2c-056052917724</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>graphs_test.py</StartupFile>
+    <StartupFile>database_test.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -24,6 +24,7 @@
   <ItemGroup>
     <Compile Include="constants.py" />
     <Compile Include="csvfilemerger.py" />
+    <Compile Include="database_test.py" />
     <Compile Include="generate_stationfile.py" />
     <Compile Include="graphs.py" />
     <Compile Include="graphs_test.py" />
@@ -38,7 +39,20 @@
     <Compile Include="te923ToCSVreader_test.py" />
     <Compile Include="utilities.py" />
     <Compile Include="weatherclient.py" />
+    <Compile Include="weathernetwork\common\stationmetadata.py" />
+    <Compile Include="weathernetwork\common\weatherdataset.py" />
+    <Compile Include="weathernetwork\common\__init__.py" />
+    <Compile Include="weathernetwork\server\database.py" />
+    <Compile Include="weathernetwork\server\__init__.py" />
+    <Compile Include="weathernetwork\test\__init__.py" />
+    <Compile Include="weathernetwork\__init__.py" />
     <Compile Include="weatherserver.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="weathernetwork\" />
+    <Folder Include="weathernetwork\common\" />
+    <Folder Include="weathernetwork\server\" />
+    <Folder Include="weathernetwork\test\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
