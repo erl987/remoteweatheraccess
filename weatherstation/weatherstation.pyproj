@@ -39,6 +39,15 @@
     <Compile Include="te923ToCSVreader_test.py" />
     <Compile Include="utilities.py" />
     <Compile Include="weatherclient.py" />
+    <Compile Include="weathernetwork\common\airdataset.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="weathernetwork\common\combisensorarray.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="weathernetwork\common\combisensordataset.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="weathernetwork\common\stationmetadata.py" />
     <Compile Include="weathernetwork\common\weatherdataset.py" />
     <Compile Include="weathernetwork\common\__init__.py" />

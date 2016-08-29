@@ -3,6 +3,8 @@ import datetime
 from weathernetwork.common.stationmetadata import WeatherStationMetadata
 from weathernetwork.server.database import WeatherDB
 from weathernetwork.common.weatherdataset import WeatherDataset
+from weathernetwork.common.airdataset import AirDataset
+from weathernetwork.common.combisensorarray import CombiSensorArray
 
 class Test_weather_db_test(unittest.TestCase):
     def test_add_station(self):
@@ -12,7 +14,7 @@ class Test_weather_db_test(unittest.TestCase):
         weather_station_2 = WeatherStationMetadata("TES2", "TE923 Mebus", "Test City", "49.234", "11.024", "450")
         weather_station_2_B = WeatherStationMetadata("TES2", "TE923 Mebus", "Test City 2", "49.234", "11.024", "450")
 
-        weather_db = WeatherDB(db_file_name)
+        weather_db = WeatherDB(db_file_name, CombiSensorArray.get_sensors())
         if not weather_db.station_exists( weather_station.get_identifier() ):
             weather_db.add_station(weather_station)
         if not weather_db.station_exists( weather_station_2.get_identifier() ):
@@ -21,10 +23,12 @@ class Test_weather_db_test(unittest.TestCase):
         weather_db.replace_station(weather_station_2_B);
 
         curr_time = datetime.datetime.utcnow()
-        dataset_1 = WeatherDataset(curr_time, 30.9, 80.5, 234.1, 1024.2, 8.9, 234, 23.1, 42.1, 29.0)
-        dataset_2 = WeatherDataset(curr_time + datetime.timedelta(5), 20.9, 80.5, 234.1, 1024.2, 8.9, 234, 23.1, 42.1, 29.0)
-        dataset_3 = WeatherDataset(curr_time + datetime.timedelta(10), 10.9, 80.5, 234.1, 1024.2, 8.9, 234, 23.1, 42.1, 29.0)
-        dataset_4 = WeatherDataset(curr_time + datetime.timedelta(15), 10.9, 80.5, 234.1, 1024.2, 8.9, 234, 23.1, 42.1, 29.0)
+        combi_sensor_data = CombiSensorArray( AirDataset( 20.5, 61.3 ), AirDataset( 30.9, 80.5 ), AirDataset( None, None ), AirDataset( None, None ), AirDataset( None, None ), AirDataset( None, None ) )
+
+        dataset_1 = WeatherDataset(curr_time, combi_sensor_data.get_vals(), 234.1, 1024.2, 8.9, 234, 23.1, 42.1, 29.0)
+        dataset_2 = WeatherDataset(curr_time + datetime.timedelta(5), combi_sensor_data.get_vals(), 234.1, 1024.2, 8.9, 234, 23.1, 42.1, 29.0)
+        dataset_3 = WeatherDataset(curr_time + datetime.timedelta(10), combi_sensor_data.get_vals(), 234.1, 1024.2, 8.9, 234, 23.1, 42.1, 29.0)
+        dataset_4 = WeatherDataset(curr_time + datetime.timedelta(15), combi_sensor_data.get_vals(), 234.1, 1024.2, 8.9, 234, 23.1, 42.1, 29.0)
 
         weather_db.add_dataset("TES", dataset_1)
         weather_db.add_dataset("TES2", [dataset_2, dataset_3, dataset_4])

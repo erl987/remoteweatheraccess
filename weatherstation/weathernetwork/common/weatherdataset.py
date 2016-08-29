@@ -1,10 +1,14 @@
 class WeatherDataset(object):
     """Weather data at a moment in time"""
 
-    def __init__(self, time, temp, humidity, rain_gauge, pressure, UV, wind_direction, wind_speed, wind_gust, wind_temp):
+    def __init__(self, time, combi_sensor_vals, rain_gauge, pressure, UV, wind_direction, wind_speed, wind_gust, wind_temp):
+        """
+        Constructor
+        :param combi_sensor_vals:   contains the combi sensor datasets
+        :type combi_sensor_vals:    list containing several combi sensor objects (of type CombiSensorDataset)
+        """
         self._time = time
-        self._temp =  temp
-        self._humidity = humidity
+        self._combi_sensor_vals = combi_sensor_vals
         self._rain_gauge = rain_gauge
         self._pressure = pressure
         self._UV = UV;
@@ -16,11 +20,8 @@ class WeatherDataset(object):
     def get_time(self):
         return self._time
 
-    def get_temperature(self):
-        return self._temp
-
-    def get_humidity(self):
-        return self._humidity
+    def get_combi_sensor_vals(self):
+        return self._combi_sensor_vals
 
     def get_rain_gauge(self):
         return self._rain_gauge
@@ -33,5 +34,3 @@ class WeatherDataset(object):
 
     def get_wind(self):
         return self._wind_direction, self._wind_speed, self._wind_gust, self._wind_temp
-
-
