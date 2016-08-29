@@ -52,6 +52,9 @@
     <Compile Include="weathernetwork\common\weatherdataset.py" />
     <Compile Include="weathernetwork\common\__init__.py" />
     <Compile Include="weathernetwork\server\database.py" />
+    <Compile Include="weathernetwork\server\exceptions.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="weathernetwork\server\__init__.py" />
     <Compile Include="weathernetwork\test\__init__.py" />
     <Compile Include="weathernetwork\__init__.py" />

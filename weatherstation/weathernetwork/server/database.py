@@ -3,6 +3,8 @@ import sqlite3
 import datetime
 from weathernetwork.common.weatherdataset import WeatherDataset
 from weathernetwork.common.combisensordataset import CombiSensorDataset
+from weathernetwork.server.exceptions import AlreadyExistingError
+from weathernetwork.server.exceptions import NotExistingError
 
 class WeatherDB(object):
     """
@@ -130,11 +132,11 @@ class WeatherDB(object):
                             ( self._round_time(time), station_ID, rainGauge, pressure, UV ) )
                     except sqlite3.Error as e:
                         if "NULL" in e.args[0]:
-                            raise NameError("The station does not exist in the database")
+                            raise NotExistingError("The station does not exist in the database")
                         elif "unique" in e.args[0]:
-                            raise NameError("For the given station, a dataset for the given time already exists in the database")
+                            raise AlreadyExistingError("For the given station, a dataset for the given time already exists in the database")
                         else:
-                            raise NameError(e)
+                            raise
 
                     # write the wind sensor information (here it is already guaranteed that a dataset for the given station and time existing in the database)
                     wind_direction, wind_speed, wind_gust, wind_temp = dataset.get_wind()
@@ -167,11 +169,11 @@ class WeatherDB(object):
                                 ( self._round_time(time), station_ID, sensor_ID, temperature, humidity ) )     
                         except sqlite3.Error as e:
                             if "NULL" in e.args[0]:
-                                raise NameError("The combi sensor ID not exist in the database")
+                                raise NotExistingError("The combi sensor ID not exist in the database")
                             elif "unique" in e.args[0]:
-                                raise NameError("For the given combi sensor ID, already data exists in the database")
+                                raise AlreadyExistingError("For the given combi sensor ID, already data exists in the database")
                             else:
-                                raise NameError(e)
+                                raise 
                                             
 
     def replace_dataset(self, station_identifier, data):
@@ -198,7 +200,7 @@ class WeatherDB(object):
                         ( rainGauge, pressure, UV, self._round_time(time), station_identifier ) ).rowcount           
            
                     if num_updated_rows == 0:
-                        raise NameError("No entry exists for the requested station at the requested time")
+                        raise NotExistingError("No entry exists for the requested station at the requested time")
 
                     # write the wind sensor information (here it is already guaranteed that a dataset for the given station and time existing in the database)
                     wind_direction, wind_speed, wind_gust, wind_temp = dataset.get_wind();
@@ -222,7 +224,7 @@ class WeatherDB(object):
                             ( temperature, humidity, self._round_time(time), station_identifier, sensor_ID ) )
 
                         if num_updated_rows == 0:
-                            raise NameError("The requested combi sensor ID does not exist")
+                            raise NotExistingError("The requested combi sensor ID does not exist")
 
 
     def _round_time(self, time):
@@ -325,7 +327,7 @@ class WeatherDB(object):
                             height) VALUES (?,?,?,?,?,?)", \
                             ( identifier, device, location, latitude, longitude, height ) )                  
                 except sqlite3.Error as e:
-                    raise NameError("The station is already existing")
+                    raise AlreadyExistingError("The station is already existing")
 
 
     def replace_station(self, station):
@@ -346,7 +348,7 @@ class WeatherDB(object):
                     ( device, location, latitude, longitude, height, identifier ) ).rowcount           
            
                 if num_updated_rows == 0:
-                    raise NameError("The station is not existing")
+                    raise NotExistingError("The station is not existing")
 
 
     def remove_station(self, station_ID):
@@ -411,7 +413,7 @@ class WeatherDB(object):
                     ( description, sensor_ID ) ).rowcount           
            
                 if num_updated_rows == 0:
-                    raise NameError("The combi sensor ID is not existing")
+                    raise NotExistingError("The combi sensor ID is not existing")
 
 
     def remove_combi_sensor(self, sensor_ID):
