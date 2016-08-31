@@ -5,12 +5,14 @@ class Error(Exception):
 
 class NotExistingError(Error):
     """Raised when a queried database item does not exists.
-
-    Attributes:
-        msg  -- explanation of the error
     """
 
     def __init__(self, msg):
+        """
+        Constructor.
+        :param msg:     error message description
+        :type msg:      string
+        """
         self.msg = msg
 
 
@@ -22,4 +24,9 @@ class AlreadyExistingError(Error):
     """
 
     def __init__(self, msg):
+        """
+        Constructor.
+        :param msg:     error message description
+        :type msg:      string
+        """
         self.msg = msg

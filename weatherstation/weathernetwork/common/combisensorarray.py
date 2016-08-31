@@ -1,7 +1,10 @@
 from weathernetwork.common.combisensordataset import CombiSensorDataset
 
 class CombiSensorArray(object):
-    """description of class"""
+    """
+    Single dataset of a set of combi sensors measuring temperature + humidity.
+    This class is designed for 5 outdoor and one indoor sensor, that may be adjusted if required.
+    """
     
     # definition of the database sensor IDs
     ID_IN = "IN"
@@ -20,6 +23,21 @@ class CombiSensorArray(object):
 
 
     def __init__(self, sensor_in, sensor_out_1, sensor_out_2, sensor_out_3, sensor_out_4, sensor_out_5):
+        """
+        Constructor.
+        :param sensor_in:       indoor sensor
+        :type sensor_in:        combiSensorArray containing the data of that sensor
+        :param sensor_out_1:    outdoor sensor 1
+        :type sensor_out_1:     combiSensorArray containing the data of that sensor
+        :param sensor_out_2:    outdoor sensor 2
+        :type sensor_out_2:     combiSensorArray containing the data of that sensor
+        :param sensor_out_3:    outdoor sensor 3
+        :type sensor_out_3:     combiSensorArray containing the data of that sensor
+        :param sensor_out_4:    outdoor sensor 4
+        :type sensor_out_4:     combiSensorArray containing the data of that sensor
+        :param sensor_out_5:    outdoor sensor 5
+        :type sensor_out_5:     combiSensorArray containing the data of that sensor
+        """
         self._in = sensor_in
         self._out1 = sensor_out_1
         self._out2 = sensor_out_2
@@ -30,6 +48,11 @@ class CombiSensorArray(object):
 
     @staticmethod
     def get_sensors():
+        """
+        Returns the sensor IDs and their descriptions.
+        :return:                sensorIDs and their descriptions
+        :rtype:                 dict (keys: sensor IDs, values: descriptions)
+        """
         return { CombiSensorArray.ID_IN : CombiSensorArray.DESCRIPTION_IN, \
                  CombiSensorArray.ID_OUT_1 : CombiSensorArray.DESCRIPTION_OUT_1, \
                  CombiSensorArray.ID_OUT_2 : CombiSensorArray.DESCRIPTION_OUT_2, \
@@ -39,6 +62,11 @@ class CombiSensorArray(object):
 
 
     def get_vals(self):
+        """
+        Returns all sensor values.
+        :return:                all sensor values
+        :rtype:                 list containing the CombiSensorDataset-objects of all sensors
+        """
         return [ 
             CombiSensorDataset( CombiSensorArray.ID_IN, self._in.get_temperature(), self._in.get_humidity() ),
             CombiSensorDataset( CombiSensorArray.ID_OUT_1, self._out1.get_temperature(), self._out1.get_humidity() ),

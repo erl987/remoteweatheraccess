@@ -39,7 +39,7 @@
     <Compile Include="te923ToCSVreader_test.py" />
     <Compile Include="utilities.py" />
     <Compile Include="weatherclient.py" />
-    <Compile Include="weathernetwork\common\airdataset.py">
+    <Compile Include="weathernetwork\common\airsensordataset.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="weathernetwork\common\combisensorarray.py">

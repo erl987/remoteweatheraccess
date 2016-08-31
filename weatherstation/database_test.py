@@ -3,7 +3,7 @@ import datetime
 from weathernetwork.common.stationmetadata import WeatherStationMetadata
 from weathernetwork.server.database import WeatherDB
 from weathernetwork.common.weatherdataset import WeatherDataset
-from weathernetwork.common.airdataset import AirDataset
+from weathernetwork.common.airsensordataset import AirSensorDataset
 from weathernetwork.common.combisensorarray import CombiSensorArray
 
 class Test_weather_db_test(unittest.TestCase):
@@ -15,15 +15,15 @@ class Test_weather_db_test(unittest.TestCase):
         weather_station_2_B = WeatherStationMetadata("TES2", "TE923 Mebus", "Test City 2", "49.234", "11.024", "450")
 
         weather_db = WeatherDB(db_file_name, CombiSensorArray.get_sensors())
-        if not weather_db.station_exists( weather_station.get_identifier() ):
+        if not weather_db.station_exists( weather_station.get_station_ID() ):
             weather_db.add_station(weather_station)
-        if not weather_db.station_exists( weather_station_2.get_identifier() ):
+        if not weather_db.station_exists( weather_station_2.get_station_ID() ):
             weather_db.add_station(weather_station_2)
 
         weather_db.replace_station(weather_station_2_B);
 
         curr_time = datetime.datetime.utcnow()
-        combi_sensor_data = CombiSensorArray( AirDataset( 20.5, 61.3 ), AirDataset( 30.9, 80.5 ), AirDataset( None, None ), AirDataset( None, None ), AirDataset( None, None ), AirDataset( None, None ) )
+        combi_sensor_data = CombiSensorArray( AirSensorDataset( 20.5, 61.3 ), AirSensorDataset( 30.9, 80.5 ), AirSensorDataset( None, None ), AirSensorDataset( None, None ), AirSensorDataset( None, None ), AirSensorDataset( None, None ) )
 
         dataset_1 = WeatherDataset(curr_time, combi_sensor_data.get_vals(), 234.1, 1024.2, 8.9, 234, 23.1, 42.1, 29.0)
         dataset_2 = WeatherDataset(curr_time + datetime.timedelta(5), combi_sensor_data.get_vals(), 234.1, 1024.2, 8.9, 234, 23.1, 42.1, 29.0)
