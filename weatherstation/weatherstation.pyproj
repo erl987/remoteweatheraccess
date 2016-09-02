@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>af61fea6-0374-4031-aa2c-056052917724</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>database_test.py</StartupFile>
+    <StartupFile>ftp_broker_test.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -25,6 +25,9 @@
     <Compile Include="constants.py" />
     <Compile Include="csvfilemerger.py" />
     <Compile Include="database_test.py" />
+    <Compile Include="ftp_broker_test.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="generate_stationfile.py" />
     <Compile Include="graphs.py" />
     <Compile Include="graphs_test.py" />
@@ -48,11 +51,41 @@
     <Compile Include="weathernetwork\common\combisensordataset.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="weathernetwork\common\delayedexception.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="weathernetwork\common\stationmetadata.py" />
     <Compile Include="weathernetwork\common\weatherdataset.py" />
     <Compile Include="weathernetwork\common\__init__.py" />
     <Compile Include="weathernetwork\server\database.py" />
+    <Compile Include="weathernetwork\server\ftpserversideproxy.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="weathernetwork\server\istorageprocess.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="weathernetwork\server\iweatherpersistenceservice.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="weathernetwork\server\ftpserverbroker.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="weathernetwork\server\mockserversideproxy.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="weathernetwork\server\storageprocess.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="weathernetwork\server\weathermessage.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="weathernetwork\server\weatherpersistenceservice.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="weathernetwork\server\exceptions.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="weathernetwork\server\iserversideproxy.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="weathernetwork\server\__init__.py" />
