@@ -67,10 +67,7 @@
     <Compile Include="weathernetwork\server\ftpbroker.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="weathernetwork\server\istorageprocess.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="weathernetwork\server\iweatherpersistenceservice.py">
+    <Compile Include="weathernetwork\server\databaseservice.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="weathernetwork\server\mockbroker\__init__.py">
@@ -79,13 +76,10 @@
     <Compile Include="weathernetwork\server\mockbroker\mockserversideproxy.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="weathernetwork\server\storageprocess.py">
+    <Compile Include="weathernetwork\server\sqldatabaseservice.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="weathernetwork\server\weathermessage.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="weathernetwork\server\weatherpersistenceservice.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="weathernetwork\server\exceptions.py">

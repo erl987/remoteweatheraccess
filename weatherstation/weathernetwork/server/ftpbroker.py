@@ -66,48 +66,22 @@ class FileSystemObserver(FileSystemEventHandler):
         filesystem_observer.join()
 
 
-class FTPServerBroker(object):
-    """Server broker for weather data transmission based on FTP"""
-
+class FTPServerBrokerProcess(object):
     def __init__(self):
-        self._proxies = []
         self._data_file_extension = ".ZIP" # TODO: possibly generalize this
         self._data_folder = "C:\\Users\\Ralf\\Documents\\test" # TODO: not yet implemented
-
-        self._received_file_queue = Queue()
-        self._filesystem_observer = FileSystemObserver(self._data_folder)
-        self._filesystem_observer_process = Process(target=self._filesystem_observer.process, args=(self._received_file_queue, ))
-        self._filesystem_observer_process.start()
+        self._temp_data_folder = "C:\\Users\\Ralf\\Documents\\test\\temp" # TODO: not yet implemented
 
 
-    def register_proxy(self, proxy):
-        """Registers a new proxy for that broker.
-        :param proxy:    new proxy to be registered
-        :type proxy:     IServerSideProxy
-        """
-        self._proxies.append(proxy)
-
-
-    def remove_listener(self, proxy):
-        self._proxies.remove(proxy)
-
-
-    def join(self):
-        self._filesystem_observer.stop()
-        self._filesystem_observer_process.join()
-
-
-    def wait_for_next_data(self):
-        """Waiting for the next message to arrive."""
-        full_path = self._received_file_queue.get()
-        self._on_new_data(full_path)
-
-
-    def send_persistence_acknowledgement(self, message_ID):
-        print( message_ID ) # TODO: temp
-
-        # delete the ZIP-file corresponding to the message ID
-        os.remove(self._data_folder + '/' + message_ID + self._data_file_extension)
+    def process(self, received_file_queue, request_queue):
+        try:
+            while (True):
+                full_path = received_file_queue.get()
+                message_ID, station_ID, data = self._on_new_data(full_path)
+                if message_ID:
+                    request_queue.put((message_ID, station_ID, data))
+        except Exception as e:
+            print(e) # TODO: handler still missing
 
 
     def _on_new_data(self, full_path):
@@ -120,53 +94,15 @@ class FTPServerBroker(object):
             splitted_message_ID = message_ID.split( '_' )
             if len(splitted_message_ID) > 0:
                 station_ID = splitted_message_ID[-1]
+                data = self._read_data_files(message_ID, station_ID)
+                return message_ID, station_ID, data
 
-                self._notify_proxies(message_ID, station_ID)
-
-
-    def _notify_proxies(self, message_ID, station_ID):
-        for proxy in self._proxies:
-            proxy.on_data_received(message_ID, station_ID)
+        return None, None, None
 
 
-class FTPServerSideProxy(IServerSideProxy):
-    """Class for a weather server broker proxy based on FTP"""
-
-    def __init__(self):
-        self._observers = []
-        self._broker = FTPServerBroker()
-        self._broker.register_proxy(self)        
-        self._data_file_extension = ".ZIP" # TODO: possibly generalize this
-        self._data_folder = "C:\\Users\\Ralf\\Documents\\test" # TODO: not yet implemented
-        self._temp_data_folder = "C:\\Users\\Ralf\\Documents\\test\\temp" # TODO: not yet implemented
-
-    def register_listener(self, observer):
-        """ Registers a new listener.
-        :param observer:    new listener to be registered
-        :type observer:     IWeatherPersistenceService
-        """
-        self._observers.append(observer)
-
-
-    def remove_listener(self, observer):
-        self._observers.remove(observer)
-
-
-    def join(self):
-        self._broker.join()
-
-
-    def acknowledge_persistence(self, finished_ID):
-        self._broker.send_persistence_acknowledgement(finished_ID)
-
-
-    def wait_for_next_data(self):
-        self._broker.wait_for_next_data()
-
-
-    def on_data_received(self, message_ID, station_ID):
-        wait_time = 0.05 # wait time between data file reading trials (in seconds)
-        max_trials = 10 # reading trials for the data file before a fatal failure is assumed
+    def _read_data_files(self, message_ID, station_ID):
+        wait_time = 0.05    # wait time between data file reading trials (in seconds)
+        max_trials = 10     # reading trials for the data file before a fatal failure is assumed
 
         # extract data from the ZIP-file(s)
         new_data_file_list = []
@@ -187,23 +123,81 @@ class FTPServerSideProxy(IServerSideProxy):
                     new_data_file_list = zip_file.namelist()
                     zip_file.extractall(self._temp_data_folder)
 
-        # read a list of WeatherData objects from the unzipped data files
-        datasets = []
-        try:
-            for curr_file_name in new_data_file_list:
-                file = PCWetterstationFormatFile(self._temp_data_folder, curr_file_name)
-                data = file.read()
-                data = data[0]
-        except Exception as e:
-                raise(e)
-
-        message = WeatherMessage(message_ID, station_ID, data)
-        self._notify_listeners(message)
+        # read a list of WeatherData objects from the unzipped data files  
+        for curr_file_name in new_data_file_list:
+            file = PCWetterstationFormatFile(self._temp_data_folder, curr_file_name) # TODO: the data from different files needs to be merged
+            data = file.read()
+            data = data[0]
 
         # delete the temporary data files
         PCWetterstationFormatFile.deletedatafiles(self._temp_data_folder, new_data_file_list)
 
+        return data
 
-    def _notify_listeners(self, message):
-        for observer in self._observers:
-            observer.add_data(message)
+
+class FTPServerBroker(object):
+    """Server broker for weather data transmission based on FTP"""
+
+    def __init__(self, request_queue):
+        self._data_folder = "C:\\Users\\Ralf\\Documents\\test" # TODO: not yet implemented
+        self._data_file_extension = ".ZIP" # TODO: possibly generalize this
+
+        self._received_file_queue = Queue()
+        self._filesystem_observer = FileSystemObserver(self._data_folder)
+        self._filesystem_observer_process = Process(target=self._filesystem_observer.process, args=(self._received_file_queue, ))
+        self._filesystem_observer_process.start()
+
+        self._broker = FTPServerBrokerProcess()
+        self._broker_process = Process(target=self._broker.process, args=(self._received_file_queue, request_queue))
+        self._broker_process.start()
+
+
+    def join(self):
+        self._filesystem_observer.stop()
+        self._filesystem_observer_process.join()
+        self._broker_process.stop()
+        self._broker_process.join()
+
+
+    def send_persistence_acknowledgement(self, message_ID):
+        print( message_ID ) # TODO: temp
+
+        # delete the ZIP-file corresponding to the message ID
+        os.remove(self._data_folder + '/' + message_ID + self._data_file_extension)
+
+
+class FTPServerSideProxyProcess(object):
+    def process(self, request_queue, database_service_factory, parent):
+        try:
+            database_service = database_service_factory.create()
+            database_service.register_observer(parent)
+
+            while (True):
+                # the FTP-broker does not require deserialization of the data
+                message_ID, station_ID, raw_data = request_queue.get()          
+                message = WeatherMessage(message_ID, station_ID, raw_data)    
+                database_service.add_data(message)
+        except Exception as e:
+            print(e) # TODO: handler still missing
+
+
+class FTPServerSideProxy(IServerSideProxy):
+    """Class for a weather server broker proxy based on FTP"""
+
+    def __init__(self, database_service_factory):
+        request_queue = Queue()      
+        self._broker = FTPServerBroker(request_queue)
+        self._proxy = FTPServerSideProxyProcess()
+       
+        self._proxy_process = Process(target=self._proxy.process, args=(request_queue, database_service_factory, self))
+        self._proxy_process.start()    
+        
+
+    def join(self):
+        self._broker.join()
+        self._proxy_process.stop()
+        self._proxy_process.join()
+
+
+    def acknowledge_persistence(self, finished_ID):
+        self._broker.send_persistence_acknowledgement(finished_ID)
