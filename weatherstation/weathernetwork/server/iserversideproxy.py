@@ -15,5 +15,9 @@ class IServerSideProxy(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def on_data_received(self, message_ID, station_ID, data):
+    def on_data_received(self, message_ID, station_ID):
+        pass
+
+    @abstractmethod
+    def wait_for_next_data(self):
         pass

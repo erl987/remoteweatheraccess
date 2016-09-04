@@ -7,7 +7,8 @@ class WeatherPersistenceService(IWeatherPersistenceService):
     """Service storing weather data in a database"""
 
     def __init__(self, server_proxy, storage_object, db_file_name):
-        server_proxy.register_listener(self)
+        self._server_proxy = server_proxy
+        self._server_proxy.register_listener(self)
         
         self._storage_queue = Queue()
         self._acknowledgement_queue = Queue()
@@ -20,11 +21,12 @@ class WeatherPersistenceService(IWeatherPersistenceService):
 
     def __enter__(self):
         self._acknowledgement_process.start()  
-        self._storage_process.start()      
+        self._storage_process.start()         
         return self
     
 
     def __exit__(self, type, value, traceback):
+        self._server_proxy.join()
         self._storage_queue.put(None)
         self._storage_process.join()
         self._acknowledgement_queue.put(None)
@@ -33,6 +35,10 @@ class WeatherPersistenceService(IWeatherPersistenceService):
 
     def add_data(self, message):
         self._storage_queue.put(message)
+
+
+    def wait_for_next_data(self):
+        self._server_proxy.wait_for_next_data()
 
 
     def _acknowledgement_worker_process(self, acknowledgement_queue, server_proxy, exception_handler):

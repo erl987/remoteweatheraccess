@@ -6,3 +6,7 @@ class IWeatherPersistenceService(metaclass=ABCMeta):
     @abstractmethod
     def add_data(self, message):
         pass
+
+    @abstractmethod
+    def wait_for_next_data(self):
+        pass

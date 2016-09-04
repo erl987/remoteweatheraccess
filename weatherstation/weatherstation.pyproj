@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>af61fea6-0374-4031-aa2c-056052917724</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>ftp_broker_test.py</StartupFile>
+    <StartupFile>ftpbroker_test.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -24,8 +24,11 @@
   <ItemGroup>
     <Compile Include="constants.py" />
     <Compile Include="csvfilemerger.py" />
-    <Compile Include="database_test.py" />
-    <Compile Include="ftp_broker_test.py">
+    <Compile Include="weathernetwork\common\fileformats.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="weathernetwork\tests\server\database_test.py" />
+    <Compile Include="weathernetwork\tests\server\weatherpersistenceservice_test.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="generate_stationfile.py" />
@@ -40,6 +43,9 @@
     <Compile Include="te923station.py" />
     <Compile Include="te923ToCSVreader.py" />
     <Compile Include="te923ToCSVreader_test.py" />
+    <Compile Include="ftpbroker_test.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="utilities.py" />
     <Compile Include="weatherclient.py" />
     <Compile Include="weathernetwork\common\airsensordataset.py">
@@ -58,7 +64,7 @@
     <Compile Include="weathernetwork\common\weatherdataset.py" />
     <Compile Include="weathernetwork\common\__init__.py" />
     <Compile Include="weathernetwork\server\database.py" />
-    <Compile Include="weathernetwork\server\ftpserversideproxy.py">
+    <Compile Include="weathernetwork\server\ftpbroker.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="weathernetwork\server\istorageprocess.py">
@@ -67,10 +73,10 @@
     <Compile Include="weathernetwork\server\iweatherpersistenceservice.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="weathernetwork\server\ftpserverbroker.py">
+    <Compile Include="weathernetwork\server\mockbroker\__init__.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="weathernetwork\server\mockserversideproxy.py">
+    <Compile Include="weathernetwork\server\mockbroker\mockserversideproxy.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="weathernetwork\server\storageprocess.py">
@@ -89,7 +95,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="weathernetwork\server\__init__.py" />
-    <Compile Include="weathernetwork\test\__init__.py" />
+    <Compile Include="weathernetwork\tests\server\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="weathernetwork\tests\__init__.py" />
     <Compile Include="weathernetwork\__init__.py" />
     <Compile Include="weatherserver.py" />
   </ItemGroup>
@@ -97,7 +106,9 @@
     <Folder Include="weathernetwork\" />
     <Folder Include="weathernetwork\common\" />
     <Folder Include="weathernetwork\server\" />
-    <Folder Include="weathernetwork\test\" />
+    <Folder Include="weathernetwork\server\mockbroker\" />
+    <Folder Include="weathernetwork\tests\" />
+    <Folder Include="weathernetwork\tests\server\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

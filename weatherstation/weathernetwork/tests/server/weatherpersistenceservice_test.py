@@ -1,5 +1,5 @@
 import unittest
-from weathernetwork.server.mockserversideproxy import MockServerSideProxy
+from weathernetwork.server.mockbroker.mockserversideproxy import MockServerSideProxy
 from weathernetwork.server.weatherpersistenceservice import WeatherPersistenceService
 from weathernetwork.common.weatherdataset import WeatherDataset
 from weathernetwork.common.combisensordataset import CombiSensorDataset
@@ -7,7 +7,7 @@ from datetime import datetime
 import time
 from weathernetwork.server.storageprocess import StorageProcess
 
-class Test_ftp_broker_test(unittest.TestCase):
+class Test_WeatherPersistenceService_test(unittest.TestCase):
     def test_ftp_broker(self):
         db_file_name = "data/weather.db"
 
