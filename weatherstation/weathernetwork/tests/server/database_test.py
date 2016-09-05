@@ -1,7 +1,7 @@
 import unittest
 import datetime
 from weathernetwork.common.stationmetadata import WeatherStationMetadata
-from weathernetwork.server.database import WeatherDB
+from weathernetwork.server.database import SQLWeatherDB
 from weathernetwork.common.weatherdataset import WeatherDataset
 from weathernetwork.common.airsensordataset import AirSensorDataset
 from weathernetwork.common.combisensorarray import CombiSensorArray
@@ -14,7 +14,7 @@ class Test_weather_db_test(unittest.TestCase):
         weather_station_2 = WeatherStationMetadata("TES2", "TE923 Mebus", "Test City", "49.234", "11.024", "450")
         weather_station_2_B = WeatherStationMetadata("TES2", "TE923 Mebus", "Test City 2", "49.234", "11.024", "450")
 
-        weather_db = WeatherDB(db_file_name, CombiSensorArray.get_sensors())
+        weather_db = SQLWeatherDB(db_file_name, CombiSensorArray.get_sensors())
         if not weather_db.station_exists( weather_station.get_station_ID() ):
             weather_db.add_station(weather_station)
         if not weather_db.station_exists( weather_station_2.get_station_ID() ):

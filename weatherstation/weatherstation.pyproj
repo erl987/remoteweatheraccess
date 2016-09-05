@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>af61fea6-0374-4031-aa2c-056052917724</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>ftpbroker_test.py</StartupFile>
+    <StartupFile>ftp_weather_server.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -24,6 +24,9 @@
   <ItemGroup>
     <Compile Include="constants.py" />
     <Compile Include="csvfilemerger.py" />
+    <Compile Include="test.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="weathernetwork\common\fileformats.py">
       <SubType>Code</SubType>
     </Compile>
@@ -43,7 +46,7 @@
     <Compile Include="te923station.py" />
     <Compile Include="te923ToCSVreader.py" />
     <Compile Include="te923ToCSVreader_test.py" />
-    <Compile Include="ftpbroker_test.py">
+    <Compile Include="ftp_weather_server.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="utilities.py" />
@@ -63,11 +66,8 @@
     <Compile Include="weathernetwork\common\stationmetadata.py" />
     <Compile Include="weathernetwork\common\weatherdataset.py" />
     <Compile Include="weathernetwork\common\__init__.py" />
-    <Compile Include="weathernetwork\server\database.py" />
+    <Compile Include="weathernetwork\server\sqldatabase.py" />
     <Compile Include="weathernetwork\server\ftpbroker.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="weathernetwork\server\databaseservice.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="weathernetwork\server\mockbroker\__init__.py">
@@ -76,16 +76,13 @@
     <Compile Include="weathernetwork\server\mockbroker\mockserversideproxy.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="weathernetwork\server\sqldatabaseservice.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="weathernetwork\server\weathermessage.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="weathernetwork\server\exceptions.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="weathernetwork\server\iserversideproxy.py">
+    <Compile Include="weathernetwork\server\interface.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="weathernetwork\server\__init__.py" />
