@@ -142,11 +142,12 @@ class FTPServerBrokerProcess(object):
                         new_data_file_list = zip_file.namelist()
                         zip_file.extractall(self._temp_data_directory)
 
-            # read a list of WeatherData objects from the unzipped data files  
+            # read a list of WeatherData objects from the unzipped data files
+            data = list()
             for curr_file_name in new_data_file_list:
-                file = PCWetterstationFormatFile(self._temp_data_directory, curr_file_name) # TODO: the data from different files needs to be merged
-                data = file.read()
-                data = data[0]
+                file = PCWetterstationFormatFile(self._temp_data_directory, curr_file_name)
+                curr_data = file.read()
+                data += curr_data[0]
         finally:
             # delete the temporary data files
             PCWetterstationFormatFile.deletedatafiles(self._temp_data_directory, new_data_file_list)
