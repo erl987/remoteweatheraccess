@@ -12,6 +12,7 @@ from datetime import timedelta
 import threading
 from multiprocessing import Event, Process, Queue
 import signal
+import glob
 
 class FileSystemObserver(FileSystemEventHandler):
     def __init__(self, data_directory):
@@ -24,6 +25,10 @@ class FileSystemObserver(FileSystemEventHandler):
 
     def stop(self):
         self._exception_event.set()
+
+
+    def set_received_file_queue(self, received_file_queue):
+        self._received_file_queue = received_file_queue
 
 
     def _remove_outdated_processed_files(self, curr_time, max_keeping_time = 10):
@@ -54,7 +59,7 @@ class FileSystemObserver(FileSystemEventHandler):
 
     def process(self, received_file_queue, exception_handler):
         try:
-            signal.signal(signal.SIGINT, signal.SIG_IGN) # required for correct handling of Crtl+C in a multiprocess environment
+            signal.signal(signal.SIGINT, signal.SIG_IGN) # required for correct handling of Crtl + C in a multiprocess environment
             self._processed_files_lock = threading.Lock()
             filesystem_observer = Observer()
             self._received_file_queue = received_file_queue
@@ -69,6 +74,11 @@ class FileSystemObserver(FileSystemEventHandler):
             filesystem_observer.join()
         except Exception as e:
             exception_handler(DelayedException(e))
+
+
+    def feed_modified_file(self, full_path):
+        """Feeds a data file manually into the queue of received files."""
+        self._received_file_queue.put(full_path)
 
 
 class FTPServerBrokerProcess(object):
@@ -112,33 +122,34 @@ class FTPServerBrokerProcess(object):
         wait_time = 0.05    # wait time between data file reading trials (in seconds)
         max_trials = 10     # reading trials for the data file before a fatal failure is assumed
 
-        # extract data from the ZIP-file(s)
         new_data_file_list = []
-        file_still_blocked = True
-        counter = 0
-        while file_still_blocked:
-            try:
-                zip_file = ZipFile(self._data_directory + '/' + message_ID + self._data_file_extension, 'r')
-            except PermissionError:
-                # workaround because the watchdog library cannot monitor the file close event and the file may still be open when the "modified" event is signalled
-                counter += 1
-                if counter > max_trials:
-                    reraise
-                time.sleep(wait_time)
-            else:
-                file_still_blocked = False
-                with zip_file:
-                    new_data_file_list = zip_file.namelist()
-                    zip_file.extractall(self._temp_data_directory)
+        try:
+            # extract data from the ZIP-file(s)
+            file_still_blocked = True
+            counter = 0
+            while file_still_blocked:
+                try:
+                    zip_file = ZipFile(self._data_directory + '/' + message_ID + self._data_file_extension, 'r')
+                except PermissionError:
+                    # workaround because the watchdog library cannot monitor the file close event and the file may still be open when the "modified" event is signalled
+                    counter += 1
+                    if counter > max_trials:
+                        reraise
+                    time.sleep(wait_time)
+                else:
+                    file_still_blocked = False
+                    with zip_file:
+                        new_data_file_list = zip_file.namelist()
+                        zip_file.extractall(self._temp_data_directory)
 
-        # read a list of WeatherData objects from the unzipped data files  
-        for curr_file_name in new_data_file_list:
-            file = PCWetterstationFormatFile(self._temp_data_directory, curr_file_name) # TODO: the data from different files needs to be merged
-            data = file.read()
-            data = data[0]
-
-        # delete the temporary data files
-        PCWetterstationFormatFile.deletedatafiles(self._temp_data_directory, new_data_file_list)
+            # read a list of WeatherData objects from the unzipped data files  
+            for curr_file_name in new_data_file_list:
+                file = PCWetterstationFormatFile(self._temp_data_directory, curr_file_name) # TODO: the data from different files needs to be merged
+                data = file.read()
+                data = data[0]
+        finally:
+            # delete the temporary data files
+            PCWetterstationFormatFile.deletedatafiles(self._temp_data_directory, new_data_file_list)
 
         return data
 
@@ -153,6 +164,7 @@ class FTPBroker(object):
         self._received_file_queue = Queue()
         self._filesystem_observer = FileSystemObserver(self._data_directory)
         self._filesystem_observer_process = Process(target=self._filesystem_observer.process, args=(self._received_file_queue, exception_handler))
+        self._filesystem_observer.set_received_file_queue(self._received_file_queue)
         self._filesystem_observer_process.start()
 
         self._broker = FTPServerBrokerProcess(data_directory, data_file_extension, temp_data_directory)
@@ -165,6 +177,10 @@ class FTPBroker(object):
         self._filesystem_observer_process.join()
         self._received_file_queue.put(None)
         self._broker_process.join()
+
+
+    def feed_modified_file(self, full_path):
+        self._filesystem_observer.feed_modified_file(full_path)
 
 
     def send_persistence_acknowledgement(self, message_ID):
@@ -199,12 +215,22 @@ class FTPServerSideProxy(IServerSideProxy):
     """
 
     def __init__(self, database_service_factory, data_directory, data_file_extension, temp_data_directory, exception_queue):
+        # empty the temporary data directory (it may contain unnecessary files after a power failure)
+        self._clear_temp_data_directory(temp_data_directory)
+
+        # find all still unstored data files
+        unstored_file_paths = self._find_all_data_files(data_directory, data_file_extension)
+
+        # start the listener processes
         self._exception_queue = exception_queue
         self._request_queue = Queue()  
         self._broker = FTPBroker(self._request_queue, data_directory, data_file_extension, temp_data_directory, self._exception_handler)                
         self._proxy = FTPServerSideProxyProcess() 
         self._proxy_process = Process(target=self._proxy.process, args=(self._request_queue, database_service_factory, self, self._exception_handler))
-        self._proxy_process.start()             
+        self._proxy_process.start()        
+        
+        # feed the still unstored data files into the listener process
+        self._feed_unstored_data_files(unstored_file_paths)    
 
         
     def __enter__(self):
@@ -213,6 +239,22 @@ class FTPServerSideProxy(IServerSideProxy):
 
     def __exit__(self, type, value, traceback):
         self._stop_and_join()
+
+
+    def _clear_temp_data_directory(self, temp_data_directory):
+        files = glob.glob(temp_data_directory + '/*')
+        for f in files:
+            os.remove(f)
+
+
+    def _find_all_data_files(self, data_directory, data_file_extension):
+        unstored_file_paths = glob.glob(data_directory + "/*" + data_file_extension)
+        return unstored_file_paths
+
+
+    def _feed_unstored_data_files(self, unstored_file_paths):
+        for file_path in unstored_file_paths:
+            self._broker.feed_modified_file(file_path)
 
 
     def _stop_and_join(self):

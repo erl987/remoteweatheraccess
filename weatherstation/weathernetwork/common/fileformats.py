@@ -36,7 +36,9 @@ class PCWetterstationFormatFile(IWeatherDataFile):
         FileNotFoundError:          Risen if the data folder is not existing.
         """
         for data_file in data_file_list:
-            os.remove( data_folder + '/' + data_file )
+            file_path = data_folder + '/' + data_file
+            if os.path.isfile(file_path):
+                os.remove(file_path)
 
 
     def read(self):
