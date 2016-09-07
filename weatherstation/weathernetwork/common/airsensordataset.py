@@ -6,9 +6,10 @@ class AirSensorDataset(object):
         Constructor.
         :param temperature:         temperature value of the sensor [°C]
         :param humidity:            humidity value of the sensor [%]
+        :raise ValueError:          if a value has an invalid type
         """
-        self._temperature = temperature
-        self._humidity = humidity
+        self._temperature = float(temperature)
+        self._humidity = float(humidity)
 
 
     def get_temperature(self):

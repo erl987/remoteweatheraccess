@@ -1,12 +1,28 @@
 import unittest
-import datetime
-from weathernetwork.common.stationmetadata import WeatherStationMetadata
-from weathernetwork.server.database import SQLWeatherDB
+from weathernetwork.server.weathermessage import WeatherMessage
+from weathernetwork.server.sqldatabase import SQLDatabaseServiceFactory, SQLDatabaseService, SQLWeatherDB
 from weathernetwork.common.weatherdataset import WeatherDataset
-from weathernetwork.common.airsensordataset import AirSensorDataset
+import datetime
+from weathernetwork.common.combisensordataset import CombiSensorDataset
+from weathernetwork.server.exceptions import NotExistingError, AlreadyExistingError
+from weathernetwork.common.stationmetadata import WeatherStationMetadata
 from weathernetwork.common.combisensorarray import CombiSensorArray
+from weathernetwork.common.airsensordataset import AirSensorDataset
 
-class Test_weather_db_test(unittest.TestCase):
+class SQLDatabaseService_test(unittest.TestCase):
+    def setUp(self):
+        """Sets up each unit test."""
+        self._db_file_name = "data/weather.db"
+        self._message_ID = "54321"
+        self._station_ID = "TES2"
+        self._not_existing_station_ID = "TES5"
+        self._data = WeatherDataset( datetime.datetime.utcnow(), [ CombiSensorDataset("OUT1", 30.9, 89.3) ], 532.3, 1024.3, 9.8, 341.4, 34.2, 10.9, 21.9)
+
+
+    def tearDown(self):
+        """Finishes each unit test."""
+
+
     def test_add_station(self):
         db_file_name = "data/weather.db";
 
@@ -42,6 +58,21 @@ class Test_weather_db_test(unittest.TestCase):
         first_time = datetime.datetime(2016, 8, 20)
         last_time = datetime.datetime(2016, 9, 27)
         data = weather_db.get_data_in_time_range("TES2", first_time, last_time)
+
+
+    def test_not_exsting_station(self):
+        with self.assertRaises(NotExistingError):
+            sql_database_service = SQLDatabaseService(self._db_file_name)
+            message = WeatherMessage(self._message_ID, self._not_existing_station_ID, self._data)
+            sql_database_service.add_data(message)
+
+
+    def test_store_twice(self):
+        sql_database_service = SQLDatabaseService(self._db_file_name)
+        message = WeatherMessage(self._message_ID, self._station_ID, self._data)
+        sql_database_service.add_data(message)
+        with self.assertRaises(AlreadyExistingError):
+            sql_database_service.add_data(message)
 
 
 if __name__ == '__main__':

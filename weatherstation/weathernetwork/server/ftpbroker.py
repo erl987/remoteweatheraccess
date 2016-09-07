@@ -13,6 +13,9 @@ import threading
 from multiprocessing import Event, Process, Queue
 import signal
 import glob
+from weathernetwork.server.exceptions import AlreadyExistingError, NotExistingError
+from weathernetwork.common.logmessage import LogMessage
+from weathernetwork.common.exceptions import FileParseError
 
 class FileSystemObserver(FileSystemEventHandler):
     def __init__(self, data_directory):
@@ -63,7 +66,9 @@ class FileSystemObserver(FileSystemEventHandler):
             self._processed_files_lock = threading.Lock()
             filesystem_observer = Observer()
             self._received_file_queue = received_file_queue
-        
+            if not os.path.isdir(self._data_directory):
+                raise IOError("Data directory \"%s\" not found." % self._data_directory)
+                    
             filesystem_observer.schedule(self, self._data_directory, recursive=False)
             filesystem_observer.start()
         
@@ -88,21 +93,22 @@ class FTPServerBrokerProcess(object):
         self._temp_data_directory = temp_data_directory
 
 
-    def process(self, received_file_queue, request_queue, exception_handler):
+    def process(self, received_file_queue, request_queue, parent, message_handler, exception_handler):
         try:
             signal.signal(signal.SIGINT, signal.SIG_IGN)
             while (True):
                 full_path = received_file_queue.get()
                 if full_path is None:
                     break;
-                message_ID, station_ID, data = self._on_new_data(full_path)
+
+                message_ID, station_ID, data = self._on_new_data(full_path, message_handler, parent)
                 if message_ID:
                     request_queue.put((message_ID, station_ID, data))
         except Exception as e:
             exception_handler(DelayedException(e))
 
 
-    def _on_new_data(self, full_path):
+    def _on_new_data(self, full_path, message_handler, parent):
         """A new file has been received via FTP (i.e. modified)"""
         # extract all required information from the name of the transferred data file
         file, file_extension = os.path.splitext(full_path)
@@ -110,10 +116,19 @@ class FTPServerBrokerProcess(object):
 
         if file_extension.upper() == self._data_file_extension:
             splitted_message_ID = message_ID.split( '_' )
+            
             if len(splitted_message_ID) > 0:
                 station_ID = splitted_message_ID[-1]
-                data = self._read_data_files(message_ID, station_ID)
-                return message_ID, station_ID, data
+                try:
+                    data = self._read_data_files(message_ID, station_ID)
+                except FileParseError as e:
+                    # invalid file format, ignore the file
+                    message_handler(LogMessage(e.msg))
+
+                    # the sender needs to acknowledge anyway, that the data does not need to be stored anymore
+                    parent.send_persistence_acknowledgement(message_ID)
+                else:
+                    return message_ID, station_ID, data
 
         return None, None, None
 
@@ -134,7 +149,7 @@ class FTPServerBrokerProcess(object):
                     # workaround because the watchdog library cannot monitor the file close event and the file may still be open when the "modified" event is signalled
                     counter += 1
                     if counter > max_trials:
-                        reraise
+                        raise
                     time.sleep(wait_time)
                 else:
                     file_still_blocked = False
@@ -158,9 +173,10 @@ class FTPServerBrokerProcess(object):
 class FTPBroker(object):
     """Broker for weather data transmission based on FTP"""
 
-    def __init__(self, request_queue, data_directory, data_file_extension, temp_data_directory, exception_handler):
+    def __init__(self, request_queue, data_directory, data_file_extension, temp_data_directory, message_handler, exception_handler):
         self._data_directory = data_directory
         self._data_file_extension = data_file_extension
+        self._message_handler = message_handler
 
         self._received_file_queue = Queue()
         self._filesystem_observer = FileSystemObserver(self._data_directory)
@@ -169,7 +185,7 @@ class FTPBroker(object):
         self._filesystem_observer_process.start()
 
         self._broker = FTPServerBrokerProcess(data_directory, data_file_extension, temp_data_directory)
-        self._broker_process = Process(target=self._broker.process, args=(self._received_file_queue, request_queue, exception_handler))
+        self._broker_process = Process(target=self._broker.process, args=(self._received_file_queue, request_queue, self, message_handler, exception_handler))
         self._broker_process.start()
 
 
@@ -185,14 +201,14 @@ class FTPBroker(object):
 
 
     def send_persistence_acknowledgement(self, message_ID):
-        print( message_ID ) # TODO: temp
-
         # delete the ZIP-file corresponding to the message ID
         os.remove(self._data_directory + '/' + message_ID + self._data_file_extension)
 
+        self._message_handler(LogMessage("Sucessfully transferred message %s" % message_ID))
+
 
 class FTPServerSideProxyProcess(object):
-    def process(self, request_queue, database_service_factory, parent, exception_handler):
+    def process(self, request_queue, database_service_factory, parent, message_handler, exception_handler):
         try:
             signal.signal(signal.SIGINT, signal.SIG_IGN)
             database_service = database_service_factory.create()
@@ -203,8 +219,18 @@ class FTPServerSideProxyProcess(object):
                 message_ID, station_ID, raw_data = request_queue.get() 
                 if message_ID is None:
                     break        
-                message = WeatherMessage(message_ID, station_ID, raw_data)    
-                database_service.add_data(message)
+                message = WeatherMessage(message_ID, station_ID, raw_data) 
+                try:   
+                    database_service.add_data(message)
+                except (NotExistingError, AlreadyExistingError) as e:
+                    # the new data will be ignored
+                    message_handler(LogMessage(e.msg))
+
+                    # the sender needs to acknowledge anyway, that the data does not need to be stored anymore
+                    parent.acknowledge_persistence(message_ID)
+
+                if not raw_data:
+                    message_handler(LogMessage("Data for station %s was empty." % station_ID))
         except Exception as e:
             exception_handler(DelayedException(e))
 
@@ -215,7 +241,7 @@ class FTPServerSideProxy(IServerSideProxy):
     Needs to be called in a with-clause for correct management of the subprocesses.
     """
 
-    def __init__(self, database_service_factory, data_directory, data_file_extension, temp_data_directory, exception_queue):
+    def __init__(self, database_service_factory, data_directory, data_file_extension, temp_data_directory, message_handler, exception_queue):
         # empty the temporary data directory (it may contain unnecessary files after a power failure)
         self._clear_temp_data_directory(temp_data_directory)
 
@@ -225,9 +251,9 @@ class FTPServerSideProxy(IServerSideProxy):
         # start the listener processes
         self._exception_queue = exception_queue
         self._request_queue = Queue()  
-        self._broker = FTPBroker(self._request_queue, data_directory, data_file_extension, temp_data_directory, self._exception_handler)                
+        self._broker = FTPBroker(self._request_queue, data_directory, data_file_extension, temp_data_directory, message_handler, self._exception_handler)                
         self._proxy = FTPServerSideProxyProcess() 
-        self._proxy_process = Process(target=self._proxy.process, args=(self._request_queue, database_service_factory, self, self._exception_handler))
+        self._proxy_process = Process(target=self._proxy.process, args=(self._request_queue, database_service_factory, self, message_handler, self._exception_handler))
         self._proxy_process.start()        
         
         # feed the still unstored data files into the listener process

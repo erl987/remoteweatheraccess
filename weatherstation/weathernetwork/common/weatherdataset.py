@@ -1,3 +1,5 @@
+import datetime
+
 class WeatherDataset(object):
     """Weather data set at a moment in time."""
 
@@ -22,16 +24,19 @@ class WeatherDataset(object):
         :type wind_gust:            float
         :param wind_temp:           wind sensor temperature [°C]
         :type wind_temp:            float
+        :raise ValueError:          if a value has an invalid type
         """
+        if type(time) is not datetime.datetime:
+            raise ValueError('time must be a datetime.datetime, not a %s' % type(arg))
         self._time = time
         self._combi_sensor_vals = combi_sensor_vals
-        self._rain_gauge = rain_gauge
-        self._pressure = pressure
-        self._UV = UV;
-        self._wind_direction = wind_direction
-        self._wind_speed = wind_speed
-        self._wind_gust = wind_gust
-        self._wind_temp = wind_temp
+        self._rain_gauge = float(rain_gauge)
+        self._pressure = float(pressure)
+        self._UV = float(UV);
+        self._wind_direction = float(wind_direction)
+        self._wind_speed = float(wind_speed)
+        self._wind_gust = float(wind_gust)
+        self._wind_temp = float(wind_temp)
 
     def get_time(self):
         """

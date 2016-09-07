@@ -4,6 +4,7 @@ from datetime import datetime as dt
 from weathernetwork.common.weatherdataset import WeatherDataset
 from weathernetwork.common.combisensordataset import CombiSensorDataset
 import os
+from weathernetwork.common.exceptions import PCWetterstationFileParseError
 
 
 class IWeatherDataFile(metaclass=ABCMeta):
@@ -74,62 +75,74 @@ class PCWetterstationFormatFile(IWeatherDataFile):
         IOError:                    The file could not be opened.
         ImportError:                The file is not compatible to PC-Wetterstation
         """
-        # Determine the sensors present in the file    
-        file_name = self._file_path + '/' + self._file_name
-        with open( file_name, 'r', newline='', encoding='latin-1' ) as f:
-            file_reader = csv.reader( f )
+        try:
+            # Determine the sensors present in the file    
+            file_name = self._file_path + '/' + self._file_name
+            with open( file_name, 'r', newline='', encoding='latin-1' ) as f:
+                file_reader = csv.reader( f )
 
-            # Read the three header lines
-            sensor_descriptions = next( file_reader )
-            sensor_units = next( file_reader )
-            metadata = ','.join( next( file_reader ) )
+                # Read the three header lines
+                sensor_descriptions = next( file_reader )
+                sensor_units = next( file_reader )
+                metadata = ','.join( next( file_reader ) )
 
-            # Read first data line containing the sensor indices
-            indices_list = next( file_reader )
+                # Read first data line containing the sensor indices
+                indices_list = next( file_reader )
+                
+                # check for correct number of header lines
+                checked_indices_list = [x for x in indices_list if x.isdigit()]
+                if indices_list[0] != '' or indices_list[1] != '':
+                    raise PCWetterstationFileParseError("File header has invalid number of lines.")
 
-        # parse header lines # TODO: not all metadata entries must be present according to the specification!!!
-        splitted_line = str.split( metadata, '#' )
-        for line in splitted_line:
-            line_pair = str.split( line, '=' )
-            if line_pair[0] == 'Calibrate':
-                rain_calib_factor = float( line_pair[1] )
-            elif line_pair[0] == 'Regen0':
-                line_pair[1].index( 'mm' )      # will raise an exception if the format is wrong
-                rain_counter_base = float( line_pair[1].replace( 'mm', '' ) )
-            elif line_pair[0] == 'Location':
-                location_pair = str.split( line_pair[1], '/' )
-                station_name = location_pair[0]
-                location_pair[1].index( 'm' )   # will raise an exception if the format is wrong
-                station_height = int( location_pair[1].replace( 'm', '' ) )
-            elif line_pair[0] == 'Station':
-                station_type = line_pair[1]
+                if ( len(checked_indices_list) + 2 ) != len(indices_list):
+                    raise PCWetterstationFileParseError("File header has invalid number of lines.")
+                
+            # parse header lines # TODO: not all metadata entries must be present according to the specification!!!
+            splitted_line = str.split( metadata, '#' )
+            for line in splitted_line:
+                line_pair = str.split( line, '=' )
+                if line_pair[0] == 'Calibrate':
+                    rain_calib_factor = float( line_pair[1] )
+                elif line_pair[0] == 'Regen0':
+                    line_pair[1].index( 'mm' )      # will raise an exception if the format is wrong
+                    rain_counter_base = float( line_pair[1].replace( 'mm', '' ) )
+                elif line_pair[0] == 'Location':
+                    location_pair = str.split( line_pair[1], '/' )
+                    station_name = location_pair[0]
+                    location_pair[1].index( 'm' )   # will raise an exception if the format is wrong
+                    station_height = int( location_pair[1].replace( 'm', '' ) )
+                elif line_pair[0] == 'Station':
+                    station_type = line_pair[1]
               
-        # Read all weather data from the file
-        with open( file_name, 'r', newline='', encoding='latin-1' ) as f:
-            file_reader = csv.DictReader( f, sensor_descriptions )
-            #file_reader = csv.DictReader( f, key_list )
+            # Read all weather data from the file
+            with open( file_name, 'r', newline='', encoding='latin-1' ) as f:
+                file_reader = csv.DictReader( f, sensor_descriptions )
 
-            # Skip all header lines
-            next( file_reader )
-            next( file_reader )
-            next( file_reader )
-            next( file_reader )
+                # Skip all header lines
+                next( file_reader )
+                next( file_reader )
+                next( file_reader )
+                next( file_reader )
 
-            # Read data
-            data = list( file_reader )
+                # Read data
+                data = list( file_reader )
 
-        # convert the sensor informations to a WeatherDataset object
-        datasets = []
-        for line in data:
-            time = dt.strptime( line['Datum'] + ' ' + line['Zeit'], '%d.%m.%Y %H:%M' )
-            combi_sensor_vals = [ CombiSensorDataset( 'IN', line['Temp. I.'], line['Feuchte I.'] ),
-                                  CombiSensorDataset( 'OUT1', line['Temp. A. 1'], line['Feuchte A. 1'] ),
-                                  CombiSensorDataset( 'OUT2', line['Temp. A. 2'], line['Feuchte A. 2'] ),
-                                  CombiSensorDataset( 'OUT3', line['Temp. A. 3'], line['Feuchte A. 3'] ),
-                                  CombiSensorDataset( 'OUT4', line['Temp. A. 4'], line['Feuchte A. 4'] ),
-                                  CombiSensorDataset( 'OUT5', line['Temp. A. 5'], line['Feuchte A. 5'] )]
+            # convert the sensor informations to a WeatherDataset object
+            datasets = []
+            for line in data:
+                time = dt.strptime( line['Datum'] + ' ' + line['Zeit'], '%d.%m.%Y %H:%M' )
+                combi_sensor_vals = [ CombiSensorDataset( 'IN', line['Temp. I.'], line['Feuchte I.'] ),
+                                      CombiSensorDataset( 'OUT1', line['Temp. A. 1'], line['Feuchte A. 1'] ),
+                                      CombiSensorDataset( 'OUT2', line['Temp. A. 2'], line['Feuchte A. 2'] ),
+                                      CombiSensorDataset( 'OUT3', line['Temp. A. 3'], line['Feuchte A. 3'] ),
+                                      CombiSensorDataset( 'OUT4', line['Temp. A. 4'], line['Feuchte A. 4'] ),
+                                      CombiSensorDataset( 'OUT5', line['Temp. A. 5'], line['Feuchte A. 5'] )]
 
-            datasets.append( WeatherDataset( time, combi_sensor_vals, line['Regen'], line['Luftdruck'], line['UV-X'], line['Richtung'], line['Wind'], line['Windböen'], line['Temp. Wind'] ) )
+                datasets.append( WeatherDataset( time, combi_sensor_vals, line['Regen'], line['Luftdruck'], line['UV-X'], line['Richtung'], line['Wind'], line['Windböen'], line['Temp. Wind'] ) )
 
-        return datasets, rain_calib_factor, rain_counter_base, station_name, station_height, station_type
+            return datasets, rain_calib_factor, rain_counter_base, station_name, station_height, station_type
+        except Exception as e:
+            raise PCWetterstationFileParseError("Weather data file \"%s\" has invalid format." % file_name)
+
+
 

@@ -160,7 +160,7 @@ class SQLWeatherDB(object):
         """
         try:
             self._sql.execute( " \
-                INSERT OR IGNORE INTO WeatherData ( \
+                INSERT INTO WeatherData ( \
                     time, \
                     stationID, \
                     rainGauge, \
@@ -171,6 +171,8 @@ class SQLWeatherDB(object):
         except sqlite3.Error as e:
             if "NULL" in e.args[0]:
                 raise NotExistingError("The station does not exist in the database")
+            elif "unique" in e.args[0]:
+                raise AlreadyExistingError("For the given station (%s), a dataset for the given time (%s) already exists in the database" % (station_ID, str(time)))
             else:
                 raise
 
@@ -181,7 +183,7 @@ class SQLWeatherDB(object):
         :param sql:                 SQL-object of the database. This method needs to be encapsulated by a transaction.
         """
         self._sql.execute(" \
-            INSERT OR IGNORE INTO WindSensorData ( \
+            INSERT INTO WindSensorData ( \
                 time, \
                 stationID, \
                 direction, \
@@ -204,7 +206,7 @@ class SQLWeatherDB(object):
             sensor_ID = next_sensor_val.get_sensor_ID()
             try:
                 self._sql.execute(" \
-                    INSERT OR IGNORE INTO CombiSensorData ( \
+                    INSERT INTO CombiSensorData ( \
                         time, \
                         stationID, \
                         sensorID, \
@@ -215,6 +217,8 @@ class SQLWeatherDB(object):
             except sqlite3.Error as e:
                 if "NULL" in e.args[0]:
                     raise NotExistingError("The combi sensor ID not exist in the database")
+                elif "unique" in e.args[0]:
+                    raise AlreadyExistingError("For the given combi sensor ID (%s), station ID (%s) and time (%s) already data exists in the database" % (sensor_ID, station_ID, str(time)))
                 else:
                     raise 
 
@@ -229,6 +233,7 @@ class SQLWeatherDB(object):
         :param data:                    data for (possibly several) timepoints
         :type data:                     single WeatherDataset object or list of multiple WeatherDataset objects
         :raise NotExistingError:        if a requested station or sensor ID is not existing in the database
+        :raise AlreadyExistingError:    if a dataset is already existing in the database for the given station and time (and sensor ID)
         """
         if not isinstance(data,list):
             data = [data]
@@ -371,28 +376,22 @@ class SQLWeatherDB(object):
                 ( station_ID, first_time, last_time ) ).fetchall()
             wind_data_in_range = [ dict( item ) for item in wind_data_from_db ]
 
-            combi_sensors_from_db = self._sql.execute( " \
-                SELECT sensorID \
-                FROM CombiSensor \
-                ORDER BY sensorID" ).fetchall()
-
             # iterate over all times in the time range in order
             datasets = []
             for base, wind in zip( base_data_in_range, wind_data_in_range ):
                 time = base["time"]
 
                 combi_data_from_db = self._sql.execute( " \
-                        SELECT temperature, humidity \
+                        SELECT temperature, humidity, sensorID \
                         FROM CombiSensorData \
                         WHERE stationID=(?) AND time=(?) \
                         ORDER BY sensorID", \
                         ( station_ID, time ) ).fetchall()
 
                 combi_data = []
-                for counter, sensor in enumerate(combi_sensors_from_db):
-                    sensor_ID = sensor[0]
-                    combi_data_in_range = dict( combi_data_from_db[counter] )
-                    combi_data.append( CombiSensorDataset(sensor_ID, combi_data_in_range["temperature"], combi_data_in_range["humidity"]) )
+                for sensor_data in combi_data_from_db:
+                    sensor_ID = sensor_data["sensorID"]
+                    combi_data.append( CombiSensorDataset(sensor_ID, sensor_data["temperature"], sensor_data["humidity"]) )
                     
                 datasets.append( WeatherDataset( base["time"], combi_data, base["rainGauge"], base["pressure"], base["UV"], wind["direction"], wind["speed"], wind["gusts"], wind["temperature"] ) )
 

@@ -24,14 +24,15 @@
   <ItemGroup>
     <Compile Include="constants.py" />
     <Compile Include="csvfilemerger.py" />
-    <Compile Include="test.py">
+    <Compile Include="ftp_server_side_proxy_test.py" />
+    <Compile Include="sql_database_service_test.py" />
+    <Compile Include="weathernetwork\common\exceptions.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="weathernetwork\common\fileformats.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="weathernetwork\tests\server\database_test.py" />
-    <Compile Include="weathernetwork\tests\server\weatherpersistenceservice_test.py">
+    <Compile Include="weathernetwork\common\logmessage.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="generate_stationfile.py" />
