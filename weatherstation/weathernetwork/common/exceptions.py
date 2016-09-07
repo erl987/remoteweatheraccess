@@ -5,7 +5,15 @@ class Error(Exception):
 
 class FileParseError(Error):
     """Raised when a data file could not be parsed correctly due to wrong format."""
-    pass
+
+    def __init__(self,msg):
+        """
+        Constructor.
+        :param msg:     error message description
+        :type msg:      string
+        """
+        self.msg = msg        
+
 
 
 class PCWetterstationFileParseError(FileParseError):
@@ -18,4 +26,4 @@ class PCWetterstationFileParseError(FileParseError):
         :param msg:     error message description
         :type msg:      string
         """
-        self.msg = msg
+        super(PCWetterstationFileParseError, self).__init__(msg)

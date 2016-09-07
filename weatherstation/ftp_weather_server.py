@@ -11,7 +11,7 @@ def on_message(message):
 if __name__ == "__main__":
     db_file_name = "data/weather.db"
     data_directory = "C:\\Users\\Ralf\\Documents\\test"
-    temp_data_directory = "C:\\Users\\Ralf\\Documents\\test\\temp"
+    temp_data_directory = "C:\\Users\\Ralf\\Desktop\\temp"
     data_file_extension = ".ZIP"
 
     exception_queue = Queue()

@@ -69,7 +69,7 @@ class FileSystemObserver(FileSystemEventHandler):
             if not os.path.isdir(self._data_directory):
                 raise IOError("Data directory \"%s\" not found." % self._data_directory)
                     
-            filesystem_observer.schedule(self, self._data_directory, recursive=False)
+            filesystem_observer.schedule(self, self._data_directory, recursive=True)
             filesystem_observer.start()
         
             # wait until stop is signalled
@@ -108,6 +108,16 @@ class FTPServerBrokerProcess(object):
             exception_handler(DelayedException(e))
 
 
+    def get_station_ID(self, message_ID):
+        splitted_message_ID = message_ID.split( '_' )
+        if len(splitted_message_ID) > 0:
+            station_ID = splitted_message_ID[-1]
+        else:
+            station_ID = []
+
+        return station_ID
+
+
     def _on_new_data(self, full_path, message_handler, parent):
         """A new file has been received via FTP (i.e. modified)"""
         # extract all required information from the name of the transferred data file
@@ -115,11 +125,13 @@ class FTPServerBrokerProcess(object):
         file_path, message_ID = os.path.split(file)
 
         if file_extension.upper() == self._data_file_extension:
-            splitted_message_ID = message_ID.split( '_' )
-            
-            if len(splitted_message_ID) > 0:
-                station_ID = splitted_message_ID[-1]
+            station_ID = self.get_station_ID(message_ID)
+            if len(station_ID) > 0:
                 try:
+                    # ensure that the file is in its correct data subdirectory
+                    if not file_path.endswith(station_ID):
+                        raise FileParseError("The data file \"%s\" is not in its correct subdirectory \"%s\"" % (message_ID, station_ID))
+                    
                     data = self._read_data_files(message_ID, station_ID)
                 except FileParseError as e:
                     # invalid file format, ignore the file
@@ -135,7 +147,7 @@ class FTPServerBrokerProcess(object):
 
     def _read_data_files(self, message_ID, station_ID):
         wait_time = 0.05    # wait time between data file reading trials (in seconds)
-        max_trials = 10     # reading trials for the data file before a fatal failure is assumed
+        max_trials = 100     # reading trials for the data file before a fatal failure is assumed
 
         new_data_file_list = []
         try:
@@ -144,7 +156,7 @@ class FTPServerBrokerProcess(object):
             counter = 0
             while file_still_blocked:
                 try:
-                    zip_file = ZipFile(self._data_directory + '/' + message_ID + self._data_file_extension, 'r')
+                    zip_file = ZipFile(self._data_directory + '/' + station_ID + '/' + message_ID + self._data_file_extension, 'r')
                 except PermissionError:
                     # workaround because the watchdog library cannot monitor the file close event and the file may still be open when the "modified" event is signalled
                     counter += 1
@@ -201,8 +213,10 @@ class FTPBroker(object):
 
 
     def send_persistence_acknowledgement(self, message_ID):
+        station_ID = self._broker.get_station_ID(message_ID)
+
         # delete the ZIP-file corresponding to the message ID
-        os.remove(self._data_directory + '/' + message_ID + self._data_file_extension)
+        os.remove(self._data_directory + '/' + station_ID + '/' + message_ID + self._data_file_extension)
 
         self._message_handler(LogMessage("Sucessfully transferred message %s" % message_ID))
 
@@ -275,7 +289,11 @@ class FTPServerSideProxy(IServerSideProxy):
 
 
     def _find_all_data_files(self, data_directory, data_file_extension):
-        unstored_file_paths = glob.glob(data_directory + "/*" + data_file_extension)
+        # recursive search in subdirectories
+        unstored_file_paths = []
+        for root, dirnames, filenames in os.walk(data_directory):
+            unstored_file_paths += glob.glob(root + "/*" + data_file_extension)
+
         return unstored_file_paths
 
 
