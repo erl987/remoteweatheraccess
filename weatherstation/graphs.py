@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
+import itertools
+from  weathernetwork.common.weatherdatasetadapter import WeatherDatasetAdapter
 
 """Generation of weather data plots.
 
@@ -25,6 +27,7 @@ Global variables:
 delta:                          Assumed width of a single y-axis label set (in pixel).
 """
 import matplotlib
+from weathernetwork.server.sqldatabase import SQLWeatherDB
 matplotlib.use( 'Agg' )
 from mpl_toolkits.axes_grid1 import host_subplot
 import mpl_toolkits.axisartist as AA
@@ -48,7 +51,7 @@ delta = 70
 time_import = lambda x: dt.strptime( x['date'] + ' ' + x['time'], '%d.%m.%Y %H:%M' )
 
 
-def get_last_n_days_data( data_folder, num_days ):
+def get_last_n_days_data( data_folder, num_days, db_file_name, station_ID ):
     """Returns the data of the latest n days of the datasets stored in all PC-Wetterstation compatible CSV-files in the specified folder.
     
     Args:
@@ -64,56 +67,22 @@ def get_last_n_days_data( data_folder, num_days ):
     Raises:
     ValueError                  Risen if the different loaded weather data files have inconsistent sensor descriptions or units
     """
-    # Find all monthly PC-Wetterstation CSV-files in the specified folder
-    file_list = pcwetterstation.finddatafiles( data_folder )
-    monthly_file_list = []
-    for file in file_list:
-        pcwetterstation_id = re.search( 'EXP\d\d_\d\d.CSV', file.upper() )
-        if pcwetterstation_id is not None:
-            if len( str.replace( file.upper(), pcwetterstation_id.group(0), '' ) ) == 0:
-                monthly_file_list.append( file ) 
+    # Read the required data from the database
+    #last_time = datetime.datetime.utcnow()
+    last_time = datetime.datetime(year=2015, month=3, day=15) # TODO: temp
+    first_time = last_time - timedelta(days=num_days)
+    
+    weather_db = SQLWeatherDB(db_file_name)
+    data = weather_db.get_data_in_time_range( station_ID, first_time, last_time)
+    
+    # calculate cumulated rain amount
+    rain_in_period = []
+    for line in data:
+        rain_in_period.append(line.get_rain_gauge())
 
-    # Determine which files might contain required data
-    num_potential_months = math.ceil( num_days / 30 ) + 1    # any series of days less than 30 can only be divided into two months
-    analyzed_file_list = []
-    for file in monthly_file_list:
-        month, year = csvfilemerger.extractdate( file )
-        analyzed_file_list.append( ( dt( day = 1, month = month, year = year + 2000 ), file ) )
-    analyzed_file_list = sorted( analyzed_file_list, key=lambda x: x[0], reverse=True )
-    analyzed_file_list = [ x for index, x in enumerate( analyzed_file_list ) if index < num_potential_months ]
+    cumulated_rain = list(itertools.accumulate(rain_in_period))
 
-    # Read weather data from these file and provide it sorted according to time
-    data = []
-    for file in analyzed_file_list:
-        all_data = pcwetterstation.read( data_folder, file[1], te923ToCSVreader.sensor_list )
-        data = all_data[0] + data
-
-        # Store sensor information
-        if 'sensor_descriptions' in locals() and sensor_descriptions != all_data[7]:
-            raise ValueError( 'The data files have inconsistent sensor descriptions.' )
-        sensor_descriptions = all_data[7]
-        if 'sensor_units' in locals() and sensor_units != all_data[8]:
-            raise ValueError( 'The data files have inconsistent sensor units.' )
-        sensor_units = all_data[8]
-
-        # Abort reading of data if enough data has been read (the file order and properties guarantee sorted data)
-        if ( time_import( data[-1] ) - time_import( data[0] ) ) > timedelta( days = num_days ):
-            break
-
-    # Limit data to the last days
-    last_time = time_import( data[-1] )
-    limited_data = [ line for line in data if ( last_time - time_import( line ) ) <= timedelta( days = num_days ) ]
-
-    # Calculate cumulated rain amount
-    search_list = [ key for key, val in limited_data[0].items() if key == 'rainCounter' ]
-    if len( search_list ) > 0:
-        for index, line in enumerate( limited_data[:] ):
-            if ( index == 0 ):
-                line['rainCounter'] = 0
-            else:
-                line['rainCounter'] = limited_data[ index - 1 ]['rainCounter'] + float( line['rainCounter'] )
-
-    return limited_data, sensor_descriptions, sensor_units
+    return data
 
 
 def GetScalings( min_max_sensors ):
@@ -191,7 +160,7 @@ def GetScalings( min_max_sensors ):
     return num_ticks, min_max_axis
 
 
-def plot_of_last_n_days( num_days, data_folder, sensors_to_plot, graph_folder, graph_file_name, is_save_to_fig ):
+def plot_of_last_n_days( num_days, db_file_name, station_ID, data_folder, sensors_to_plot, graph_folder, graph_file_name, is_save_to_fig ):
     """Plots the weather data of the last n days from all data available in a defined folder.
     
     Args:
@@ -211,7 +180,7 @@ def plot_of_last_n_days( num_days, data_folder, sensors_to_plot, graph_folder, g
     None
     """
     # Find data for the last n days in the data folder
-    data, sensor_descriptions, sensor_units = get_last_n_days_data( data_folder, num_days )
+    data = get_last_n_days_data( data_folder, num_days, db_file_name, station_ID )
 
     # Calculate secondary y-axis positions
     yAxisPos = []
@@ -231,8 +200,10 @@ def plot_of_last_n_days( num_days, data_folder, sensors_to_plot, graph_folder, g
             ax[-1].axis[ yAxisPos[index][0] ] = ax[-1].new_fixed_axis( yAxisPos[index][0], offset = ( yAxisPos[index][1], 0 ) )
     
     # Plot graphs for the required data
-    times = [ time_import( line ) for line in data ]
+    times = [ line.get_time() for line in data ]
     min_max_sensors = dict()
+    adapter = WeatherDatasetAdapter(data[0])
+    val = adapter.get(WeatherDatasetAdapter.HUMIDITY_INSIDE)
     for index, sensor in enumerate( sensors_to_plot ):
         # Plot data
         plot_data = [ float( line[ sensor ] ) for line in data ]

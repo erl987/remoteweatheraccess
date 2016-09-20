@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>af61fea6-0374-4031-aa2c-056052917724</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>ftp_weather_server.py</StartupFile>
+    <StartupFile>sql_database_service_test.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -25,6 +25,9 @@
     <Compile Include="constants.py" />
     <Compile Include="csvfilemerger.py" />
     <Compile Include="ftp_server_side_proxy_test.py" />
+    <Compile Include="plot_weather_graph.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="sql_database_service_test.py" />
     <Compile Include="weathernetwork\common\exceptions.py">
       <SubType>Code</SubType>
@@ -58,14 +61,20 @@
     <Compile Include="weathernetwork\common\combisensorarray.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="weathernetwork\common\combisensordataset.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="weathernetwork\common\delayedexception.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="weathernetwork\common\sensor.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="weathernetwork\common\stationmetadata.py" />
-    <Compile Include="weathernetwork\common\weatherdataset.py" />
+    <Compile Include="weathernetwork\common\switch.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="weathernetwork\common\weatherstationdataset.py" />
+    <Compile Include="weathernetwork\common\weatherdatasetadapter.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="weathernetwork\common\__init__.py" />
     <Compile Include="weathernetwork\server\sqldatabase.py" />
     <Compile Include="weathernetwork\server\ftpbroker.py">
