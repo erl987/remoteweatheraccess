@@ -3,9 +3,7 @@ from weathernetwork.server.weathermessage import WeatherMessage
 from weathernetwork.server.sqldatabase import SQLDatabaseServiceFactory, SQLDatabaseService, SQLWeatherDB
 import datetime
 from weathernetwork.server.exceptions import NotExistingError, AlreadyExistingError
-from weathernetwork.common.stationmetadata import WeatherStationMetadata
-from weathernetwork.common.combisensorarray import CombiSensorArray
-from weathernetwork.common.airsensordataset import AirSensorDataset
+from weathernetwork.common.sensor import WeatherStationMetadata
 from weathernetwork.common.sensor import BaseStationSensorData, WindSensorData, CombiSensorData
 from weathernetwork.common.weatherstationdataset import WeatherStationDataset
 
@@ -17,9 +15,31 @@ class SQLDatabaseService_test(unittest.TestCase):
         self._station_ID = "TES2"
         self._not_existing_station_ID = "TES5"
         self._sensor_IDs = ["OUT1"]
-        sensor_array = CombiSensorArray()
-        sensor_array.add_sensor("OUT1", AirSensorDataset(30.9, 89.3))
-        #self._data = WeatherDataset( datetime.datetime.utcnow(), sensor_array, 532.3, 1024.3, 9.8, 341.4, 34.2, 10.9, 21.9)
+
+        base_station_sensor_data = BaseStationSensorData(1032.4, 12.4, 8.5)
+        wind_sensor_data = WindSensorData(12.4, 43.9, 180.0, 15.2)
+        combi_sensor_data = CombiSensorData("OUT1", 34.9, 89.7)
+
+        curr_time = datetime.datetime.utcnow()
+        self._dataset_1 = WeatherStationDataset(curr_time)
+        self._dataset_1.add_sensor(base_station_sensor_data)
+        self._dataset_1.add_sensor(wind_sensor_data)
+        self._dataset_1.add_sensor(combi_sensor_data)
+
+        self._dataset_2 = WeatherStationDataset(curr_time + datetime.timedelta(5))
+        self._dataset_2.add_sensor(base_station_sensor_data)
+        self._dataset_2.add_sensor(wind_sensor_data)
+        self._dataset_2.add_sensor(combi_sensor_data)
+
+        self._dataset_3 = WeatherStationDataset(curr_time + datetime.timedelta(10))
+        self._dataset_3.add_sensor(base_station_sensor_data)
+        self._dataset_3.add_sensor(wind_sensor_data)
+        self._dataset_3.add_sensor(combi_sensor_data)
+
+        self._dataset_4 = WeatherStationDataset(curr_time + datetime.timedelta(15))
+        self._dataset_4.add_sensor(base_station_sensor_data)
+        self._dataset_4.add_sensor(wind_sensor_data)
+        self._dataset_4.add_sensor(combi_sensor_data)
 
 
     def tearDown(self):
@@ -45,46 +65,33 @@ class SQLDatabaseService_test(unittest.TestCase):
 
         weather_db.replace_station(weather_station_2_B);
 
-        curr_time = datetime.datetime.utcnow()
-        data = WeatherStationDataset()
-        data.add_sensor(BaseStationSensorData(1032.4, 12.4, 8.5))
-        data.add_sensor(WindSensorData(12.4, 43.9, 180.0, 15.2))
-        data.add_sensor(CombiSensorData("OUT1", 34.9, 89.7))
+        # testing obtaining single sensor values
+        value = self._dataset_1.get_sensor_value( ["OUT1", "temperature"])
 
-        value = data.get_sensor_value( ["OUT1", "temperature"])
+        weather_db.add_dataset("TES", self._dataset_1)
+        weather_db.add_dataset("TES2", [self._dataset_2, self._dataset_3, self._dataset_4])
 
+        weather_db.replace_dataset("TES2", self._dataset_2)
 
-        combi_sensor_data = CombiSensorArray( AirSensorDataset( 20.5, 61.3 ), AirSensorDataset( 30.9, 80.5 ), AirSensorDataset( None, None ), AirSensorDataset( None, None ), AirSensorDataset( None, None ), AirSensorDataset( None, None ) )
-
-        dataset_1 = WeatherDataset(curr_time, combi_sensor_data.get_vals(), 234.1, 1024.2, 8.9, 234, 23.1, 42.1, 29.0)
-        dataset_2 = WeatherDataset(curr_time + datetime.timedelta(5), combi_sensor_data.get_vals(), 234.1, 1024.2, 8.9, 234, 23.1, 42.1, 29.0)
-        dataset_3 = WeatherDataset(curr_time + datetime.timedelta(10), combi_sensor_data.get_vals(), 234.1, 1024.2, 8.9, 234, 23.1, 42.1, 29.0)
-        dataset_4 = WeatherDataset(curr_time + datetime.timedelta(15), combi_sensor_data.get_vals(), 234.1, 1024.2, 8.9, 234, 23.1, 42.1, 29.0)
-
-        weather_db.add_dataset("TES", dataset_1)
-        weather_db.add_dataset("TES2", [dataset_2, dataset_3, dataset_4])
-
-        weather_db.replace_dataset("TES2", dataset_2)
-
-        removed_items = weather_db.remove_dataset("TES2", [dataset_2.get_time(), dataset_3.get_time()])
+        removed_items = weather_db.remove_dataset("TES2", [self._dataset_2.get_time(), self._dataset_3.get_time()])
 
         weather_db.remove_station("TES")
 
         first_time = datetime.datetime(2016, 8, 20)
         last_time = datetime.datetime(2016, 9, 27)
-        data = weather_db.get_data_in_time_range("TES2", first_time, last_time)
+        dataset_1 = weather_db.get_data_in_time_range("TES2", first_time, last_time)
 
 
-    def test_not_exsting_station(self):
+    def test_not_existing_station(self):
         with self.assertRaises(NotExistingError):
             sql_database_service = SQLDatabaseService(self._db_file_name)
-            message = WeatherMessage(self._message_ID, self._not_existing_station_ID, self._data)
+            message = WeatherMessage(self._message_ID, self._not_existing_station_ID, self._dataset_1)
             sql_database_service.add_data(message)
 
 
     def test_store_twice(self):
         sql_database_service = SQLDatabaseService(self._db_file_name)
-        message = WeatherMessage(self._message_ID, self._station_ID, self._data)
+        message = WeatherMessage(self._message_ID, self._station_ID, self._dataset_1)
         sql_database_service.add_data(message)
         with self.assertRaises(AlreadyExistingError):
             sql_database_service.add_data(message)

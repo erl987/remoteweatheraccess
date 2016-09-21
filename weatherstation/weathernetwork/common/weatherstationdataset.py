@@ -40,16 +40,55 @@ class WeatherStationDataset(object):
     _combi_sensor_descriptions[HUMIDITY] = "humidity"
     _sensor_descriptions[COMBI_SENSOR] = _combi_sensor_descriptions
 
-    def __init__(self):
+    def __init__(self, time):
         """
         Constructor.
         """
+        self._time = time
         self._sensor_data = dict()
 
 
     @staticmethod
     def get_sensor_descriptions():
         return WeatherStationDataset._sensor_descriptions
+
+
+    def get_time(self):
+        return self._time
+
+
+    @staticmethod
+    def get_wind_sensor_data(dataset):
+        time = dataset.get_time()
+        wind_direction = dataset.get_sensor_value([WeatherStationDataset.WIND, WeatherStationDataset.DIRECTION])
+        wind_average = dataset.get_sensor_value([WeatherStationDataset.WIND, WeatherStationDataset.AVERAGE])
+        wind_gust = dataset.get_sensor_value([WeatherStationDataset.WIND, WeatherStationDataset.GUSTS])
+        wind_chill_temp = dataset.get_sensor_value([WeatherStationDataset.WIND, WeatherStationDataset.WIND_CHILL])
+
+        return time, wind_direction, wind_average, wind_gust, wind_chill_temp
+
+
+    @staticmethod
+    def get_base_station_sensor_data(dataset):
+        time = dataset.get_time()
+        pressure = dataset.get_sensor_value(WeatherStationDataset.PRESSURE)
+        rain = dataset.get_sensor_value(WeatherStationDataset.RAIN)
+        UV = dataset.get_sensor_value(WeatherStationDataset.UV)
+
+        return time, pressure, rain, UV
+
+
+    @staticmethod
+    def get_combi_sensor_data(sensor_ID, dataset):
+        time = dataset.get_time()
+        if dataset.contains(sensor_ID):
+            temperature = dataset.get_sensor_value([sensor_ID, WeatherStationDataset.TEMPERATURE])
+            humidity = dataset.get_sensor_value([sensor_ID, WeatherStationDataset.HUMIDITY])
+        else:
+            temperature = None
+            humidity = None
+
+        return time, temperature, humidity
 
 
     def _get_wind_data(self, subsensor_ID):
@@ -101,6 +140,10 @@ class WeatherStationDataset(object):
                 raise NotExistingError("Invalid subsensor for a combi sensor")
 
         return value
+
+
+    def contains(self, sensor_ID):
+        return sensor_ID in self._sensor_data
 
 
     def get_sensor_value(self, sensor_ID_list):
