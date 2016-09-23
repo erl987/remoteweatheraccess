@@ -1,10 +1,10 @@
 from abc import ABCMeta, abstractmethod
 import csv
 from datetime import datetime as dt
-from weathernetwork.common.weatherdataset import WeatherDataset
-from weathernetwork.common.combisensordataset import CombiSensorDataset
 import os
 from weathernetwork.common.exceptions import PCWetterstationFileParseError
+from weathernetwork.common.sensor import CombiSensorData, BaseStationSensorData, WindSensorData
+from weathernetwork.common.weatherstationdataset import WeatherStationDataset
 
 
 class IWeatherDataFile(metaclass=ABCMeta):
@@ -131,14 +131,18 @@ class PCWetterstationFormatFile(IWeatherDataFile):
             datasets = []
             for line in data:
                 time = dt.strptime( line['Datum'] + ' ' + line['Zeit'], '%d.%m.%Y %H:%M' )
-                combi_sensor_vals = [ CombiSensorDataset( 'IN', line['Temp. I.'], line['Feuchte I.'] ),
-                                      CombiSensorDataset( 'OUT1', line['Temp. A. 1'], line['Feuchte A. 1'] ),
-                                      CombiSensorDataset( 'OUT2', line['Temp. A. 2'], line['Feuchte A. 2'] ),
-                                      CombiSensorDataset( 'OUT3', line['Temp. A. 3'], line['Feuchte A. 3'] ),
-                                      CombiSensorDataset( 'OUT4', line['Temp. A. 4'], line['Feuchte A. 4'] ),
-                                      CombiSensorDataset( 'OUT5', line['Temp. A. 5'], line['Feuchte A. 5'] )]
+                curr_dataset = WeatherStationDataset(time)
 
-                datasets.append( WeatherDataset( time, combi_sensor_vals, line['Regen'], line['Luftdruck'], line['UV-X'], line['Richtung'], line['Wind'], line['Windböen'], line['Temp. Wind'] ) )
+                curr_dataset.add_sensor(CombiSensorData( 'IN', line['Temp. I.'], line['Feuchte I.'] ))
+                curr_dataset.add_sensor(CombiSensorData( 'OUT1', line['Temp. A. 1'], line['Feuchte A. 1'] ))
+                curr_dataset.add_sensor(CombiSensorData( 'OUT2', line['Temp. A. 2'], line['Feuchte A. 2'] ))
+                curr_dataset.add_sensor(CombiSensorData( 'OUT3', line['Temp. A. 3'], line['Feuchte A. 3'] ))
+                curr_dataset.add_sensor(CombiSensorData( 'OUT4', line['Temp. A. 4'], line['Feuchte A. 4'] ))
+                curr_dataset.add_sensor(CombiSensorData( 'OUT5', line['Temp. A. 5'], line['Feuchte A. 5'] ))
+
+                curr_dataset.add_sensor(BaseStationSensorData(line['Luftdruck'], line['Regen'], line['UV-X']))
+                curr_dataset.add_sensor(WindSensorData(line['Wind'], line['Windböen'], line['Richtung'], line['Temp. Wind']))
+                datasets.append(curr_dataset)
 
             return datasets, rain_calib_factor, rain_counter_base, station_name, station_height, station_type
         except Exception as e:

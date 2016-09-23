@@ -27,19 +27,22 @@ graph_file_name:                Name of the graph file to be stored.
 import unittest
 
 import graphs
+from weathernetwork.common.weatherstationdataset import WeatherStationDataset
 
 data_folder = './data'
 graph_file_name = 'graph.svg'
+sensors_to_plot = [ WeatherStationDataset.PRESSURE, WeatherStationDataset.RAIN, ['OUT1', WeatherStationDataset.TEMPERATURE], ['OUT1', WeatherStationDataset.HUMIDITY] ]
 
 
 class Test_graphs(unittest.TestCase):
     def setUp(self):
         '''Sets up each unit test.'''
+        self._db_file_name = "data/weather.db"
+        self._station_ID = "TES2"
 
 
     def test_plot_of_last_n_days(self):
-        sensors_to_plot = [ 'pressure', 'rainCounter', 'tempOutside1', 'humidOutside1' ]
-        graphs.plot_of_last_n_days( 7, data_folder, sensors_to_plot, data_folder, graph_file_name, False )     
+        graphs.plot_of_last_n_days( 7, self._db_file_name, self._station_ID, data_folder, sensors_to_plot, data_folder, graph_file_name, True )     
 
 
     def tearDown(self):

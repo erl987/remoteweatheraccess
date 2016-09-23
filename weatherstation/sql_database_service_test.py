@@ -58,6 +58,7 @@ class SQLDatabaseService_test(unittest.TestCase):
             weather_db.add_combi_sensor("OUT1", "outside sensor 1")
         sensor_IDs = weather_db.get_all_sensor_IDs()
         test_description = weather_db.get_sensor_description( ["OUT1", "temperature"] )
+        test_unit = weather_db.get_sensor_unit( ["OUT1", "humidity"] )
         if not weather_db.station_exists( weather_station.get_station_ID() ):
             weather_db.add_station(weather_station)
         if not weather_db.station_exists( weather_station_2.get_station_ID() ):

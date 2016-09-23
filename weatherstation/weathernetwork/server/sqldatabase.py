@@ -57,7 +57,7 @@ class SQLDatabaseServiceFactory(IDatabaseServiceFactory):
 class SQLWeatherDB(object):
     """
     Persistent weather SQL-database.
-    SQLlite can handle concurrency, i.e. multiple concurrent class of the class are allowed at any time.
+    SQLlite can handle concurrency, i.e. multiple concurrent objects of the class are allowed at any time.
     """
     def __init__(self, db_file):
         """
@@ -67,6 +67,7 @@ class SQLWeatherDB(object):
         """
         # open the database
         self._sensor_descriptions = WeatherStationDataset.get_sensor_descriptions()
+        self._sensor_units = WeatherStationDataset.get_sensor_units()
         self._sql = sqlite3.connect(db_file, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
         self._sql.row_factory = sqlite3.Row
        
@@ -611,6 +612,35 @@ class SQLWeatherDB(object):
             raise NotExistingError("This sensor has several subsensors, none is specified.")
             
         return description
+
+
+    def get_sensor_unit(self, sensor_ID_list):
+        """
+        Obtains the unit of a certain sensor ID.
+        """
+        if not isinstance(sensor_ID_list, list):
+            sensor_ID_list = [sensor_ID_list]
+        sensor_ID = sensor_ID_list[0]
+        if len(sensor_ID_list) > 1:
+            subsensor_ID = sensor_ID_list[1]
+        else:
+            subsensor_ID = None
+
+        if sensor_ID in self._sensor_units:
+            if not subsensor_ID:
+                unit = self._sensor_units[sensor_ID]
+            else:
+                unit = self._sensor_units[sensor_ID][subsensor_ID]
+        else:
+            if self.combi_sensor_exists(sensor_ID):
+                unit = self._sensor_units["combiSensor"][subsensor_ID]
+            else:
+                raise NotExistingError("This sensor does not exist")
+
+        if isinstance(unit, dict):
+            raise NotExistingError("This sensor has several subsensors, none is specified.")
+            
+        return unit
 
 
     def get_all_sensor_IDs(self):

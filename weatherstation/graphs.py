@@ -15,7 +15,7 @@
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
 import itertools
-from  weathernetwork.common.weatherdatasetadapter import WeatherDatasetAdapter
+from weathernetwork.common.weatherstationdataset import WeatherStationDataset
 
 """Generation of weather data plots.
 
@@ -48,21 +48,21 @@ import csvfilemerger
 import utilities
 
 delta = 70
-time_import = lambda x: dt.strptime( x['date'] + ' ' + x['time'], '%d.%m.%Y %H:%M' )
 
 
-def get_last_n_days_data( data_folder, num_days, db_file_name, station_ID ):
-    """Returns the data of the latest n days of the datasets stored in all PC-Wetterstation compatible CSV-files in the specified folder.
+def get_last_n_days_data(num_days, db_file_name, station_ID, required_sensor_IDs):
+    """Returns the data of the latest n days from the specified database.
     
     Args:
-    data_folder:                Folder with the PC-Wetterstation compatible CSV-files which will be analyzed.   
     num_days:                   The data for the last 'num_days' before the last entry in the data file will be returned.
+    db_file_name:               Name and path of the SQL-database file
+    required_sensor_IDs:        Sensors IDs for which the sensor description is required
     
     Returns:                             
-    limited_data:               Weather dataset of the last 'num_days' before the the last entry in the specified folder containing all sensors stored. 
-                                If rain data is present, the rain data will be returned as a cumulative sum starting from the first timepoint in the data with 0 mm.
-    sensor_descriptions:        OrderedDict containing the read descriptions of all sensors in the file. The keys are those from the sensor_list.
-    sensor_units:               OrderedDict containing the read units of all sensors in the file. The keys are those from the sensor_list. 
+    data:                       Weather dataset of the last 'num_days' before the the last entry in the specified folder containing all sensors stored
+                                If rain data is present, the rain data will be returned as a cumulative sum starting from the first timepoint in the data with 0 mm
+    sensor_descriptions:        dict containing the descriptions of the required sensors
+    sensor_units:               dict containing the units of the requires sensors
                                 
     Raises:
     ValueError                  Risen if the different loaded weather data files have inconsistent sensor descriptions or units
@@ -73,16 +73,21 @@ def get_last_n_days_data( data_folder, num_days, db_file_name, station_ID ):
     first_time = last_time - timedelta(days=num_days)
     
     weather_db = SQLWeatherDB(db_file_name)
-    data = weather_db.get_data_in_time_range( station_ID, first_time, last_time)
+    data = weather_db.get_data_in_time_range(station_ID, first_time, last_time)
+    sensor_descriptions = dict()
+    sensor_units = dict()
+    for sensor_ID in required_sensor_IDs:
+        sensor_descriptions[str(sensor_ID)] = weather_db.get_sensor_description(sensor_ID)
+        sensor_units[str(sensor_ID)] = weather_db.get_sensor_unit(sensor_ID)
     
     # calculate cumulated rain amount
-    rain_in_period = []
-    for line in data:
-        rain_in_period.append(line.get_rain_gauge())
+    #rain_in_period = []
+    #for line in data:
+    #    rain_in_period.append(line.get_rain_gauge())
+    #
+    #cumulated_rain = list(itertools.accumulate(rain_in_period))
 
-    cumulated_rain = list(itertools.accumulate(rain_in_period))
-
-    return data
+    return data, sensor_descriptions, sensor_units
 
 
 def GetScalings( min_max_sensors ):
@@ -104,7 +109,7 @@ def GetScalings( min_max_sensors ):
     all_num_ticks = []
     # determine number of ticks
     for key, sensor in min_max_sensors.items():
-        if 'temp' in key:
+        if WeatherStationDataset.TEMPERATURE in key:
             # temperatures should have an identical scaling
             curr_min_T = utilities.floor_to_n( sensor['min'], delta_T )
             if 'min_T' not in locals() or curr_min_T < min_T:
@@ -113,7 +118,7 @@ def GetScalings( min_max_sensors ):
             if 'max_T' not in locals() or curr_max_T > max_T:
                 max_T = curr_max_T
             all_num_ticks.append( int( ( max_T - min_T ) / delta_T + 1 ) )
-        elif 'rainCounter' in key:
+        elif WeatherStationDataset.RAIN in key:
             if sensor['max'] < 20:
                 delta_rain = 2.5
             elif sensor['max'] < 40:
@@ -126,7 +131,7 @@ def GetScalings( min_max_sensors ):
                 delta_rain = 50.0
             max_rain_counter = utilities.ceil_to_n( sensor['max'], delta_rain )
             all_num_ticks.append( int( ( max_rain_counter - 0 ) / delta_rain + 1 ) )
-        elif 'pressure' in key:
+        elif WeatherStationDataset.PRESSURE in key:
             min_p = utilities.floor_to_n( sensor['min'], delta_p )
             max_p = utilities.ceil_to_n( sensor['max'], delta_p )
             all_num_ticks.append( int( ( max_p - min_p ) / delta_p + 1 ) )
@@ -138,18 +143,18 @@ def GetScalings( min_max_sensors ):
 
     min_max_axis = dict()
     for key, sensor in min_max_sensors.items():
-        if 'temp' in key:
+        if WeatherStationDataset.TEMPERATURE in key:
             # temperature minimum is always the next lower temperature dividable by 5 degree C (already calculated)
             max_T = min_T + delta_T * ( num_ticks - 1 )
             min_max_axis[key] = { 'min' : min_T, 'max' : max_T };
-        elif 'humid' in key:
+        elif WeatherStationDataset.HUMIDITY in key:
             # humidity is always in the range from 0 - 100 pct
             min_max_axis[key] = { 'min' : 0, 'max' : 100 };
-        elif 'rainCounter' in key:
+        elif WeatherStationDataset.RAIN in key:
             # rain counter minimum is always 0 mm
             max_rain_counter = 0 + delta_rain * ( num_ticks - 1 )
             min_max_axis[key] = { 'min' : 0, 'max' : max_rain_counter }
-        elif 'pressure' in key:
+        elif WeatherStationDataset.PRESSURE in key:
             # pressure minimum is always the next lower pressure dividable by 5 hPa (already calculated)
             max_p = min_p + delta_p * ( num_ticks - 1 )
             min_max_axis[key] = { 'min' : min_p, 'max' : max_p }
@@ -180,7 +185,7 @@ def plot_of_last_n_days( num_days, db_file_name, station_ID, data_folder, sensor
     None
     """
     # Find data for the last n days in the data folder
-    data = get_last_n_days_data( data_folder, num_days, db_file_name, station_ID )
+    data, sensor_descriptions, sensor_units = get_last_n_days_data( num_days, db_file_name, station_ID, sensors_to_plot )
 
     # Calculate secondary y-axis positions
     yAxisPos = []
@@ -202,17 +207,15 @@ def plot_of_last_n_days( num_days, db_file_name, station_ID, data_folder, sensor
     # Plot graphs for the required data
     times = [ line.get_time() for line in data ]
     min_max_sensors = dict()
-    adapter = WeatherDatasetAdapter(data[0])
-    val = adapter.get(WeatherDatasetAdapter.HUMIDITY_INSIDE)
     for index, sensor in enumerate( sensors_to_plot ):
         # Plot data
-        plot_data = [ float( line[ sensor ] ) for line in data ]
-        ax[index].plot( times, plot_data, label = sensor, lw=2.0 )
-        min_max_sensors[ sensor ] = { 'min': min( plot_data ), 'max' : max( plot_data ) }
+        plot_data = [ float( line.get_sensor_value(sensor) ) for line in data ]
+        ax[index].plot( times, plot_data, label = str(sensor), lw=2.0 )
+        min_max_sensors[str(sensor)] = { 'min': min( plot_data ), 'max' : max( plot_data ) }
 
         # Set data axis settings
         sensor_color = ax[index].lines[0].get_color()
-        ax[index].set_ylabel( sensor_descriptions[ sensor ] + ' / ' + sensor_units[ sensor ], color = sensor_color )
+        ax[index].set_ylabel( sensor_descriptions[str(sensor)] + ' / ' + sensor_units[str(sensor)], color = sensor_color ) # TODO: implement the unit
         ax[index].axis[ yAxisPos[index][0] ].label.set_font_properties( fonts.FontProperties( weight='bold', size=13 ) )
         ax[index].yaxis.set_minor_locator( ticker.AutoMinorLocator( 5 ) ) 
         ax[index].axis[ yAxisPos[index][0] ].minor_ticks.set_color( sensor_color )
@@ -226,7 +229,7 @@ def plot_of_last_n_days( num_days, db_file_name, station_ID, data_folder, sensor
     num_ticks, min_max_axis = GetScalings( min_max_sensors )
     for index, sensor in enumerate( sensors_to_plot ):
         ax[index].yaxis.set_major_locator( ticker.LinearLocator( numticks = num_ticks ) )
-        ax[index].set_ylim( min_max_axis[sensor]['min'], min_max_axis[sensor]['max'] )
+        ax[index].set_ylim( min_max_axis[str(sensor)]['min'], min_max_axis[str(sensor)]['max'] )
                     
     # Configure date axis and grid lines
     ax[0].xaxis.set_minor_locator( mdates.HourLocator( byhour = [ 0, 6, 12, 18 ] ) )

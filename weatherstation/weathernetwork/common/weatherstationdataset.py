@@ -40,6 +40,23 @@ class WeatherStationDataset(object):
     _combi_sensor_descriptions[HUMIDITY] = "humidity"
     _sensor_descriptions[COMBI_SENSOR] = _combi_sensor_descriptions
 
+    _sensor_units = dict()
+    _sensor_units[PRESSURE] = "hPa"
+    _sensor_units[RAIN] = "mm"
+    _sensor_units[UV] = "UV-X"
+
+    _wind_units = dict()
+    _wind_units[AVERAGE] = "km/h"
+    _wind_units[GUSTS] = "km/h"
+    _wind_units[DIRECTION] = "°"
+    _wind_units[WIND_CHILL] = "°C"
+    _sensor_units[WIND] = _wind_units
+
+    _combi_sensor_units = dict()
+    _combi_sensor_units[TEMPERATURE] = "°C"
+    _combi_sensor_units[HUMIDITY] = "%"
+    _sensor_units[COMBI_SENSOR] = _combi_sensor_units
+
     def __init__(self, time):
         """
         Constructor.
@@ -51,6 +68,11 @@ class WeatherStationDataset(object):
     @staticmethod
     def get_sensor_descriptions():
         return WeatherStationDataset._sensor_descriptions
+
+
+    @staticmethod
+    def get_sensor_units():
+        return WeatherStationDataset._sensor_units
 
 
     def get_time(self):
