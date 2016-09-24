@@ -79,16 +79,16 @@ class WindSensorData(ISensor):
 
     def get_description(self, subsensor_ID):
         for case in switch(subsensor_ID):
-            if case(WeatherStationDataset.AVERAGE):
+            if case(WindSensorData.AVERAGE):
                 description = "average wind speed"
                 break
-            if case(WeatherStationDataset.GUSTS):
+            if case(WindSensorData.GUSTS):
                 description = "max. wind gust"
                 break
-            if case(WeatherStationDataset.DIRECTION):
+            if case(WindSensorData.DIRECTION):
                 description = "wind direction"
                 break
-            if case(WeatherStationDataset.WIND_CHILL):
+            if case(WindSensorData.WIND_CHILL):
                 description = "wind chill temperature"
                 break
             if case():
@@ -99,16 +99,16 @@ class WindSensorData(ISensor):
 
     def get_unit(self, subsensor_ID):
         for case in switch(subsensor_ID):
-            if case(WeatherStationDataset.AVERAGE):
+            if case(WindSensorData.AVERAGE):
                 unit = "km/h"
                 break
-            if case(WeatherStationDataset.GUSTS):
+            if case(WindSensorData.GUSTS):
                 unit = "km/h"
                 break
-            if case(WeatherStationDataset.DIRECTION):
+            if case(WindSensorData.DIRECTION):
                 unit = "°"
                 break
-            if case(WeatherStationDataset.WIND_CHILL):
+            if case(WindSensorData.WIND_CHILL):
                 unit = "°C"
                 break
             if case():
@@ -128,10 +128,11 @@ class CombiSensorData(ISensor):
     TEMPERATURE = "temperature"
     HUMIDITY = "humidity"
 
-    def __init__(self, sensor_ID, temperature, humidity):
+    def __init__(self, sensor_ID, temperature, humidity, description = []):
         super(self.__class__, self).__init__(sensor_ID)
         self._temperature = temperature
         self._humidity = humidity
+        self._description = description
 
 
     def get_all_data(self):
@@ -163,10 +164,17 @@ class CombiSensorData(ISensor):
             if case():
                 raise NotExistingError("Invalid subsensor for a combi sensor")
           
-        description += " (" + super(self.__class__, self).get_sensor_ID() + ")"
-              
+        if self._description:
+            description += " (" + self._description + ")"
+        else:
+            description += " (" + super(self.__class__, self).get_sensor_ID() + ")"
+
         return description
  
+
+    def get_combi_sensor_description(self):
+        return self._description
+
 
     def get_unit(self, subsensor_ID):
         for case in switch(subsensor_ID):
@@ -207,7 +215,7 @@ class BaseStationSensorData(ISensor):
 
 
     def get_sensor_value(self, subsensor_ID):
-        for case in switch(sensor_ID):
+        for case in switch(subsensor_ID):
             if case(BaseStationSensorData.PRESSURE):
                 value = self._pressure
                 break

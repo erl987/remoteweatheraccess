@@ -14,8 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
-import itertools
-from weathernetwork.common.weatherstationdataset import WeatherStationDataset
+from weathernetwork.common.sensor import CombiSensorData, BaseStationSensorData
 
 """Generation of weather data plots.
 
@@ -50,7 +49,7 @@ import utilities
 delta = 70
 
 
-def get_last_n_days_data(num_days, db_file_name, station_ID, required_sensor_IDs):
+def get_last_n_days_data(num_days, db_file_name, station_ID):
     """Returns the data of the latest n days from the specified database.
     
     Args:
@@ -61,11 +60,6 @@ def get_last_n_days_data(num_days, db_file_name, station_ID, required_sensor_IDs
     Returns:                             
     data:                       Weather dataset of the last 'num_days' before the the last entry in the specified folder containing all sensors stored
                                 If rain data is present, the rain data will be returned as a cumulative sum starting from the first timepoint in the data with 0 mm
-    sensor_descriptions:        dict containing the descriptions of the required sensors
-    sensor_units:               dict containing the units of the requires sensors
-                                
-    Raises:
-    ValueError                  Risen if the different loaded weather data files have inconsistent sensor descriptions or units
     """
     # Read the required data from the database
     #last_time = datetime.datetime.utcnow()
@@ -74,11 +68,6 @@ def get_last_n_days_data(num_days, db_file_name, station_ID, required_sensor_IDs
     
     weather_db = SQLWeatherDB(db_file_name)
     data = weather_db.get_data_in_time_range(station_ID, first_time, last_time)
-    sensor_descriptions = dict()
-    sensor_units = dict()
-    for sensor_ID in required_sensor_IDs:
-        sensor_descriptions[str(sensor_ID)] = weather_db.get_sensor_description(sensor_ID)
-        sensor_units[str(sensor_ID)] = weather_db.get_sensor_unit(sensor_ID)
     
     # calculate cumulated rain amount
     #rain_in_period = []
@@ -87,7 +76,7 @@ def get_last_n_days_data(num_days, db_file_name, station_ID, required_sensor_IDs
     #
     #cumulated_rain = list(itertools.accumulate(rain_in_period))
 
-    return data, sensor_descriptions, sensor_units
+    return data
 
 
 def GetScalings( min_max_sensors ):
@@ -109,7 +98,7 @@ def GetScalings( min_max_sensors ):
     all_num_ticks = []
     # determine number of ticks
     for key, sensor in min_max_sensors.items():
-        if WeatherStationDataset.TEMPERATURE in key:
+        if CombiSensorData.TEMPERATURE in key:
             # temperatures should have an identical scaling
             curr_min_T = utilities.floor_to_n( sensor['min'], delta_T )
             if 'min_T' not in locals() or curr_min_T < min_T:
@@ -118,7 +107,7 @@ def GetScalings( min_max_sensors ):
             if 'max_T' not in locals() or curr_max_T > max_T:
                 max_T = curr_max_T
             all_num_ticks.append( int( ( max_T - min_T ) / delta_T + 1 ) )
-        elif WeatherStationDataset.RAIN in key:
+        elif BaseStationSensorData.RAIN in key:
             if sensor['max'] < 20:
                 delta_rain = 2.5
             elif sensor['max'] < 40:
@@ -131,7 +120,7 @@ def GetScalings( min_max_sensors ):
                 delta_rain = 50.0
             max_rain_counter = utilities.ceil_to_n( sensor['max'], delta_rain )
             all_num_ticks.append( int( ( max_rain_counter - 0 ) / delta_rain + 1 ) )
-        elif WeatherStationDataset.PRESSURE in key:
+        elif BaseStationSensorData.PRESSURE in key:
             min_p = utilities.floor_to_n( sensor['min'], delta_p )
             max_p = utilities.ceil_to_n( sensor['max'], delta_p )
             all_num_ticks.append( int( ( max_p - min_p ) / delta_p + 1 ) )
@@ -143,18 +132,18 @@ def GetScalings( min_max_sensors ):
 
     min_max_axis = dict()
     for key, sensor in min_max_sensors.items():
-        if WeatherStationDataset.TEMPERATURE in key:
+        if CombiSensorData.TEMPERATURE in key:
             # temperature minimum is always the next lower temperature dividable by 5 degree C (already calculated)
             max_T = min_T + delta_T * ( num_ticks - 1 )
             min_max_axis[key] = { 'min' : min_T, 'max' : max_T };
-        elif WeatherStationDataset.HUMIDITY in key:
+        elif CombiSensorData.HUMIDITY in key:
             # humidity is always in the range from 0 - 100 pct
             min_max_axis[key] = { 'min' : 0, 'max' : 100 };
-        elif WeatherStationDataset.RAIN in key:
+        elif BaseStationSensorData.RAIN in key:
             # rain counter minimum is always 0 mm
             max_rain_counter = 0 + delta_rain * ( num_ticks - 1 )
             min_max_axis[key] = { 'min' : 0, 'max' : max_rain_counter }
-        elif WeatherStationDataset.PRESSURE in key:
+        elif BaseStationSensorData.PRESSURE in key:
             # pressure minimum is always the next lower pressure dividable by 5 hPa (already calculated)
             max_p = min_p + delta_p * ( num_ticks - 1 )
             min_max_axis[key] = { 'min' : min_p, 'max' : max_p }
@@ -185,7 +174,7 @@ def plot_of_last_n_days( num_days, db_file_name, station_ID, data_folder, sensor
     None
     """
     # Find data for the last n days in the data folder
-    data, sensor_descriptions, sensor_units = get_last_n_days_data( num_days, db_file_name, station_ID, sensors_to_plot )
+    data = get_last_n_days_data( num_days, db_file_name, station_ID )
 
     # Calculate secondary y-axis positions
     yAxisPos = []
@@ -215,7 +204,7 @@ def plot_of_last_n_days( num_days, db_file_name, station_ID, data_folder, sensor
 
         # Set data axis settings
         sensor_color = ax[index].lines[0].get_color()
-        ax[index].set_ylabel( sensor_descriptions[str(sensor)] + ' / ' + sensor_units[str(sensor)], color = sensor_color ) # TODO: implement the unit
+        ax[index].set_ylabel( data[0].get_sensor_description(sensor) + ' / ' + data[0].get_sensor_unit(sensor), color = sensor_color )
         ax[index].axis[ yAxisPos[index][0] ].label.set_font_properties( fonts.FontProperties( weight='bold', size=13 ) )
         ax[index].yaxis.set_minor_locator( ticker.AutoMinorLocator( 5 ) ) 
         ax[index].axis[ yAxisPos[index][0] ].minor_ticks.set_color( sensor_color )

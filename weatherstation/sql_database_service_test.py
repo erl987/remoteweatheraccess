@@ -18,7 +18,7 @@ class SQLDatabaseService_test(unittest.TestCase):
 
         base_station_sensor_data = BaseStationSensorData(1032.4, 12.4, 8.5)
         wind_sensor_data = WindSensorData(12.4, 43.9, 180.0, 15.2)
-        combi_sensor_data = CombiSensorData("OUT1", 34.9, 89.7)
+        combi_sensor_data = CombiSensorData("OUT1", 34.9, 89.7, "outside sensor 1")
 
         curr_time = datetime.datetime.utcnow()
         self._dataset_1 = WeatherStationDataset(curr_time)

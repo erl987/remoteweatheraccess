@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>af61fea6-0374-4031-aa2c-056052917724</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>sql_database_service_test.py</StartupFile>
+    <StartupFile>graphs_test.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>

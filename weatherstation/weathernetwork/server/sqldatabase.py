@@ -204,6 +204,10 @@ class SQLWeatherDB(object):
         for sensor_ID in available_combi_sensor_IDs:
             time = dataset.get_time()
             temperature, humidity = dataset.get_sensor_object(sensor_ID).get_all_data()
+            combi_sensor_description = dataset.get_sensor_object(sensor_ID).get_combi_sensor_description()
+            if combi_sensor_description:
+                if self._get_combi_sensor_description(sensor_ID) != combi_sensor_description:
+                    raise NotExistingError("The combi sensor description of the new data differs from that stored in the database.")
 
             try:
                 self._sql.execute(" \
@@ -294,6 +298,11 @@ class SQLWeatherDB(object):
                 # write the temperature / humidity combi sensor information (again existence of station and time is guaranteed)
                 for sensor_ID in available_combi_sensor_IDs:
                     temperature, humidity = dataset.get_sensor_object(sensor_ID).get_all_data()
+                    combi_sensor_description = dataset.get_sensor_object(sensor_ID).get_combi_sensor_description()
+                    if combi_sensor_description:
+                        if self._get_combi_sensor_description(sensor_ID) != combi_sensor_description:
+                            raise NotExistingError("The combi sensor description of the new data differs from that stored in the database.")
+
                     num_updated_rows = self._sql.execute( " \
                         UPDATE CombiSensorData \
                         SET temperature=(?), humidity=(?) \
@@ -383,7 +392,7 @@ class SQLWeatherDB(object):
                 curr_dataset = WeatherStationDataset(time)
                 for sensor_data in combi_data_from_db:
                     sensor_ID = sensor_data["sensorID"]
-                    curr_dataset.add_sensor(CombiSensorData(sensor_ID, sensor_data["temperature"], sensor_data["humidity"]))
+                    curr_dataset.add_sensor(CombiSensorData(sensor_ID, sensor_data["temperature"], sensor_data["humidity"], self._get_combi_sensor_description(sensor_ID)))
                  
                 curr_dataset.add_sensor(BaseStationSensorData(base["pressure"], base["rainGauge"], base["UV"]))
                 curr_dataset.add_sensor(WindSensorData(wind["speed"], wind["gusts"], wind["direction"], wind["temperature"]))
@@ -559,13 +568,13 @@ class SQLWeatherDB(object):
     def _get_combi_sensor_description(self, sensor_ID):
         """
         Obtains the description of a combi sensor.
+        Note: This method call must be embedded within a SQL-database lock (in a with-statement)
         """
-        with self._sql:
-            combi_sensor_row = self._sql.execute( " \
-                SELECT description \
-                FROM CombiSensor \
-                WHERE sensorID=(?)", \
-                ( sensor_ID, ) ).fetchone()
+        combi_sensor_row = self._sql.execute( " \
+            SELECT description \
+            FROM CombiSensor \
+            WHERE sensorID=(?)", \
+            ( sensor_ID, ) ).fetchone()
 
         if not combi_sensor_row:
             raise NotExistingError("The sensor ID is not existing")
