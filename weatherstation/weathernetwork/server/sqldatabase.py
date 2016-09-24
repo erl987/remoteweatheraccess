@@ -66,8 +66,6 @@ class SQLWeatherDB(object):
         :type db_file:              string
         """
         # open the database
-        self._sensor_descriptions = WeatherStationDataset.get_sensor_descriptions()
-        self._sensor_units = WeatherStationDataset.get_sensor_units()
         self._sql = sqlite3.connect(db_file, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
         self._sql.row_factory = sqlite3.Row
        
@@ -155,7 +153,8 @@ class SQLWeatherDB(object):
         :param sql:                 SQL-object of the database. This method needs to be encapsulated by a transaction.
         """
         # obtain the base station data
-        time, pressure, rain, UV = WeatherStationDataset.get_base_station_sensor_data(dataset)
+        time = dataset.get_time()
+        pressure, rain, UV = dataset.get_sensor_object(BaseStationSensorData.BASE_STATION).get_all_data()
 
         try:
             self._sql.execute( " \
@@ -181,7 +180,8 @@ class SQLWeatherDB(object):
         Adds a new dataset to the WindSensor SQL-table.
         :param sql:                 SQL-object of the database. This method needs to be encapsulated by a transaction.
         """
-        time, wind_direction, wind_average, wind_gust, wind_chill_temp = WeatherStationDataset.get_wind_sensor_data(dataset)
+        time = dataset.get_time()
+        wind_average, wind_gust, wind_direction, wind_chill_temp = dataset.get_sensor_object(WindSensorData.WIND).get_all_data()
 
         self._sql.execute(" \
             INSERT INTO WindSensorData ( \
@@ -202,7 +202,8 @@ class SQLWeatherDB(object):
         :param combi_sensor_vals:   list of CombiSensorDataset objects
         """
         for sensor_ID in available_combi_sensor_IDs:
-            time, temperature, humidity = WeatherStationDataset.get_combi_sensor_data(sensor_ID, dataset)
+            time = dataset.get_time()
+            temperature, humidity = dataset.get_sensor_object(sensor_ID).get_all_data()
 
             try:
                 self._sql.execute(" \
@@ -269,8 +270,10 @@ class SQLWeatherDB(object):
         with self._sql:
             available_combi_sensor_IDs = self._get_combi_sensor_IDs()
             for dataset in data:
+                time = dataset.get_time()
+
                 # write the base station information
-                time, pressure, rain, UV = WeatherStationDataset.get_base_station_sensor_data(dataset)
+                pressure, rain, UV = dataset.get_sensor_object(BaseStationSensorData.BASE_STATION).get_all_data()
                 num_updated_rows = self._sql.execute( " \
                     UPDATE WeatherData \
                     SET rainGauge=(?), pressure=(?), UV=(?) \
@@ -281,7 +284,7 @@ class SQLWeatherDB(object):
                     raise NotExistingError("No entry exists for the requested station at the requested time")
 
                 # write the wind sensor information (here it is already guaranteed that a dataset for the given station and time existing in the database)
-                time, wind_direction, wind_average, wind_gust, wind_chill_temp = WeatherStationDataset.get_wind_sensor_data(dataset)
+                wind_average, wind_gust, wind_direction, wind_chill_temp = dataset.get_sensor_object(WindSensorData.WIND).get_all_data()
                 self._sql.execute( " \
                     UPDATE WindSensorData \
                     SET direction=(?), speed=(?), gusts=(?), temperature=(?) \
@@ -290,7 +293,7 @@ class SQLWeatherDB(object):
 
                 # write the temperature / humidity combi sensor information (again existence of station and time is guaranteed)
                 for sensor_ID in available_combi_sensor_IDs:
-                    time, temperature, humidity = WeatherStationDataset.get_combi_sensor_data(sensor_ID, dataset)
+                    temperature, humidity = dataset.get_sensor_object(sensor_ID).get_all_data()
                     num_updated_rows = self._sql.execute( " \
                         UPDATE CombiSensorData \
                         SET temperature=(?), humidity=(?) \
@@ -488,7 +491,7 @@ class SQLWeatherDB(object):
         :type descrption:               string
         :raise AlreadyExistingError:    if the sensor ID already exists in the database
         """
-        if sensor_ID in self.get_all_sensor_IDs():
+        if self.combi_sensor_exists(sensor_ID):
             raise AlreadyExistingError("The sensor ID already exists in the database")
 
         with self._sql:
@@ -585,84 +588,3 @@ class SQLWeatherDB(object):
                 ( sensor_ID, ) ).rowcount
 
         return is_deleted
-
-
-    def get_sensor_description(self, sensor_ID_list):
-        """
-        Obtains the description of a certain sensor ID.
-        """
-        if not isinstance(sensor_ID_list, list):
-            sensor_ID_list = [sensor_ID_list]
-        sensor_ID = sensor_ID_list[0]
-        if len(sensor_ID_list) > 1:
-            subsensor_ID = sensor_ID_list[1]
-        else:
-            subsensor_ID = None
-
-        if sensor_ID in self._sensor_descriptions:
-            if not subsensor_ID:
-                description = self._sensor_descriptions[sensor_ID]
-            else:
-                description = self._sensor_descriptions[sensor_ID][subsensor_ID]
-        else:
-            description = self._get_combi_sensor_description(sensor_ID)
-            description += " (" + self._sensor_descriptions["combiSensor"][subsensor_ID] + ")"
-        
-        if isinstance(description, dict):
-            raise NotExistingError("This sensor has several subsensors, none is specified.")
-            
-        return description
-
-
-    def get_sensor_unit(self, sensor_ID_list):
-        """
-        Obtains the unit of a certain sensor ID.
-        """
-        if not isinstance(sensor_ID_list, list):
-            sensor_ID_list = [sensor_ID_list]
-        sensor_ID = sensor_ID_list[0]
-        if len(sensor_ID_list) > 1:
-            subsensor_ID = sensor_ID_list[1]
-        else:
-            subsensor_ID = None
-
-        if sensor_ID in self._sensor_units:
-            if not subsensor_ID:
-                unit = self._sensor_units[sensor_ID]
-            else:
-                unit = self._sensor_units[sensor_ID][subsensor_ID]
-        else:
-            if self.combi_sensor_exists(sensor_ID):
-                unit = self._sensor_units["combiSensor"][subsensor_ID]
-            else:
-                raise NotExistingError("This sensor does not exist")
-
-        if isinstance(unit, dict):
-            raise NotExistingError("This sensor has several subsensors, none is specified.")
-            
-        return unit
-
-
-    def get_all_sensor_IDs(self):
-        """
-        Obtains the IDs of all sensors stored in the database.
-        """
-        sensor_ID_dict = dict()
-
-        # regular sensors
-        sensor_IDs = list(self._sensor_descriptions.keys())
-        for sensor_ID in sensor_IDs:
-            if isinstance(self._sensor_descriptions[sensor_ID], dict):
-                sensor_ID_dict[sensor_ID] = list(self._sensor_descriptions[sensor_ID].keys())
-            else:
-                sensor_ID_dict[sensor_ID] = None
-
-        del sensor_ID_dict["combiSensor"]
-
-        # combi sensors
-        with self._sql:
-            sensor_IDs = self._get_combi_sensor_IDs()
-        for sensor_ID in sensor_IDs:
-            sensor_ID_dict[sensor_ID] = list(self._sensor_descriptions["combiSensor"].keys())
-
-        return sensor_ID_dict
