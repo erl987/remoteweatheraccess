@@ -13,11 +13,12 @@ if __name__ == "__main__":
     data_directory = "C:\\Users\\Ralf\\Documents\\test"
     temp_data_directory = "C:\\Users\\Ralf\\Desktop\\temp"
     data_file_extension = ".ZIP"
+    delta_time = 10     # time difference between two datasets (in minutes)
 
     exception_queue = Queue()
     sql_database_service_factory = SQLDatabaseServiceFactory(db_file_name)
 
-    with FTPServerSideProxy(sql_database_service_factory, data_directory, data_file_extension, temp_data_directory, on_message, exception_queue) as proxy:
+    with FTPServerSideProxy(sql_database_service_factory, data_directory, data_file_extension, temp_data_directory, on_message, exception_queue, delta_time) as proxy:
         # stall the main thread until the program is finished
         exception_from_subprocess = []
         try:

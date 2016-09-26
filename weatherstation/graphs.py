@@ -14,17 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
-from weathernetwork.common.sensor import CombiSensorData, BaseStationSensorData
-
-"""Generation of weather data plots.
-
-Functions:
-get_last_n_days_data:           Returns the data of the latest n days of the datasets stored in all PC-Wetterstation compatible CSV-files in the specified folder.
-plot_of_last_days:              Plots the weather data of the last n days from all data available in a defined folder.
-
-Global variables:
-delta:                          Assumed width of a single y-axis label set (in pixel).
-"""
+from weathernetwork.common.sensor import CombiSensorData, BaseStationSensorData, RainSensorData
 import matplotlib
 from weathernetwork.server.sqldatabase import SQLWeatherDB
 matplotlib.use( 'Agg' )
@@ -46,35 +36,37 @@ import te923ToCSVreader
 import csvfilemerger
 import utilities
 
+"""Generation of weather data plots.
+
+Functions:
+get_last_n_days_data:           Returns the data of the latest n days of the datasets stored in all PC-Wetterstation compatible CSV-files in the specified folder.
+plot_of_last_days:              Plots the weather data of the last n days from all data available in a defined folder.
+
+Global variables:
+delta:                          Assumed width of a single y-axis label set (in pixel).
+"""
+
 delta = 70
 
 
-def get_last_n_days_data(num_days, db_file_name, station_ID):
+def get_last_n_days_data(num_days, db_file_name, station_ID, last_time=None):
     """Returns the data of the latest n days from the specified database.
     
     Args:
     num_days:                   The data for the last 'num_days' before the last entry in the data file will be returned.
     db_file_name:               Name and path of the SQL-database file
-    required_sensor_IDs:        Sensors IDs for which the sensor description is required
+    station_ID:					ID of the required station
     
     Returns:                             
     data:                       Weather dataset of the last 'num_days' before the the last entry in the specified folder containing all sensors stored
-                                If rain data is present, the rain data will be returned as a cumulative sum starting from the first timepoint in the data with 0 mm
     """
     # Read the required data from the database
-    #last_time = datetime.datetime.utcnow()
-    last_time = datetime.datetime(year=2015, month=3, day=15) # TODO: temp
+    if not last_time:
+        last_time = datetime.datetime.utcnow()
     first_time = last_time - timedelta(days=num_days)
     
     weather_db = SQLWeatherDB(db_file_name)
     data = weather_db.get_data_in_time_range(station_ID, first_time, last_time)
-    
-    # calculate cumulated rain amount
-    #rain_in_period = []
-    #for line in data:
-    #    rain_in_period.append(line.get_rain_gauge())
-    #
-    #cumulated_rain = list(itertools.accumulate(rain_in_period))
 
     return data
 
@@ -107,7 +99,7 @@ def GetScalings( min_max_sensors ):
             if 'max_T' not in locals() or curr_max_T > max_T:
                 max_T = curr_max_T
             all_num_ticks.append( int( ( max_T - min_T ) / delta_T + 1 ) )
-        elif BaseStationSensorData.RAIN in key:
+        elif RainSensorData.RAIN in key:
             if sensor['max'] < 20:
                 delta_rain = 2.5
             elif sensor['max'] < 40:
@@ -139,7 +131,7 @@ def GetScalings( min_max_sensors ):
         elif CombiSensorData.HUMIDITY in key:
             # humidity is always in the range from 0 - 100 pct
             min_max_axis[key] = { 'min' : 0, 'max' : 100 };
-        elif BaseStationSensorData.RAIN in key:
+        elif RainSensorData.RAIN in key:
             # rain counter minimum is always 0 mm
             max_rain_counter = 0 + delta_rain * ( num_ticks - 1 )
             min_max_axis[key] = { 'min' : 0, 'max' : max_rain_counter }
@@ -154,7 +146,7 @@ def GetScalings( min_max_sensors ):
     return num_ticks, min_max_axis
 
 
-def plot_of_last_n_days( num_days, db_file_name, station_ID, data_folder, sensors_to_plot, graph_folder, graph_file_name, is_save_to_fig ):
+def plot_of_last_n_days( num_days, db_file_name, station_ID, data_folder, sensors_to_plot, graph_folder, graph_file_name, is_save_to_fig, last_time=None ):
     """Plots the weather data of the last n days from all data available in a defined folder.
     
     Args:
@@ -174,7 +166,7 @@ def plot_of_last_n_days( num_days, db_file_name, station_ID, data_folder, sensor
     None
     """
     # Find data for the last n days in the data folder
-    data = get_last_n_days_data( num_days, db_file_name, station_ID )
+    data = get_last_n_days_data( num_days, db_file_name, station_ID, last_time )
 
     # Calculate secondary y-axis positions
     yAxisPos = []

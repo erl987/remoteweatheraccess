@@ -1,9 +1,10 @@
 from abc import ABCMeta, abstractmethod
 import csv
 from datetime import datetime as dt
+from datetime import timedelta
 import os
 from weathernetwork.common.exceptions import PCWetterstationFileParseError
-from weathernetwork.common.sensor import CombiSensorData, BaseStationSensorData, WindSensorData
+from weathernetwork.common.sensor import CombiSensorData, BaseStationSensorData, WindSensorData, RainSensorData
 from weathernetwork.common.weatherstationdataset import WeatherStationDataset
 
 
@@ -17,9 +18,15 @@ class IWeatherDataFile(metaclass=ABCMeta):
 
 class PCWetterstationFormatFile(IWeatherDataFile):
     """Class for weather data files of the program PCWetterstation"""
-    def __init__(self, file_path, file_name):
+
+    def __init__(self, file_path, file_name, delta_time):
+        """
+        Constructor.
+        :param delta_time:          time between two datasets (only relevant for the rain gauge data of the first dataset, where this information cannot be derived automatically), in minutes
+        """
         self._file_path = file_path
         self._file_name = file_name
+        self._delta_time = delta_time
 
 
     @staticmethod
@@ -130,9 +137,13 @@ class PCWetterstationFormatFile(IWeatherDataFile):
             # convert the sensor informations to a WeatherDataset object
             datasets = []
             for line in data:
+                if 'time' in locals():
+                    prev_time = time            
                 time = dt.strptime( line['Datum'] + ' ' + line['Zeit'], '%d.%m.%Y %H:%M' )
-                curr_dataset = WeatherStationDataset(time)
+                if not 'prev_time' in locals():
+                    prev_time = time - timedelta(seconds=int(round( 60 * self._delta_time )))
 
+                curr_dataset = WeatherStationDataset(time)
                 curr_dataset.add_sensor(CombiSensorData( 'IN', line['Temp. I.'], line['Feuchte I.'] ))
                 curr_dataset.add_sensor(CombiSensorData( 'OUT1', line['Temp. A. 1'], line['Feuchte A. 1'] ))
                 curr_dataset.add_sensor(CombiSensorData( 'OUT2', line['Temp. A. 2'], line['Feuchte A. 2'] ))
@@ -140,7 +151,8 @@ class PCWetterstationFormatFile(IWeatherDataFile):
                 curr_dataset.add_sensor(CombiSensorData( 'OUT4', line['Temp. A. 4'], line['Feuchte A. 4'] ))
                 curr_dataset.add_sensor(CombiSensorData( 'OUT5', line['Temp. A. 5'], line['Feuchte A. 5'] ))
 
-                curr_dataset.add_sensor(BaseStationSensorData(line['Luftdruck'], line['Regen'], line['UV-X']))
+                curr_dataset.add_sensor(BaseStationSensorData(line['Luftdruck'], line['UV-X']))
+                curr_dataset.add_sensor(RainSensorData(line['Regen'], prev_time)) # cumulated data is not available here
                 curr_dataset.add_sensor(WindSensorData(line['Wind'], line['Windböen'], line['Richtung'], line['Temp. Wind']))
                 datasets.append(curr_dataset)
 

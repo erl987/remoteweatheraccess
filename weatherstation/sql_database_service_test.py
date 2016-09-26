@@ -3,9 +3,10 @@ from weathernetwork.server.weathermessage import WeatherMessage
 from weathernetwork.server.sqldatabase import SQLDatabaseServiceFactory, SQLDatabaseService, SQLWeatherDB
 import datetime
 from weathernetwork.server.exceptions import NotExistingError, AlreadyExistingError
-from weathernetwork.common.sensor import WeatherStationMetadata
+from weathernetwork.common.sensor import WeatherStationMetadata, RainSensorData
 from weathernetwork.common.sensor import BaseStationSensorData, WindSensorData, CombiSensorData
 from weathernetwork.common.weatherstationdataset import WeatherStationDataset
+from datetime import timedelta
 
 class SQLDatabaseService_test(unittest.TestCase):
     def setUp(self):
@@ -16,28 +17,36 @@ class SQLDatabaseService_test(unittest.TestCase):
         self._not_existing_station_ID = "TES5"
         self._sensor_IDs = ["OUT1"]
 
-        base_station_sensor_data = BaseStationSensorData(1032.4, 12.4, 8.5)
+        curr_time = datetime.datetime(year=2016, month=9, day=25, hour=18, minute=30, second=30)
+        base_station_sensor_data = BaseStationSensorData(1032.4, 8.5)
         wind_sensor_data = WindSensorData(12.4, 43.9, 180.0, 15.2)
         combi_sensor_data = CombiSensorData("OUT1", 34.9, 89.7, "outside sensor 1")
 
-        curr_time = datetime.datetime.utcnow()
         self._dataset_1 = WeatherStationDataset(curr_time)
+        rain_sensor_data_1 = RainSensorData(12.5, curr_time - timedelta(minutes=10))
         self._dataset_1.add_sensor(base_station_sensor_data)
+        self._dataset_1.add_sensor(rain_sensor_data_1)
         self._dataset_1.add_sensor(wind_sensor_data)
         self._dataset_1.add_sensor(combi_sensor_data)
 
-        self._dataset_2 = WeatherStationDataset(curr_time + datetime.timedelta(5))
+        self._dataset_2 = WeatherStationDataset(curr_time + datetime.timedelta(minutes=10))
+        rain_sensor_data_2 = RainSensorData(10.5, self._dataset_2.get_time() - timedelta(minutes=10))
         self._dataset_2.add_sensor(base_station_sensor_data)
+        self._dataset_2.add_sensor(rain_sensor_data_2)
         self._dataset_2.add_sensor(wind_sensor_data)
         self._dataset_2.add_sensor(combi_sensor_data)
 
-        self._dataset_3 = WeatherStationDataset(curr_time + datetime.timedelta(10))
+        self._dataset_3 = WeatherStationDataset(curr_time + datetime.timedelta(minutes=20))
+        rain_sensor_data_3 = RainSensorData(9.2, self._dataset_3.get_time() - timedelta(minutes=10))
         self._dataset_3.add_sensor(base_station_sensor_data)
+        self._dataset_3.add_sensor(rain_sensor_data_3)
         self._dataset_3.add_sensor(wind_sensor_data)
         self._dataset_3.add_sensor(combi_sensor_data)
 
-        self._dataset_4 = WeatherStationDataset(curr_time + datetime.timedelta(15))
+        self._dataset_4 = WeatherStationDataset(curr_time + datetime.timedelta(minutes=30))
+        rain_sensor_data_4 = RainSensorData(15.5, self._dataset_4.get_time() - timedelta(minutes=10))
         self._dataset_4.add_sensor(base_station_sensor_data)
+        self._dataset_4.add_sensor(rain_sensor_data_4)
         self._dataset_4.add_sensor(wind_sensor_data)
         self._dataset_4.add_sensor(combi_sensor_data)
 
@@ -70,6 +79,14 @@ class SQLDatabaseService_test(unittest.TestCase):
         # testing obtaining single sensor values
         value = self._dataset_1.get_sensor_value( ["OUT1", "temperature"])
 
+        # prepare the database
+        weather_db.remove_dataset("TES", self._dataset_1.get_time())
+        weather_db.remove_dataset("TES2", self._dataset_1.get_time())
+        weather_db.remove_dataset("TES2", self._dataset_2.get_time())
+        weather_db.remove_dataset("TES2", self._dataset_3.get_time())
+        weather_db.remove_dataset("TES2", self._dataset_4.get_time())
+
+        # testing adding datasets
         weather_db.add_dataset("TES", self._dataset_1)
         weather_db.add_dataset("TES2", [self._dataset_2, self._dataset_3, self._dataset_4])
 

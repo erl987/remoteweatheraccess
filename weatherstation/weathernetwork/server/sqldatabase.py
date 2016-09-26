@@ -4,7 +4,7 @@ from weathernetwork.server.exceptions import AlreadyExistingError
 from weathernetwork.server.exceptions import NotExistingError
 from weathernetwork.server.interface import IDatabaseService, IDatabaseServiceFactory
 from weathernetwork.common.weatherstationdataset import WeatherStationDataset
-from weathernetwork.common.sensor import CombiSensorData, BaseStationSensorData, WindSensorData
+from weathernetwork.common.sensor import CombiSensorData, BaseStationSensorData, WindSensorData, RainSensorData
 
 
 class SQLDatabaseService(IDatabaseService):
@@ -85,7 +85,6 @@ class SQLWeatherDB(object):
                 ( \
                     stationID VARCHAR(10) NOT NULL, \
                     time TIMESTAMP NOT NULL, \
-                    rainGauge REAL, \
                     pressure REAL, \
                     UV REAL, \
                     FOREIGN KEY(stationID) \
@@ -136,6 +135,21 @@ class SQLWeatherDB(object):
                     sensorID VARCHAR(10) NOT NULL PRIMARY KEY, \
                     description VARCHAR(255) \
                 )")
+
+            self._sql.execute( " \
+                CREATE TABLE IF NOT EXISTS RainSensorData \
+                ( \
+                    stationID VARCHAR(10) NOT NULL, \
+                    beginTime TIMESTAMP NOT NULL, \
+                    endTime TIMESTAMP NOT NULL, \
+                    amount REAL, \
+                    FOREIGN KEY(stationID, endTime) \
+                        REFERENCES WeatherData(stationID, time) \
+                        ON DELETE CASCADE \
+                        ON UPDATE CASCADE, \
+                    PRIMARY KEY (stationID, endTime), \
+                    CHECK(endTime>beginTime) \
+                )")
                   
             self._sql.execute("PRAGMA foreign_keys = ON")
                         
@@ -147,25 +161,24 @@ class SQLWeatherDB(object):
         self._sql.close()
 
 
-    def _add_to_BaseStation_table(self, sql, station_ID, dataset):
+    def _add_to_BaseStation_table(self, station_ID, dataset):
         """
         Adds a new dataset to the WeatherStation SQL-table.
-        :param sql:                 SQL-object of the database. This method needs to be encapsulated by a transaction.
+        Note: This method needs to be encapsulated by a transaction.
         """
         # obtain the base station data
         time = dataset.get_time()
-        pressure, rain, UV = dataset.get_sensor_object(BaseStationSensorData.BASE_STATION).get_all_data()
+        pressure, UV = dataset.get_sensor_object(BaseStationSensorData.BASE_STATION).get_all_data()
 
         try:
             self._sql.execute( " \
                 INSERT INTO WeatherData ( \
                     time, \
                     stationID, \
-                    rainGauge, \
                     pressure, \
                     UV \
-                ) VALUES (?,(SELECT stationID from WeatherStation WHERE stationID=(?)),?,?,?)", \
-                ( self._round_time(time), station_ID, rain, pressure, UV ) )
+                ) VALUES (?,(SELECT stationID from WeatherStation WHERE stationID=(?)),?,?)", \
+                ( self._round_time(time), station_ID, pressure, UV ) )
         except sqlite3.Error as e:
             if "NULL" in e.args[0]:
                 raise NotExistingError("The station does not exist in the database")
@@ -175,10 +188,61 @@ class SQLWeatherDB(object):
                 raise
 
 
-    def _add_to_WindSensorData_table(self, sql, station_ID, dataset):
+    def _check_if_unique_rain_sensor_interval(self, station_ID, first_time, last_time):
+        """
+        Determines if rain sensor data for the specified time interval already exists
+        Note: This method needs to be encapsulated by a transaction.
+        :param station_ID:          station ID
+        :type station_ID:           string
+        :param first_time:          begin time of the interval (inclusive)
+        :type first_time:           datetime
+        :param last_time:           end time of the interval (inclusive)
+        :type last_time:            datetime
+        """
+        is_existing = self._sql.execute( " \
+            SELECT EXISTS( \
+                SELECT * \
+                FROM   RainSensorData \
+                WHERE  stationID=(?) AND (?)<endTime AND beginTime<(?) \
+            )", ( station_ID, self._round_time(first_time), self._round_time(last_time) ) ).fetchone()[0]
+
+        return is_existing
+
+
+    def _add_to_RainSensorData_table(self, station_ID, dataset):
+        """
+        Adds a new dataset to the WeatherStation SQL-table.
+        Note: This method needs to be encapsulated by a transaction.
+		If cumulated rain amount is present in the data, it is ignored.
+        """
+        # obtain the base station data
+        time = dataset.get_time()
+        amount, begin_time, cumulated_amount, cumulation_begin_time = dataset.get_sensor_object(RainSensorData.RAIN).get_all_data()
+
+        # ensure the uniqueness of the rain sensor intervals
+        if self._check_if_unique_rain_sensor_interval(station_ID, begin_time, time):
+            raise AlreadyExistingError("For the given station (%s), a rain sensor dataset within the given time interval (%s - %s) already exists in the database" % (station_ID, str(self._round_time(begin_time)), str(self._round_time(time))))
+
+        try:
+            self._sql.execute( " \
+                INSERT INTO RainSensorData ( \
+                    endTime, \
+                    stationID, \
+                    amount, \
+                    beginTime \
+                ) VALUES (?,?,?,?)", \
+                ( self._round_time(time), station_ID, amount, self._round_time(begin_time) ) )
+        except sqlite3.Error as e:
+            if "constraint failed" in e.args[0]:
+                raise ValueError("The begin time of the rain sensor interval is the same as or later than the end time")
+            else:
+                raise
+
+
+    def _add_to_WindSensorData_table(self, station_ID, dataset):
         """
         Adds a new dataset to the WindSensor SQL-table.
-        :param sql:                 SQL-object of the database. This method needs to be encapsulated by a transaction.
+        Note: This method needs to be encapsulated by a transaction.
         """
         time = dataset.get_time()
         wind_average, wind_gust, wind_direction, wind_chill_temp = dataset.get_sensor_object(WindSensorData.WIND).get_all_data()
@@ -195,10 +259,10 @@ class SQLWeatherDB(object):
             ( self._round_time(time), station_ID, wind_direction, wind_average, wind_gust, wind_chill_temp ) )   
 
 
-    def _add_to_CombiSensorData_table(self, sql, station_ID, available_combi_sensor_IDs, dataset):
+    def _add_to_CombiSensorData_table(self, station_ID, available_combi_sensor_IDs, dataset):
         """
         Adds a new dataset to the CombiSensorData SQL-table.
-        :param sql:                 SQL-object of the database. This method needs to be encapsulated by a transaction.
+        Note: This method needs to be encapsulated by a transaction.
         :param combi_sensor_vals:   list of CombiSensorDataset objects
         """
         for sensor_ID in available_combi_sensor_IDs:
@@ -249,13 +313,16 @@ class SQLWeatherDB(object):
             # add the dataset to the database
             for dataset in data:
                 # write the base station information
-                self._add_to_BaseStation_table(self._sql, station_ID, dataset)
+                self._add_to_BaseStation_table(station_ID, dataset)
 
-                # write the wind sensor information (here it is already guaranteed that a dataset for the given station and time existing in the database)
-                self._add_to_WindSensorData_table(self._sql, station_ID, dataset)
+                # write the rain sensor information (here it is already guaranteed that a dataset for the given station and time existing in the database)
+                self._add_to_RainSensorData_table(station_ID, dataset)
+
+                # write the wind sensor information (again existence of station and time is guaranteed)
+                self._add_to_WindSensorData_table(station_ID, dataset)
                     
                 # write the temperature / humidity combi sensor information (again existence of station and time is guaranteed)
-                self._add_to_CombiSensorData_table(self._sql, station_ID, available_combi_sensor_IDs, dataset);
+                self._add_to_CombiSensorData_table(station_ID, available_combi_sensor_IDs, dataset);
                                        
 
     def replace_dataset(self, station_ID, data):
@@ -277,17 +344,28 @@ class SQLWeatherDB(object):
                 time = dataset.get_time()
 
                 # write the base station information
-                pressure, rain, UV = dataset.get_sensor_object(BaseStationSensorData.BASE_STATION).get_all_data()
+                pressure, UV = dataset.get_sensor_object(BaseStationSensorData.BASE_STATION).get_all_data()
                 num_updated_rows = self._sql.execute( " \
                     UPDATE WeatherData \
-                    SET rainGauge=(?), pressure=(?), UV=(?) \
+                    SET pressure=(?), UV=(?) \
                     WHERE time=(?) AND stationID=(?)", \
-                    ( rain, pressure, UV, self._round_time(time), station_ID ) ).rowcount           
+                    ( pressure, UV, self._round_time(time), station_ID ) ).rowcount           
            
                 if num_updated_rows == 0:
                     raise NotExistingError("No entry exists for the requested station at the requested time")
 
-                # write the wind sensor information (here it is already guaranteed that a dataset for the given station and time existing in the database)
+                # write the rain sensor information (here it is already guaranteed that a dataset for the given station and time existing in the database)
+                amount, begin_time, cumulated_amount, cumulation_begin_time = dataset.get_sensor_object(RainSensorData.RAIN).get_all_data()         
+                num_updated_rows = self._sql.execute( " \
+                    UPDATE RainSensorData \
+                    SET amount=(?) \
+                    WHERE endTime=(?) AND beginTime=(?) AND stationID=(?)", \
+                    ( amount, self._round_time(time), self._round_time(begin_time), station_ID ) ).rowcount  
+                
+                if num_updated_rows == 0:
+                    raise NotExistingError("The begin time of the rain sensor data cannot be updated.")
+
+                # write the wind sensor information (again existence of station and time is guaranteed)
                 wind_average, wind_gust, wind_direction, wind_chill_temp = dataset.get_sensor_object(WindSensorData.WIND).get_all_data()
                 self._sql.execute( " \
                     UPDATE WindSensorData \
@@ -362,15 +440,23 @@ class SQLWeatherDB(object):
         """
         with self._sql:
             base_data_from_db = self._sql.execute( " \
-                SELECT * \
+                SELECT time, pressure, UV \
                 FROM WeatherData \
                 WHERE stationID=(?) AND time BETWEEN (?) AND (?) \
                 ORDER BY time", \
                 ( station_ID, first_time, last_time ) ).fetchall()
             base_data_in_range = [ dict( item ) for item in base_data_from_db ]
 
+            rain_data_from_db = self._sql.execute( " \
+                SELECT amount, beginTime \
+                FROM RainSensorData \
+                WHERE stationID=(?) AND endTime BETWEEN (?) AND (?) \
+                ORDER BY endTime", \
+                ( station_ID, first_time, last_time ) ).fetchall()
+            rain_data_in_range = [ dict( item ) for item in rain_data_from_db ]
+
             wind_data_from_db = self._sql.execute( " \
-                SELECT * \
+                SELECT speed, gusts, direction, temperature \
                 FROM WindSensorData \
                 WHERE stationID=(?) AND time BETWEEN (?) AND (?) \
                 ORDER BY time", \
@@ -379,8 +465,12 @@ class SQLWeatherDB(object):
 
             # iterate over all times in the time range in order
             datasets = []
-            for base, wind in zip( base_data_in_range, wind_data_in_range ):
+            cumulated_rain = 0
+            is_first = True
+            for base, rain, wind in zip( base_data_in_range, rain_data_in_range, wind_data_in_range ):
                 time = base["time"]
+                if is_first:
+                    first_time_with_data = base_data_in_range[0]["time"]
 
                 combi_data_from_db = self._sql.execute( " \
                         SELECT temperature, humidity, sensorID \
@@ -394,9 +484,13 @@ class SQLWeatherDB(object):
                     sensor_ID = sensor_data["sensorID"]
                     curr_dataset.add_sensor(CombiSensorData(sensor_ID, sensor_data["temperature"], sensor_data["humidity"], self._get_combi_sensor_description(sensor_ID)))
                  
-                curr_dataset.add_sensor(BaseStationSensorData(base["pressure"], base["rainGauge"], base["UV"]))
+                curr_dataset.add_sensor(BaseStationSensorData(base["pressure"], base["UV"]))
+                if not is_first:
+                    cumulated_rain += rain["amount"]
+                curr_dataset.add_sensor(RainSensorData(rain["amount"], rain["beginTime"], cumulated_rain, first_time_with_data))
                 curr_dataset.add_sensor(WindSensorData(wind["speed"], wind["gusts"], wind["direction"], wind["temperature"]))
                 datasets.append(curr_dataset)
+                is_first = False
 
         return datasets
 

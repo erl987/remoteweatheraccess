@@ -1,7 +1,7 @@
 import datetime
 from weathernetwork.common.switch import switch
 from weathernetwork.server.exceptions import NotExistingError
-from weathernetwork.common.sensor import WindSensorData, BaseStationSensorData, CombiSensorData
+from weathernetwork.common.sensor import WindSensorData, BaseStationSensorData, CombiSensorData, RainSensorData
 
 class WeatherStationDataset(object):
     """Weather data set at a moment in time."""
@@ -52,6 +52,8 @@ class WeatherStationDataset(object):
     def add_sensor(self, data):
         if isinstance(data, BaseStationSensorData):
             self._sensor_data[BaseStationSensorData.BASE_STATION] = data
+        elif isinstance(data, RainSensorData):
+            self._sensor_data[RainSensorData.RAIN] = data
         elif isinstance(data, WindSensorData):
             self._sensor_data[WindSensorData.WIND] = data
         elif isinstance(data, CombiSensorData):
