@@ -87,11 +87,12 @@ class FileSystemObserver(FileSystemEventHandler):
 
 
 class FTPServerBrokerProcess(object):
-    def __init__(self, data_directory, data_file_extension, temp_data_directory, delta_time):
+    def __init__(self, data_directory, data_file_extension, temp_data_directory, delta_time, combi_sensor_IDs):
         self._data_directory = data_directory        
         self._data_file_extension = data_file_extension
         self._temp_data_directory = temp_data_directory
         self._delta_time = delta_time
+        self._combi_sensor_IDs = combi_sensor_IDs
 
 
     def process(self, received_file_queue, request_queue, parent, message_handler, exception_handler):
@@ -173,8 +174,8 @@ class FTPServerBrokerProcess(object):
             # read a list of WeatherData objects from the unzipped data files
             data = list()
             for curr_file_name in new_data_file_list:
-                file = PCWetterstationFormatFile(self._temp_data_directory, curr_file_name, self._delta_time)
-                curr_data = file.read()
+                weather_file = PCWetterstationFormatFile(self._combi_sensor_IDs)
+                curr_data = weather_file.read(self._temp_data_directory + "/" + curr_file_name, self._delta_time)
                 data += curr_data[0]
         finally:
             # delete the temporary data files
@@ -186,7 +187,7 @@ class FTPServerBrokerProcess(object):
 class FTPBroker(object):
     """Broker for weather data transmission based on FTP"""
 
-    def __init__(self, request_queue, data_directory, data_file_extension, temp_data_directory, message_handler, exception_handler, delta_time):
+    def __init__(self, request_queue, data_directory, data_file_extension, temp_data_directory, message_handler, exception_handler, delta_time, combi_sensor_IDs):
         self._data_directory = data_directory
         self._data_file_extension = data_file_extension
         self._message_handler = message_handler
@@ -197,7 +198,7 @@ class FTPBroker(object):
         self._filesystem_observer.set_received_file_queue(self._received_file_queue)
         self._filesystem_observer_process.start()
 
-        self._broker = FTPServerBrokerProcess(data_directory, data_file_extension, temp_data_directory, delta_time)
+        self._broker = FTPServerBrokerProcess(data_directory, data_file_extension, temp_data_directory, delta_time, combi_sensor_IDs)
         self._broker_process = Process(target=self._broker.process, args=(self._received_file_queue, request_queue, self, message_handler, exception_handler))
         self._broker_process.start()
 
@@ -257,6 +258,10 @@ class FTPServerSideProxy(IServerSideProxy):
     """
 
     def __init__(self, database_service_factory, data_directory, data_file_extension, temp_data_directory, message_handler, exception_queue, delta_time):
+        # obtain the combi sensors existing in the database
+        database_service = database_service_factory.create()
+        combi_sensor_IDs = database_service.get_combi_sensor_IDs()
+
         # empty the temporary data directory (it may contain unnecessary files after a power failure)
         self._clear_temp_data_directory(temp_data_directory)
 
@@ -266,7 +271,7 @@ class FTPServerSideProxy(IServerSideProxy):
         # start the listener processes
         self._exception_queue = exception_queue
         self._request_queue = Queue()  
-        self._broker = FTPBroker(self._request_queue, data_directory, data_file_extension, temp_data_directory, message_handler, self._exception_handler, delta_time)                
+        self._broker = FTPBroker(self._request_queue, data_directory, data_file_extension, temp_data_directory, message_handler, self._exception_handler, delta_time, combi_sensor_IDs)                
         self._proxy = FTPServerSideProxyProcess() 
         self._proxy_process = Process(target=self._proxy.process, args=(self._request_queue, database_service_factory, self, message_handler, self._exception_handler))
         self._proxy_process.start()        

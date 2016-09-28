@@ -4,7 +4,7 @@ from weathernetwork.server.exceptions import AlreadyExistingError
 from weathernetwork.server.exceptions import NotExistingError
 from weathernetwork.server.interface import IDatabaseService, IDatabaseServiceFactory
 from weathernetwork.common.weatherstationdataset import WeatherStationDataset
-from weathernetwork.common.sensor import CombiSensorData, BaseStationSensorData, WindSensorData, RainSensorData
+from weathernetwork.common.sensor import CombiSensorData, BaseStationSensorData, WindSensorData, RainSensorData, WeatherStationMetadata
 
 
 class SQLDatabaseService(IDatabaseService):
@@ -29,8 +29,16 @@ class SQLDatabaseService(IDatabaseService):
         self._notify_observers(message_ID)
 
 
+    def get_combi_sensor_IDs(self):
+        """
+        Obtains the sensor IDs of the combi sensors present in the database.
+        """
+        return self._database.get_combi_sensor_IDs()
+
+
     def register_observer(self, observer):
-        """Registers a new observer.
+        """
+        Registers a new observer.
         """
         self._observers.append(observer)
 
@@ -78,7 +86,8 @@ class SQLWeatherDB(object):
                     location VARCHAR(255) NOT NULL, \
                     latitude REAL NOT NULL, \
                     longitude REAL NOT NULL, \
-                    height REAL NOT NULL \
+                    height REAL NOT NULL, \
+                    rainCalibFactor REAL NOT NULL \
                 )" )
             self._sql.execute( " \
                 CREATE TABLE IF NOT EXISTS WeatherData \
@@ -502,10 +511,11 @@ class SQLWeatherDB(object):
         :type station:                  WeatherStationMetaData object
         :raise AlreadyExistingError:    if the station is already existing in the database
         """
-        identifier = station.get_station_ID();
-        device = station.get_device_info();
-        location = station.get_location_info();
-        latitude, longitude, height = station.get_geo_info();
+        identifier = station.get_station_ID()
+        device = station.get_device_info()
+        location = station.get_location_info()
+        latitude, longitude, height = station.get_geo_info()
+        rain_calib_factor = station.get_rain_calib_factor()
 
         with self._sql:
             try:
@@ -516,8 +526,9 @@ class SQLWeatherDB(object):
                         location, \
                         latitude, \
                         longitude, \
-                        height) VALUES (?,?,?,?,?,?)", \
-                        ( identifier, device, location, latitude, longitude, height ) )                  
+                        height, \
+                        rainCalibFactor) VALUES (?,?,?,?,?,?,?)", \
+                        ( identifier, device, location, latitude, longitude, height, rain_calib_factor ) )                  
             except sqlite3.Error as e:
                 raise AlreadyExistingError("The station is already existing")
 
@@ -529,17 +540,18 @@ class SQLWeatherDB(object):
         :type station:                  WeatherStationMetaData object
         :raise NotExistingError:        if the station is not existing in the database
         """
-        identifier = station.get_station_ID();
-        device = station.get_device_info();
-        location = station.get_location_info();
-        latitude, longitude, height = station.get_geo_info();
+        identifier = station.get_station_ID()
+        device = station.get_device_info()
+        location = station.get_location_info()
+        latitude, longitude, height = station.get_geo_info()
+        rain_calib_factor = station.get_rain_calib_factor()
 
         with self._sql:
             num_updated_rows = self._sql.execute( " \
                 UPDATE WeatherStation \
-                SET device=(?), location=(?), latitude=(?), longitude=(?), height=(?) \
+                SET device=(?), location=(?), latitude=(?), longitude=(?), height=(?), rainCalibFactor=(?) \
                 WHERE stationID=(?) ", \
-                ( device, location, latitude, longitude, height, identifier ) ).rowcount           
+                ( device, location, latitude, longitude, height, rain_calib_factor, identifier ) ).rowcount           
            
             if num_updated_rows == 0:
                 raise NotExistingError("The station is not existing")
@@ -583,6 +595,26 @@ class SQLWeatherDB(object):
                 )", ( station_ID, ) ).fetchone()[0]
 
         return is_existing
+
+
+    def get_station_metadata(self, station_ID):
+        """
+        Obtains the metadata for a station from the database.
+        :param 
+        """
+        with self._sql:
+            station_metadata_line = self._sql.execute( " \
+                SELECT * \
+                FROM WeatherStation \
+                WHERE stationID=(?)", ( station_ID, ) ).fetchone()
+
+            if not station_metadata_line:
+                raise NotExistingError("The requested station ID is not existing in the database")
+
+            metadata = dict(station_metadata_line)
+            station_metadata = WeatherStationMetadata(metadata["stationID"], metadata["device"], metadata["location"], metadata["latitude"], metadata["longitude"], metadata["height"], metadata["rainCalibFactor"])
+
+            return station_metadata
 
 
     def add_combi_sensor(self, sensor_ID, description):
@@ -643,6 +675,16 @@ class SQLWeatherDB(object):
                 )", ( sensor_ID, ) ).fetchone()[0]
 
         return is_existing
+
+
+    def get_combi_sensor_IDs(self):
+        """
+        Obtains all combi sensors registered in the database.
+        """
+        with self._sql:
+            combi_sensor_IDs = self._get_combi_sensor_IDs()
+
+        return combi_sensor_IDs
 
 
     def _get_combi_sensor_IDs(self):

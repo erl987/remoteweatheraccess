@@ -173,10 +173,10 @@ class WindSensorData(ISensor):
                 unit = "km/h"
                 break
             if case(WindSensorData.DIRECTION):
-                unit = "°"
+                unit = "\N{DEGREE SIGN}"
                 break
             if case(WindSensorData.WIND_CHILL):
-                unit = "°C"
+                unit = "\N{DEGREE SIGN}C"
                 break
             if case():
                 raise NotExistingError("Invalid subsensor \"%s\" for a wind sensor" % subsensor_ID)
@@ -246,7 +246,7 @@ class CombiSensorData(ISensor):
     def get_unit(self, subsensor_ID):
         for case in switch(subsensor_ID):
             if case(CombiSensorData.TEMPERATURE):
-                unit = "°C"
+                unit = "\N{DEGREE SIGN}C"
                 break
             if case(CombiSensorData.HUMIDITY):
                 unit = "%"
@@ -328,7 +328,7 @@ class BaseStationSensorData(ISensor):
 class WeatherStationMetadata(object):
     """Metadata of a weather station."""
 
-    def __init__(self, station_ID, device_info, location_info, latitude, longitude, height):
+    def __init__(self, station_ID, device_info, location_info, latitude, longitude, height, rain_calib_factor):
         """
         Constructor.
         :param station_ID:          station ID
@@ -343,6 +343,9 @@ class WeatherStationMetadata(object):
         :type longitude:            float
         :param height:              height [m above sea level]
         :type height:               float
+        :return:                    rain gauge calibration factor (typically 1.0)
+        :rtype:                     float
+
         """
         self._station_ID = station_ID
         self._device_info = device_info
@@ -350,6 +353,7 @@ class WeatherStationMetadata(object):
         self._latitude = latitude
         self._longitude = longitude
         self._height = height
+        self._rain_calib_factor = rain_calib_factor
 
 
     def get_station_ID(self):
@@ -386,3 +390,12 @@ class WeatherStationMetadata(object):
         :rtype:                     float, float, float
         """
         return self._latitude, self._longitude, self._height
+
+
+    def get_rain_calib_factor(self):
+        """
+        Returns the rain gauge calibration factor.
+        :return:                    rain gauge calibration factor (typically 1.0)
+        :rtype:                     float
+        """
+        return self._rain_calib_factor

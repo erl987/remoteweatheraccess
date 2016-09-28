@@ -1,4 +1,3 @@
-from abc import ABCMeta, abstractmethod
 import csv
 from datetime import datetime as dt
 from datetime import timedelta
@@ -8,30 +7,36 @@ from weathernetwork.common.sensor import CombiSensorData, BaseStationSensorData,
 from weathernetwork.common.weatherstationdataset import WeatherStationDataset
 
 
-class IWeatherDataFile(metaclass=ABCMeta):
-    """Interface class for weather data files"""
-
-    @abstractmethod
-    def read(self):
-        pass
-
-
-class PCWetterstationFormatFile(IWeatherDataFile):
+class PCWetterstationFormatFile(object):
     """Class for weather data files of the program PCWetterstation"""
 
-    def __init__(self, file_path, file_name, delta_time):
-        """
-        Constructor.
-        :param delta_time:          time between two datasets (only relevant for the rain gauge data of the first dataset, where this information cannot be derived automatically), in minutes
-        """
-        self._file_path = file_path
-        self._file_name = file_name
-        self._delta_time = delta_time
+    DATA_FILE_TAG = 'EXP'       # indicating a PC-Wetterstation data file
+
+    def __init__(self, combi_sensor_IDs):
+        # list of sensors defined for the PCWetterstation file format (see page 269 of the manual for PCWetterstation)
+        self._sensor_list = []
+        self._sensor_list.append( ([BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE], 133) )
+        self._sensor_list.append( ([BaseStationSensorData.BASE_STATION, BaseStationSensorData.UV], 9) )
+        self._sensor_list.append( ([WindSensorData.WIND, WindSensorData.AVERAGE], 35) )
+        self._sensor_list.append( ([WindSensorData.WIND, WindSensorData.GUSTS], 45) )
+        self._sensor_list.append( ([WindSensorData.WIND, WindSensorData.WIND_CHILL], 8) )
+        self._sensor_list.append( ([WindSensorData.WIND, WindSensorData.DIRECTION], 36) )
+        self._sensor_list.append( ([RainSensorData.RAIN, RainSensorData.PERIOD], 34) )
+
+        # combi sensors defined by the user
+        file_specific_temp_sensor_ID = 1 # temperature sensors have an ID of 1 .. 16 in PCWetterstation format files
+        file_specific_humidity_sensor_ID = 17 # humidity sensors have an ID of 17 ... 32 in PC Wetterstation format files
+        for combi_sensor in combi_sensor_IDs:
+            self._sensor_list.append( ([combi_sensor, CombiSensorData.TEMPERATURE], file_specific_temp_sensor_ID) )
+            self._sensor_list.append( ([combi_sensor, CombiSensorData.HUMIDITY], file_specific_humidity_sensor_ID) )
+            file_specific_temp_sensor_ID += 1
+            file_specific_humidity_sensor_ID += 1
 
 
     @staticmethod
     def deletedatafiles(data_folder, data_file_list):
-        """Deletes all given files from a given folder.
+        """
+        Deletes all given files from a given folder.
     
         Args:
         data_folder:                Folder in which the data files are deleted. It can be a relative path to the current working directory. 
@@ -49,42 +54,17 @@ class PCWetterstationFormatFile(IWeatherDataFile):
                 os.remove(file_path)
 
 
-    def read(self):
-        """Reads a CSV-file with the weather data compatible to PC-Wetterstation.
-    
-        Args:
-        data_folder:                Folder where the CSV-file for PC-Wetterstation is be stored. It must be given relative to the current path.
-        file_name:                  Name of the CSV-file, there are no requirements regarding the name.
-        sensor_list:                Ordered dict containing the mapping of all sensors to the index of the sensor in the weatherstation and the software PC-Wetterstation,
-                                    the name and the units of the sensors. The keys must be identical to that used in the 'export_data'.  
-    
-        Returns:                             
-        data:                       All data from the file. The format is a list of dicts with the keys being registered in sensor_list and given in 'key_list'. It contains at least 
-                                    the following information as strings:
-                                        - date of the data in the format dd.mm.yyyy
-                                        - time of the data (local time) in the format mm:hh
-                                        - all measured data according to PC-Wetterstation specification with:
-                                                * wind speeds in km/h
-                                                * rain in mm since last recording
-                                                * temperatures in degree Celsius
-                                                * pressure in hPa
-                                                * humidities in percent
-        key_list:                   List containing all keys of 'data' in the order they are read from the file
-        rain_calib_factor:          Calibration factor of the rain sensor (1.000 if the rain sensor has the original area).
-        rain_counter_base:          Reference value of the rain counter before the start of the present data (in mm).
-        station_name:               ID of the station (typically three letters, for example ERL).
-        station_height:             Altitude of the station (in meters).
-        station_type:               Information string on the detailed type of the weather station (producer, ...).
-        sensor_descriptions_dict:   Dict containing the read descriptions of all sensors in the file. The keys are those from the sensor_list and are given in 'key_list'.
-        sensor_units_dict:          Dict containing the read units of all sensors in the file. The keys are those from the sensor_list and are given in 'key_list'. 
-
+    def read(self, file_name, delta_time):
+        """
+        Reads a CSV-file with the weather data compatible to PC-Wetterstation.
+        :param delta_time:          time between two datasets (only relevant for the rain gauge data of the first dataset, where this information cannot be derived automatically), in minutes    
         Raises:
         IOError:                    The file could not be opened.
         ImportError:                The file is not compatible to PC-Wetterstation
         """
         try:
             # Determine the sensors present in the file    
-            file_name = self._file_path + '/' + self._file_name
+            file_name = file_name
             with open( file_name, 'r', newline='', encoding='latin-1' ) as f:
                 file_reader = csv.reader( f )
 
@@ -141,10 +121,10 @@ class PCWetterstationFormatFile(IWeatherDataFile):
                     prev_time = time            
                 time = dt.strptime( line['Datum'] + ' ' + line['Zeit'], '%d.%m.%Y %H:%M' )
                 if not 'prev_time' in locals():
-                    prev_time = time - timedelta(seconds=int(round( 60 * self._delta_time )))
+                    prev_time = time - timedelta(seconds=int(round( 60 * delta_time )))
 
                 curr_dataset = WeatherStationDataset(time)
-                curr_dataset.add_sensor(CombiSensorData( 'IN', line['Temp. I.'], line['Feuchte I.'] ))
+                curr_dataset.add_sensor(CombiSensorData( 'IN', line['Temp. I.'], line['Feuchte I.'] )) # TODO: generalize this with the available information on the required combi sensors
                 curr_dataset.add_sensor(CombiSensorData( 'OUT1', line['Temp. A. 1'], line['Feuchte A. 1'] ))
                 curr_dataset.add_sensor(CombiSensorData( 'OUT2', line['Temp. A. 2'], line['Feuchte A. 2'] ))
                 curr_dataset.add_sensor(CombiSensorData( 'OUT3', line['Temp. A. 3'], line['Feuchte A. 3'] ))
@@ -156,9 +136,83 @@ class PCWetterstationFormatFile(IWeatherDataFile):
                 curr_dataset.add_sensor(WindSensorData(line['Wind'], line['Windböen'], line['Richtung'], line['Temp. Wind']))
                 datasets.append(curr_dataset)
 
-            return datasets, rain_calib_factor, rain_counter_base, station_name, station_height, station_type
+            return datasets, rain_calib_factor, rain_counter_base, station_name, station_height, station_type # TODO: replace the station data by a WeatherStationMetadata object!!!!
         except Exception as e:
             raise PCWetterstationFileParseError("Weather data file \"%s\" has invalid format." % file_name)
 
 
+    def write(self, file_path, data, station_metadata):
+        """Writes a CSV-file with the weather data compatible to PC-Wetterstation.
+    
+        Args:
+        data:                       Weather data to be written to file
+        station_metadata            Metadata of the station
+        """
+        # TODO: generalized periods over several months need to be supported
 
+        # generate file name assuming that all datasets are from one month
+        first_date = data[0].get_time()
+        file_name = PCWetterstationFormatFile.DATA_FILE_TAG + first_date.strftime('%m_%y') + '.csv'
+        data_file_name = file_path + '/' + file_name
+        
+        # generate settings line for the CSV-file
+        station_ID = station_metadata.get_station_ID()
+        location = station_metadata.get_location_info()
+        station_latitude, station_longitude, station_height = station_metadata.get_geo_info()
+        device_info = station_metadata.get_device_info()
+        rain_calib_factor = station_metadata.get_rain_calib_factor()
+
+        settings_line = '#Calibrate=' + str( '%1.3f' % rain_calib_factor ) + ' #Regen0=0mm #Location=' + str( location ) + ' (' + str( station_latitude ) + '\N{DEGREE SIGN}/' + \
+            str( station_longitude ) + '\N{DEGREE SIGN}) ' + '/ ' + str( int( station_height ) ) + 'm #Station=' + str( station_ID ) + " (" + device_info + ")"
+
+        # store all data in a PC-Wetterstation compatible CSV-file
+        isFirst = True
+        with open( data_file_name, 'w', newline='', encoding='latin-1' ) as f:
+            writer = csv.writer( f, lineterminator="\r\n" )    
+
+            for dataset in data:
+                values, description_list, unit_list, sensor_list = self._get_line(dataset)
+                if isFirst:
+                    # write the header lines
+                    writer.writerow(description_list)
+                    writer.writerow(unit_list)
+                    writer.writerow([settings_line])
+                    writer.writerow(sensor_list)
+                    isFirst = False
+
+                writer.writerow(values)
+
+
+    def _get_line(self, dataset):
+        """
+        Helper method for preparing a single data line to be written into a CSV-file.
+        """
+        values = []
+        sensor_list = []
+        description_list = []
+        unit_list = []
+
+        # read the date and time
+        time = dataset.get_time()
+        values.append(time.strftime('%d.%m.%Y'))
+        sensor_list.append("")
+        description_list.append("date")
+        unit_list.append("")
+
+        values.append(time.strftime('%H:%M:%S'))
+        sensor_list.append("")
+        description_list.append("time")
+        unit_list.append("")
+
+        # read all sensor data
+        for required_sensor in self._sensor_list:
+            sensor_ID_list, sensor_format_specific_ID = required_sensor
+            try:
+                values.append( dataset.get_sensor_value(sensor_ID_list) )
+                description_list.append( dataset.get_sensor_description(sensor_ID_list) )
+                unit_list.append( dataset.get_sensor_unit(sensor_ID_list) )
+                sensor_list.append( sensor_format_specific_ID )
+            except:
+                raise # TODO: introduce a senseful reaction
+
+        return values, description_list, unit_list, sensor_list

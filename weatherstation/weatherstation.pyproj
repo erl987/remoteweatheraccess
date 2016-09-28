@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>af61fea6-0374-4031-aa2c-056052917724</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>sql_database_service_test.py</StartupFile>
+    <StartupFile>export_test.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -24,6 +24,9 @@
   <ItemGroup>
     <Compile Include="constants.py" />
     <Compile Include="csvfilemerger.py" />
+    <Compile Include="export_test.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ftp_server_side_proxy_test.py" />
     <Compile Include="plot_weather_graph.py">
       <SubType>Code</SubType>
