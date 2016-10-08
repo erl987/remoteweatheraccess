@@ -15,7 +15,6 @@ class FileParseError(Error):
         self.msg = msg        
 
 
-
 class PCWetterstationFileParseError(FileParseError):
     """Raised when a PC Wetterstation data file could not be parsed correctly due to wrong format.
     """
@@ -27,3 +26,16 @@ class PCWetterstationFileParseError(FileParseError):
         :type msg:      string
         """
         super(PCWetterstationFileParseError, self).__init__(msg)
+
+
+class DatasetFormatError(FileParseError):
+    """Raised when a weather dataset lacks required sensors
+    """
+
+    def __init__(self, msg):
+        """
+        Constructor.
+        :param msg:     error message description
+        :type msg:      string
+        """
+        super(DatasetFormatError, self).__init__(msg)

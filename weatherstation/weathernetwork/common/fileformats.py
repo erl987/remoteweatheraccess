@@ -2,7 +2,7 @@ import csv
 from datetime import datetime as dt
 from datetime import timedelta
 import os
-from weathernetwork.common.exceptions import PCWetterstationFileParseError
+from weathernetwork.common.exceptions import PCWetterstationFileParseError, DatasetFormatError
 from weathernetwork.common.sensor import CombiSensorData, BaseStationSensorData, WindSensorData, RainSensorData
 from weathernetwork.common.weatherstationdataset import WeatherStationDataset
 
@@ -13,6 +13,10 @@ class PCWetterstationFormatFile(object):
     DATA_FILE_TAG = 'EXP'       # indicating a PC-Wetterstation data file
 
     def __init__(self, combi_sensor_IDs):
+        """
+        Constructor.
+        :param combi_sensor_IDs:    contains a list with all combi sensor IDs that should be present in the file
+        """
         # list of sensors defined for the PCWetterstation file format (see page 269 of the manual for PCWetterstation)
         self._sensor_list = []
         self._sensor_list.append( ([BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE], 133) )
@@ -145,17 +149,56 @@ class PCWetterstationFormatFile(object):
         """Writes a CSV-file with the weather data compatible to PC-Wetterstation.
     
         Args:
-        data:                       Weather data to be written to file
+        file_path:                  Path where the CSV-file will be written to.
+        data:                       Weather data to be written to file. It is expected to be sorted by ascending time.
         station_metadata            Metadata of the station
         """
-        # TODO: generalized periods over several months need to be supported
-
-        # generate file name assuming that all datasets are from one month
-        first_date = data[0].get_time()
-        file_name = PCWetterstationFormatFile.DATA_FILE_TAG + first_date.strftime('%m_%y') + '.csv'
-        data_file_name = file_path + '/' + file_name
-        
         # generate settings line for the CSV-file
+        settings_line = self._create_settings_header_line(station_metadata)
+
+        dataset_index = 0
+        while dataset_index < len(data):
+            # generate file name based on the first dataset
+            first_date = data[dataset_index].get_time()
+            file_name = PCWetterstationFormatFile.DATA_FILE_TAG + first_date.strftime('%m_%y') + '.csv'
+            data_file_name = file_path + '/' + file_name
+        
+            # store all data of this month in a PC-Wetterstation compatible CSV-file
+            is_first = True
+            with open(data_file_name, 'w', newline='', encoding='latin-1') as f:
+                writer = csv.writer(f, lineterminator="\r\n")    
+
+                for dataset in data[dataset_index:]:
+                    if not self._in_same_month(dataset.get_time(), first_date):
+                        break
+
+                    values, description_list, unit_list, sensor_list = self._get_line(dataset)
+                    if is_first:
+                        # write the header lines
+                        writer.writerow(description_list)
+                        writer.writerow(unit_list)
+                        writer.writerow([settings_line])
+                        writer.writerow(sensor_list)
+                        is_first = False
+
+                    writer.writerow(values)
+                    dataset_index += 1
+
+
+    def _in_same_month(self, first_date, second_date):
+        """
+        Determines if the two dates are within the same month.
+        """
+        if first_date.month == second_date.month and first_date.year == second_date.year:
+            return True
+        else:
+            return False
+
+
+    def _create_settings_header_line(self, station_metadata):
+        """
+        Helper method for creating the settings header line of a PCWetterstation CSV-file.
+        """
         station_ID = station_metadata.get_station_ID()
         location = station_metadata.get_location_info()
         station_latitude, station_longitude, station_height = station_metadata.get_geo_info()
@@ -165,22 +208,7 @@ class PCWetterstationFormatFile(object):
         settings_line = '#Calibrate=' + str( '%1.3f' % rain_calib_factor ) + ' #Regen0=0mm #Location=' + str( location ) + ' (' + str( station_latitude ) + '\N{DEGREE SIGN}/' + \
             str( station_longitude ) + '\N{DEGREE SIGN}) ' + '/ ' + str( int( station_height ) ) + 'm #Station=' + str( station_ID ) + " (" + device_info + ")"
 
-        # store all data in a PC-Wetterstation compatible CSV-file
-        isFirst = True
-        with open( data_file_name, 'w', newline='', encoding='latin-1' ) as f:
-            writer = csv.writer( f, lineterminator="\r\n" )    
-
-            for dataset in data:
-                values, description_list, unit_list, sensor_list = self._get_line(dataset)
-                if isFirst:
-                    # write the header lines
-                    writer.writerow(description_list)
-                    writer.writerow(unit_list)
-                    writer.writerow([settings_line])
-                    writer.writerow(sensor_list)
-                    isFirst = False
-
-                writer.writerow(values)
+        return settings_line
 
 
     def _get_line(self, dataset):
@@ -213,6 +241,6 @@ class PCWetterstationFormatFile(object):
                 unit_list.append( dataset.get_sensor_unit(sensor_ID_list) )
                 sensor_list.append( sensor_format_specific_ID )
             except:
-                raise # TODO: introduce a senseful reaction
+                raise DatasetFormatError("Sensor %s is missing in the data to be written to file" % str(sensor_ID_list))
 
         return values, description_list, unit_list, sensor_list

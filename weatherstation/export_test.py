@@ -12,7 +12,7 @@ class Export_test(unittest.TestCase):
         self._file_path = "./data"
 
         # weather data
-        curr_time = datetime.datetime(year=2016, month=9, day=25, hour=18, minute=30, second=30)
+        curr_time = datetime.datetime(year=2016, month=9, day=30, hour=23, minute=40, second=30)
         base_station_sensor_data = BaseStationSensorData(1032.4, 8.5)
         wind_sensor_data = WindSensorData(12.4, 43.9, 180.0, 15.2)
         combi_sensor_data = CombiSensorData("OUT1", 34.9, 89.7, "outside sensor 1")
