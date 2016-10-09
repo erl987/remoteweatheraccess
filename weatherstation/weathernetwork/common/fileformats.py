@@ -211,7 +211,7 @@ class PCWetterstationFormatFile(object):
                         # write the header lines
                         writer.writerow(description_list)
                         writer.writerow(unit_list)
-                        writer.writerow([settings_line]) # TODO: this causes unwished quotation marks in the file!!!
+                        f.write(settings_line + '\n')
                         writer.writerow(sensor_list)
                         is_first = False
 

@@ -45,6 +45,7 @@ class Export_test(unittest.TestCase):
         dataset_4.add_sensor(wind_sensor_data)
         dataset_4.add_sensor(combi_sensor_data)
 
+        self._data_09_16 = [dataset_1, dataset_2]
         self._data = [dataset_1, dataset_2, dataset_3, dataset_4]
 
         # station data
@@ -86,6 +87,27 @@ class Export_test(unittest.TestCase):
         file_name = "EXP03_15.csv"
         weather_data_file = PCWetterstationFormatFile( [ "OUT1" ] )
         datasets, rain_counter_base, station_metadata = weather_data_file.read(self._file_path + "/" + file_name, self._station_ID)
+
+
+    def test_write_read(self):
+        device_info = "Test weather station"
+        location_info = "Test place"
+        latitude = "50.5"
+        longitude = "10.9"
+        height = 203.5
+        rain_calib_factor = 1.0
+        station_metadata = WeatherStationMetadata(self._station_ID, device_info, location_info, latitude, longitude, height, rain_calib_factor)
+
+        # write the weather data to file
+        weather_data_file = PCWetterstationFormatFile( [ "OUT1" ] )
+        weather_data_file.write(self._file_path, self._data_09_16, station_metadata)
+
+        # read the weather data from file
+        file_name = "EXP09_16.csv"
+        weather_data_file = PCWetterstationFormatFile( [ "OUT1" ] )
+        read_datasets, read_rain_counter_base, read_station_metadata = weather_data_file.read(self._file_path + "/" + file_name, self._station_ID)
+
+        self.assertEqual(True, True)
 
 if __name__ == '__main__':
     unittest.main()
