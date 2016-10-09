@@ -33,7 +33,7 @@ from weathernetwork.common.sensor import CombiSensorData, BaseStationSensorData,
 
 data_folder = './data'
 graph_file_name = 'graph.svg'
-sensors_to_plot = [ BaseStationSensorData.PRESSURE, [RainSensorData.RAIN, RainSensorData.CUMULATED], ['OUT1', CombiSensorData.TEMPERATURE], ['OUT1', CombiSensorData.HUMIDITY] ]
+sensors_to_plot = [ BaseStationSensorData.PRESSURE, (RainSensorData.RAIN, RainSensorData.CUMULATED), ('OUT1', CombiSensorData.TEMPERATURE), ('OUT1', CombiSensorData.HUMIDITY) ]
 
 
 class Test_graphs(unittest.TestCase):

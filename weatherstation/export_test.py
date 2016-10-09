@@ -82,5 +82,10 @@ class Export_test(unittest.TestCase):
         weather_data_file.write(self._file_path, data, station_metadata)
 
 
+    def test_read_list(self):
+        file_name = "EXP03_15.csv"
+        weather_data_file = PCWetterstationFormatFile( [ "OUT1" ] )
+        datasets, rain_counter_base, station_metadata = weather_data_file.read(self._file_path + "/" + file_name, self._station_ID)
+
 if __name__ == '__main__':
     unittest.main()

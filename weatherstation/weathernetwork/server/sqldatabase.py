@@ -189,9 +189,9 @@ class SQLWeatherDB(object):
                 ) VALUES (?,(SELECT stationID from WeatherStation WHERE stationID=(?)),?,?)", \
                 ( self._round_time(time), station_ID, pressure, UV ) )
         except sqlite3.Error as e:
-            if "NULL" in e.args[0]:
+            if "NULL" in e.args[0].upper():
                 raise NotExistingError("The station does not exist in the database")
-            elif "unique" in e.args[0]:
+            elif "UNIQUE" in e.args[0].upper():
                 raise AlreadyExistingError("For the given station (%s), a dataset for the given time (%s) already exists in the database" % (station_ID, str(time)))
             else:
                 raise
@@ -242,7 +242,7 @@ class SQLWeatherDB(object):
                 ) VALUES (?,?,?,?)", \
                 ( self._round_time(time), station_ID, amount, self._round_time(begin_time) ) )
         except sqlite3.Error as e:
-            if "constraint failed" in e.args[0]:
+            if "CONSTRAINT FAILED" in e.args[0].upper():
                 raise ValueError("The begin time of the rain sensor interval is the same as or later than the end time")
             else:
                 raise
@@ -293,9 +293,9 @@ class SQLWeatherDB(object):
                     ) VALUES (?,?,(SELECT sensorID from CombiSensor WHERE sensorID=(?)),?,?)", \
                     ( self._round_time(time), station_ID, sensor_ID, temperature, humidity ) )     
             except sqlite3.Error as e:
-                if "NULL" in e.args[0]:
+                if "NULL" in e.args[0].upper():
                     raise NotExistingError("The combi sensor ID not exist in the database")
-                elif "unique" in e.args[0]:
+                elif "UNIQUE" in e.args[0].upper():
                     raise AlreadyExistingError("For the given combi sensor ID (%s), station ID (%s) and time (%s) already data exists in the database" % (sensor_ID, station_ID, str(time)))
                 else:
                     raise 

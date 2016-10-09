@@ -22,25 +22,25 @@ class WeatherStationDataset(object):
         return sensor_ID in self._sensor_data
 
 
-    def _prepare_sensor_ID_list(self, sensor_ID_list):
-        if not isinstance(sensor_ID_list, list):
-            sensor_ID_list = [sensor_ID_list]
+    def _prepare_sensor_ID_tuple(self, sensor_ID_tuple):
+        if not isinstance(sensor_ID_tuple, tuple):
+            sensor_ID_tuple = (sensor_ID_tuple, )
 
-        if len(sensor_ID_list) > 1:
-            sensor_ID = sensor_ID_list[0]
-            subsensor_ID = sensor_ID_list[1]
+        if len(sensor_ID_tuple) > 1:
+            sensor_ID = sensor_ID_tuple[0]
+            subsensor_ID = sensor_ID_tuple[1]
         else:
             sensor_ID = BaseStationSensorData.BASE_STATION
-            subsensor_ID = sensor_ID_list[0]
+            subsensor_ID = sensor_ID_tuple[0]
 
         return sensor_ID, subsensor_ID
 
 
-    def get_sensor_value(self, sensor_ID_list):
+    def get_sensor_value(self, sensor_ID_tuple):
         """
         Obtains the signal data value of a specified sensor.
         """
-        sensor_ID, subsensor_ID = self._prepare_sensor_ID_list(sensor_ID_list)
+        sensor_ID, subsensor_ID = self._prepare_sensor_ID_tuple(sensor_ID_tuple)
 
         return self._sensor_data[sensor_ID].get_sensor_value(subsensor_ID)
 
@@ -66,20 +66,20 @@ class WeatherStationDataset(object):
         del self._sensor_data[sensor_ID]
 
 
-    def get_sensor_description(self, sensor_ID_list):
+    def get_sensor_description(self, sensor_ID_tuple):
         """
         Obtains the unit of a certain sensor ID.
         """
-        sensor_ID, subsensor_ID = self._prepare_sensor_ID_list(sensor_ID_list)
+        sensor_ID, subsensor_ID = self._prepare_sensor_ID_tuple(sensor_ID_tuple)
 
         return self._sensor_data[sensor_ID].get_description(subsensor_ID)
 
 
-    def get_sensor_unit(self, sensor_ID_list):
+    def get_sensor_unit(self, sensor_ID_tuple):
         """
         Obtains the unit of a certain sensor ID.
         """
-        sensor_ID, subsensor_ID = self._prepare_sensor_ID_list(sensor_ID_list)
+        sensor_ID, subsensor_ID = self._prepare_sensor_ID_tuple(sensor_ID_tuple)
 
         return self._sensor_data[sensor_ID].get_unit(subsensor_ID)
 
