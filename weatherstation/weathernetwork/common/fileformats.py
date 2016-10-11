@@ -211,7 +211,7 @@ class PCWetterstationFormatFile(object):
                         # write the header lines
                         writer.writerow(description_list)
                         writer.writerow(unit_list)
-                        f.write(settings_line + '\n')
+                        f.write(settings_line + '\r\n')
                         writer.writerow(sensor_list)
                         is_first = False
 
