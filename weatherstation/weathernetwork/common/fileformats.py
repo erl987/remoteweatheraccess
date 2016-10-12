@@ -100,7 +100,7 @@ class PCWetterstationFormatFile(object):
 
             return datasets, rain_counter_base, station_metadata
         except Exception as e:
-            raise PCWetterstationFileParseError("Weather data file \"%s\" has invalid format." % file_name)
+            raise PCWetterstationFileParseError("Weather data file \"%s\" has invalid format: %s" % (file_name, str(e)))
 
 
     def _check_file_format(self, indices_list):
@@ -123,25 +123,28 @@ class PCWetterstationFormatFile(object):
         """
         Parses the data from a single line in a PCWetterstation file to a WatherstationDataset-object.
         """
-        dataset = WeatherStationDataset(time)
-        for combi_sensor in self._combi_sensor_IDs:
-            temperature = data_dict[self._sensor_list[ (combi_sensor, CombiSensorData.TEMPERATURE) ]]
-            humidity = data_dict[self._sensor_list[ (combi_sensor, CombiSensorData.HUMIDITY)]]
-            dataset.add_sensor(CombiSensorData(combi_sensor, temperature, humidity))
+        try:
+            dataset = WeatherStationDataset(time)
+            for combi_sensor in self._combi_sensor_IDs:
+                temperature = float(data_dict[self._sensor_list[ (combi_sensor, CombiSensorData.TEMPERATURE) ]])
+                humidity = float(data_dict[self._sensor_list[ (combi_sensor, CombiSensorData.HUMIDITY)]])
+                dataset.add_sensor(CombiSensorData(combi_sensor, temperature, humidity))
 
-        # required sensors
-        pressure = data_dict[self._sensor_list[ (BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE) ]]
-        UV =  data_dict[self._sensor_list[ (BaseStationSensorData.BASE_STATION, BaseStationSensorData.UV) ]]
-        dataset.add_sensor(BaseStationSensorData(pressure, UV))
+            # required sensors
+            pressure = float(data_dict[self._sensor_list[ (BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE) ]])
+            UV =  float(data_dict[self._sensor_list[ (BaseStationSensorData.BASE_STATION, BaseStationSensorData.UV) ]])
+            dataset.add_sensor(BaseStationSensorData(pressure, UV))
 
-        rain = data_dict[self._sensor_list[ (RainSensorData.RAIN, RainSensorData.PERIOD) ]]
-        dataset.add_sensor(RainSensorData(rain, prev_time)) # cumulated data is not available here
+            rain = float(data_dict[self._sensor_list[ (RainSensorData.RAIN, RainSensorData.PERIOD) ]])
+            dataset.add_sensor(RainSensorData(rain, prev_time)) # cumulated data is not available here
 
-        average = data_dict[self._sensor_list[ (WindSensorData.WIND, WindSensorData.AVERAGE) ]]
-        gusts = data_dict[self._sensor_list[ (WindSensorData.WIND, WindSensorData.GUSTS) ]]
-        direction = data_dict[self._sensor_list[ (WindSensorData.WIND, WindSensorData.DIRECTION) ]]
-        wind_chill = data_dict[self._sensor_list[ (WindSensorData.WIND, WindSensorData.WIND_CHILL) ]]
-        dataset.add_sensor(WindSensorData(average, gusts, direction, wind_chill))
+            average = float(data_dict[self._sensor_list[ (WindSensorData.WIND, WindSensorData.AVERAGE) ]])
+            gusts = float(data_dict[self._sensor_list[ (WindSensorData.WIND, WindSensorData.GUSTS) ]])
+            direction = float(data_dict[self._sensor_list[ (WindSensorData.WIND, WindSensorData.DIRECTION) ]])
+            wind_chill = float(data_dict[self._sensor_list[ (WindSensorData.WIND, WindSensorData.WIND_CHILL) ]])
+            dataset.add_sensor(WindSensorData(average, gusts, direction, wind_chill))
+        except Exception as e:
+            raise PCWetterstationFileParseError("Data parsing error: %s" % str(e))
 
         return dataset
 
@@ -158,24 +161,28 @@ class PCWetterstationFormatFile(object):
         latitude = float('NaN')  # the file format does not contain explicit information on the latitude
         longitude = float('NaN') # the file format does not contain explicit information on the latitude
         
-        # parse header lines
-        splitted_line = str.split(metadata, '#')
-        for line in splitted_line:
-            line_pair = str.split(line, '=')
-            if line_pair[0] == 'Calibrate':
-                rain_calib_factor = float(line_pair[1])
-            elif line_pair[0] == 'Regen0':
-                line_pair[1].index('mm')      # will raise an exception if the format is wrong
-                rain_counter_base = float(line_pair[1].replace('mm', ''))
-            elif line_pair[0] == 'Location':
-                location_pair = str.split(line_pair[1], '/')
-                location_info = location_pair[0]
-                location_pair[1].index('m')   # will raise an exception if the format is wrong
-                station_height = int(location_pair[1].replace('m', ''))
-            elif line_pair[0] == 'Station':
-                device_info = line_pair[1]
+        try:
+            # parse header lines
+            splitted_line = str.split(metadata, '#')
+            for line in splitted_line:
+                line_pair = str.split(line, '=')
+                if line_pair[0] == 'Calibrate':
+                    rain_calib_factor = float(line_pair[1])
+                elif line_pair[0] == 'Regen0':
+                    line_pair[1].index('mm')      # will raise an exception if the format is wrong
+                    rain_counter_base = float(line_pair[1].replace('mm', ''))
+                elif line_pair[0] == 'Location':
+                    location_pair = str.split(line_pair[1], '/')
+                    location_info = location_pair[0]
+                    location_pair[1].index('m')   # will raise an exception if the format is wrong
+                    station_height = int(location_pair[1].replace('m', ''))
+                elif line_pair[0] == 'Station':
+                    device_info = line_pair[1]
               
-        station_metadata = WeatherStationMetadata(station_ID, device_info, location_info, latitude, longitude, station_height, rain_calib_factor)
+            station_metadata = WeatherStationMetadata(station_ID, device_info, location_info, latitude, longitude, station_height, rain_calib_factor)
+        except Exception as e:
+            raise PCWetterstationFileParseError("File header parsing error: %s" % str(e))
+
         return station_metadata, rain_counter_base
 
 
