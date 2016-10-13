@@ -6,7 +6,7 @@ from datetime import timedelta
 from weathernetwork.common.fileformats import PCWetterstationFormatFile
 from weathernetwork.server.sqldatabase import SQLWeatherDB
 
-class Export_test(unittest.TestCase):
+class TestPCWetterstationFileProcessing(unittest.TestCase):
     def setUp(self):
         """Sets up each unit test."""
         self._file_path = "./data"
@@ -61,7 +61,7 @@ class Export_test(unittest.TestCase):
         """Finishes each unit test."""
 
 
-    def test_export_list(self):
+    def test_write_file(self):
         device_info = "Test weather station"
         location_info = "Test place"
         latitude = "50.5"
@@ -74,7 +74,7 @@ class Export_test(unittest.TestCase):
         weather_data_file.write(self._file_path, self._data, station_metadata)
 
 
-    def test_export_from_database(self):
+    def test_write_from_database(self):
         weather_db = SQLWeatherDB(self._db_file_name)
         station_metadata = weather_db.get_station_metadata(self._station_ID)
         combi_sensor_IDs = weather_db.get_combi_sensor_IDs()
@@ -83,13 +83,13 @@ class Export_test(unittest.TestCase):
         weather_data_file.write(self._file_path, data, station_metadata)
 
 
-    def test_read_list(self):
+    def test_read(self):
         file_name = "EXP03_15.csv"
         weather_data_file = PCWetterstationFormatFile( [ "OUT1" ] )
         datasets, rain_counter_base, station_metadata = weather_data_file.read(self._file_path + "/" + file_name, self._station_ID)
 
 
-    def test_write_read(self):
+    def test_write_read_consistency(self):
         device_info = "Test weather station"
         location_info = "Test place"
         latitude = "50.5"

@@ -44,11 +44,13 @@ from datetime import timedelta
 import os
 import shutil
 import logging
+from ftplib import FTP
 
-import te923ToCSVreader
-import stationdata
-import lastdata
-import te923station
+from weathernetwork.client import te923ToCSVreader
+from weathernetwork.client import stationdata
+from weathernetwork.client import lastdata
+from weathernetwork.client import te923station
+from weathernetwork.client import server
 
 data_folder = './test_data/'
 station_data_file_name = 'stationData.dat'
@@ -57,7 +59,8 @@ station_name = 'TES'
 station_height = 100.0
 storage_interval = 10.0
 ftp_passwd = 'password'
-ftp_server = 'server.com' 
+ftp_server = 'server.com'
+port = 21 
 ftp_folder = 'newData'
 settings_file_name = 'settings_TES.dat' # TODO: no ideal solution!!!!!!
 
@@ -75,11 +78,12 @@ class TestProcessToCSV(unittest.TestCase):
         os.makedirs( data_folder, exist_ok = True )
 
         # Generate station data file
-        stationdata.write( data_folder + station_data_file_name, rain_calib_factor, station_name, station_height, storage_interval, ftp_passwd, ftp_server, ftp_folder )
+        stationdata.write( data_folder + station_data_file_name, rain_calib_factor, station_name, station_height, storage_interval, ftp_passwd, ftp_server, port, ftp_folder )
 
 
-    @patch('te923ToCSVreader.dt', SpoofDate)
-    def test_first_execution(self):
+    @patch('weathernetwork.client.te923ToCSVreader.dt', SpoofDate)
+    @patch('weathernetwork.client.server.FTP', autospec=True)
+    def test_first_execution(self, mock_FTP_constructor):
         '''Tests the behviour in case of first execution with no last data file being present.'''
         # Simulate reading of weather data
         time_last = 1382374260 - storage_interval * 60 # in seconds since epoch (CET including possible daylight saving) '21.10.2013,18:51
@@ -92,8 +96,9 @@ class TestProcessToCSV(unittest.TestCase):
         # TODO: implement useful assert
 
 
-    @patch('te923ToCSVreader.dt', SpoofDate)
-    def test_single_data_read(self):
+    @patch('weathernetwork.client.te923ToCSVreader.dt', SpoofDate)
+    @patch('weathernetwork.client.server.FTP', autospec=True)
+    def test_single_data_read(self, mock_FTP_constructor):
         '''Test the behaviour if one new dataset has been read (i.e. a call between [1.0 ... 2.0[ * storage_interval).'''
         time_last = 1381578982 # in seconds since epoch (CET including possible daylight saving)      
          
@@ -107,8 +112,9 @@ class TestProcessToCSV(unittest.TestCase):
         # TODO: implement useful assert
 
 
-    @patch('te923ToCSVreader.dt', SpoofDate)
-    def test_no_new_data_read(self):
+    @patch('weathernetwork.client.te923ToCSVreader.dt', SpoofDate)
+    @patch('weathernetwork.client.server.FTP', autospec=True)
+    def test_no_new_data_read(self, mock_FTP_constructor):
         '''Test the behaviour if no new dataset has been read (i.e. a call between [0.0 ... 1.0[ * storage_interval).'''
         time_last = 1381578982 # in seconds since epoch (CET including possible daylight saving)   
         set_last_old_rain_counter = 880   
@@ -129,8 +135,9 @@ class TestProcessToCSV(unittest.TestCase):
         self.assertFalse( is_reading )
 
 
-    @patch('te923ToCSVreader.dt', SpoofDate)
-    def test_multiple_data_read(self):
+    @patch('weathernetwork.client.te923ToCSVreader.dt', SpoofDate)
+    @patch('weathernetwork.client.server.FTP', autospec=True)
+    def test_multiple_data_read(self, mock_FTP_constructor):
         '''Test the behaviour if multiple new datasets have been read (i.e. a call > 1.0 * storage_interval).'''
         time_last = 1381578982 # in seconds since epoch (CET including possible daylight saving)      
          
@@ -147,8 +154,9 @@ class TestProcessToCSV(unittest.TestCase):
         # TODO: implement useful assert
 
 
-    @patch('te923ToCSVreader.dt', SpoofDate)
-    def test_distant_data_read(self):
+    @patch('weathernetwork.client.te923ToCSVreader.dt', SpoofDate)
+    @patch('weathernetwork.client.server.FTP', autospec=True)
+    def test_distant_data_read(self, mock_FTP_constructor):
         '''Test the behaviour if datasets with time gaps in between are read (this requires special handling of rain counters).'''
         time_last = 1381578982 # in seconds since epoch (CET including possible daylight saving)      
          
@@ -165,9 +173,10 @@ class TestProcessToCSV(unittest.TestCase):
         # TODO: implement useful assert
 
 
-    @patch('te923ToCSVreader.dt', SpoofDate)
-    @patch('server.dt', SpoofDate)
-    def test_two_months_read(self):
+    @patch('weathernetwork.client.te923ToCSVreader.dt', SpoofDate)
+    @patch('weathernetwork.client.server.dt', SpoofDate)
+    @patch('weathernetwork.client.server.FTP', autospec=True)
+    def test_two_months_read(self, mock_FTP_constructor):
         '''Test the behaviour in case of a month change during the reading.'''
         time_last = 1383259782 # in seconds since epoch (CET including possible daylight saving)      
          

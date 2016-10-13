@@ -32,8 +32,8 @@ import datetime
 from datetime import datetime as dt
 from collections import OrderedDict
 
-import constants
-import utilities
+from weathernetwork.client import constants
+from weathernetwork.common import utilities
 
 
 data_file_tag = 'EXP'       # indicating a PC-Wetterstation data file

@@ -15,6 +15,7 @@
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
 from weathernetwork.common.sensor import CombiSensorData, BaseStationSensorData, RainSensorData
+from weathernetwork.common import utilities
 import matplotlib
 from weathernetwork.server.sqldatabase import SQLWeatherDB
 matplotlib.use( 'Agg' )
@@ -31,10 +32,6 @@ from datetime import timedelta
 import re
 import math
 
-import pcwetterstation
-import te923ToCSVreader
-import csvfilemerger
-import utilities
 
 """Generation of weather data plots.
 

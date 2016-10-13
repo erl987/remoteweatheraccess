@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>af61fea6-0374-4031-aa2c-056052917724</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>export_test.py</StartupFile>
+    <StartupFile>test_runner.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -24,16 +24,31 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="constants.py" />
-    <Compile Include="csvfilemerger.py" />
-    <Compile Include="export_test.py">
+    <Compile Include="apps\ftp_weather_server.py" />
+    <Compile Include="apps\plot_weather_graph.py" />
+    <Compile Include="apps\__init__.py" />
+    <Compile Include="tests\client\test_te923ToCSVreader.py" />
+    <Compile Include="tests\client\__init__.py" />
+    <Compile Include="tests\common\test_fileformats.py" />
+    <Compile Include="tests\common\__init__.py" />
+    <Compile Include="tests\server\test_ftpbroker.py" />
+    <Compile Include="tests\server\test_graphs.py" />
+    <Compile Include="tests\server\test_sqldatabase.py" />
+    <Compile Include="tests\server\__init__.py" />
+    <Compile Include="tests\__init__.py" />
+    <Compile Include="test_runner.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ftp_server_side_proxy_test.py" />
-    <Compile Include="plot_weather_graph.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="sql_database_service_test.py" />
+    <Compile Include="weathernetwork\client\constants.py" />
+    <Compile Include="weathernetwork\client\generate_stationfile.py" />
+    <Compile Include="weathernetwork\client\lastdata.py" />
+    <Compile Include="weathernetwork\client\pcwetterstation.py" />
+    <Compile Include="weathernetwork\client\server.py" />
+    <Compile Include="weathernetwork\client\stationdata.py" />
+    <Compile Include="weathernetwork\client\te923station.py" />
+    <Compile Include="weathernetwork\client\te923ToCSVreader.py" />
+    <Compile Include="weathernetwork\client\weatherclient.py" />
+    <Compile Include="weathernetwork\client\__init__.py" />
     <Compile Include="weathernetwork\common\exceptions.py">
       <SubType>Code</SubType>
     </Compile>
@@ -43,23 +58,6 @@
     <Compile Include="weathernetwork\common\logmessage.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="generate_stationfile.py" />
-    <Compile Include="graphs.py" />
-    <Compile Include="graphs_test.py" />
-    <Compile Include="lastdata.py" />
-    <Compile Include="pcwetterstation.py" />
-    <Compile Include="pcwetterstation_test.py" />
-    <Compile Include="server.py" />
-    <Compile Include="serverdata.py" />
-    <Compile Include="stationdata.py" />
-    <Compile Include="te923station.py" />
-    <Compile Include="te923ToCSVreader.py" />
-    <Compile Include="te923ToCSVreader_test.py" />
-    <Compile Include="ftp_weather_server.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="utilities.py" />
-    <Compile Include="weatherclient.py" />
     <Compile Include="weathernetwork\common\delayedexception.py">
       <SubType>Code</SubType>
     </Compile>
@@ -69,16 +67,12 @@
     <Compile Include="weathernetwork\common\switch.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="weathernetwork\common\utilities.py" />
     <Compile Include="weathernetwork\common\weatherstationdataset.py" />
     <Compile Include="weathernetwork\common\__init__.py" />
+    <Compile Include="weathernetwork\server\graphs.py" />
     <Compile Include="weathernetwork\server\sqldatabase.py" />
     <Compile Include="weathernetwork\server\ftpbroker.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="weathernetwork\server\mockbroker\__init__.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="weathernetwork\server\mockbroker\mockserversideproxy.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="weathernetwork\server\weathermessage.py">
@@ -91,20 +85,18 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="weathernetwork\server\__init__.py" />
-    <Compile Include="weathernetwork\tests\server\__init__.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="weathernetwork\tests\__init__.py" />
     <Compile Include="weathernetwork\__init__.py" />
-    <Compile Include="weatherserver.py" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="apps\" />
+    <Folder Include="tests\" />
+    <Folder Include="tests\client\" />
+    <Folder Include="tests\common\" />
+    <Folder Include="tests\server\" />
     <Folder Include="weathernetwork\" />
+    <Folder Include="weathernetwork\client\" />
     <Folder Include="weathernetwork\common\" />
     <Folder Include="weathernetwork\server\" />
-    <Folder Include="weathernetwork\server\mockbroker\" />
-    <Folder Include="weathernetwork\tests\" />
-    <Folder Include="weathernetwork\tests\server\" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="{9a7a9026-48c1-4688-9d5d-e5699d47d074}\3.5" />

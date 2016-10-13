@@ -26,7 +26,7 @@ graph_file_name:                Name of the graph file to be stored.
 """
 import unittest
 
-import graphs
+from weathernetwork.server import graphs
 from datetime import datetime
 from weathernetwork.common.weatherstationdataset import WeatherStationDataset
 from weathernetwork.common.sensor import CombiSensorData, BaseStationSensorData, RainSensorData
@@ -36,7 +36,7 @@ graph_file_name = 'graph.svg'
 sensors_to_plot = [ BaseStationSensorData.PRESSURE, (RainSensorData.RAIN, RainSensorData.CUMULATED), ('OUT1', CombiSensorData.TEMPERATURE), ('OUT1', CombiSensorData.HUMIDITY) ]
 
 
-class Test_graphs(unittest.TestCase):
+class TestGraphGeneration(unittest.TestCase):
     def setUp(self):
         '''Sets up each unit test.'''
         self._db_file_name = "data/weather.db"

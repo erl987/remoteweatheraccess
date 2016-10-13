@@ -32,12 +32,7 @@ from collections import OrderedDict
 import logging
 import sys
 
-import constants
-import stationdata
-import lastdata
-import te923station
-import pcwetterstation
-import server
+from weathernetwork.client import constants, stationdata, lastdata, te923station, pcwetterstation, server
 
 log_file_name = 'te923.log' # only relevant for Windows
 station_type = 'TE923/924 (Mebus,Irox,Honeywell,Cresta)'
@@ -87,7 +82,7 @@ def reset_logger(logger):
     """
     if not sys.platform.startswith('linux'):
         # Close the logger
-        logger.handlers[0].stream.close()
+        logger.handlers[0].close()
         logger.removeHandler(logger.handlers[0])
 
 
@@ -203,7 +198,7 @@ def te923ToCSVreader(data_folder, station_data_file_name, script_name):
                     lastdata.write( data_folder + '/' + settings_file_name, last_dataset_time, last_dataset_rain_counter )
                     logger.info( 'Weather data in the files %s (%s) was successfully transfered to FTP-server \'%s\' (user: \'%s\').', data_file_list, transfered_file_name, ftp_server, station_name )
                 else:
-                    raise RuntimeError( 'Weather data transfer to FTP-server \'%s\' (user: \'%s\') failed. Read weather data in the files %s (%s) was discarded. Error description: %s.', ftp_server, station_name, data_file_list, transfered_file_name, error_text )
+                    raise RuntimeError( 'Weather data transfer to FTP-server \'%s\' (user: \'%s\') failed. Read weather data in the files %s was discarded. Error description: %s.' % ( ftp_server, station_name, data_file_list, error_text ) )
             else:
                 raise RuntimeError( 'No weather data found which was unprocessed.' )
     except Exception as e:
