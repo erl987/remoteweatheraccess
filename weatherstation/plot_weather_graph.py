@@ -1,4 +1,4 @@
-import graphs
+from weathernetwork.server import graphs
 
 
 if __name__ == "__main__":

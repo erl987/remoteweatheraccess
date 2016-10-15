@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>af61fea6-0374-4031-aa2c-056052917724</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>test_runner.py</StartupFile>
+    <StartupFile>plot_weather_graph.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -24,9 +24,8 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="apps\ftp_weather_server.py" />
-    <Compile Include="apps\plot_weather_graph.py" />
-    <Compile Include="apps\__init__.py" />
+    <Compile Include="ftp_weather_server.py" />
+    <Compile Include="plot_weather_graph.py" />
     <Compile Include="tests\client\test_te923ToCSVreader.py" />
     <Compile Include="tests\client\__init__.py" />
     <Compile Include="tests\common\test_fileformats.py" />
@@ -88,7 +87,6 @@
     <Compile Include="weathernetwork\__init__.py" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="apps\" />
     <Folder Include="tests\" />
     <Folder Include="tests\client\" />
     <Folder Include="tests\common\" />
