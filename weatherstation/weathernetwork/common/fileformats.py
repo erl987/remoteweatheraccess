@@ -10,16 +10,16 @@ from weathernetwork.common.weatherstationdataset import WeatherStationDataset
 class PCWetterstationFormatFile(object):
     """Class for processing weather data files having the format for the program PC-Wetterstation. Only the english CSV-format is accepted."""
 
-    DATA_FILE_TAG = 'EXP'       # indicating a PC-Wetterstation data file
-    DATE = "date"               # constant describing a date (equivalent to the sensor IDs)
-    TIME = "time"               # constant describing a time of day (equivalent to the sensor IDs)
+    _DATA_FILE_TAG = 'EXP'       # indicating a PC-Wetterstation data file
+    _DATE = "date"               # constant describing a date (equivalent to the sensor IDs)
+    _TIME = "time"               # constant describing a time of day (equivalent to the sensor IDs)
 
     def __init__(self, combi_sensor_IDs):
-        """
-        Constructor.
-        :param combi_sensor_IDs:                contains a list with all combi sensor IDs that should be present in the file
-        :type combi_sensor_IDs:                 list of strings
-        :raise PCWetterstationFileParseError:   if more combi sensors than allowed are defined
+        """Constructor.
+
+        :param combi_sensor_IDs: contains a list with all combi sensor IDs that should be present in the file
+        :type combi_sensor_IDs: list of strings
+        :raise PCWetterstationFileParseError: if more combi sensors than allowed are defined
         """
         # list of required sensors, using the PCWetterstation file format based sensor IDs (see page 269 of the manual for PCWetterstation)
         self._sensor_list = dict()
@@ -48,8 +48,8 @@ class PCWetterstationFormatFile(object):
 
     @staticmethod
     def deletedatafiles(data_folder, data_file_list):
-        """
-        Deletes all given files from a given folder.
+        """Deletes all given files from a given folder.
+
         :param data_folder:                     folder where all given files should be deleted. It can be a relative path to the current working directory. 
         :type data_folder:                      string
         :param data_file_list:                  list containing all files to be deleted
@@ -63,15 +63,15 @@ class PCWetterstationFormatFile(object):
 
 
     def read(self, file_name, station_ID, delta_time=10):
-        """
-        Reads a PC-Wetterstation format file.
+        """Reads a PC-Wetterstation format file.
+
         :param file_name:                       path and name of the data file. It can be a relative path to the current working directory.
         :type file_name:                        string
         :param station_ID:                      ID of the weather station for which the data is valid
         :type station_ID:                       string
         :param delta_time:                      time between two datasets in minutes (only relevant for the rain gauge data of the first dataset, where this information cannot be derived automatically)
         :type delta_time:                       float
-        :IOError:                               if the file could not be opened
+        :raise IOError:                         if the file could not be opened
         :raise PCWetterstationFileParserError:  if the file could not be parsed
         """
         try:  
@@ -89,7 +89,7 @@ class PCWetterstationFormatFile(object):
                 checked_indices_list = self._check_file_format(indices_list)
                 
                 # read all weather data from the file at once
-                file_reader = csv.DictReader(f, [PCWetterstationFormatFile.DATE, PCWetterstationFormatFile.TIME] + checked_indices_list) # the keys are the format internal sensor IDs
+                file_reader = csv.DictReader(f, [PCWetterstationFormatFile._DATE, PCWetterstationFormatFile._TIME] + checked_indices_list) # the keys are the format internal sensor IDs
                 data = list( file_reader )
 
                 # parse the weather data line by line
@@ -97,7 +97,7 @@ class PCWetterstationFormatFile(object):
                 for single_line_dict in data:
                     if 'time' in locals():
                         prev_time = time            
-                    time = dt.strptime( single_line_dict[PCWetterstationFormatFile.DATE] + ' ' + single_line_dict[PCWetterstationFormatFile.TIME], '%d.%m.%Y %H:%M' )
+                    time = dt.strptime( single_line_dict[PCWetterstationFormatFile._DATE] + ' ' + single_line_dict[PCWetterstationFormatFile._TIME], '%d.%m.%Y %H:%M' )
                     if not 'prev_time' in locals():
                         prev_time = time - timedelta(seconds=int(round( 60 * delta_time ))) # initial guess for the first timepoint in the file
 
@@ -109,8 +109,8 @@ class PCWetterstationFormatFile(object):
 
 
     def _check_file_format(self, indices_list):
-        """
-        Checks for the validity of the file format.
+        """Checks for the validity of the file format.
+
         :param indices_list:                    list containing all (PC-Wetterstation internal) indices of the sensors present in the file
         :type indices_list:                     list of strings (containing integers)
         :return:                                list of all (PC-Wetterstation internal) indices that could be verified to be present in the file
@@ -130,8 +130,8 @@ class PCWetterstationFormatFile(object):
 
 
     def _parse_single_line(self, time, prev_time, data_dict):
-        """
-        Parses the data from a single line in a PCWetterstation file to a WatherstationDataset-object.
+        """Parses the data from a single line in a PCWetterstation file to a WatherstationDataset-object.
+
         :param time:                            timepoint for which the current data is valid
         :type time:                             datetime
         :param prev_time:                       previous timepoint before the current data is valid
@@ -169,8 +169,8 @@ class PCWetterstationFormatFile(object):
 
 
     def _parse_file_metadata(self, metadata, station_ID):
-        """
-        Parses the metadata information of a PCWetterstation format file.
+        """Parses the metadata information of a PCWetterstation format file.
+
         :param metadata:                        Unparsed line from the PC-Wetterstation data file containing the metadata
         :type metadata:                         string
         :param station_ID:                      ID of the current weather station being processed
@@ -213,15 +213,14 @@ class PCWetterstationFormatFile(object):
 
 
     def write(self, file_path, data, station_metadata):
-        """
-        Writes a PC-Wetterstation format data file.
-        For each month a single file is written (following the file format standard)
+        """Writes a PC-Wetterstation format data file. For each month a single file is written (following the file format standard)
+
         :param file_path:                       path where the data file will be written to
-        :type:                                  string
+        :type file_path:                        string
         :param data:                            weather data written to the file. It is expected to be sorted by ascending time.
-        :type:                                  list of WeatherStationDataset objects
+        :type data:                             list of WeatherStationDataset objects
         :param station_metadata:                metadata of the station
-        :type:                                  WeatherStationMetadata object
+        :type station_metadata:                 WeatherStationMetadata object
         :raise DatasetFormatError:              if a required sensor is missing in the data
          """
         # generate settings line for the CSV-file
@@ -231,7 +230,7 @@ class PCWetterstationFormatFile(object):
         while dataset_index < len(data):
             # generate file name based on the first dataset
             first_date = data[dataset_index].get_time()
-            file_name = PCWetterstationFormatFile.DATA_FILE_TAG + first_date.strftime('%m_%y') + '.csv'
+            file_name = PCWetterstationFormatFile._DATA_FILE_TAG + first_date.strftime('%m_%y') + '.csv'
             data_file_name = file_path + '/' + file_name
         
             # store all data of this month in a PC-Wetterstation compatible CSV-file
@@ -257,8 +256,8 @@ class PCWetterstationFormatFile(object):
 
 
     def _in_same_month(self, first_date, second_date):
-        """
-        Determines if the two dates are within the same month.
+        """Determines if the two dates are within the same month.
+
         :param first_date:                      first date to be compared
         :type:                                  datetime
         :param second_date:                     second date to be compared
@@ -273,8 +272,8 @@ class PCWetterstationFormatFile(object):
 
 
     def _create_settings_header_line(self, station_metadata):
-        """
-        Helper method for creating the settings header line of a PC-Wetterstation format file.
+        """Helper method for creating the settings header line of a PC-Wetterstation format file.
+
         :param station_metadata:                station metadata to be written to a PC-Wetterstation station header line
         :type station_metadata:                 WeatherStationMetadata object
         :return:                                header line for the PC-Wetterstation file format
@@ -293,8 +292,8 @@ class PCWetterstationFormatFile(object):
 
 
     def _get_line(self, dataset):
-        """
-        Helper method for preparing a single data line to be written into a PC-Wetterstation format file. Also returns header lines describing the sensors.
+        """Helper method for preparing a single data line to be written into a PC-Wetterstation format file. Also returns header lines describing the sensors.
+
         :param dataset:                         dataset to be converted into a PC-Wetterstation file data line
         :type dataset:                          WeatherStationDataset object
         :return:                                data line for the PC-Wetterstation file format, header line for the sensor descriptions, units and (PC-Wetterstation internal) sensor IDs
@@ -309,12 +308,12 @@ class PCWetterstationFormatFile(object):
         time = dataset.get_time()
         values.append(time.strftime('%d.%m.%Y'))
         sensor_list.append("")
-        description_list.append(PCWetterstationFormatFile.DATE)
+        description_list.append(PCWetterstationFormatFile._DATE)
         unit_list.append("")
 
         values.append(time.strftime('%H:%M'))
         sensor_list.append("")
-        description_list.append(PCWetterstationFormatFile.TIME)
+        description_list.append(PCWetterstationFormatFile._TIME)
         unit_list.append("")
 
         # read all sensor data

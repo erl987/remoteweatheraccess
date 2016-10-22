@@ -18,7 +18,7 @@
 """Read in data from a TE923-compatible weather station via USB and store the data in a CSV-file compatible to PC-Wetterstation."""
 import sys
 
-import te923ToCSVreader
+from weathernetwork.client import te923ToCSVreader
 
 data_folder = '/opt/weatherstation/configData/'
 station_data_file_name = 'stationData.dat'

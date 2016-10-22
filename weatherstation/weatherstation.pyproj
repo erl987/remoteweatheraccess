@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>af61fea6-0374-4031-aa2c-056052917724</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>ftp_weather_server.py</StartupFile>
+    <StartupFile>test_runner.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -14,6 +14,10 @@
     <RootNamespace>weatherstation</RootNamespace>
     <InterpreterId>{9a7a9026-48c1-4688-9d5d-e5699d47d074}</InterpreterId>
     <InterpreterVersion>3.5</InterpreterVersion>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <CommandLineArguments>
+    </CommandLineArguments>
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -30,6 +34,7 @@
     <Compile Include="tests\client\__init__.py" />
     <Compile Include="tests\common\test_fileformats.py" />
     <Compile Include="tests\common\__init__.py" />
+    <Compile Include="tests\server\test_config.py" />
     <Compile Include="tests\server\test_ftpbroker.py" />
     <Compile Include="tests\server\test_graphs.py" />
     <Compile Include="tests\server\test_sqldatabase.py" />
@@ -69,6 +74,9 @@
     <Compile Include="weathernetwork\common\utilities.py" />
     <Compile Include="weathernetwork\common\weatherstationdataset.py" />
     <Compile Include="weathernetwork\common\__init__.py" />
+    <Compile Include="weathernetwork\server\config.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="weathernetwork\server\graphs.py" />
     <Compile Include="weathernetwork\server\sqldatabase.py" />
     <Compile Include="weathernetwork\server\ftpbroker.py">

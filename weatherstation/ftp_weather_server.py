@@ -16,37 +16,38 @@
 
 from weathernetwork.server.ftpbroker import FTPServerSideProxy
 from weathernetwork.server.sqldatabase import SQLDatabaseServiceFactory
+from weathernetwork.server.config import FTPWeatherServerConfigFile
 from weathernetwork.common.logging import MultiProcessLogger, IMultiProcessLogger
 from multiprocessing import Queue
+import sys
 
 if __name__ == "__main__":
-    # TODO: implement a XML-configuration file
-    db_file_name = "data/weather.db"
-    data_directory = "C:\\Users\\Ralf\\Documents\\test"
-    temp_data_directory = "C:\\Users\\Ralf\\Desktop\\temp"
-    data_file_extension = ".ZIP"
-    delta_time = 10     # time difference between two datasets (in minutes)
-    log_file_name = "data/ftp_weather_server.log"
+    # read the configuration file (specified in the first command line argument)
+    if len(sys.argv) <= 1 or len(sys.argv) > 1 and sys.argv[1].lower() == "help":
+        print("Weather server listening for data via FTP. Usage: python ftp_weather_server config.ini")
+    else:
+        configFileHandler = FTPWeatherServerConfigFile(sys.argv[1])
+        configuration = configFileHandler.read()
 
-    with MultiProcessLogger(True, log_file_name) as logger:
-        try:
-            exception_queue = Queue()
-            sql_database_service_factory = SQLDatabaseServiceFactory(db_file_name)
+        with MultiProcessLogger(True, configuration.get_log_config()) as logger:
+            try:
+                exception_queue = Queue()
+                sql_database_service_factory = SQLDatabaseServiceFactory(configuration.get_database_config().get_db_file_name())
 
-            # main server loop
-            with FTPServerSideProxy(sql_database_service_factory, data_directory, data_file_extension, temp_data_directory, logger.get_connection_queue(), exception_queue, delta_time) as proxy:
-                logger.log(IMultiProcessLogger.INFO, "Server is running.")
+                # main server loop
+                with FTPServerSideProxy(sql_database_service_factory, configuration.get_ftp_receiver_settings(), logger.get_connection_queue(), exception_queue) as proxy:
+                    logger.log(IMultiProcessLogger.INFO, "Server is running.")
                 
-                # stall the main thread until the program is finished
-                exception_from_subprocess = []
-                try:
-                    exception_from_subprocess = exception_queue.get()
-                except KeyboardInterrupt:
-                    pass
+                    # stall the main thread until the program is finished
+                    exception_from_subprocess = []
+                    try:
+                        exception_from_subprocess = exception_queue.get()
+                    except KeyboardInterrupt:
+                        pass
 
-                if exception_from_subprocess:
-                    exception_from_subprocess.re_raise()
-        except Exception as e:
-            logger.log(IMultiProcessLogger.ERROR, repr(e))
+                    if exception_from_subprocess:
+                        exception_from_subprocess.re_raise()
+            except Exception as e:
+                logger.log(IMultiProcessLogger.ERROR, repr(e))
 
-        logger.log(IMultiProcessLogger.INFO, "Server has stopped.")
+            logger.log(IMultiProcessLogger.INFO, "Server has stopped.")

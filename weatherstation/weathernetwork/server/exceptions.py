@@ -30,3 +30,16 @@ class AlreadyExistingError(Error):
         :type msg:      string
         """
         self.msg = msg
+
+
+class InvalidConfigFileError(Error):
+    """Raise when the server config file is invalid.
+    """
+
+    def __init__(self, msg):
+        """
+        Constructor.
+        :param msg:     error message description
+        :type msg:      string
+        """
+        self.msg = msg

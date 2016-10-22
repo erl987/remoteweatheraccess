@@ -3,7 +3,7 @@ import sys
 import threading
 from datetime import datetime
 from multiprocessing import Queue
-from logging.handlers import SysLogHandler
+from logging.handlers import SysLogHandler, RotatingFileHandler
 from abc import ABCMeta, abstractmethod
 
 class IMultiProcessLogger(metaclass=ABCMeta):
@@ -24,17 +24,16 @@ class IMultiProcessLogger(metaclass=ABCMeta):
 
 class MultiProcessLogger(IMultiProcessLogger):
     """Multiprocessing capable logging class. Use this class only within a context manager."""
-    def __init__(self, is_print_to_screen, log_file_name=None):
+    def __init__(self, is_print_to_screen, log_config=None):
         """
         Constructor.
         :param is_print_to_screen:          flag stating if the log message is additionally printed to the screen
         :type is_print_to_screen:           boolean
-        :param log_file_name:               Name and path of the log file to be used. If omitted, the default log system of the platform is used.
-        :type log_file_name:                string
-        :raise FileNotFoundError:           if no log file name is given and the operating system has no default log system
+        :param log_config:                  Configuration of the log. If omitted, the default log system of the platform is used.
+        :type log_config:                   LogConfig object
+        :raise FileNotFoundError:           if no log file is configured and the operating system has no default log system
         """
         self._is_print_to_screen = is_print_to_screen
-        self._log_file_name = log_file_name
         self._logging_queue = []
         self._thread = []
         self._lock = threading.Lock()
@@ -42,8 +41,14 @@ class MultiProcessLogger(IMultiProcessLogger):
         # initialize the logger for the present process
         logger = logging.getLogger()
         logger.setLevel(logging.DEBUG)
-        if self._log_file_name:
-            logging.basicConfig(filename=log_file_name, level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s', datefmt='%b %d %H:%M:%S')
+        if log_config:
+            log_file_name = log_config.get_log_file_name()
+            max_bytes = log_config.get_max_kbytes_per_files() * 1024
+            backup_count = log_config.get_num_files_to_keep()
+
+            log_handler = RotatingFileHandler(log_file_name, maxBytes=max_bytes, backupCount=backup_count)
+            log_handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)s: %(message)s', datefmt='%b %d %H:%M:%S'))
+            logger.addHandler(log_handler)
         else:
             if sys.platform.startswith('linux'):
                 syslog = SysLogHandler(address='/dev/log')
@@ -53,7 +58,7 @@ class MultiProcessLogger(IMultiProcessLogger):
                 logger = logging.LoggerAdapter(self._logger, { 'app_name': script_name } )
             else:
                 # on Windows
-                raise FileNotFoundError("No log file name given and the operating system has no default log system.")
+                raise FileNotFoundError("The OS has no default log system. You need to specify a log file.")
 
 
     def __enter__(self):

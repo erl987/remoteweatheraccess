@@ -260,7 +260,10 @@ class FTPServerSideProxy(IServerSideProxy):
     Needs to be called in a with-clause for correct management of the subprocesses.
     """
 
-    def __init__(self, database_service_factory, data_directory, data_file_extension, temp_data_directory, logging_queue, exception_queue, delta_time):
+    def __init__(self, database_service_factory, config, logging_queue, exception_queue):
+        # read the configuration
+        data_directory, temp_data_directory, data_file_extension, delta_time = config.get()
+
         # obtain the combi sensors existing in the database
         database_service = database_service_factory.create()
         combi_sensor_IDs = database_service.get_combi_sensor_IDs()
