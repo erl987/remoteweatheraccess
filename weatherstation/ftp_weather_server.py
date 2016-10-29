@@ -14,17 +14,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
+import sys
 from weathernetwork.server.ftpbroker import FTPServerSideProxy
 from weathernetwork.server.sqldatabase import SQLDatabaseServiceFactory
 from weathernetwork.server.config import FTPWeatherServerConfigFile
 from weathernetwork.common.logging import MultiProcessLogger, IMultiProcessLogger
 from multiprocessing import Queue
-import sys
 
-if __name__ == "__main__":
+
+def main():
+    """Weather server listening for data via FTP.
+
+    Command line arguments:
+    configuration INI-file
+    """
     # read the configuration file (specified in the first command line argument)
     if len(sys.argv) <= 1 or len(sys.argv) > 1 and sys.argv[1].lower() == "help":
-        print("Weather server listening for data via FTP. Usage: python ftp_weather_server config.ini")
+        print("Weather server listening for data via FTP. Usage: python ftp_weather_server.py config.ini")
     else:
         configFileHandler = FTPWeatherServerConfigFile(sys.argv[1])
         configuration = configFileHandler.read()
@@ -51,3 +57,7 @@ if __name__ == "__main__":
                 logger.log(IMultiProcessLogger.ERROR, repr(e))
 
             logger.log(IMultiProcessLogger.INFO, "Server has stopped.")
+
+
+if __name__ == "__main__":
+    main()
