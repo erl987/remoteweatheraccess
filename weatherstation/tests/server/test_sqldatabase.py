@@ -1,6 +1,6 @@
 import unittest
 from weathernetwork.server.weathermessage import WeatherMessage
-from weathernetwork.server.sqldatabase import SQLDatabaseServiceFactory, SQLDatabaseService, SQLWeatherDB
+from weathernetwork.server.sqldatabase import SQLDatabaseService, SQLWeatherDB
 import datetime
 from weathernetwork.server.exceptions import NotExistingError, AlreadyExistingError
 from weathernetwork.common.sensor import WeatherStationMetadata, RainSensorData

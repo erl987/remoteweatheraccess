@@ -17,7 +17,7 @@
 import sys
 from weathernetwork.server.ftpbroker import FTPServerSideProxy
 from weathernetwork.server.sqldatabase import SQLDatabaseServiceFactory
-from weathernetwork.server.config import FTPWeatherServerConfigFile
+from weathernetwork.server.config import FTPWeatherServerIniFile
 from weathernetwork.common.logging import MultiProcessLogger, IMultiProcessLogger
 from multiprocessing import Queue
 
@@ -32,7 +32,7 @@ def main():
     if len(sys.argv) <= 1 or len(sys.argv) > 1 and sys.argv[1].lower() == "help":
         print("Weather server listening for data via FTP. Usage: python ftp_weather_server.py config.ini")
     else:
-        configFileHandler = FTPWeatherServerConfigFile(sys.argv[1])
+        configFileHandler = FTPWeatherServerIniFile(sys.argv[1])
         configuration = configFileHandler.read()
 
         with MultiProcessLogger(True, configuration.get_log_config()) as logger:

@@ -33,7 +33,7 @@ class AlreadyExistingError(Error):
 
 
 class InvalidConfigFileError(Error):
-    """Raise when the server config file is invalid.
+    """Raise when a config file is invalid.
     """
 
     def __init__(self, msg):

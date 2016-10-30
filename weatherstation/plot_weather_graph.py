@@ -29,7 +29,6 @@ def main():
     """
     time_period_duration = 7  # number of days to be plotted
     db_file_name = "data/weather.db"
-    data_storage_folder = ""
     sensors_to_plot = [BaseStationSensorData.PRESSURE,
                        (RainSensorData.RAIN, RainSensorData.CUMULATED),
                        ('OUT1', CombiSensorData.TEMPERATURE),
@@ -45,29 +44,31 @@ def main():
     if len(sys.argv) != 3:
         print("Plotting weather data from a SQL database. Usage: python plot_weather_graph.py STATION_ID plot_config.ini")
     else:
-        station_ID = sys.argv[1]
+        station_id = sys.argv[1]
         config_file_name = sys.argv[2]
 
     log_config = LogConfig(log_file_name, max_kbytes_per_log_file, max_num_log_files_to_keep)
     with MultiProcessLogger(True, log_config) as logger:
-        logger.log(IMultiProcessLogger.INFO, "Plotting last {} days for station {}.".format(time_period_duration, station_ID))
-        num_plot_datasets, first_plot_time, last_plot_time = graphs.plot_of_last_n_days(
-            time_period_duration, 
-            db_file_name, 
-            station_ID, 
-            data_storage_folder, 
-            sensors_to_plot, 
-            graph_directory, 
-            graph_file_name, 
-            True, 
-            datetime(year=2015, month=3, day=3)
-        )
-        logger.log(IMultiProcessLogger.INFO, "Plotting for station {} finished, plotted {} datasets ({} - {}).".format(
-            station_ID, 
-            num_plot_datasets, 
-            first_plot_time,
-            last_plot_time
-        ))
+        try:
+            logger.log(IMultiProcessLogger.INFO, "Started plotting the last {} days for station {}.".format(time_period_duration, station_id))
+            num_plot_datasets, first_plot_time, last_plot_time = graphs.plot_of_last_n_days(
+                time_period_duration, 
+                db_file_name, 
+                station_id,
+                sensors_to_plot, 
+                graph_directory, 
+                graph_file_name, 
+                True, 
+                datetime(year=2015, month=3, day=3)
+            )
+            logger.log(IMultiProcessLogger.INFO, "Finished plotting for station {}, plotted {} datasets ({} - {}).".format(
+                station_id, 
+                num_plot_datasets, 
+                first_plot_time,
+                last_plot_time
+            ))
+        except Exception as e:
+            logger.log(IMultiProcessLogger.ERROR, repr(e))
 
 
 if __name__ == "__main__":

@@ -143,14 +143,13 @@ def GetScalings( min_max_sensors ):
     return num_ticks, min_max_axis
 
 
-def plot_of_last_n_days( num_days, db_file_name, station_ID, data_folder, sensors_to_plot, graph_folder, graph_file_name, is_save_to_fig, last_time=None ):
+def plot_of_last_n_days( num_days, db_file_name, station_id, sensors_to_plot, graph_folder, graph_file_name, is_save_to_fig, last_time=None ):
     """Plots the weather data of the last n days from all data available in a defined folder.
     
     Args:
     num_days:                   Last 'num_days' before the last entry in the data file will be plotted.
-    data_folder:                Folder with the PC-Wetterstation compatible CSV-files which will be analyzed.
     sensors_to_plot:            List with all names of the sensors to be plotted. The names must be identical with the 'sensor_list' dictionary labels.
-    graph_folder:               Folder where the graph plot file will be stored.
+    graph_folder:               Base folder where the graph plot file will be stored, the file is stored in a subfolder named by the station ID.
     graph_file_name:            Name of the graph plot file. Any graphics format supported by MATPLOTLIB can be used, for example '.svg' or '.png'.
     is_save_to_fig:             Flag stating if the graph will be written to file (True) or to a GUI (False)
     
@@ -163,7 +162,7 @@ def plot_of_last_n_days( num_days, db_file_name, station_ID, data_folder, sensor
     None
     """
     # Find data for the last n days in the data folder
-    data = get_last_n_days_data( num_days, db_file_name, station_ID, last_time )
+    data = get_last_n_days_data( num_days, db_file_name, station_id, last_time )
 
     # Calculate secondary y-axis positions
     yAxisPos = []
@@ -227,7 +226,7 @@ def plot_of_last_n_days( num_days, db_file_name, station_ID, data_folder, sensor
 
     # Save plot to file
     if is_save_to_fig:
-        plt.savefig( graph_folder + '/' + graph_file_name )
+        plt.savefig( graph_folder + '/' + station_id + '/' + graph_file_name )
     else:
         plt.show()
 

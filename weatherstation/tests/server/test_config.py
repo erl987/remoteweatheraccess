@@ -1,5 +1,5 @@
 import unittest
-from weathernetwork.server.config import FTPWeatherServerConfigFile
+from weathernetwork.server.config import FTPWeatherServerIniFile, WeatherPlotterIniFile
 
 class TestServerConfig(unittest.TestCase):
     def setUp(self):
@@ -10,15 +10,35 @@ class TestServerConfig(unittest.TestCase):
         pass
 
     def test_read(self):
-        configFile = FTPWeatherServerConfigFile(self._file_name)
-        configuration = configFile.read()
+        config_file = FTPWeatherServerIniFile(self._file_name)
+        configuration = config_file.read()
 
     def test_write(self):
-        configFile = FTPWeatherServerConfigFile(self._file_name)
-        configuration = configFile.read()
+        config_file = FTPWeatherServerIniFile(self._file_name)
+        configuration = config_file.read()
 
-        configFile_2 = FTPWeatherServerConfigFile(self._file_name_2)
-        configFile_2.write(configuration)
+        config_file_2 = FTPWeatherServerIniFile(self._file_name_2)
+        config_file_2.write(configuration)
+
+
+class TestPlotterConfig(unittest.TestCase):
+    def setUp(self):
+        self._file_name = "./data/config_weather_plotter.ini"
+        self._file_name_2 = "./data/config_weather_plotter_2.ini"
+
+    def tearDown(self):
+        pass
+
+    def test_read(self):
+        config_file = WeatherPlotterIniFile(self._file_name)
+        configuration = config_file.read()
+
+    def test_write(self):
+        config_file = WeatherPlotterIniFile(self._file_name)
+        configuration = config_file.read()
+
+        config_file_2 = WeatherPlotterIniFile(self._file_name_2)
+        config_file_2.write(configuration)
 
 
 if __name__ == '__main__':

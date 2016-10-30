@@ -29,3 +29,16 @@ class IDatabaseServiceFactory(metaclass=ABCMeta):
     @abstractmethod
     def create(self, db_file_name):
         pass
+
+
+class IIniConfig(metaclass=ABCMeta):
+    """Interface class for server configuration data compatible to INI-files."""
+
+    @staticmethod
+    @abstractmethod
+    def read_section_from_ini_file(section):
+        pass
+
+    @abstractmethod
+    def write_section_to_ini_file(self, config_file_section):
+        pass
