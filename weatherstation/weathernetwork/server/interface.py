@@ -31,7 +31,7 @@ class IDatabaseServiceFactory(metaclass=ABCMeta):
         pass
 
 
-class IIniConfig(metaclass=ABCMeta):
+class IIniConfigSection(metaclass=ABCMeta):
     """Interface class for server configuration data compatible to INI-files."""
 
     @staticmethod

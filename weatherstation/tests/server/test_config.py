@@ -1,5 +1,5 @@
 import unittest
-from weathernetwork.server.config import FTPWeatherServerIniFile, WeatherPlotterIniFile
+from weathernetwork.server.config import FTPWeatherServerIniFile, WeatherPlotServiceIniFile
 
 class TestServerConfig(unittest.TestCase):
     def setUp(self):
@@ -30,14 +30,14 @@ class TestPlotterConfig(unittest.TestCase):
         pass
 
     def test_read(self):
-        config_file = WeatherPlotterIniFile(self._file_name)
+        config_file = WeatherPlotServiceIniFile(self._file_name)
         configuration = config_file.read()
 
     def test_write(self):
-        config_file = WeatherPlotterIniFile(self._file_name)
+        config_file = WeatherPlotServiceIniFile(self._file_name)
         configuration = config_file.read()
 
-        config_file_2 = WeatherPlotterIniFile(self._file_name_2)
+        config_file_2 = WeatherPlotServiceIniFile(self._file_name_2)
         config_file_2.write(configuration)
 
 

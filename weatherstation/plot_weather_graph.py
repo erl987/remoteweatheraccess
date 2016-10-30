@@ -19,7 +19,7 @@ from datetime import datetime
 from weathernetwork.common.logging import IMultiProcessLogger, MultiProcessLogger
 from weathernetwork.common.sensor import BaseStationSensorData, CombiSensorData, RainSensorData
 from weathernetwork.server import graphs
-from weathernetwork.server.config import LogConfig
+from weathernetwork.server.config import LogConfigSection
 
 
 def main():
@@ -47,7 +47,7 @@ def main():
         station_id = sys.argv[1]
         config_file_name = sys.argv[2]
 
-    log_config = LogConfig(log_file_name, max_kbytes_per_log_file, max_num_log_files_to_keep)
+    log_config = LogConfigSection(log_file_name, max_kbytes_per_log_file, max_num_log_files_to_keep)
     with MultiProcessLogger(True, log_config) as logger:
         try:
             logger.log(IMultiProcessLogger.INFO, "Started plotting the last {} days for station {}.".format(time_period_duration, station_id))
