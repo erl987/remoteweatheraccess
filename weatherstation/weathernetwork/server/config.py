@@ -32,7 +32,7 @@ class BaseWeatherServerConfig(object):
         :rtype:                         LogConfig
         """
         return self._log_config
-    
+
 
 class FTPWeatherServerConfig(BaseWeatherServerConfig):
     """Configuration data of a FTP weather server"""
@@ -90,7 +90,7 @@ class DatabaseConfigSection(IIniConfigSection):
     # INI-file subsection tags
     _DB_FILE_NAME = "DatabaseFile"
     _DATABASE_SUBSECTION = [_DB_FILE_NAME]
-    
+
     def __init__(self, db_file_name):
         """Constructor.
 
@@ -120,8 +120,8 @@ class DatabaseConfigSection(IIniConfigSection):
         if not IniFileUtils.check_section_for_all_tags(section, DatabaseConfigSection._DATABASE_SUBSECTION, False):
             raise InvalidConfigFileError("An entry in the section \"%s\" is invalid." % section.name)
 
-        db_file_name = section.get(DatabaseConfigSection._DB_FILE_NAME)  
-        
+        db_file_name = section.get(DatabaseConfigSection._DB_FILE_NAME)
+
         return DatabaseConfigSection(db_file_name)
 
     def write_section_to_ini_file(self, config_file_section):
@@ -142,7 +142,7 @@ class FTPReceiverConfigSection(object):
     _DATA_FILE_EXTENSION = "DataFileExtension"
     _TIME_BETWEEN_DATA = "TimeBetweenData"
     _RECEIVER_SUBSECTION = [_RECEIVER_DIRECTORY, _TEMP_DIRECTORY, _DATA_FILE_EXTENSION, _TIME_BETWEEN_DATA]
-    
+
     def __init__(self, receiver_directory, temp_data_directory, data_file_extension, time_between_data):
         """Constructor.
 
@@ -157,13 +157,13 @@ class FTPReceiverConfigSection(object):
         """
         self._receiver_directory = receiver_directory
         self._temp_data_directory = temp_data_directory
-        
+
         if not data_file_extension.startswith("."):
             data_file_extension = "." + data_file_extension
         self._data_file_extension = data_file_extension
 
         self._time_between_data = time_between_data
-        
+
     def get(self):
         """Obtains the complete configuration data for the FTP-based weather server.
 
@@ -174,10 +174,10 @@ class FTPReceiverConfigSection(object):
         :return:                        file extension of the data files, may contain a leading dot (typically: ZIP)
         :rtype:                         string
         :return:                        time between two timepoints in the datafiles (only used for the first timepoint in a file), in minutes
-        :rtype:                         float                     
+        :rtype:                         float
         """
         return self._receiver_directory, self._temp_data_directory, self._data_file_extension, self._time_between_data
-    
+
     @staticmethod
     def read_section_from_ini_file(section):
         """Reads the receiver section of the INI-file.
@@ -248,7 +248,7 @@ class PlotConfigSection(IIniConfigSection):
         """Obtains the sensors to be plotted.
 
         :return:                        sensors to be plotted (format: ['rain', ('OUT1', 'temperature')])
-        :rtype:                         list of strings / dict for subsensors           
+        :rtype:                         list of strings / dict for subsensors
         """
         return self._sensors_to_plot
 
@@ -263,7 +263,7 @@ class PlotConfigSection(IIniConfigSection):
     @staticmethod
     def _strip_sensor_name(sensor_name):
         """Checks a sensor name for validity and strips all leading and trailing spaces.
-        
+
         :param sensor_name:             name of the sensor to be checked
         :type sensor_name:              string
         :return:                        sensor name stripped from leading and trailing spaces
@@ -271,14 +271,14 @@ class PlotConfigSection(IIniConfigSection):
         :raise InvalidConfigFileException: if the sensor name is invalid
         """
         if '(' in sensor_name or ')' in sensor_name or ',' in sensor_name:
-            raise InvalidConfigFileException("Sensor name was not correctly parsed, it contains invalid characters.")
+            raise InvalidConfigFileError("Sensor name was not correctly parsed, it contains invalid characters.")
 
         return sensor_name.strip()
 
     @staticmethod
     def _parse_sensors_string(sensors_string):
         """Parses the INI-file entry for the definition of the sensors to be plotted.
-        
+
         :param sensors_string:          string from the INI-file containing the sensors to be plotted
         :type sensors_string:           string
         :return:                        parsed sensors to be plotted (format: ['rain', ('OUT1', 'temperature')])
@@ -307,7 +307,7 @@ class PlotConfigSection(IIniConfigSection):
                     if len(splitted_sensor_definition) != 2:
                         raise InvalidConfigFileError("A subsensor definition is invalid.")
                     sensors_to_plot.append(
-                        (PlotConfigSection._strip_sensor_name(splitted_sensor_definition[0]), 
+                        (PlotConfigSection._strip_sensor_name(splitted_sensor_definition[0]),
                          PlotConfigSection._strip_sensor_name(splitted_sensor_definition[1])
                         )
                     )
@@ -389,7 +389,7 @@ class LogConfigSection(IIniConfigSection):
         :rtype:                         int
         """
         return self._max_kbytes_per_file
-   
+
 
     def get_num_files_to_keep(self):
         """Obtains the maximum number of log files kept.
@@ -402,7 +402,7 @@ class LogConfigSection(IIniConfigSection):
     @staticmethod
     def read_section_from_ini_file(section):
         """Reads the log section of the INI-file.
-        
+
         :param section:                 section containing the log system configuration
         :type section:                  ConfigParser
         :raise InvalidConfigFileError:  if an entry in the given section is invalid
@@ -413,8 +413,8 @@ class LogConfigSection(IIniConfigSection):
         log_file_name = section.get(LogConfigSection._LOG_FILE)
         max_kbytes_per_file = section.getint(LogConfigSection._MAX_KBYTES)
         num_files_to_keep = section.getint(LogConfigSection._NUM_FILES_TO_KEEP)
-        
-        return LogConfigSection(log_file_name, max_kbytes_per_file, num_files_to_keep)   
+
+        return LogConfigSection(log_file_name, max_kbytes_per_file, num_files_to_keep)
 
     def write_section_to_ini_file(self, config_file_section):
         """Writes the content of the object to a INI-file section.
@@ -459,7 +459,7 @@ class BaseWeatherServerIniFile(object):
 
     def read(self):
         """Reads the basic config data from the INI-file.
-        
+
         :raise InvalidConfigFileError:  if an entry in the given section is invalid
         """
         self._config_file.clear()
@@ -473,15 +473,15 @@ class BaseWeatherServerIniFile(object):
             log_section = self._config_file[BaseWeatherServerIniFile._LOG_SECTION_TAG]
             if not IniFileUtils.check_section_for_all_tags(log_section, BaseWeatherServerIniFile._LOG_SUBSECTION_BASE, False):
                 raise InvalidConfigFileError("An entry in the section \"%s\" is invalid." % log_section.name)
-            is_default_OS_log = log_section.getboolean(BaseWeatherServerIniFile._IS_DEFAULT_OS_LOG)
-            if not is_default_OS_log:
+            is_default_os_log = log_section.getboolean(BaseWeatherServerIniFile._IS_DEFAULT_OS_LOG)
+            if not is_default_os_log:
                 log_config = LogConfigSection.read_section_from_ini_file(self._config_file[BaseWeatherServerIniFile._LOG_SECTION_TAG])
             else:
                 log_config = None
         except Exception as e:
             raise InvalidConfigFileError("Error parsing the config file: %s" % str(e))
 
-        return BaseWeatherServerConfig(database_config,log_config)
+        return BaseWeatherServerConfig(database_config, log_config)
 
     def prepare_writing(self):
         """Prepares the class for writing a INI-file. This method MUST be called by any child before writing to the INI-file."""
@@ -489,7 +489,7 @@ class BaseWeatherServerIniFile(object):
 
         # changing the config file handler to maintain the case of the letters
         self._old_optionxform = self._config_file.optionxform
-        self._config_file.optionxform = str        
+        self._config_file.optionxform = str
 
     def finish_writing(self):
         """Finishes writing to the INI-file. This method MUST be called by any child after writing to the INI-file."""
@@ -526,7 +526,7 @@ class BaseWeatherServerIniFile(object):
         :rtype:                         ConfigParser
         """
         self._config_file[section_name] = {}
-        
+
         return self._config_file[section_name]
 
 
@@ -534,7 +534,7 @@ class FTPWeatherServerIniFile(BaseWeatherServerIniFile):
     """Config settings for a FTP weather server based on a INI-file."""
 
     # INI-file main section tags (specific to the present class)
-    _RECEIVER_SECTION_TAG = "receiver" 
+    _RECEIVER_SECTION_TAG = "receiver"
     _MAIN_SECTIONS = [_RECEIVER_SECTION_TAG]
 
     def __init__(self, file_name):
@@ -547,7 +547,7 @@ class FTPWeatherServerIniFile(BaseWeatherServerIniFile):
 
     def read(self):
         """Reads the config data from the INI-file.
-        
+
         :raise InvalidConfigFileError:  if an entry in the given section is invalid
         """
         base_config = super().read()
@@ -575,7 +575,7 @@ class WeatherPlotServiceIniFile(BaseWeatherServerIniFile):
     """Config settings for a weather plotter based on a INI-file."""
 
     # INI-file main section tags (specific to the present class)
-    _PLOTTER_SECTION_TAG = "plotter" 
+    _PLOTTER_SECTION_TAG = "plotter"
     _MAIN_SECTIONS = [_PLOTTER_SECTION_TAG]
 
     def __init__(self, file_name):
@@ -588,7 +588,7 @@ class WeatherPlotServiceIniFile(BaseWeatherServerIniFile):
 
     def read(self):
         """Reads the config data from the INI-file.
-        
+
         :raise InvalidConfigFileError:  if an entry in the given section is invalid
         """
         base_config = super().read()
@@ -631,5 +631,5 @@ class IniFileUtils(object):
         if not is_root_level:
             available_tags = [tag.lower() for tag in available_tags]
             required_tags = [tag.lower() for tag in required_tags]
-        
+
         return set(required_tags) <= set(available_tags)

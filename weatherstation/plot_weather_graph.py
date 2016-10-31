@@ -17,9 +17,8 @@
 import sys
 from datetime import datetime
 from weathernetwork.common.logging import IMultiProcessLogger, MultiProcessLogger
-from weathernetwork.common.sensor import BaseStationSensorData, CombiSensorData, RainSensorData
 from weathernetwork.server import graphs
-from weathernetwork.server.config import LogConfigSection
+from weathernetwork.server.config import WeatherPlotServiceIniFile
 
 
 def main():
@@ -27,19 +26,6 @@ def main():
     
     Commandline arguments: station_ID to be plotted, configuration INI-file
     """
-    time_period_duration = 7  # number of days to be plotted
-    db_file_name = "data/weather.db"
-    sensors_to_plot = [BaseStationSensorData.PRESSURE,
-                       (RainSensorData.RAIN, RainSensorData.CUMULATED),
-                       ('OUT1', CombiSensorData.TEMPERATURE),
-                       ('OUT1', CombiSensorData.HUMIDITY)]
-    graph_directory = './data'
-    graph_file_name = 'graph.svg'
-    log_file_name = "./data/weatherDiagramPlotter.txt"
-    max_kbytes_per_log_file = 100000
-    max_num_log_files_to_keep = 0  # no file is deleted
-
-
     # read the command line arguments
     if len(sys.argv) != 3:
         print("Plotting weather data from a SQL database. Usage: python plot_weather_graph.py STATION_ID plot_config.ini")
@@ -47,15 +33,20 @@ def main():
         station_id = sys.argv[1]
         config_file_name = sys.argv[2]
 
-    log_config = LogConfigSection(log_file_name, max_kbytes_per_log_file, max_num_log_files_to_keep)
-    with MultiProcessLogger(True, log_config) as logger:
+    configFileHandler = WeatherPlotServiceIniFile(config_file_name)
+    configuration = configFileHandler.read()
+
+    with MultiProcessLogger(True, configuration.get_log_config()) as logger:
+        time_period_duration = configuration.get_plotter_settings().get_time_period_duration()
+        graph_directory, graph_file_name = configuration.get_plotter_settings().get_graph_file_settings() 
+
         try:
             logger.log(IMultiProcessLogger.INFO, "Started plotting the last {} days for station {}.".format(time_period_duration, station_id))
             num_plot_datasets, first_plot_time, last_plot_time = graphs.plot_of_last_n_days(
                 time_period_duration, 
-                db_file_name, 
+                configuration.get_database_config().get_db_file_name(), 
                 station_id,
-                sensors_to_plot, 
+                configuration.get_plotter_settings().get_sensors_to_plot(),
                 graph_directory, 
                 graph_file_name, 
                 True, 
