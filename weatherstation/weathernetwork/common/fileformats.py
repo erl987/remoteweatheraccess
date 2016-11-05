@@ -96,8 +96,11 @@ class PCWetterstationFormatFile(object):
                 datasets = []
                 for single_line_dict in data:
                     if 'time' in locals():
-                        prev_time = time            
-                    time = dt.strptime( single_line_dict[PCWetterstationFormatFile._DATE] + ' ' + single_line_dict[PCWetterstationFormatFile._TIME], '%d.%m.%Y %H:%M' )
+                        prev_time = time
+                          
+                    date_string = single_line_dict[PCWetterstationFormatFile._DATE]
+                    time_string = single_line_dict[PCWetterstationFormatFile._TIME]
+                    time = dt(*map(int, [date_string[6:], date_string[3:5], date_string[0:2], time_string[:2], time_string[3:]]))  # performance optimized
                     if not 'prev_time' in locals():
                         prev_time = time - timedelta(seconds=int(round( 60 * delta_time ))) # initial guess for the first timepoint in the file
 
