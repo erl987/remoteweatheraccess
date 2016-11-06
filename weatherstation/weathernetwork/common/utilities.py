@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
+from datetime import datetime
+
 
 """General utilities functions.
 
@@ -78,3 +80,28 @@ def ceil_to_n( val, n ):
     ceiled_val = math.ceil( val / n ) * n
 
     return ceiled_val
+
+
+def consolidate_ranges(ranges):
+    """Consolidates a list of time ranges by merging all overlapping ranges.
+    
+    :param ranges:              list of unmerged time ranges
+    :type ranges:               list of datetime tuples
+    :return:                    consolidated list of time ranges
+    :rtype:                     list of datetime tuples
+    """
+    result = []
+    current_begin = datetime.min
+    current_end = datetime.min
+
+    for begin, end in sorted(ranges):
+        if begin > current_end:
+            # a new range is starting
+            result.append((begin, end))
+            current_begin, current_end = begin, end
+        else:
+            # the current range overlaps and extends the previous range
+            current_end = max(current_end, end)
+            result[-1] = (current_begin, current_end)
+
+    return result
