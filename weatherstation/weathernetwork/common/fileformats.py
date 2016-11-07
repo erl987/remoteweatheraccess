@@ -294,6 +294,28 @@ class PCWetterstationFormatFile(object):
         return settings_line
 
 
+    def _date_to_str(self, date):
+        """Performance efficient converting of a date object to a string.
+
+        :param date:                            date to be converted
+        :type date:                             date
+        :return:                                date in the format DD.MM.YYYY
+        :rtype:                                 string
+        """
+        year, month, day = str(date).split('-')
+        return day + '.' + month + '.' + year
+
+
+    def _time_to_str(self, time):
+        """Performance efficient converting of a time object to a string.
+
+        :param time:                            time to be converted
+        :type time:                             time
+        :return:                                time in the format HH:MM
+        :rtype:                                 string
+        """
+        return str(time)[0:-3]  # removes the seconds
+
     def _get_line(self, dataset):
         """Helper method for preparing a single data line to be written into a PC-Wetterstation format file. Also returns header lines describing the sensors.
 
@@ -309,12 +331,12 @@ class PCWetterstationFormatFile(object):
 
         # read the date and time
         time = dataset.get_time()
-        values.append(time.strftime('%d.%m.%Y'))
+        values.append(self._date_to_str(time.date()))
         sensor_list.append("")
         description_list.append(PCWetterstationFormatFile._DATE)
         unit_list.append("")
 
-        values.append(time.strftime('%H:%M'))
+        values.append(self._time_to_str(time.time()))
         sensor_list.append("")
         description_list.append(PCWetterstationFormatFile._TIME)
         unit_list.append("")
