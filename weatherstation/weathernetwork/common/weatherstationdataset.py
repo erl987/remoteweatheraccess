@@ -19,25 +19,11 @@ class WeatherStationDataset(object):
         return sensor_ID in self._sensor_data
 
 
-    def _prepare_sensor_ID_tuple(self, sensor_ID_tuple):
-        if not isinstance(sensor_ID_tuple, tuple):
-            sensor_ID_tuple = (sensor_ID_tuple, )
-
-        if len(sensor_ID_tuple) > 1:
-            sensor_ID = sensor_ID_tuple[0]
-            subsensor_ID = sensor_ID_tuple[1]
-        else:
-            sensor_ID = BaseStationSensorData.BASE_STATION
-            subsensor_ID = sensor_ID_tuple[0]
-
-        return sensor_ID, subsensor_ID
-
-
     def get_sensor_value(self, sensor_ID_tuple):
         """
         Obtains the signal data value of a specified sensor.
         """
-        sensor_ID, subsensor_ID = self._prepare_sensor_ID_tuple(sensor_ID_tuple)
+        sensor_ID, subsensor_ID = sensor_ID_tuple
 
         return self._sensor_data[sensor_ID].get_sensor_value(subsensor_ID)
 
@@ -58,7 +44,7 @@ class WeatherStationDataset(object):
         """
         Obtains the unit of a certain sensor ID.
         """
-        sensor_ID, subsensor_ID = self._prepare_sensor_ID_tuple(sensor_ID_tuple)
+        sensor_ID, subsensor_ID = sensor_ID_tuple
 
         return self._sensor_data[sensor_ID].get_description(subsensor_ID)
 
@@ -67,7 +53,7 @@ class WeatherStationDataset(object):
         """
         Obtains the unit of a certain sensor ID.
         """
-        sensor_ID, subsensor_ID = self._prepare_sensor_ID_tuple(sensor_ID_tuple)
+        sensor_ID, subsensor_ID = sensor_ID_tuple
 
         return self._sensor_data[sensor_ID].get_unit(subsensor_ID)
 

@@ -69,9 +69,6 @@
     <Compile Include="weathernetwork\common\sensor.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="weathernetwork\common\switch.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="weathernetwork\common\utilities.py" />
     <Compile Include="weathernetwork\common\weatherstationdataset.py" />
     <Compile Include="weathernetwork\common\__init__.py" />

@@ -32,7 +32,10 @@ from weathernetwork.common.sensor import CombiSensorData, BaseStationSensorData,
 
 graph_file_name = 'graph.svg'
 graph_directory = './data'
-sensors_to_plot = [ BaseStationSensorData.PRESSURE, (RainSensorData.RAIN, RainSensorData.CUMULATED), ('OUT1', CombiSensorData.TEMPERATURE), ('OUT1', CombiSensorData.HUMIDITY) ]
+sensors_to_plot = [(BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE),
+                   (RainSensorData.RAIN, RainSensorData.CUMULATED),
+                   ('OUT1', CombiSensorData.TEMPERATURE),
+                   ('OUT1', CombiSensorData.HUMIDITY)]
 
 
 class TestGraphGeneration(unittest.TestCase):
@@ -43,7 +46,8 @@ class TestGraphGeneration(unittest.TestCase):
 
 
     def test_plot_of_last_n_days(self):
-        graphs.plot_of_last_n_days( 7, self._db_file_name, self._station_ID, sensors_to_plot, graph_directory, graph_file_name, True, datetime(year=2015, month=3, day=3) )     
+        graphs.plot_of_last_n_days( 7, self._db_file_name, self._station_ID, sensors_to_plot, 
+                                   graph_directory, graph_file_name, True, datetime(year=2015, month=3, day=3) )
 
 
     def tearDown(self):
