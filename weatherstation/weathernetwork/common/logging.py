@@ -55,7 +55,7 @@ class MultiProcessLogger(IMultiProcessLogger):
                 formatter = logging.Formatter('%(name)s - %(app_name)s - %(levelname)s : %(message)s')
                 syslog.setFormatter(formatter)
                 logger.addHandler(syslog)
-                logger = logging.LoggerAdapter(self._logger, { 'app_name': script_name } )
+                logger = logging.LoggerAdapter(self._logger, { 'app_name': script_name })  # TODO: most probably this is wrong
             else:
                 # on Windows
                 raise FileNotFoundError("The OS has no default log system. You need to specify a log file.")
@@ -149,19 +149,23 @@ class MultiProcessLogger(IMultiProcessLogger):
 
 
 class MultiprocessLoggerProxy(IMultiProcessLogger):
-    """Proxy class for multiprocessing capable logging within another process."""
+    """Proxy class for multiprocessing capable logging within another process. DO NOT USE IT FROM THE SAME PROCESS."""
 
     def __init__(self, logging_queue):
-        """
-        Constructor.
+        """Constructor.
+        WARNING: THIS QUEUE WILL ONLY BE REGISTERED IF NONE WAS REGISTERED FOR THAT PROCESS BEFORE!
+
         :param logging_queue:       Queue connecting the proxy to the logger within the logging process
         :type logging_queue:        multiprocessing.Queue object
         """
         # create a connection to the remote logger within the logging process
-        log_queue_handler = logging.handlers.QueueHandler(logging_queue)
         self._logger = logging.getLogger()
-        self._logger.setLevel(logging.DEBUG)
-        self._logger.addHandler(log_queue_handler)
+
+        # do not register the logging queue if another queue has already been registered for the current process
+        if not self._logger.hasHandlers():
+            log_queue_handler = logging.handlers.QueueHandler(logging_queue)
+            self._logger.setLevel(logging.DEBUG)
+            self._logger.addHandler(log_queue_handler)
 
 
     def log(self, log_level, message):

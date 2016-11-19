@@ -38,7 +38,7 @@ def main():
         with MultiProcessLogger(True, configuration.get_log_config()) as logger:
             try:
                 exception_queue = Queue()
-                sql_database_service_factory = SQLDatabaseServiceFactory(configuration.get_database_config().get_db_file_name())
+                sql_database_service_factory = SQLDatabaseServiceFactory(configuration.get_database_config().get_db_file_name(), logger.get_connection_queue())
 
                 # main server loop
                 with FTPServerSideProxy(sql_database_service_factory, configuration.get_ftp_receiver_settings(), logger.get_connection_queue(), exception_queue):

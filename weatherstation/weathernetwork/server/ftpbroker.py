@@ -227,9 +227,9 @@ class FTPServerSideProxyProcess(object):
     def process(request_queue, database_service_factory, parent, logging_queue, exception_handler):
         try:
             signal.signal(signal.SIGINT, signal.SIG_IGN)
-            database_service = database_service_factory.create()
+            database_service = database_service_factory.create(True)  # this registers the logger queue for that process
             database_service.register_observer(parent)
-            logger = MultiprocessLoggerProxy(logging_queue)
+            logger = MultiprocessLoggerProxy(logging_queue)  # this will not register the queue a second time
 
             while True:
                 # the FTP-broker does not require deserialization of the data
@@ -263,7 +263,7 @@ class FTPServerSideProxy(IServerSideProxy):
         data_directory, temp_data_directory, data_file_extension, delta_time = config.get()
 
         # obtain the combi sensors existing in the database
-        database_service = database_service_factory.create()
+        database_service = database_service_factory.create(False)  # no logging, because called from the main process
         combi_sensor_IDs = database_service.get_combi_sensor_IDs()
 
         # empty the temporary data directory (it may contain unnecessary files after a power failure)

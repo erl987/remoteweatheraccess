@@ -1,5 +1,7 @@
 import sqlite3
 import datetime
+
+from weathernetwork.common.logging import MultiprocessLoggerProxy
 from weathernetwork.server.exceptions import AlreadyExistingError
 from weathernetwork.server.exceptions import NotExistingError
 from weathernetwork.server.interface import IDatabaseService, IDatabaseServiceFactory
@@ -10,14 +12,18 @@ from weathernetwork.common import utilities
 
 class SQLDatabaseService(IDatabaseService):
     """SQL weather database service"""
-    def __init__(self, db_file_name):
+    def __init__(self, db_file_name, logging_queue=None):
+        if logging_queue:
+            self._logger = MultiprocessLoggerProxy(logging_queue)
+        else:
+            self._logger = None
         self._observers = []
         self._database = SQLWeatherDB(db_file_name)
 
 
     def add_data(self, message):
         """
-        Stores the dataset in the database.
+        Stores the dataset in the database. Logging is only supported if it is called from another than the main process.
         """
         data = message.get_data()
         station_ID = message.get_station_ID()
@@ -49,18 +55,25 @@ class SQLDatabaseService(IDatabaseService):
 
 
     def _notify_observers(self, finished_ID):
-        for observer in self._observers:
-            observer.acknowledge_persistence(finished_ID)
+        # if this is executed on the main process, no acknowledgement will happen
+        if self._logger:
+            for observer in self._observers:
+                observer.acknowledge_persistence(finished_ID, self._logger)
         
 
 class SQLDatabaseServiceFactory(IDatabaseServiceFactory):
     """Factory for weather database services"""
-    def __init__(self, db_file_name):
+    def __init__(self, db_file_name, logging_queue):
         self._db_file_name = db_file_name
+        self._logging_queue = logging_queue
 
 
-    def create(self):
-        return SQLDatabaseService(self._db_file_name)
+    def create(self, use_logging):
+        if use_logging:
+            sql_database_service = SQLDatabaseService(self._db_file_name, self._logging_queue)
+        else:
+            sql_database_service = SQLDatabaseService(self._db_file_name)
+        return sql_database_service
 
 
 class SQLWeatherDB(object):
