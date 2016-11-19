@@ -43,14 +43,11 @@ from datetime import datetime as dt
 from datetime import timedelta
 import os
 import shutil
-import logging
-from ftplib import FTP
 
 from weathernetwork.client import te923ToCSVreader
 from weathernetwork.client import stationdata
 from weathernetwork.client import lastdata
 from weathernetwork.client import te923station
-from weathernetwork.client import server
 
 data_folder = './test_data/'
 station_data_file_name = 'stationData.dat'

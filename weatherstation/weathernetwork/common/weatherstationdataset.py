@@ -1,5 +1,3 @@
-from weathernetwork.common.sensor import BaseStationSensorData
-
 class WeatherStationDataset(object):
     """Weather data set at a moment in time."""
 

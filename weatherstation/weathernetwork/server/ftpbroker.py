@@ -17,42 +17,39 @@ from weathernetwork.common.logging import MultiprocessLoggerProxy, IMultiProcess
 from weathernetwork.server.exceptions import AlreadyExistingError, NotExistingError
 from weathernetwork.common.exceptions import FileParseError
 
+
 class FileSystemObserver(FileSystemEventHandler):
     def __init__(self, data_directory):
         self._data_directory = data_directory
-        self._received_file_queue = []
+        self._received_file_queue = None
         self._exception_event = Event()
-        self._processed_files_lock = []
+        self._processed_files_lock = None
         self._processed_files = dict()
-
 
     def stop(self):
         self._exception_event.set()
 
-
     def set_received_file_queue(self, received_file_queue):
         self._received_file_queue = received_file_queue
-
 
     def _remove_outdated_processed_files(self, curr_time, max_keeping_time = 10):
         """Removes too old processed message IDs from the list."""
         removal_list = []
         for file in self._processed_files.keys():
-            if (curr_time - self._processed_files[file]) > timedelta(seconds = max_keeping_time):
+            if (curr_time - self._processed_files[file]) > timedelta(seconds=max_keeping_time):
                 removal_list.append(file)
 
         for item in removal_list:
             del self._processed_files[item]
 
-
     def on_modified(self, event):
         """A file has been modified"""
         if not event.is_directory:
             # ensure that this file has not yet been processed (workaround for the watchdog library reporting possibly multiple "modified" events for a single file)
-            full_path = event.src_path              
-            curr_time = datetime.datetime.utcnow()   
+            full_path = event.src_path
+            curr_time = datetime.datetime.utcnow()
             with self._processed_files_lock:
-                self._remove_outdated_processed_files(curr_time)                
+                self._remove_outdated_processed_files(curr_time)
                 already_processed = full_path in self._processed_files
                 self._processed_files[full_path] = curr_time
 
@@ -68,10 +65,10 @@ class FileSystemObserver(FileSystemEventHandler):
             self._received_file_queue = received_file_queue
             if not os.path.isdir(self._data_directory):
                 raise IOError("Data directory \"%s\" not found." % self._data_directory)
-                    
+
             filesystem_observer.schedule(self, self._data_directory, recursive=True)
             filesystem_observer.start()
-        
+
             # wait until stop is signalled
             self._exception_event.wait()
 
@@ -88,7 +85,7 @@ class FileSystemObserver(FileSystemEventHandler):
 
 class FTPServerBrokerProcess(object):
     def __init__(self, data_directory, data_file_extension, temp_data_directory, delta_time, combi_sensor_IDs):
-        self._data_directory = data_directory        
+        self._data_directory = data_directory
         self._data_file_extension = data_file_extension
         self._temp_data_directory = temp_data_directory
         self._delta_time = delta_time
@@ -97,14 +94,14 @@ class FTPServerBrokerProcess(object):
 
     def process(self, received_file_queue, request_queue, parent, logging_queue, exception_handler):
         try:
-			# logger in the main process
+            # logger in the main process
             logger = MultiprocessLoggerProxy(logging_queue)
 
             signal.signal(signal.SIGINT, signal.SIG_IGN)
-            while (True):
+            while True:
                 full_path = received_file_queue.get()
                 if full_path is None:
-                    break;
+                    break
 
                 message_ID, station_ID, data = self._on_new_data(full_path, logger, parent)
                 if message_ID:
@@ -112,13 +109,13 @@ class FTPServerBrokerProcess(object):
         except Exception as e:
             exception_handler(DelayedException(e))
 
-
-    def get_station_ID(self, message_ID):
+    @staticmethod
+    def get_station_ID(message_ID):
         splitted_message_ID = message_ID.split( '_' )
         if len(splitted_message_ID) > 0:
             station_ID = splitted_message_ID[-1]
         else:
-            station_ID = []
+            station_ID = None
 
         return station_ID
 
@@ -136,7 +133,7 @@ class FTPServerBrokerProcess(object):
                     # ensure that the file is in its correct data subdirectory
                     if not file_path.endswith(station_ID):
                         raise FileParseError("The data file \"%s\" is not in its correct subdirectory \"%s\"" % (message_ID, station_ID))
-                    
+
                     data = self._read_data_files(message_ID, station_ID)
                 except FileParseError as e:
                     # invalid file format, ignore the file
@@ -154,7 +151,7 @@ class FTPServerBrokerProcess(object):
         wait_time = 0.05    # wait time between data file reading trials (in seconds)
         max_trials = 100     # reading trials for the data file before a fatal failure is assumed
 
-        new_data_file_list = []
+        new_data_file_list = None
         try:
             # extract data from the ZIP-file(s)
             file_still_blocked = True
@@ -226,20 +223,21 @@ class FTPBroker(object):
 
 
 class FTPServerSideProxyProcess(object):
-    def process(self, request_queue, database_service_factory, parent, logging_queue, exception_handler):
+    @staticmethod
+    def process(request_queue, database_service_factory, parent, logging_queue, exception_handler):
         try:
             signal.signal(signal.SIGINT, signal.SIG_IGN)
             database_service = database_service_factory.create()
             database_service.register_observer(parent)
             logger = MultiprocessLoggerProxy(logging_queue)
 
-            while (True):
+            while True:
                 # the FTP-broker does not require deserialization of the data
-                message_ID, station_ID, raw_data = request_queue.get() 
+                message_ID, station_ID, raw_data = request_queue.get()
                 if message_ID is None:
-                    break        
-                message = WeatherMessage(message_ID, station_ID, raw_data) 
-                try:   
+                    break
+                message = WeatherMessage(message_ID, station_ID, raw_data)
+                try:
                     database_service.add_data(message)
                 except (NotExistingError, AlreadyExistingError) as e:
                     # the new data will be ignored
@@ -276,31 +274,31 @@ class FTPServerSideProxy(IServerSideProxy):
 
         # start the listener processes
         self._exception_queue = exception_queue
-        self._request_queue = Queue()  
-        self._broker = FTPBroker(self._request_queue, data_directory, data_file_extension, temp_data_directory,logging_queue, self._exception_handler, delta_time, combi_sensor_IDs)                
-        self._proxy = FTPServerSideProxyProcess() 
+        self._request_queue = Queue()
+        self._broker = FTPBroker(self._request_queue, data_directory, data_file_extension, temp_data_directory,logging_queue, self._exception_handler, delta_time, combi_sensor_IDs)
+        self._proxy = FTPServerSideProxyProcess()
         self._proxy_process = Process(target=self._proxy.process, args=(self._request_queue, database_service_factory, self, logging_queue, self._exception_handler))
-        self._proxy_process.start()        
-        
-        # feed the still unstored data files into the listener process
-        self._feed_unstored_data_files(unstored_file_paths)    
+        self._proxy_process.start()
 
-        
+        # feed the still unstored data files into the listener process
+        self._feed_unstored_data_files(unstored_file_paths)
+
+
     def __enter__(self):
         return self
-    
 
-    def __exit__(self, type, value, traceback):
+
+    def __exit__(self, type_val, value, traceback):
         self._stop_and_join()
 
-
-    def _clear_temp_data_directory(self, temp_data_directory):
+    @staticmethod
+    def _clear_temp_data_directory(temp_data_directory):
         files = glob.glob(temp_data_directory + '/*')
         for f in files:
             os.remove(f)
 
-
-    def _find_all_data_files(self, data_directory, data_file_extension):
+    @staticmethod
+    def _find_all_data_files(data_directory, data_file_extension):
         # recursive search in subdirectories
         unstored_file_paths = []
         for root, dirnames, filenames in os.walk(data_directory):
@@ -318,7 +316,7 @@ class FTPServerSideProxy(IServerSideProxy):
         self._broker.stop_and_join()
         self._request_queue.put((None,None,None))
         self._proxy_process.join()
-        
+
 
     def acknowledge_persistence(self, finished_ID, logger):
         self._broker.send_persistence_acknowledgement(finished_ID, logger)

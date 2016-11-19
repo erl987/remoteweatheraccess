@@ -25,12 +25,9 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib.ticker as ticker
 import matplotlib.font_manager as fonts
-import numpy as np
 import datetime
 from datetime import datetime as dt
 from datetime import timedelta
-import re
-import math
 
 
 """Generation of weather data plots.
@@ -115,7 +112,7 @@ def GetScalings( min_max_sensors ):
             all_num_ticks.append( int( ( max_p - min_p ) / delta_p + 1 ) )
 
     if len( all_num_ticks ) == 0:
-        all_num_ticks.append( 5 ); # default value if no special sensors are present
+        all_num_ticks.append( 5 ) # default value if no special sensors are present
 
     num_ticks = max( all_num_ticks )
 
@@ -124,10 +121,10 @@ def GetScalings( min_max_sensors ):
         if CombiSensorData.TEMPERATURE in key:
             # temperature minimum is always the next lower temperature dividable by 5 degree C (already calculated)
             max_T = min_T + delta_T * ( num_ticks - 1 )
-            min_max_axis[key] = { 'min' : min_T, 'max' : max_T };
+            min_max_axis[key] = { 'min' : min_T, 'max' : max_T }
         elif CombiSensorData.HUMIDITY in key:
             # humidity is always in the range from 0 - 100 pct
-            min_max_axis[key] = { 'min' : 0, 'max' : 100 };
+            min_max_axis[key] = { 'min' : 0, 'max' : 100 }
         elif RainSensorData.RAIN in key:
             # rain counter minimum is always 0 mm
             max_rain_counter = 0 + delta_rain * ( num_ticks - 1 )

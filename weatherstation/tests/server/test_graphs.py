@@ -27,7 +27,6 @@ import unittest
 
 from weathernetwork.server import graphs
 from datetime import datetime
-from weathernetwork.common.weatherstationdataset import WeatherStationDataset
 from weathernetwork.common.sensor import CombiSensorData, BaseStationSensorData, RainSensorData
 
 graph_file_name = 'graph.svg'
@@ -40,7 +39,7 @@ sensors_to_plot = [(BaseStationSensorData.BASE_STATION, BaseStationSensorData.PR
 
 class TestGraphGeneration(unittest.TestCase):
     def setUp(self):
-        '''Sets up each unit test.'''
+        """Sets up each unit test."""
         self._db_file_name = "data/weather.db"
         self._station_ID = "TES2"
 
@@ -51,7 +50,7 @@ class TestGraphGeneration(unittest.TestCase):
 
 
     def tearDown(self):
-        '''Finishes each unit test.'''
+        """Finishes each unit test."""
 
 if __name__ == '__main__':
     unittest.main()

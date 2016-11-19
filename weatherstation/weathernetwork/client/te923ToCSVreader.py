@@ -65,7 +65,7 @@ sensor_list = OrderedDict( [
     ('rainCounter',    (21,       'Regen',                                            34,     'mm'                ))
     ] )
 
-delta_t_tol = timedelta( minutes = 60 ); # All datasets read from the weather station with a timestamp being more than this tolerance time in the future are dismissed
+delta_t_tol = timedelta( minutes = 60 )  # All datasets read from the weather station with a timestamp being more than this tolerance time in the future are dismissed
 
 
 def reset_logger(logger):
@@ -158,7 +158,7 @@ def te923ToCSVreader(data_folder, station_data_file_name, script_name):
         except Exception as e:
             raise RuntimeError( 'Error accessing weatherstation TE923. Error description: %s.', repr(e) )
 
-        if ( len( imported_data ) == 0 ):
+        if len( imported_data ) == 0:
             raise RuntimeError( 'No data could be read from the weather station. Maybe no USB-connection is possible.' )
         else:
             # Reduce datasets to unsaved new datasets (it is assumed that the read data is sorted according to time)
@@ -167,11 +167,11 @@ def te923ToCSVreader(data_folder, station_data_file_name, script_name):
 
             # Ensure that the data contains no timestamps in the future
             curr_time = dt.now() # Compare to the current system time
-            imported_data = [ x for x in imported_data if ( dt.fromtimestamp( int( x[ date_index ] ) ) < curr_time + delta_t_tol ) ];
+            imported_data = [ x for x in imported_data if ( dt.fromtimestamp( int( x[ date_index ] ) ) < curr_time + delta_t_tol ) ]
         
-            if ( len( imported_data ) > 0 ):         
+            if len( imported_data ) > 0:
                 # If this is the first execution of the program or the last stored data is older than three storage steps, there is no other choice than using the rain counter value of the first dataset as reference
-                new_first_read_dataset_time = dt.fromtimestamp( int( imported_data[ firstNewDataIndex ][ sensor_list[ 'date' ][ constants.import_index ] ] ) );
+                new_first_read_dataset_time = dt.fromtimestamp( int( imported_data[ firstNewDataIndex ][ sensor_list[ 'date' ][ constants.import_index ] ] ) )
                 if ( new_first_read_dataset_time - last_read_dataset_time ) > 3 * timedelta( minutes = storage_interval ):
                     last_read_dataset_raincounter = float( imported_data[ firstNewDataIndex ][ sensor_list[ 'rainCounter' ][ constants.import_index ] ] )
   
@@ -184,16 +184,16 @@ def te923ToCSVreader(data_folder, station_data_file_name, script_name):
                 data_file_list = pcwetterstation.finddatafiles( data_folder )
                 try:
                     transfered_file_name = server.transferto( ftp_server, station_name, ftp_passwd, ftp_folder, data_folder, data_file_list, port )
-                    isSuccessfullTransfer = True;
+                    isSuccessfullTransfer = True
                 except Exception as e:
                     error_text = repr( e )
-                    isSuccessfullTransfer = False;
+                    isSuccessfullTransfer = False
 
                 # Delete the CSV-files in any situation
                 pcwetterstation.deletedatafiles( data_folder, data_file_list )
 
                 # Store the next latest dataset only if the transfer to the server was successfull, otherwise there is a rollback
-                if ( isSuccessfullTransfer ):
+                if isSuccessfullTransfer:
                     # The reading flag is also resetted here by default
                     lastdata.write( data_folder + '/' + settings_file_name, last_dataset_time, last_dataset_rain_counter )
                     logger.info( 'Weather data in the files %s (%s) was successfully transfered to FTP-server \'%s\' (user: \'%s\').', data_file_list, transfered_file_name, ftp_server, station_name )

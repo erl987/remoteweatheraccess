@@ -170,7 +170,7 @@ class CombiSensorData(ISensor):
     TEMPERATURE = "temperature"
     HUMIDITY = "humidity"
 
-    def __init__(self, sensor_ID, temperature, humidity, description = []):
+    def __init__(self, sensor_ID, temperature, humidity, description = None):
         super(self.__class__, self).__init__(sensor_ID)
         self._temperature = temperature
         self._humidity = humidity

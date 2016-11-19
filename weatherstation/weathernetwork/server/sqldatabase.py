@@ -183,22 +183,24 @@ class SQLWeatherDB(object):
             pressure, UV = dataset.get_sensor_object(BaseStationSensorData.BASE_STATION).get_all_data()
             data_to_be_written.append((time, station_ID, pressure, UV))
 
-        try:
-            self._sql.executemany( " \
-                INSERT INTO WeatherData ( \
-                    time, \
-                    stationID, \
-                    pressure, \
-                    UV \
-                ) VALUES (?,(SELECT stationID from WeatherStation WHERE stationID=(?)),?,?)", \
-                data_to_be_written )
-        except sqlite3.Error as e:
-            if "NULL" in e.args[0].upper():
-                raise NotExistingError("The station does not exist in the database")
-            elif "UNIQUE" in e.args[0].upper():
-                raise AlreadyExistingError("For the given station (%s), a dataset for the given time (%s) already exists in the database" % (station_ID, str(time)))
-            else:
-                raise
+        if data_to_be_written:
+            try:
+                self._sql.executemany(" \
+                    INSERT INTO WeatherData ( \
+                        time, \
+                        stationID, \
+                        pressure, \
+                        UV \
+                    ) VALUES (?,(SELECT stationID from WeatherStation WHERE stationID=(?)),?,?)",
+                    data_to_be_written )
+            except sqlite3.Error as e:
+                if "NULL" in e.args[0].upper():
+                    raise NotExistingError("The station does not exist in the database")
+                elif "UNIQUE" in e.args[0].upper():
+                    raise AlreadyExistingError("For the given station (%s), a dataset for the given time (%s) already "
+                                               "exists in the database" % (station_ID, str(time)))
+                else:
+                    raise
 
 
     def _rain_sensor_period_exists(self, station_ID, first_time, last_time):
@@ -250,7 +252,7 @@ class SQLWeatherDB(object):
                     stationID, \
                     amount, \
                     beginTime \
-                ) VALUES (?,?,?,?)", \
+                ) VALUES (?,?,?,?)",
                 data_to_be_written)
         except sqlite3.Error as e:
             if "CONSTRAINT FAILED" in e.args[0].upper():
@@ -278,7 +280,7 @@ class SQLWeatherDB(object):
                 speed, \
                 gusts, \
                 temperature \
-            ) VALUES (?,?,?,?,?,?)", \
+            ) VALUES (?,?,?,?,?,?)",
             data_to_be_written )   
 
 
@@ -300,23 +302,26 @@ class SQLWeatherDB(object):
 
                 data_to_be_written.append((time, station_ID, sensor_ID, temperature, humidity))
 
-            try:
-                self._sql.executemany(" \
-                    INSERT INTO CombiSensorData ( \
-                        time, \
-                        stationID, \
-                        sensorID, \
-                        temperature, \
-                        humidity \
-                    ) VALUES (?,?,(SELECT sensorID from CombiSensor WHERE sensorID=(?)),?,?)", \
-                    data_to_be_written )     
-            except sqlite3.Error as e:
-                if "NULL" in e.args[0].upper():
-                    raise NotExistingError("The combi sensor ID not exist in the database")
-                elif "UNIQUE" in e.args[0].upper():
-                    raise AlreadyExistingError("For the given combi sensor ID (%s), station ID (%s) and time (%s) already data exists in the database" % (sensor_ID, station_ID, str(time)))
-                else:
-                    raise 
+            if data_to_be_written:
+                try:
+                    self._sql.executemany(" \
+                        INSERT INTO CombiSensorData ( \
+                            time, \
+                            stationID, \
+                            sensorID, \
+                            temperature, \
+                            humidity \
+                        ) VALUES (?,?,(SELECT sensorID from CombiSensor WHERE sensorID=(?)),?,?)",
+                        data_to_be_written)
+                except sqlite3.Error as e:
+                    if "NULL" in e.args[0].upper():
+                        raise NotExistingError("The combi sensor ID not exist in the database")
+                    elif "UNIQUE" in e.args[0].upper():
+                        raise AlreadyExistingError("For the given combi sensor ID (%s), station ID (%s) and time (%s) "
+                                                   "already data exists in the database" % (sensor_ID, station_ID,
+                                                                                            str(time)))
+                    else:
+                        raise
 
 
     def add_dataset(self, station_ID, data):
@@ -348,7 +353,7 @@ class SQLWeatherDB(object):
             self._add_to_WindSensorData_table(station_ID, data)
                  
             # write the temperature / humidity combi sensor information (again existence of station and time is guaranteed)
-            self._add_to_CombiSensorData_table(station_ID, available_combi_sensor_IDs, data);
+            self._add_to_CombiSensorData_table(station_ID, available_combi_sensor_IDs, data)
                                        
 
     def replace_dataset(self, station_ID, data):
@@ -374,7 +379,7 @@ class SQLWeatherDB(object):
                 num_updated_rows = self._sql.execute( " \
                     UPDATE WeatherData \
                     SET pressure=(?), UV=(?) \
-                    WHERE time=(?) AND stationID=(?)", \
+                    WHERE time=(?) AND stationID=(?)",
                     ( pressure, UV, time, station_ID ) ).rowcount           
            
                 if num_updated_rows == 0:
@@ -385,7 +390,7 @@ class SQLWeatherDB(object):
                 num_updated_rows = self._sql.execute( " \
                     UPDATE RainSensorData \
                     SET amount=(?) \
-                    WHERE endTime=(?) AND beginTime=(?) AND stationID=(?)", \
+                    WHERE endTime=(?) AND beginTime=(?) AND stationID=(?)",
                     ( amount, time, begin_time, station_ID ) ).rowcount  
                 
                 if num_updated_rows == 0:
@@ -396,7 +401,7 @@ class SQLWeatherDB(object):
                 self._sql.execute( " \
                     UPDATE WindSensorData \
                     SET direction=(?), speed=(?), gusts=(?), temperature=(?) \
-                    WHERE time=(?) AND stationID=(?)", \
+                    WHERE time=(?) AND stationID=(?)",
                     ( wind_direction, wind_average, wind_gust, wind_chill_temp, time, station_ID ) )           
 
                 # write the temperature / humidity combi sensor information (again existence of station and time is guaranteed)
@@ -410,7 +415,7 @@ class SQLWeatherDB(object):
                     num_updated_rows = self._sql.execute( " \
                         UPDATE CombiSensorData \
                         SET temperature=(?), humidity=(?) \
-                        WHERE time=(?) AND stationID=(?) AND sensorID=(?)", \
+                        WHERE time=(?) AND stationID=(?) AND sensorID=(?)",
                         ( temperature, humidity, time, station_ID, sensor_ID ) ).rowcount
 
                     if num_updated_rows == 0:
@@ -437,7 +442,7 @@ class SQLWeatherDB(object):
                 num_deleted_rows += self._sql.execute( " \
                     DELETE \
                     FROM WeatherData \
-                    WHERE stationID=(?) AND time=(?)", \
+                    WHERE stationID=(?) AND time=(?)",
                     ( station_ID, curr_time ) ).rowcount
 
         return num_deleted_rows
@@ -452,7 +457,8 @@ class SQLWeatherDB(object):
         :type first_time:           datetime
         :param last_time:           end of the requested time range (inclusive)
         :type last_time:            datetime
-        :return:                    weather datasets for the requested timepoints, sorted by ascending time. If no data exists for the requested range, it is empty.
+        :return:                    weather datasets for the requested timepoints, sorted by ascending time. If no data
+                                    exists for the requested range, it is empty.
         :rtype:                     list of WeatherDataset objects
         """
         with self._sql:
@@ -460,7 +466,7 @@ class SQLWeatherDB(object):
                 SELECT time, pressure, UV \
                 FROM WeatherData \
                 WHERE stationID=(?) AND time BETWEEN (?) AND (?) \
-                ORDER BY time", \
+                ORDER BY time",
                 ( station_ID, first_time, last_time ) ).fetchall()
             base_data_in_range = [ dict( item ) for item in base_data_from_db ]
 
@@ -468,7 +474,7 @@ class SQLWeatherDB(object):
                 SELECT amount, beginTime \
                 FROM RainSensorData \
                 WHERE stationID=(?) AND endTime BETWEEN (?) AND (?) \
-                ORDER BY endTime", \
+                ORDER BY endTime",
                 ( station_ID, first_time, last_time ) ).fetchall()
             rain_data_in_range = [ dict( item ) for item in rain_data_from_db ]
 
@@ -476,7 +482,7 @@ class SQLWeatherDB(object):
                 SELECT speed, gusts, direction, temperature \
                 FROM WindSensorData \
                 WHERE stationID=(?) AND time BETWEEN (?) AND (?) \
-                ORDER BY time", \
+                ORDER BY time",
                 ( station_ID, first_time, last_time ) ).fetchall()
             wind_data_in_range = [ dict( item ) for item in wind_data_from_db ]
 
@@ -493,19 +499,28 @@ class SQLWeatherDB(object):
                         SELECT temperature, humidity, sensorID \
                         FROM CombiSensorData \
                         WHERE stationID=(?) AND time=(?) \
-                        ORDER BY sensorID", \
+                        ORDER BY sensorID",
                         ( station_ID, time ) ).fetchall()
 
                 curr_dataset = WeatherStationDataset(time)
                 for sensor_data in combi_data_from_db:
                     sensor_ID = sensor_data["sensorID"]
-                    curr_dataset.add_sensor(CombiSensorData(sensor_ID, sensor_data["temperature"], sensor_data["humidity"], self._get_combi_sensor_description(sensor_ID)))
+                    curr_dataset.add_sensor(CombiSensorData(sensor_ID,
+                                                            sensor_data["temperature"],
+                                                            sensor_data["humidity"],
+                                                            self._get_combi_sensor_description(sensor_ID)))
                  
                 curr_dataset.add_sensor(BaseStationSensorData(base["pressure"], base["UV"]))
                 if not is_first:
                     cumulated_rain += rain["amount"]
-                curr_dataset.add_sensor(RainSensorData(rain["amount"], rain["beginTime"], cumulated_rain, first_time_with_data))
-                curr_dataset.add_sensor(WindSensorData(wind["speed"], wind["gusts"], wind["direction"], wind["temperature"]))
+                curr_dataset.add_sensor(RainSensorData(rain["amount"],
+                                                       rain["beginTime"],
+                                                       cumulated_rain,
+                                                       first_time_with_data))
+                curr_dataset.add_sensor(WindSensorData(wind["speed"],
+                                                       wind["gusts"],
+                                                       wind["direction"],
+                                                       wind["temperature"]))
                 datasets.append(curr_dataset)
                 is_first = False
 
@@ -535,9 +550,9 @@ class SQLWeatherDB(object):
                         latitude, \
                         longitude, \
                         height, \
-                        rainCalibFactor) VALUES (?,?,?,?,?,?,?)", \
+                        rainCalibFactor) VALUES (?,?,?,?,?,?,?)",
                         ( identifier, device, location, latitude, longitude, height, rain_calib_factor ) )                  
-            except sqlite3.Error as e:
+            except sqlite3.Error:
                 raise AlreadyExistingError("The station is already existing")
 
 
@@ -558,7 +573,7 @@ class SQLWeatherDB(object):
             num_updated_rows = self._sql.execute( " \
                 UPDATE WeatherStation \
                 SET device=(?), location=(?), latitude=(?), longitude=(?), height=(?), rainCalibFactor=(?) \
-                WHERE stationID=(?) ", \
+                WHERE stationID=(?) ",
                 ( device, location, latitude, longitude, height, rain_calib_factor, identifier ) ).rowcount           
            
             if num_updated_rows == 0:
@@ -577,7 +592,7 @@ class SQLWeatherDB(object):
             num_deleted_rows = self._sql.execute( " \
                 DELETE \
                 FROM WeatherStation \
-                WHERE stationID=(?)", \
+                WHERE stationID=(?)",
                 ( station_ID, ) ).rowcount
 
         if num_deleted_rows == 1:
@@ -631,7 +646,7 @@ class SQLWeatherDB(object):
         :param sensor_ID:               combi sensor ID
         :type sensor_ID:                string
         :param description:             description of the sensor (location, type, specialities, ...)
-        :type descrption:               string
+        :type description:              string
         :raise AlreadyExistingError:    if the sensor ID already exists in the database
         """
         if self.combi_sensor_exists(sensor_ID):
@@ -642,7 +657,7 @@ class SQLWeatherDB(object):
                 INSERT OR IGNORE INTO CombiSensor ( \
                     sensorID, \
                     description \
-                ) VALUES (?,?)", \
+                ) VALUES (?,?)",
                 ( sensor_ID, description ) )
 
 
@@ -652,14 +667,14 @@ class SQLWeatherDB(object):
         :param sensor_ID:               combi sensor ID
         :type sensor_ID:                string
         :param description:             description of the sensor (location, type, specialities, ...)
-        :type descrption:               string
+        :type description:              string
         :raise NotExistingError:        if the combi sensor ID does not exist in the database
         """
         with self._sql:
             num_updated_rows = self._sql.execute( " \
                 UPDATE CombiSensor \
                 SET description=(?) \
-                WHERE sensorID=(?)", \
+                WHERE sensorID=(?)",
                 ( description, sensor_ID ) ).rowcount           
            
             if num_updated_rows == 0:
@@ -717,7 +732,7 @@ class SQLWeatherDB(object):
         combi_sensor_row = self._sql.execute( " \
             SELECT description \
             FROM CombiSensor \
-            WHERE sensorID=(?)", \
+            WHERE sensorID=(?)",
             ( sensor_ID, ) ).fetchone()
 
         if not combi_sensor_row:
@@ -737,7 +752,7 @@ class SQLWeatherDB(object):
             is_deleted = self._sql.execute( " \
                 DELETE \
                 FROM CombiSensor \
-                WHERE sensorID=(?)", \
+                WHERE sensorID=(?)",
                 ( sensor_ID, ) ).rowcount
 
         return is_deleted

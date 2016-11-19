@@ -73,7 +73,7 @@ class MultiProcessLogger(IMultiProcessLogger):
         return self
     
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type_val, value, traceback):
         """
         Context manager exit method.
         """
@@ -136,8 +136,8 @@ class MultiProcessLogger(IMultiProcessLogger):
             curr_time = datetime.now()
             self._print_to_screen(curr_time.strftime("%b %d %H:%M:%S"), message)
 
-
-    def _print_to_screen(self, timestamp, message):
+    @staticmethod
+    def _print_to_screen(timestamp, message):
         """
         Prints a log message to the screen.
         :param timestamp:           timestamp of the message

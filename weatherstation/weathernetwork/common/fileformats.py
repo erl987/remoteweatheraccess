@@ -170,8 +170,8 @@ class PCWetterstationFormatFile(object):
 
         return dataset
 
-
-    def _parse_file_metadata(self, metadata, station_ID):
+    @staticmethod
+    def _parse_file_metadata(metadata, station_ID):
         """Parses the metadata information of a PCWetterstation format file.
 
         :param metadata:                        Unparsed line from the PC-Wetterstation data file containing the metadata
@@ -257,8 +257,8 @@ class PCWetterstationFormatFile(object):
                     writer.writerow(values)
                     dataset_index += 1
 
-
-    def _in_same_month(self, first_date, second_date):
+    @staticmethod
+    def _in_same_month(first_date, second_date):
         """Determines if the two dates are within the same month.
 
         :param first_date:                      first date to be compared
@@ -273,8 +273,8 @@ class PCWetterstationFormatFile(object):
         else:
             return False
 
-
-    def _create_settings_header_line(self, station_metadata):
+    @staticmethod
+    def _create_settings_header_line(station_metadata):
         """Helper method for creating the settings header line of a PC-Wetterstation format file.
 
         :param station_metadata:                station metadata to be written to a PC-Wetterstation station header line
@@ -293,8 +293,8 @@ class PCWetterstationFormatFile(object):
 
         return settings_line
 
-
-    def _date_to_str(self, date):
+    @staticmethod
+    def _date_to_str(date):
         """Performance efficient converting of a date object to a string.
 
         :param date:                            date to be converted
@@ -305,8 +305,8 @@ class PCWetterstationFormatFile(object):
         year, month, day = str(date).split('-')
         return day + '.' + month + '.' + year
 
-
-    def _time_to_str(self, time):
+    @staticmethod
+    def _time_to_str(time):
         """Performance efficient converting of a time object to a string.
 
         :param time:                            time to be converted

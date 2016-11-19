@@ -159,7 +159,7 @@ def writesinglemonth( data_folder, rain_calib_factor, station_name, station_heig
 
         # Write sensor indices line
         sensor_index_list = [ sensor_list[key][constants.export_index] for key in key_list ]
-        writer.writerows( [ sensor_index_list ] );
+        writer.writerows( [ sensor_index_list ] )
 
         # Write data
         for line in export_data:
@@ -211,7 +211,7 @@ def convertTo(read_data, last_old_rain_counter, sensor_list):
     for imported_line in read_data:
         new_line = []
         for key in sensor_list:
-            if ( sensor_list[ key ][ constants.import_index ] != 'none' ):
+            if sensor_list[ key ][ constants.import_index ] != 'none':
                 new_line.append( ( key, imported_line[ sensor_list[ key ][ constants.import_index ] ] ) )
             else:
                 new_line.append( ( key, '0' ) )
@@ -228,7 +228,7 @@ def convertTo(read_data, last_old_rain_counter, sensor_list):
 
     # Convert date stamps (date zone and DST according to system settings)
     for line in export_data[:]:
-        curr_time = dt.fromtimestamp( int( line['date'] ) );            # import ctime seconds since epoch
+        curr_time = dt.fromtimestamp( int( line['date'] ) )            # import ctime seconds since epoch
         line['date'] = curr_time.strftime( '%d.%m.%Y' )
         line['time'] = curr_time.strftime( '%H:%M' )
 
@@ -249,11 +249,11 @@ def convertTo(read_data, last_old_rain_counter, sensor_list):
     for index, counter in enumerate( rain_counters[:] ):
         if index > 0:
             if ( counter - rain_counters[index-1] ) < 0:
-                rain_counters[index] = rain_counters[index-1];
+                rain_counters[index] = rain_counters[index-1]
 
     rain_amounts = [ 0.68685 * ( x - rain_counters[i-1] ) for i, x in enumerate( rain_counters ) ][1:]              # convert from tipping bucket counts to mm
     for export_line, amount in zip( export_data[:], rain_amounts ):
-        export_line['rainCounter'] = str( amount );                                                                 # set to rain amount differences since the last dataset before the current (in mm)
+        export_line['rainCounter'] = str( amount )                                                                 # set to rain amount differences since the last dataset before the current (in mm)
 
     last_dataset_time = dt.strptime( export_data[-1]['date'] + ' ' + export_data[-1]['time'], '%d.%m.%Y %H:%M')     # the accuracy is minutes
     last_dataset_rain_counter = rain_counters[-1]

@@ -56,7 +56,7 @@ class SQLDatabaseService_test(unittest.TestCase):
 
 
     def test_add_station(self):
-        db_file_name = "data/weather.db";
+        db_file_name = "data/weather.db"
 
         weather_station = WeatherStationMetadata("TES", "TE923 Mebus", "Test City", "49.234", "11.024", "440", 1.0)
         weather_station_2 = WeatherStationMetadata("TES2", "TE923 Mebus", "Test City", "49.234", "11.024", "450", 1.0)
@@ -74,7 +74,7 @@ class SQLDatabaseService_test(unittest.TestCase):
         if not weather_db.station_exists( weather_station_2.get_station_ID() ):
             weather_db.add_station(weather_station_2)
 
-        weather_db.replace_station(weather_station_2_B);
+        weather_db.replace_station(weather_station_2_B)
 
         # testing obtaining single sensor values
         value = self._dataset_1.get_sensor_value( ("OUT1", "temperature") )

@@ -69,7 +69,7 @@ def read(station_data_file_name):
     IOError:                An error occurred accessing the file.
     """
     with open( station_data_file_name, 'rb') as f:
-        data = pickle.load( f );
+        data = pickle.load( f )
         rain_calib_factor = data['rain_calib_factor']
         station_name = data['station_name']
         station_height = data['station_height']             # in m

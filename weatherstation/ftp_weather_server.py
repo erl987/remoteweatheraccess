@@ -41,7 +41,7 @@ def main():
                 sql_database_service_factory = SQLDatabaseServiceFactory(configuration.get_database_config().get_db_file_name())
 
                 # main server loop
-                with FTPServerSideProxy(sql_database_service_factory, configuration.get_ftp_receiver_settings(), logger.get_connection_queue(), exception_queue) as proxy:
+                with FTPServerSideProxy(sql_database_service_factory, configuration.get_ftp_receiver_settings(), logger.get_connection_queue(), exception_queue):
                     logger.log(IMultiProcessLogger.INFO, "Server is running.")
                 
                     # stall the main thread until the program is finished

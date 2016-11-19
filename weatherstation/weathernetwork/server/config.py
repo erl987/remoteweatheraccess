@@ -11,7 +11,8 @@ class BaseWeatherServerConfig(object):
 
         :param database_config:         SQL-database configuration
         :type database_config:          DatabaseConfig
-        :param log_config:              log system configuration. If empty, the default log system of the OS will be used.
+        :param log_config:              log system configuration. If empty, the default log system of the OS will be
+                                        used.
         :type log_config:               LogConfig
         """
         self._database_config = database_config
@@ -28,7 +29,8 @@ class BaseWeatherServerConfig(object):
     def get_log_config(self):
         """Obtains the log system configuration.
 
-        :return:                        configuration of the log system. If empty, the default log system of the OS will be used.
+        :return:                        configuration of the log system. If empty, the default log system of the OS will
+                                        be used.
         :rtype:                         LogConfig
         """
         return self._log_config
@@ -44,7 +46,8 @@ class FTPWeatherServerConfig(BaseWeatherServerConfig):
         :type database_config:          DatabaseConfig
         :param ftp_receiver_config:     FTP-based wather server configuration
         :type ftp_receiver_config:      FTPReceiverConfig
-        :param log_config:              log system configuration. If empty, the default log system of the OS will be used.
+        :param log_config:              log system configuration. If empty, the default log system of the OS will be
+                                        used.
         :type log_config:               LogConfig
         """
         super().__init__(database_config, log_config)
@@ -69,7 +72,8 @@ class WeatherPlotServiceConfig(BaseWeatherServerConfig):
         :type database_config:          DatabaseConfig object
         :param plotter_config:          plotter configuration
         :type plotter_config:           PlotterConfig
-        :param log_config:              log system configuration. If empty, the default log system of the OS will be used.
+        :param log_config:              log system configuration. If empty, the default log system of the OS will be
+                                        used.
         :type log_config:               LogConfig object
         """
         super().__init__(database_config, log_config)
@@ -146,13 +150,16 @@ class FTPReceiverConfigSection(object):
     def __init__(self, receiver_directory, temp_data_directory, data_file_extension, time_between_data):
         """Constructor.
 
-        :param receiver_directory:      root of the directories where the FTP-server saves new data files (in one subdirectory for each station)
+        :param receiver_directory:      root of the directories where the FTP-server saves new data files (in one
+                                        subdirectory for each station)
         :type receiver_directory:       string
-        :param temp_data_directory:     temporary data directory available for the server for processing the new data files
+        :param temp_data_directory:     temporary data directory available for the server for processing the new data
+                                        files
         :type temp_data_directory:      string
         :param data_file_extension:     file extension of the data files, may contain a leading dot (typically: ZIP)
         :type data_file_extension:      string
-        :param time_between_data:       time between two timepoints in the datafiles (only used for the first timepoint in a file), in minutes
+        :param time_between_data:       time between two timepoints in the datafiles (only used for the first timepoint
+                                        in a file), in minutes
         :type time_between_data:        float
         """
         self._receiver_directory = receiver_directory
@@ -167,13 +174,16 @@ class FTPReceiverConfigSection(object):
     def get(self):
         """Obtains the complete configuration data for the FTP-based weather server.
 
-        :return:                        root of the directories where the FTP-server saves new data files (in one subdirectory for each station)
+        :return:                        root of the directories where the FTP-server saves new data files (in one
+                                        subdirectory for each station)
         :rtype:                         string
-        :return:                        temporary data directory available for the server for processing the new data files
+        :return:                        temporary data directory available for the server for processing the new data
+                                        files
         :rtype:                         string
         :return:                        file extension of the data files, may contain a leading dot (typically: ZIP)
         :rtype:                         string
-        :return:                        time between two timepoints in the datafiles (only used for the first timepoint in a file), in minutes
+        :return:                        time between two timepoints in the datafiles (only used for the first timepoint
+                                        in a file), in minutes
         :rtype:                         float
         """
         return self._receiver_directory, self._temp_data_directory, self._data_file_extension, self._time_between_data
@@ -199,7 +209,8 @@ class FTPReceiverConfigSection(object):
     def write_section_to_ini_file(self, config_file_section):
         """Writes the content of the object to a INI-file section.
 
-        :param config_file_section:     section to contain the FTP-based weather server configuration after that method call
+        :param config_file_section:     section to contain the FTP-based weather server configuration after that method
+                                        call
         :type config_file_section:      ConfigParser
         """
         receiver_directory, temp_data_directory, data_file_extension, time_between_data = self.get()
@@ -224,7 +235,8 @@ class PlotConfigSection(IIniConfigSection):
 
         :param sensors_to_plot:         sensors to be plotted (format: ['rain', ('OUT1', 'temperature')])
         :type sensors_to_plot:          list of strings / dict for subsensors
-        :param graph_directory:         base directory of the plots, the files are stored in a subdirectory named after the station ID
+        :param graph_directory:         base directory of the plots, the files are stored in a subdirectory named after
+                                        the station ID
         :type graph_directory:          string
         :param graph_file_name:         name of the graph files
         :type graph_file_name:          string
@@ -308,8 +320,7 @@ class PlotConfigSection(IIniConfigSection):
                         raise InvalidConfigFileError("A subsensor definition is invalid.")
                     sensors_to_plot.append(
                         (PlotConfigSection._strip_sensor_name(splitted_sensor_definition[0]),
-                         PlotConfigSection._strip_sensor_name(splitted_sensor_definition[1])
-                        )
+                         PlotConfigSection._strip_sensor_name(splitted_sensor_definition[1]))
                     )
                 else:
                     sensors_to_plot.append(PlotConfigSection._strip_sensor_name(sensor))
@@ -339,13 +350,17 @@ class PlotConfigSection(IIniConfigSection):
     def write_section_to_ini_file(self, config_file_section):
         """Writes the content of the object to a INI-file section.
 
-        :param config_file_section:     section to contain the FTP-based weather server configuration after that method call
+        :param config_file_section:     section to contain the FTP-based weather server configuration after that method
+                                        call
         :type config_file_section:      ConfigParser
         """
         graph_directory, graph_file_name = self.get_graph_file_settings()
         sensors_to_plot_string = str(self.get_sensors_to_plot())
         sensors_to_plot_string = sensors_to_plot_string.replace('\'', '')
-        config_file_section[PlotConfigSection._SENSORS_TO_PLOT] = sensors_to_plot_string[1:-1] # removing the leading and trailing brackets in the string
+
+        # removing the leading and trailing brackets in the string
+        config_file_section[PlotConfigSection._SENSORS_TO_PLOT] = sensors_to_plot_string[1:-1]
+
         config_file_section[PlotConfigSection._GRAPH_DIRECTORY] = graph_directory
         config_file_section[PlotConfigSection._GRAPH_FILE_NAME] = graph_file_name
         config_file_section[PlotConfigSection._TIME_PERIOD_DURATION] = str(self.get_time_period_duration())
@@ -365,7 +380,8 @@ class LogConfigSection(IIniConfigSection):
 
         :param log_file_name:           nme of the log file
         :type log_file_name:            string
-        :param max_kbytes_per_file:     maximum size of a log file (in KB). Larger files are renamed to ".1" ... by log rotation and a new file is started.
+        :param max_kbytes_per_file:     maximum size of a log file (in KB). Larger files are renamed to ".1" ... by
+                                        log rotation and a new file is started.
         :type max_kbytes_per_file:      int
         :param num_files_to_keep:       maximum number of log files kept. If set to 0, no file is deleted.
         :type num_files_to_keep:        int
@@ -385,11 +401,11 @@ class LogConfigSection(IIniConfigSection):
     def get_max_kbytes_per_files(self):
         """Obtains the maximum size of a log file.
 
-        :return:                        maximum size of a log file (in KB). Larger files are renamed to ".1" ... by log rotation and a new file is started.
+        :return:                        maximum size of a log file (in KB). Larger files are renamed to ".1" ... by
+                                        log rotation and a new file is started.
         :rtype:                         int
         """
         return self._max_kbytes_per_file
-
 
     def get_num_files_to_keep(self):
         """Obtains the maximum number of log files kept.
@@ -464,18 +480,22 @@ class BaseWeatherServerIniFile(object):
         """
         self._config_file.clear()
         self._config_file.read(self._file_name)
-        if not IniFileUtils.check_section_for_all_tags(self._config_file, BaseWeatherServerIniFile._BASE_SECTIONS, True):
+        if not IniFileUtils.check_section_for_all_tags(
+                self._config_file, BaseWeatherServerIniFile._BASE_SECTIONS, True):
             raise InvalidConfigFileError("At least one section header is invalid.")
 
         try:
-            database_config = DatabaseConfigSection.read_section_from_ini_file(self._config_file[BaseWeatherServerIniFile._DATABASE_SECTION_TAG])
+            database_config = DatabaseConfigSection.read_section_from_ini_file(
+                self._config_file[BaseWeatherServerIniFile._DATABASE_SECTION_TAG])
 
             log_section = self._config_file[BaseWeatherServerIniFile._LOG_SECTION_TAG]
-            if not IniFileUtils.check_section_for_all_tags(log_section, BaseWeatherServerIniFile._LOG_SUBSECTION_BASE, False):
+            if not IniFileUtils.check_section_for_all_tags(
+                    log_section, BaseWeatherServerIniFile._LOG_SUBSECTION_BASE, False):
                 raise InvalidConfigFileError("An entry in the section \"%s\" is invalid." % log_section.name)
             is_default_os_log = log_section.getboolean(BaseWeatherServerIniFile._IS_DEFAULT_OS_LOG)
             if not is_default_os_log:
-                log_config = LogConfigSection.read_section_from_ini_file(self._config_file[BaseWeatherServerIniFile._LOG_SECTION_TAG])
+                log_config = LogConfigSection.read_section_from_ini_file(
+                    self._config_file[BaseWeatherServerIniFile._LOG_SECTION_TAG])
             else:
                 log_config = None
         except Exception as e:
@@ -484,7 +504,9 @@ class BaseWeatherServerIniFile(object):
         return BaseWeatherServerConfig(database_config, log_config)
 
     def prepare_writing(self):
-        """Prepares the class for writing a INI-file. This method MUST be called by any child before writing to the INI-file."""
+        """Prepares the class for writing a INI-file.
+        This method MUST be called by any child before writing to the INI-file.
+        """
         self._config_file.clear()
 
         # changing the config file handler to maintain the case of the letters
@@ -492,7 +514,9 @@ class BaseWeatherServerIniFile(object):
         self._config_file.optionxform = str
 
     def finish_writing(self):
-        """Finishes writing to the INI-file. This method MUST be called by any child after writing to the INI-file."""
+        """Finishes writing to the INI-file.
+        This method MUST be called by any child after writing to the INI-file.
+        """
         with open(self._file_name, 'w') as file:
             self._config_file.write(file)
 
@@ -508,7 +532,8 @@ class BaseWeatherServerIniFile(object):
         # write the data to the configuration file
         self._config_file[BaseWeatherServerIniFile._DATABASE_SECTION_TAG] = {}
         self._config_file[BaseWeatherServerIniFile._LOG_SECTION_TAG] = {}
-        config.get_database_config().write_section_to_ini_file(self._config_file[BaseWeatherServerIniFile._DATABASE_SECTION_TAG])
+        config.get_database_config().write_section_to_ini_file(
+            self._config_file[BaseWeatherServerIniFile._DATABASE_SECTION_TAG])
 
         log_config_section = self._config_file[BaseWeatherServerIniFile._LOG_SECTION_TAG]
         if config.get_log_config():
@@ -553,11 +578,15 @@ class FTPWeatherServerIniFile(BaseWeatherServerIniFile):
         base_config = super().read()
 
         try:
-            ftp_receiver_config = FTPReceiverConfigSection.read_section_from_ini_file(super().get_section(FTPWeatherServerIniFile._RECEIVER_SECTION_TAG))
+            ftp_receiver_config = FTPReceiverConfigSection.read_section_from_ini_file(super().get_section(
+                FTPWeatherServerIniFile._RECEIVER_SECTION_TAG))
         except Exception as e:
             raise InvalidConfigFileError("Error parsing the config file: %s" % str(e))
 
-        return FTPWeatherServerConfig(base_config.get_database_config(), ftp_receiver_config, base_config.get_log_config())
+        return FTPWeatherServerConfig(
+            base_config.get_database_config(),
+            ftp_receiver_config,
+            base_config.get_log_config())
 
     def write(self, config):
         """Writes configuration data to the INI-file.
@@ -567,7 +596,8 @@ class FTPWeatherServerIniFile(BaseWeatherServerIniFile):
         """
         super().prepare_writing()
         super().write(config)
-        config.get_ftp_receiver_settings().write_section_to_ini_file(super().add_section(FTPWeatherServerIniFile._RECEIVER_SECTION_TAG))
+        config.get_ftp_receiver_settings().write_section_to_ini_file(super().add_section(
+            FTPWeatherServerIniFile._RECEIVER_SECTION_TAG))
         super().finish_writing()
 
 
@@ -594,10 +624,10 @@ class WeatherPlotServiceIniFile(BaseWeatherServerIniFile):
         base_config = super().read()
 
         try:
-            plotter_config = PlotConfigSection.read_section_from_ini_file(super().get_section(WeatherPlotServiceIniFile._PLOTTER_SECTION_TAG))
+            plotter_config = PlotConfigSection.read_section_from_ini_file(super().get_section(
+                WeatherPlotServiceIniFile._PLOTTER_SECTION_TAG))
         except Exception as e:
             raise InvalidConfigFileError("Error parsing the config file: %s" % str(e))
-
 
         return WeatherPlotServiceConfig(base_config.get_database_config(), plotter_config, base_config.get_log_config())
 
@@ -609,7 +639,8 @@ class WeatherPlotServiceIniFile(BaseWeatherServerIniFile):
         """
         super().prepare_writing()
         super().write(config)
-        config.get_plotter_settings().write_section_to_ini_file(super().add_section(WeatherPlotServiceIniFile._PLOTTER_SECTION_TAG))
+        config.get_plotter_settings().write_section_to_ini_file(super().add_section(
+            WeatherPlotServiceIniFile._PLOTTER_SECTION_TAG))
         super().finish_writing()
 
 
