@@ -13,9 +13,9 @@ from weathernetwork.common import utilities
 
 class SQLDatabaseService(IDatabaseService):
     """SQL weather database service"""
-    def __init__(self, db_file_name, logging_queue=None):
-        if logging_queue:
-            self._logger = MultiprocessLoggerProxy(logging_queue)
+    def __init__(self, db_file_name, logging_connection=None):
+        if logging_connection:
+            self._logger = MultiprocessLoggerProxy(logging_connection)
         else:
             self._logger = None
         self._observers = []
@@ -60,13 +60,13 @@ class SQLDatabaseService(IDatabaseService):
 
 class SQLDatabaseServiceFactory(IDatabaseServiceFactory):
     """Factory for weather database services"""
-    def __init__(self, db_file_name, logging_queue):
+    def __init__(self, db_file_name, logging_connection):
         self._db_file_name = db_file_name
-        self._logging_queue = logging_queue
+        self._logging_connection = logging_connection
 
     def create(self, use_logging):
         if use_logging:
-            sql_database_service = SQLDatabaseService(self._db_file_name, self._logging_queue)
+            sql_database_service = SQLDatabaseService(self._db_file_name, self._logging_connection)
         else:
             sql_database_service = SQLDatabaseService(self._db_file_name)
         return sql_database_service

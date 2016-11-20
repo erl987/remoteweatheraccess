@@ -92,10 +92,10 @@ class FTPServerBrokerProcess(object):
         self._combi_sensor_IDs = combi_sensor_ids
 
 
-    def process(self, received_file_queue, request_queue, parent, logging_queue, exception_handler):
+    def process(self, received_file_queue, request_queue, parent, logging_connection, exception_handler):
         try:
             # logger in the main process
-            logger = MultiprocessLoggerProxy(logging_queue)
+            logger = MultiprocessLoggerProxy(logging_connection)
 
             signal.signal(signal.SIGINT, signal.SIG_IGN)
             while True:
@@ -187,7 +187,7 @@ class FTPServerBrokerProcess(object):
 class FTPBroker(object):
     """Broker for weather data transmission based on FTP"""
 
-    def __init__(self, request_queue, data_directory, data_file_extension, temp_data_directory, logging_queue, exception_handler, delta_time, combi_sensor_ids):
+    def __init__(self, request_queue, data_directory, data_file_extension, temp_data_directory, logging_connection, exception_handler, delta_time, combi_sensor_ids):
         self._data_directory = data_directory
         self._data_file_extension = data_file_extension
 
@@ -198,7 +198,7 @@ class FTPBroker(object):
         self._filesystem_observer_process.start()
 
         self._broker = FTPServerBrokerProcess(data_directory, data_file_extension, temp_data_directory, delta_time, combi_sensor_ids)
-        self._broker_process = Process(target=self._broker.process, args=(self._received_file_queue, request_queue, self, logging_queue, exception_handler))
+        self._broker_process = Process(target=self._broker.process, args=(self._received_file_queue, request_queue, self, logging_connection, exception_handler))
         self._broker_process.start()
 
 
@@ -224,12 +224,12 @@ class FTPBroker(object):
 
 class FTPServerSideProxyProcess(object):
     @staticmethod
-    def process(request_queue, database_service_factory, parent, logging_queue, exception_handler):
+    def process(request_queue, database_service_factory, parent, logging_connection, exception_handler):
         try:
             signal.signal(signal.SIGINT, signal.SIG_IGN)
-            database_service = database_service_factory.create(True)  # this registers the logger queue for that process
+            database_service = database_service_factory.create(True)
             database_service.register_observer(parent)
-            logger = MultiprocessLoggerProxy(logging_queue)  # this will not register the queue a second time
+            logger = MultiprocessLoggerProxy(logging_connection)
 
             while True:
                 # the FTP-broker does not require deserialization of the data
@@ -258,7 +258,7 @@ class FTPServerSideProxy(IServerSideProxy):
     Needs to be called in a with-clause for correct management of the subprocesses.
     """
 
-    def __init__(self, database_service_factory, config, logging_queue, exception_queue):
+    def __init__(self, database_service_factory, config, logging_connection, exception_queue):
         # read the configuration
         data_directory, temp_data_directory, data_file_extension, delta_time = config.get()
 
@@ -275,9 +275,9 @@ class FTPServerSideProxy(IServerSideProxy):
         # start the listener processes
         self._exception_queue = exception_queue
         self._request_queue = Queue()
-        self._broker = FTPBroker(self._request_queue, data_directory, data_file_extension, temp_data_directory,logging_queue, self._exception_handler, delta_time, combi_sensor_ids)
+        self._broker = FTPBroker(self._request_queue, data_directory, data_file_extension, temp_data_directory, logging_connection, self._exception_handler, delta_time, combi_sensor_ids)
         self._proxy = FTPServerSideProxyProcess()
-        self._proxy_process = Process(target=self._proxy.process, args=(self._request_queue, database_service_factory, self, logging_queue, self._exception_handler))
+        self._proxy_process = Process(target=self._proxy.process, args=(self._request_queue, database_service_factory, self, logging_connection, self._exception_handler))
         self._proxy_process.start()
 
         # feed the still unstored data files into the listener process

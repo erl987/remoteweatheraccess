@@ -1,10 +1,47 @@
 import logging
+import os
 import sys
 import threading
 from datetime import datetime
 from multiprocessing import Queue
 from logging.handlers import SysLogHandler, RotatingFileHandler
 from abc import ABCMeta, abstractmethod
+
+from weathernetwork.common.exceptions import RunInNotAllowedProcessError
+
+
+class MultiProcessConnector(object):
+    """Class representing a connector the main logger process from other subprocesses"""
+    def __init__(self, logging_queue, main_logger_pid):
+        """
+        Constructor.
+
+        :param logging_queue:               Queue for sending log messages to the main logger process
+        :type logging_queue:                multiprocessing.Queue
+        :param main_logger_pid:             Process ID of the main logger process
+        :type main_logger_pid:              integer
+        """
+        self._logging_queue = logging_queue
+        self._main_logger_pid = main_logger_pid
+
+    def get_connection_queue(self):
+        """
+        Obtains the queue for sending log messages to the main logger process.
+
+        :return:                            Queue for sending log messages
+        :rtype:                             multiprocessing.Queue
+        """
+        return self._logging_queue
+
+    def get_main_logger_pid(self):
+        """
+        Obtains the process ID of the main logger process.
+
+        :return:                            Process ID of the main logger process
+        :rtype:                             integer
+        """
+        return self._main_logger_pid
+
 
 class IMultiProcessLogger(metaclass=ABCMeta):
     """Interface class for a multiprocessing capable logger."""
@@ -29,13 +66,16 @@ class MultiProcessLogger(IMultiProcessLogger):
         Constructor.
         :param is_print_to_screen:          flag stating if the log message is additionally printed to the screen
         :type is_print_to_screen:           boolean
-        :param log_config:                  Configuration of the log. If omitted, the default log system of the platform is used.
+        :param log_config:                  Configuration of the log. If omitted, the default log system of the
+                                            platform is used.
         :type log_config:                   LogConfig object
-        :raise FileNotFoundError:           if no log file is configured and the operating system has no default log system
+        :raise FileNotFoundError:           if no log file is configured and the operating system has no default
+                                            log system
         """
         self._is_print_to_screen = is_print_to_screen
-        self._logging_queue = []
-        self._thread = []
+        self._logging_queue = None
+        self._thread = None
+        self._main_logger_pid = os.getpid()
         self._lock = threading.Lock()
 
         # initialize the logger for the present process
@@ -47,7 +87,9 @@ class MultiProcessLogger(IMultiProcessLogger):
             backup_count = log_config.get_num_files_to_keep()
 
             log_handler = RotatingFileHandler(log_file_name, maxBytes=max_bytes, backupCount=backup_count)
-            log_handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)s: %(message)s', datefmt='%b %d %H:%M:%S'))
+            log_handler.setFormatter(
+                logging.Formatter(fmt='%(asctime)s %(levelname)s: %(message)s', datefmt='%b %d %H:%M:%S')
+            )
             logger.addHandler(log_handler)
         else:
             if sys.platform.startswith('linux'):
@@ -60,7 +102,6 @@ class MultiProcessLogger(IMultiProcessLogger):
                 # on Windows
                 raise FileNotFoundError("The OS has no default log system. You need to specify a log file.")
 
-
     def __enter__(self):
         """
         Context manager initializer method.
@@ -71,7 +112,6 @@ class MultiProcessLogger(IMultiProcessLogger):
             self._thread.start()
 
         return self
-    
 
     def __exit__(self, type_val, value, traceback):
         """
@@ -79,18 +119,17 @@ class MultiProcessLogger(IMultiProcessLogger):
         """
         self.join()
 
-
-    def get_connection_queue(self):
+    def get_connection(self):
         """
-        Returns the queue that can be used to feed log messages from proxies in other processes to the logger process.
-        :return:                            queue connecting a MultiProcessLoggerProxy in another process to the current logger
+        Returns the connection that can be used to feed messages from proxies in other processes to the logger process.
+        :return:                            queue connecting a MultiProcessLoggerProxy in another process to the current
+                                            logger
         :rtype:                             multiprocessing.Queue
         """
         with self._lock:
-            logging_queue = self._logging_queue
+            connection = MultiProcessConnector(self._logging_queue, self._main_logger_pid)
 
-        return logging_queue
-     
+        return connection
 
     def join(self):
         """
@@ -101,7 +140,6 @@ class MultiProcessLogger(IMultiProcessLogger):
                 self._logging_queue.put(None)
             if self._thread:
                 self._thread.join()
-       
              
     def _logger_thread(self):
         """
@@ -119,7 +157,6 @@ class MultiProcessLogger(IMultiProcessLogger):
             if self._is_print_to_screen:
                 self._print_to_screen(record.asctime, record.getMessage())
 
-
     def log(self, log_level, message):
         """
         Logging a message.
@@ -129,7 +166,7 @@ class MultiProcessLogger(IMultiProcessLogger):
         :type message:              string
         """
         # direct logging within the same process
-        logger = logging.getLogger() # this is always the root logger
+        logger = logging.getLogger()  # this is always the root logger
         logger.log(log_level, message)
 
         if self._is_print_to_screen:
@@ -149,24 +186,32 @@ class MultiProcessLogger(IMultiProcessLogger):
 
 
 class MultiprocessLoggerProxy(IMultiProcessLogger):
-    """Proxy class for multiprocessing capable logging within another process. DO NOT USE IT FROM THE SAME PROCESS."""
+    """Mono-state proxy class (one instance per process) for multiprocessing capable logging within another process."""
+    __shared_state = {}
 
-    def __init__(self, logging_queue):
-        """Constructor.
-        WARNING: THIS QUEUE WILL ONLY BE REGISTERED IF NONE WAS REGISTERED FOR THAT PROCESS BEFORE!
+    def __init__(self, logging_connection):
+        """Constructor. An existing logging queue for that process will be replaced by the new queue.
 
-        :param logging_queue:       Queue connecting the proxy to the logger within the logging process
-        :type logging_queue:        multiprocessing.Queue object
+        :param logging_connection:  Queue connecting the proxy to the logger within the logging process
+        :type logging_connection:   MultiProcessConnector
         """
-        # create a connection to the remote logger within the logging process
+        # this proxy must not be used from the main logger process
+        if os.getpid() == logging_connection.get_main_logger_pid():
+            raise RunInNotAllowedProcessError("The logger proxy must not be run within the main logger process.")
+
+        # this is a mono-state class (borg pattern)
+        self.__dict__ = self.__shared_state
+
         self._logger = logging.getLogger()
 
-        # do not register the logging queue if another queue has already been registered for the current process
-        if not self._logger.hasHandlers():
-            log_queue_handler = logging.handlers.QueueHandler(logging_queue)
-            self._logger.setLevel(logging.DEBUG)
-            self._logger.addHandler(log_queue_handler)
+        # remove all handlers already registered (there should be only one)
+        if self._logger.hasHandlers():
+            self._logger.handlers = []
 
+        # create a connection to the remote logger within the logging process
+        log_queue_handler = logging.handlers.QueueHandler(logging_connection.get_connection_queue())
+        self._logger.setLevel(logging.DEBUG)
+        self._logger.addHandler(log_queue_handler)
 
     def log(self, log_level, message):
         """
