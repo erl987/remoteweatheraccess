@@ -94,10 +94,9 @@ class MultiProcessLogger(IMultiProcessLogger):
         else:
             if sys.platform.startswith('linux'):
                 syslog = SysLogHandler(address='/dev/log')
-                formatter = logging.Formatter('%(name)s - %(app_name)s - %(levelname)s : %(message)s')
+                formatter = logging.Formatter('%(name)s - FTPWeatherServer - %(levelname)s : %(message)s')
                 syslog.setFormatter(formatter)
                 logger.addHandler(syslog)
-                logger = logging.LoggerAdapter(self._logger, { 'app_name': script_name })  # TODO: most probably this is wrong
             else:
                 # on Windows
                 raise FileNotFoundError("The OS has no default log system. You need to specify a log file.")
