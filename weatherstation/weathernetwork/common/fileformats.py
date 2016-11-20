@@ -14,11 +14,11 @@ class PCWetterstationFormatFile(object):
     _DATE = "date"               # constant describing a date (equivalent to the sensor IDs)
     _TIME = "time"               # constant describing a time of day (equivalent to the sensor IDs)
 
-    def __init__(self, combi_sensor_IDs):
+    def __init__(self, combi_sensor_ids):
         """Constructor.
 
-        :param combi_sensor_IDs: contains a list with all combi sensor IDs that should be present in the file
-        :type combi_sensor_IDs: list of strings
+        :param combi_sensor_ids: contains a list with all combi sensor IDs that should be present in the file
+        :type combi_sensor_ids: list of strings
         :raise PCWetterstationFileParseError: if more combi sensors than allowed are defined
         """
         # list of required sensors, using the PCWetterstation file format based sensor IDs (see page 269 of the manual for PCWetterstation)
@@ -32,17 +32,17 @@ class PCWetterstationFormatFile(object):
         self._sensor_list[ (RainSensorData.RAIN, RainSensorData.PERIOD) ] = 34
 
         # required combi sensors defined by the user
-        combi_sensor_IDs = list(set(combi_sensor_IDs)) # make the list unique
-        self._combi_sensor_IDs = combi_sensor_IDs
-        file_specific_temp_sensor_ID = 1        # temperature sensors have an ID of 1 .. 16 in PCWetterstation format files
-        file_specific_humidity_sensor_ID = 17   # humidity sensors have an ID of 17 ... 32 in PC Wetterstation format files
-        for combi_sensor in combi_sensor_IDs:
-            self._sensor_list[ (combi_sensor, CombiSensorData.TEMPERATURE) ] = file_specific_temp_sensor_ID
-            self._sensor_list[ (combi_sensor, CombiSensorData.HUMIDITY) ] = file_specific_humidity_sensor_ID
-            file_specific_temp_sensor_ID += 1
-            file_specific_humidity_sensor_ID += 1
+        combi_sensor_ids = list(set(combi_sensor_ids))  # make the list unique
+        self._combi_sensor_IDs = combi_sensor_ids
+        file_specific_temperature_sensor_id = 1 # temperature sensors have an ID of 1 .. 16 in PCWetterstation files
+        file_specific_humidity_sensor_id = 17   # humidity sensors have an ID of 17 ... 32 in PC Wetterstation files
+        for combi_sensor in combi_sensor_ids:
+            self._sensor_list[ (combi_sensor, CombiSensorData.TEMPERATURE) ] = file_specific_temperature_sensor_id
+            self._sensor_list[ (combi_sensor, CombiSensorData.HUMIDITY) ] = file_specific_humidity_sensor_id
+            file_specific_temperature_sensor_id += 1
+            file_specific_humidity_sensor_id += 1
 
-            if file_specific_temp_sensor_ID > 16:
+            if file_specific_temperature_sensor_id > 16:
                 raise PCWetterstationFileParseError("More combi sensors than allowed by the file format.")
 
 
@@ -62,13 +62,13 @@ class PCWetterstationFormatFile(object):
                 os.remove(file_path)
 
 
-    def read(self, file_name, station_ID, delta_time=10):
+    def read(self, file_name, station_id, delta_time=10):
         """Reads a PC-Wetterstation format file.
 
         :param file_name:                       path and name of the data file. It can be a relative path to the current working directory.
         :type file_name:                        string
-        :param station_ID:                      ID of the weather station for which the data is valid
-        :type station_ID:                       string
+        :param station_id:                      ID of the weather station for which the data is valid
+        :type station_id:                       string
         :param delta_time:                      time between two datasets in minutes (only relevant for the rain gauge data of the first dataset, where this information cannot be derived automatically)
         :type delta_time:                       float
         :raise IOError:                         if the file could not be opened
@@ -82,7 +82,7 @@ class PCWetterstationFormatFile(object):
                 sensor_descriptions = next(file_reader)
                 sensor_units = next(file_reader)
                 metadata = ','.join( next(file_reader))
-                station_metadata, rain_counter_base = self._parse_file_metadata(metadata, station_ID)
+                station_metadata, rain_counter_base = self._parse_file_metadata(metadata, station_id)
                 indices_list = next(file_reader)
 
                 # check for correct file format
@@ -154,8 +154,8 @@ class PCWetterstationFormatFile(object):
 
             # required sensors
             pressure = float(data_dict[self._sensor_list[ (BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE) ]])
-            UV =  float(data_dict[self._sensor_list[ (BaseStationSensorData.BASE_STATION, BaseStationSensorData.UV) ]])
-            dataset.add_sensor(BaseStationSensorData(pressure, UV))
+            uv =  float(data_dict[self._sensor_list[ (BaseStationSensorData.BASE_STATION, BaseStationSensorData.UV) ]])
+            dataset.add_sensor(BaseStationSensorData(pressure, uv))
 
             rain = float(data_dict[self._sensor_list[ (RainSensorData.RAIN, RainSensorData.PERIOD) ]])
             dataset.add_sensor(RainSensorData(rain, prev_time)) # cumulated data is not available here
@@ -171,13 +171,13 @@ class PCWetterstationFormatFile(object):
         return dataset
 
     @staticmethod
-    def _parse_file_metadata(metadata, station_ID):
+    def _parse_file_metadata(metadata, station_id):
         """Parses the metadata information of a PCWetterstation format file.
 
         :param metadata:                        Unparsed line from the PC-Wetterstation data file containing the metadata
         :type metadata:                         string
-        :param station_ID:                      ID of the current weather station being processed
-        :type station_ID:                       string
+        :param station_id:                      ID of the current weather station being processed
+        :type station_id:                       string
         :return:                                parsed metadata of the station, reference value of the rain counter at the beginning of the data file (in mm)
         :rtype:                                 WeatherStationMetadata object, float
         :raise PCWetterstationFileParseError:   if the metadata could not be parsed
@@ -208,7 +208,7 @@ class PCWetterstationFormatFile(object):
                 elif line_pair[0] == 'Station':
                     device_info = line_pair[1]
               
-            station_metadata = WeatherStationMetadata(station_ID, device_info, location_info, latitude, longitude, station_height, rain_calib_factor)
+            station_metadata = WeatherStationMetadata(station_id, device_info, location_info, latitude, longitude, station_height, rain_calib_factor)
         except Exception as e:
             raise PCWetterstationFileParseError("File header parsing error: %s" % str(e))
 
@@ -282,14 +282,14 @@ class PCWetterstationFormatFile(object):
         :return:                                header line for the PC-Wetterstation file format
         :rtype:                                 string
         """
-        station_ID = station_metadata.get_station_ID()
+        station_id = station_metadata.get_station_id()
         location = station_metadata.get_location_info()
         station_latitude, station_longitude, station_height = station_metadata.get_geo_info()
         device_info = station_metadata.get_device_info()
         rain_calib_factor = station_metadata.get_rain_calib_factor()
 
         settings_line = '#Calibrate=' + str( '%1.3f' % rain_calib_factor ) + ' #Regen0=0mm #Location=' + str( location ) + ' (' + str( station_latitude ) + '\N{DEGREE SIGN}, ' + \
-            str( station_longitude ) + '\N{DEGREE SIGN}) ' + '/ ' + str( int( station_height ) ) + 'm #Station=' + str( station_ID ) + " (" + device_info + ")"
+            str( station_longitude ) + '\N{DEGREE SIGN}) ' + '/ ' + str( int( station_height ) ) + 'm #Station=' + str( station_id ) + " (" + device_info + ")"
 
         return settings_line
 

@@ -77,9 +77,9 @@ class TestPCWetterstationFileProcessing(unittest.TestCase):
     def test_write_from_database(self):
         weather_db = SQLWeatherDB(self._db_file_name)
         station_metadata = weather_db.get_station_metadata(self._station_ID)
-        combi_sensor_IDs = weather_db.get_combi_sensor_IDs()
+        combi_sensor_ids = weather_db.get_combi_sensor_ids()
         data = weather_db.get_data_in_time_range(self._station_ID, self._first_time, self._last_time)
-        weather_data_file = PCWetterstationFormatFile(combi_sensor_IDs)
+        weather_data_file = PCWetterstationFormatFile(combi_sensor_ids)
         weather_data_file.write(self._file_path, data, station_metadata)
 
 

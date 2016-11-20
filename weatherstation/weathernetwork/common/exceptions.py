@@ -25,7 +25,7 @@ class PCWetterstationFileParseError(FileParseError):
         :param msg:     error message description
         :type msg:      string
         """
-        super(PCWetterstationFileParseError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class DatasetFormatError(FileParseError):
@@ -38,4 +38,4 @@ class DatasetFormatError(FileParseError):
         :param msg:     error message description
         :type msg:      string
         """
-        super(DatasetFormatError, self).__init__(msg)
+        super().__init__(msg)

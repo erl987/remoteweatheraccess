@@ -219,7 +219,7 @@ def convertTo(read_data, last_old_rain_counter, sensor_list):
 
     # Replace non-valid values by zeros
     for line_index, line in enumerate( export_data[:] ):
-        processed_line = OrderedDict( ( index, val ) if utilities.isFloat(val) else ( index, '0' ) for index, val in line.items() )
+        processed_line = OrderedDict(( index, val ) if utilities.is_float(val) else (index, '0') for index, val in line.items())
         export_data[ line_index ] = processed_line
 
     # Delete all sensor data that should not be exported to the CSV-file
@@ -344,7 +344,7 @@ def read( data_folder, file_name, sensor_list ):
     for index in indices_list:
         curr_key = ''
         for key, sensor in sensor_list.items():
-            if utilities.isFloat( index ):
+            if utilities.is_float(index):
                 if sensor[constants.export_index] == int( index ):
                     curr_key = key
                     break

@@ -20,14 +20,14 @@ from datetime import datetime
 """General utilities functions.
 
 Functions:
-isFloat:                        Determines if a string is a number.
+is_float:                        Determines if a string is a number.
 floor_to_n:                     Floors a float to the next integer dividable by n.
 ceil_to_n:                      Ceils a float to the next integer dividable by n.
 """
 import math
 
 
-def isFloat(string):
+def is_float(string):
     """Determines if a string is a number.
     
     Args:

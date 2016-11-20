@@ -8,7 +8,8 @@ from weathernetwork.common.sensor import BaseStationSensorData, WindSensorData, 
 from weathernetwork.common.weatherstationdataset import WeatherStationDataset
 from datetime import timedelta
 
-class SQLDatabaseService_test(unittest.TestCase):
+
+class TestSQLDatabaseService(unittest.TestCase):
     def setUp(self):
         """Sets up each unit test."""
         self._db_file_name = "data/weather.db"
@@ -60,21 +61,21 @@ class SQLDatabaseService_test(unittest.TestCase):
 
         weather_station = WeatherStationMetadata("TES", "TE923 Mebus", "Test City", "49.234", "11.024", "440", 1.0)
         weather_station_2 = WeatherStationMetadata("TES2", "TE923 Mebus", "Test City", "49.234", "11.024", "450", 1.0)
-        weather_station_2_B = WeatherStationMetadata("TES2", "TE923 Mebus", "Test City 2", "49.234", "11.024", "450", 1.0)
+        weather_station_2_b = WeatherStationMetadata("TES2", "TE923 Mebus", "Test City 2", "49.234", "11.024", "450", 1.0)
 
         weather_db = SQLWeatherDB(db_file_name)
         if not weather_db.combi_sensor_exists("OUT1"):
             weather_db.add_combi_sensor("OUT1", "outside sensor 1")
-        sensor_IDs = self._dataset_1.get_all_sensor_IDs()
+        sensor_ids = self._dataset_1.get_all_sensor_ids()
         test_description = self._dataset_1.get_sensor_description( ("OUT1", "temperature") )
         test_unit = self._dataset_1.get_sensor_unit( ("OUT1", "humidity") )
 
-        if not weather_db.station_exists( weather_station.get_station_ID() ):
+        if not weather_db.station_exists( weather_station.get_station_id() ):
             weather_db.add_station(weather_station)
-        if not weather_db.station_exists( weather_station_2.get_station_ID() ):
+        if not weather_db.station_exists( weather_station_2.get_station_id() ):
             weather_db.add_station(weather_station_2)
 
-        weather_db.replace_station(weather_station_2_B)
+        weather_db.replace_station(weather_station_2_b)
 
         # testing obtaining single sensor values
         value = self._dataset_1.get_sensor_value( ("OUT1", "temperature") )

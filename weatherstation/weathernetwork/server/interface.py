@@ -1,9 +1,10 @@
 from abc import ABCMeta, abstractmethod
 
+
 class IServerSideProxy(metaclass=ABCMeta):
     """Interface class for a weather server broker proxy"""
     @abstractmethod
-    def acknowledge_persistence(self, finished_ID, logger):
+    def acknowledge_persistence(self, finished_id, logger):
         pass
 
 
@@ -27,7 +28,7 @@ class IDatabaseServiceFactory(metaclass=ABCMeta):
     """Abstract factory for weather database services"""
 
     @abstractmethod
-    def create(self):
+    def create(self, use_logging):
         pass
 
 

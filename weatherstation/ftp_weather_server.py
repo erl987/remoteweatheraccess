@@ -32,8 +32,8 @@ def main():
     if len(sys.argv) <= 1 or len(sys.argv) > 1 and sys.argv[1].lower() == "help":
         print("Weather server listening for data via FTP. Usage: python ftp_weather_server.py config.ini")
     else:
-        configFileHandler = FTPWeatherServerIniFile(sys.argv[1])
-        configuration = configFileHandler.read()
+        config_file_handler = FTPWeatherServerIniFile(sys.argv[1])
+        configuration = config_file_handler.read()
 
         with MultiProcessLogger(True, configuration.get_log_config()) as logger:
             try:
