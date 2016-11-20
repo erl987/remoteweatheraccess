@@ -59,9 +59,9 @@ class TestSQLDatabaseService(unittest.TestCase):
     def test_add_station(self):
         db_file_name = "data/weather.db"
 
-        weather_station = WeatherStationMetadata("TES", "TE923 Mebus", "Test City", "49.234", "11.024", "440", 1.0)
-        weather_station_2 = WeatherStationMetadata("TES2", "TE923 Mebus", "Test City", "49.234", "11.024", "450", 1.0)
-        weather_station_2_b = WeatherStationMetadata("TES2", "TE923 Mebus", "Test City 2", "49.234", "11.024", "450", 1.0)
+        weather_station = WeatherStationMetadata("TES", "TE923 Mebus", "Test City", 49.234, 11.024, 440, 1.0)
+        weather_station_2 = WeatherStationMetadata("TES2", "TE923 Mebus", "Test City", 49.234, 11.024, 450, 1.0)
+        weather_station_2_b = WeatherStationMetadata("TES2", "TE923 Mebus", "Test City 2", 49.234, 11.024, 450, 1.0)
 
         weather_db = SQLWeatherDB(db_file_name)
         if not weather_db.combi_sensor_exists("OUT1"):
@@ -70,9 +70,9 @@ class TestSQLDatabaseService(unittest.TestCase):
         test_description = self._dataset_1.get_sensor_description( ("OUT1", "temperature") )
         test_unit = self._dataset_1.get_sensor_unit( ("OUT1", "humidity") )
 
-        if not weather_db.station_exists( weather_station.get_station_id() ):
+        if not weather_db.station_exists(weather_station.get_station_id()):
             weather_db.add_station(weather_station)
-        if not weather_db.station_exists( weather_station_2.get_station_id() ):
+        if not weather_db.station_exists(weather_station_2.get_station_id()):
             weather_db.add_station(weather_station_2)
 
         weather_db.replace_station(weather_station_2_b)

@@ -527,7 +527,7 @@ class BaseWeatherServerIniFile(object):
         """Writes configuration data to the INI-file.
 
         :param config:                  configuration data to written to the file represented by the object
-        :type config:                   FTPWeatherServerConfig
+        :type config:                   BaseWeatherServerConfig
         """
         # write the data to the configuration file
         self._config_file[BaseWeatherServerIniFile._DATABASE_SECTION_TAG] = {}
@@ -635,7 +635,7 @@ class WeatherPlotServiceIniFile(BaseWeatherServerIniFile):
         """Writes configuration data to the INI-file.
 
         :param config:                  configuration data to written to the file represented by the object
-        :type config:                   FTPWeatherServerConfig
+        :type config:                   WeatherPlotServiceConfig
         """
         super().prepare_writing()
         super().write(config)

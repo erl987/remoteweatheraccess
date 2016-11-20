@@ -288,6 +288,7 @@ class WeatherStationMetadata(object):
     def __init__(self, station_id, device_info, location_info, latitude, longitude, height, rain_calib_factor):
         """
         Constructor.
+
         :param station_id:          station ID
         :type station_id:           string
         :param device_info:         device information (type of the device, possibly special configurations)

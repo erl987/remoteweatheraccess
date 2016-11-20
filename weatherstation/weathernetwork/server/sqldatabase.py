@@ -171,14 +171,12 @@ class SQLWeatherDB(object):
                 )")
                   
             self._sql.execute("PRAGMA foreign_keys = ON")
-                        
 
     def close_database(self):
         """
         Dispose method used for guaranteed closing of the database connection.
         """
         self._sql.close()
-
 
     def _add_to_base_station_table(self, station_id, data):
         """
@@ -215,6 +213,7 @@ class SQLWeatherDB(object):
         """
         Determines if rain sensor data for the specified time interval already exists
         Note: This method needs to be encapsulated by a transaction.
+
         :param station_id:          station ID
         :type station_id:           string
         :param first_time:          begin time of the interval (inclusive)
@@ -231,12 +230,11 @@ class SQLWeatherDB(object):
 
         return is_existing
 
-
     def _add_to_rain_sensor_data_table(self, station_id, data):
         """
         Adds a new dataset to the WeatherStation SQL-table.
         Note: This method needs to be encapsulated by a transaction.
-		If cumulated rain amount is present in the data, it is ignored.
+        If cumulated rain amount is present in the data, it is ignored.
         """
         # obtain the base station data
         data_to_be_written = []
@@ -261,13 +259,12 @@ class SQLWeatherDB(object):
                     amount, \
                     beginTime \
                 ) VALUES (?,?,?,?)",
-                data_to_be_written)
+                                  data_to_be_written)
         except sqlite3.Error as e:
             if "CONSTRAINT FAILED" in e.args[0].upper():
                 raise ValueError("The begin time of the rain sensor interval is the same as or later than the end time")
             else:
                 raise
-
 
     def _add_to_wind_sensor_data_table(self, station_id, data):
         """
@@ -289,14 +286,19 @@ class SQLWeatherDB(object):
                 gusts, \
                 temperature \
             ) VALUES (?,?,?,?,?,?)",
-            data_to_be_written )   
-
+                              data_to_be_written )
 
     def _add_to_combi_sensor_data_table(self, station_id, available_combi_sensor_ids, data):
         """
         Adds a new dataset to the CombiSensorData SQL-table.
         Note: This method needs to be encapsulated by a transaction.
-        :param combi_sensor_vals:   list of CombiSensorDataset objects
+
+        :param station_id:                      Station ID
+        :type station_id:                       string
+        :param available_combi_sensor_ids:      List of all available combi sensor IDs
+        :type available_combi_sensor_ids:       list of string
+        :param data:                            Data
+        :type data:                             list of WeatherStationDataset
         """
         for sensor_ID in available_combi_sensor_ids:
             data_to_be_written = []
@@ -320,7 +322,7 @@ class SQLWeatherDB(object):
                             temperature, \
                             humidity \
                         ) VALUES (?,?,(SELECT sensorID from CombiSensor WHERE sensorID=(?)),?,?)",
-                        data_to_be_written)
+                                          data_to_be_written)
                 except sqlite3.Error as e:
                     if "NULL" in e.args[0].upper():
                         raise NotExistingError("The combi sensor ID not exist in the database")
@@ -331,18 +333,19 @@ class SQLWeatherDB(object):
                     else:
                         raise
 
-
     def add_dataset(self, station_id, data):
         """
         Adds a new dataset to the database.
         Note: The performance is limited to about 50 commits/s. Add multiple rows at once for better performance.
         If already data exists for the requested station, nothing is changed.
+
         :param station_id:              station ID
         :type station_id:               string
         :param data:                    data for (possibly several) timepoints
         :type data:                     single WeatherDataset object or list of multiple WeatherDataset objects
         :raise NotExistingError:        if a requested station or sensor ID is not existing in the database
-        :raise AlreadyExistingError:    if a dataset is already existing in the database for the given station and time (and sensor ID)
+        :raise AlreadyExistingError:    if a dataset is already existing in the database for the given station and
+                                        time (and sensor ID)
         """
         if not isinstance(data,list):
             data = [data]
@@ -362,12 +365,12 @@ class SQLWeatherDB(object):
                  
             # write the temperature / humidity combi sensor information (again existence of station and time is guaranteed)
             self._add_to_combi_sensor_data_table(station_id, available_combi_sensor_ids, data)
-                                       
 
     def replace_dataset(self, station_id, data):
         """
         Replaces an existing dataset.
         Note: The performance is limited to about 50 commits/s. Add multiple rows at once for better performance.
+
         :param station_id:          station ID
         :type station_id:           string
         :param data:                data for (possibly several) timepoints
@@ -399,7 +402,7 @@ class SQLWeatherDB(object):
                     UPDATE RainSensorData \
                     SET amount=(?) \
                     WHERE endTime=(?) AND beginTime=(?) AND stationID=(?)",
-                    ( amount, time, begin_time, station_id ) ).rowcount  
+                    (amount, time, begin_time, station_id)).rowcount
                 
                 if num_updated_rows == 0:
                     raise NotExistingError("The begin time of the rain sensor data cannot be updated.")
@@ -429,10 +432,10 @@ class SQLWeatherDB(object):
                     if num_updated_rows == 0:
                         raise NotExistingError("The requested combi sensor ID does not exist")
 
-
     def remove_dataset(self, station_id, time):
         """
         Deletes the given dataset. UNDO is NOT possible.
+
         :param station_id:          station ID
         :type station_id:           string
         :param time:                timepoint(s). Multiple times can be deleted at once.
@@ -455,19 +458,19 @@ class SQLWeatherDB(object):
 
         return num_deleted_rows
 
-
     def get_data_in_time_range(self, station_id, first_time, last_time):
         """
         Returns all datasets for the given station within the given time range.
+
         :param station_id:          station ID
         :type station_id:           string
         :param first_time:          begining of the requested time range (inclusive)
-        :type first_time:           datetime
+        :type first_time:           datetime.datetime
         :param last_time:           end of the requested time range (inclusive)
-        :type last_time:            datetime
+        :type last_time:            datetime.datetime
         :return:                    weather datasets for the requested timepoints, sorted by ascending time. If no data
                                     exists for the requested range, it is empty.
-        :rtype:                     list of WeatherDataset objects
+        :rtype:                     list of WeatherStationDataset
         """
         with self._sql:
             base_data_from_db = self._sql.execute( " \
@@ -534,10 +537,10 @@ class SQLWeatherDB(object):
 
         return datasets
 
-
     def add_station(self, station):
         """
         Adds a new weather station to the database.
+
         :param station:                 metadata of the station
         :type station:                  WeatherStationMetaData object
         :raise AlreadyExistingError:    if the station is already existing in the database
@@ -563,10 +566,11 @@ class SQLWeatherDB(object):
             except sqlite3.Error:
                 raise AlreadyExistingError("The station is already existing")
 
-
     def replace_station(self, station):
         """
-        Replaces the metadata of an existing weather station in the database. DO NOT USE this method if a station has been relocated to a new place. Create instead a new station with a new identifier.
+        Replaces the metadata of an existing weather station in the database. DO NOT USE this method if a station
+        has been relocated to a new place. Create instead a new station with a new identifier.
+
         :param station:                 metadata of the station
         :type station:                  WeatherStationMetaData object
         :raise NotExistingError:        if the station is not existing in the database
@@ -587,13 +591,14 @@ class SQLWeatherDB(object):
             if num_updated_rows == 0:
                 raise NotExistingError("The station is not existing")
 
-
     def remove_station(self, station_id):
         """
         Removes an existing station from the database. All weather data entries are also deleted.
+
         :param station_id:              station ID
         :type station_id:               string
-        :return:                        success flag of the remove operation (true: removal was successfull, false: otherwise)
+        :return:                        success flag of the remove operation (true: removal was successfull,
+                                        false: otherwise)
         :rtype:                         boolean
         """
         with self._sql:
@@ -608,10 +613,10 @@ class SQLWeatherDB(object):
         else:
             return False
 
-
     def station_exists(self, station_id):
         """
         Checks if a station exists in the database.
+
         :param station_id:              station ID
         :type station_id:               string
         :return:                        True if the station exists in the database, false otherwise
@@ -627,10 +632,10 @@ class SQLWeatherDB(object):
 
         return is_existing
 
-
     def get_station_metadata(self, station_id):
         """
         Obtains the metadata for a station from the database.
+
         :param 
         """
         with self._sql:
@@ -647,10 +652,10 @@ class SQLWeatherDB(object):
 
             return station_metadata
 
-
     def add_combi_sensor(self, sensor_id, description):
         """
         Adds a combi sensor (temperature + humidity). If it already exists in the database, nothing is changed.
+
         :param sensor_id:               combi sensor ID
         :type sensor_id:                string
         :param description:             description of the sensor (location, type, specialities, ...)
@@ -668,10 +673,10 @@ class SQLWeatherDB(object):
                 ) VALUES (?,?)",
                                (sensor_id, description))
 
-
     def replace_combi_sensor(self, sensor_id, description):
         """
         Replaces an existing combi sensor description without changing the data.
+
         :param sensor_id:               combi sensor ID
         :type sensor_id:                string
         :param description:             description of the sensor (location, type, specialities, ...)
@@ -688,10 +693,10 @@ class SQLWeatherDB(object):
             if num_updated_rows == 0:
                 raise NotExistingError("The combi sensor ID is not existing")
 
-
     def combi_sensor_exists(self, sensor_id):
         """
         Checks if a combi sensor exists in the database.
+
         :param sensor_id:               combi sensor ID
         :type sensor_id:                string
         :return:                        True if the combi sensor exists in the database, false otherwise
@@ -707,7 +712,6 @@ class SQLWeatherDB(object):
 
         return is_existing
 
-
     def get_combi_sensor_ids(self):
         """
         Obtains all combi sensors registered in the database.
@@ -717,20 +721,18 @@ class SQLWeatherDB(object):
 
         return combi_sensor_ids
 
-
     def _get_combi_sensor_ids(self):
         """
         Obtains all combi sensors registered in the database.
         Note: This method call must be embedded within a SQL-database lock (in a with-statement)
         """
-        combi_sensor_rows = self._sql.execute( " \
+        combi_sensor_rows = self._sql.execute(" \
             SELECT sensorID \
             FROM CombiSensor \
-            ORDER BY sensorID" ).fetchall()
+            ORDER BY sensorID").fetchall()
 
         combi_sensor_ids = [item["sensorID"] for item in combi_sensor_rows]
         return combi_sensor_ids
-
 
     def _get_combi_sensor_description(self, sensor_id):
         """
@@ -748,19 +750,19 @@ class SQLWeatherDB(object):
 
         return combi_sensor_row[0]
 
-
     def remove_combi_sensor(self, sensor_id):
         """
         Removes an existing combi sensor from the database.
+
         :param sensor_id:               combi sensor ID
         :type sensor_id:                string
 
         """
         with self._sql:
-            is_deleted = self._sql.execute( " \
+            is_deleted = self._sql.execute(" \
                 DELETE \
                 FROM CombiSensor \
                 WHERE sensorID=(?)",
-                ( sensor_ID, ) ).rowcount
+                (sensor_id,)).rowcount
 
         return is_deleted

@@ -90,7 +90,7 @@ class PCWetterstationFormatFile(object):
                 
                 # read all weather data from the file at once
                 file_reader = csv.DictReader(f, [PCWetterstationFormatFile._DATE, PCWetterstationFormatFile._TIME] + checked_indices_list) # the keys are the format internal sensor IDs
-                data = list( file_reader )
+                data = list(file_reader)
 
                 # parse the weather data line by line
                 datasets = []
