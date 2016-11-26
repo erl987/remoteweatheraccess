@@ -1,12 +1,12 @@
 from abc import ABCMeta, abstractmethod
 from weathernetwork.server.exceptions import NotExistingError
 
+
 class ISensor(metaclass=ABCMeta):
     """Interface class for all sensors."""
 
     def __init__(self, sensor_id):
         self._sensor_id = sensor_id
-
 
     def get_sensor_id(self):
         """
@@ -14,21 +14,17 @@ class ISensor(metaclass=ABCMeta):
         """
         return self._sensor_id
 
-
     @abstractmethod
     def get_sensor_value(self, subsensor_id):
         pass
-
 
     @abstractmethod
     def get_description(self, subsensor_id):
         pass
 
-
     @abstractmethod
     def get_unit(self, subsensor_id):
         pass
-
 
     @abstractmethod
     def get_subsensor_ids(self):
@@ -50,10 +46,8 @@ class RainSensorData(ISensor):
         self._cumulated_amount = cumulated_amount
         self._cumulation_begin_time = cumulation_begin_time
 
-
     def get_all_data(self):
         return self._amount, self._begin_time, self._cumulated_amount, self._cumulation_begin_time
-
 
     def get_sensor_value(self, subsensor_id):
         if subsensor_id == RainSensorData.PERIOD:
@@ -65,7 +59,6 @@ class RainSensorData(ISensor):
 
         return value
 
-
     def get_description(self, subsensor_id):
         if subsensor_id == RainSensorData.PERIOD:
             description = "rain"
@@ -76,7 +69,6 @@ class RainSensorData(ISensor):
 
         return description
 
-
     def get_unit(self, subsensor_id):
         if subsensor_id == RainSensorData.PERIOD:
             unit = "mm"
@@ -86,7 +78,6 @@ class RainSensorData(ISensor):
             raise NotExistingError("Invalid subsensor \"%s\" for a rain sensor" % subsensor_id)
 
         return unit
-
 
     def get_subsensor_ids(self):
         return [RainSensorData.PERIOD, RainSensorData.CUMULATED]
@@ -109,10 +100,8 @@ class WindSensorData(ISensor):
         self._direction = direction
         self._wind_chill = wind_chill
 
-
     def get_all_data(self):
         return self._average, self._gusts, self._direction, self._wind_chill
-
 
     def get_sensor_value(self, subsensor_id):
         if subsensor_id == WindSensorData.AVERAGE:
@@ -128,7 +117,6 @@ class WindSensorData(ISensor):
 
         return value
 
-
     def get_description(self, subsensor_id):
         if subsensor_id == WindSensorData.AVERAGE:
             description = "average wind speed"
@@ -140,9 +128,8 @@ class WindSensorData(ISensor):
             description = "wind chill temperature"
         else:
             raise NotExistingError("Invalid subsensor \"%s\" for a wind sensor" % subsensor_id)
-            
-        return description
 
+        return description
 
     def get_unit(self, subsensor_id):
         if subsensor_id == WindSensorData.AVERAGE:
@@ -155,9 +142,8 @@ class WindSensorData(ISensor):
             unit = "\N{DEGREE SIGN}C"
         else:
             raise NotExistingError("Invalid subsensor \"%s\" for a wind sensor" % subsensor_id)
-            
-        return unit
 
+        return unit
 
     def get_subsensor_ids(self):
         return [WindSensorData.AVERAGE, WindSensorData.GUSTS, WindSensorData.DIRECTION, WindSensorData.WIND_CHILL]
@@ -170,16 +156,14 @@ class CombiSensorData(ISensor):
     TEMPERATURE = "temperature"
     HUMIDITY = "humidity"
 
-    def __init__(self, sensor_id, temperature, humidity, description = None):
+    def __init__(self, sensor_id, temperature, humidity, description=None):
         super(self.__class__, self).__init__(sensor_id)
         self._temperature = temperature
         self._humidity = humidity
         self._description = description
 
-
     def get_all_data(self):
         return self._temperature, self._humidity
-
 
     def get_sensor_value(self, subsensor_id):
         if subsensor_id == CombiSensorData.TEMPERATURE:
@@ -191,7 +175,6 @@ class CombiSensorData(ISensor):
 
         return value
 
-
     def get_description(self, subsensor_id):
         if subsensor_id == CombiSensorData.TEMPERATURE:
             description = "temperature"
@@ -199,18 +182,16 @@ class CombiSensorData(ISensor):
             description = "humidity"
         else:
             raise NotExistingError("Invalid subsensor \"%s\" for a combi sensor" % subsensor_id)
-          
+
         if self._description:
             description += " (" + self._description + ")"
         else:
             description += " (" + super(self.__class__, self).get_sensor_id() + ")"
 
         return description
- 
 
     def get_combi_sensor_description(self):
         return self._description
-
 
     def get_unit(self, subsensor_id):
         if subsensor_id == CombiSensorData.TEMPERATURE:
@@ -218,10 +199,9 @@ class CombiSensorData(ISensor):
         elif subsensor_id == CombiSensorData.HUMIDITY:
             unit = "%"
         else:
-             raise NotExistingError("Invalid subsensor \"%s\" for a combi sensor" % subsensor_id)
-            
-        return unit
+            raise NotExistingError("Invalid subsensor \"%s\" for a combi sensor" % subsensor_id)
 
+        return unit
 
     def get_subsensor_ids(self):
         return [CombiSensorData.TEMPERATURE, CombiSensorData.HUMIDITY]
@@ -240,10 +220,8 @@ class BaseStationSensorData(ISensor):
         self._pressure = pressure
         self._uv = uv
 
-
     def get_all_data(self):
         return self._pressure, self._uv
-
 
     def get_sensor_value(self, subsensor_id):
         if subsensor_id == BaseStationSensorData.PRESSURE:
@@ -255,7 +233,6 @@ class BaseStationSensorData(ISensor):
 
         return value
 
-
     def get_description(self, subsensor_id):
         if subsensor_id == BaseStationSensorData.PRESSURE:
             description = "pressure"
@@ -263,9 +240,8 @@ class BaseStationSensorData(ISensor):
             description = "UV"
         else:
             raise NotExistingError("Invalid subsensor \"%s\" for a base station sensor" % subsensor_id)
-            
-        return description
 
+        return description
 
     def get_unit(self, subsensor_id):
         if subsensor_id == BaseStationSensorData.PRESSURE:
@@ -274,9 +250,8 @@ class BaseStationSensorData(ISensor):
             unit = "UV-X"
         else:
             raise NotExistingError("Invalid subsensor \"%s\" for a base station sensor" % subsensor_id)
-            
-        return unit
 
+        return unit
 
     def get_subsensor_ids(self):
         return [BaseStationSensorData.PRESSURE, BaseStationSensorData.UV]
@@ -313,7 +288,6 @@ class WeatherStationMetadata(object):
         self._height = height
         self._rain_calib_factor = rain_calib_factor
 
-
     def get_station_id(self):
         """
         Returns the station ID.
@@ -321,7 +295,6 @@ class WeatherStationMetadata(object):
         :rtype:         String
         """
         return self._station_ID
-
 
     def get_device_info(self):
         """
@@ -331,7 +304,6 @@ class WeatherStationMetadata(object):
         """
         return self._device_info
 
-
     def get_location_info(self):
         """
         Returns the location information.
@@ -340,7 +312,6 @@ class WeatherStationMetadata(object):
         """
         return self._location_info
 
-
     def get_geo_info(self):
         """
         Returns the geographical position information.
@@ -348,7 +319,6 @@ class WeatherStationMetadata(object):
         :rtype:                     float, float, float
         """
         return self._latitude, self._longitude, self._height
-
 
     def get_rain_calib_factor(self):
         """

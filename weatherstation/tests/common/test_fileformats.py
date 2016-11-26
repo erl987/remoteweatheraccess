@@ -1,6 +1,7 @@
 import unittest
 import datetime
-from weathernetwork.common.sensor import RainSensorData, BaseStationSensorData, WindSensorData, CombiSensorData, WeatherStationMetadata
+from weathernetwork.common.sensor import RainSensorData, BaseStationSensorData, WindSensorData, CombiSensorData
+from weathernetwork.common.sensor import WeatherStationMetadata
 from weathernetwork.common.weatherstationdataset import WeatherStationDataset
 from datetime import timedelta
 from weathernetwork.common.fileformats import PCWetterstationFormatFile
@@ -111,7 +112,7 @@ class TestPCWetterstationFileProcessing(unittest.TestCase):
         read_datasets, read_rain_counter_base, read_station_metadata \
             = weather_data_file.read(self._file_path + "/" + file_name, self._station_ID)
 
-        self.assertEqual(True, True) # TODO: senseful checking
+        self.assertEqual(True, True)  # TODO: senseful checking
 
 if __name__ == '__main__':
     unittest.main()

@@ -43,20 +43,12 @@ class TestGraphGeneration(unittest.TestCase):
         self._db_file_name = "data/weather.db"
         self._station_ID = "TES2"
 
-
     def test_plot_of_last_n_days(self):
-        graphs.plot_of_last_n_days( 7, self._db_file_name, self._station_ID, sensors_to_plot, 
-                                   graph_directory, graph_file_name, True, datetime(year=2015, month=3, day=3) )
-
+        graphs.plot_of_last_n_days(7, self._db_file_name, self._station_ID, sensors_to_plot,
+                                   graph_directory, graph_file_name, True, datetime(year=2015, month=3, day=3))
 
     def tearDown(self):
         """Finishes each unit test."""
 
 if __name__ == '__main__':
     unittest.main()
-
-
-
-
-
-

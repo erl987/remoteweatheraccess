@@ -32,7 +32,7 @@ class FileSystemObserver(FileSystemEventHandler):
     def set_received_file_queue(self, received_file_queue):
         self._received_file_queue = received_file_queue
 
-    def _remove_outdated_processed_files(self, curr_time, max_keeping_time = 10):
+    def _remove_outdated_processed_files(self, curr_time, max_keeping_time=10):
         """Removes too old processed message IDs from the list."""
         removal_list = []
         for file in self._processed_files.keys():
@@ -45,7 +45,8 @@ class FileSystemObserver(FileSystemEventHandler):
     def on_modified(self, event):
         """A file has been modified"""
         if not event.is_directory:
-            # ensure that this file has not yet been processed (workaround for the watchdog library reporting possibly multiple "modified" events for a single file)
+            # ensure that this file has not yet been processed
+            # (workaround for the watchdog library reporting possibly multiple "modified" events for a single file)
             full_path = event.src_path
             curr_time = datetime.datetime.utcnow()
             with self._processed_files_lock:
@@ -56,10 +57,11 @@ class FileSystemObserver(FileSystemEventHandler):
             if not already_processed:
                 self._received_file_queue.put(full_path)
 
-
     def process(self, received_file_queue, exception_handler):
         try:
-            signal.signal(signal.SIGINT, signal.SIG_IGN) # required for correct handling of Crtl + C in a multiprocess environment
+            # required for correct handling of Crtl + C in a multiprocess environment
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+
             self._processed_files_lock = threading.Lock()
             filesystem_observer = Observer()
             self._received_file_queue = received_file_queue
@@ -77,7 +79,6 @@ class FileSystemObserver(FileSystemEventHandler):
         except Exception as e:
             exception_handler(DelayedException(e))
 
-
     def feed_modified_file(self, full_path):
         """Feeds a data file manually into the queue of received files."""
         self._received_file_queue.put(full_path)
@@ -90,7 +91,6 @@ class FTPServerBrokerProcess(object):
         self._temp_data_directory = temp_data_directory
         self._delta_time = delta_time
         self._combi_sensor_IDs = combi_sensor_ids
-
 
     def process(self, received_file_queue, request_queue, parent, logging_connection, exception_handler):
         try:
@@ -119,7 +119,6 @@ class FTPServerBrokerProcess(object):
 
         return station_id
 
-
     def _on_new_data(self, full_path, logger, parent):
         """A new file has been received via FTP (i.e. modified)"""
         # extract all required information from the name of the transferred data file
@@ -132,7 +131,9 @@ class FTPServerBrokerProcess(object):
                 try:
                     # ensure that the file is in its correct data subdirectory
                     if not file_path.endswith(station_id):
-                        raise FileParseError("The data file \"%s\" is not in its correct subdirectory \"%s\"" % (message_id, station_id))
+                        raise FileParseError(
+                            "The data file \"%s\" is not in its correct subdirectory \"%s\"" % (message_id, station_id)
+                        )
 
                     data = self._read_data_files(message_id, station_id)
                 except FileParseError as e:
@@ -146,7 +147,6 @@ class FTPServerBrokerProcess(object):
 
         return None, None, None
 
-
     def _read_data_files(self, message_id, station_id):
         wait_time = 0.05    # wait time between data file reading trials (in seconds)
         max_trials = 100     # reading trials for the data file before a fatal failure is assumed
@@ -158,9 +158,12 @@ class FTPServerBrokerProcess(object):
             counter = 0
             while file_still_blocked:
                 try:
-                    zip_file = ZipFile(self._data_directory + '/' + station_id + '/' + message_id + self._data_file_extension, 'r')
+                    zip_file = ZipFile(
+                        self._data_directory + '/' + station_id + '/' + message_id + self._data_file_extension, 'r'
+                    )
                 except PermissionError:
-                    # workaround because the watchdog library cannot monitor the file close event and the file may still be open when the "modified" event is signalled
+                    # workaround because the watchdog library cannot monitor the file close event and the file may still
+                    # be open when the "modified" event is signalled
                     counter += 1
                     if counter > max_trials:
                         raise
@@ -187,20 +190,27 @@ class FTPServerBrokerProcess(object):
 class FTPBroker(object):
     """Broker for weather data transmission based on FTP"""
 
-    def __init__(self, request_queue, data_directory, data_file_extension, temp_data_directory, logging_connection, exception_handler, delta_time, combi_sensor_ids):
+    def __init__(self, request_queue, data_directory, data_file_extension, temp_data_directory, logging_connection,
+                 exception_handler, delta_time, combi_sensor_ids):
         self._data_directory = data_directory
         self._data_file_extension = data_file_extension
 
         self._received_file_queue = Queue()
         self._filesystem_observer = FileSystemObserver(self._data_directory)
-        self._filesystem_observer_process = Process(target=self._filesystem_observer.process, args=(self._received_file_queue, exception_handler))
+        self._filesystem_observer_process = Process(
+            target=self._filesystem_observer.process, args=(self._received_file_queue, exception_handler)
+        )
         self._filesystem_observer.set_received_file_queue(self._received_file_queue)
         self._filesystem_observer_process.start()
 
-        self._broker = FTPServerBrokerProcess(data_directory, data_file_extension, temp_data_directory, delta_time, combi_sensor_ids)
-        self._broker_process = Process(target=self._broker.process, args=(self._received_file_queue, request_queue, self, logging_connection, exception_handler))
+        self._broker = FTPServerBrokerProcess(
+            data_directory, data_file_extension, temp_data_directory, delta_time, combi_sensor_ids
+        )
+        self._broker_process = Process(
+            target=self._broker.process,
+            args=(self._received_file_queue, request_queue, self, logging_connection, exception_handler)
+        )
         self._broker_process.start()
-
 
     def stop_and_join(self):
         self._filesystem_observer.stop()
@@ -208,10 +218,8 @@ class FTPBroker(object):
         self._received_file_queue.put(None)
         self._broker_process.join()
 
-
     def feed_modified_file(self, full_path):
         self._filesystem_observer.feed_modified_file(full_path)
-
 
     def send_persistence_acknowledgement(self, message_id, logger):
         station_id = self._broker.get_station_id(message_id)
@@ -275,18 +283,28 @@ class FTPServerSideProxy(IServerSideProxy):
         # start the listener processes
         self._exception_queue = exception_queue
         self._request_queue = Queue()
-        self._broker = FTPBroker(self._request_queue, data_directory, data_file_extension, temp_data_directory, logging_connection, self._exception_handler, delta_time, combi_sensor_ids)
+        self._broker = FTPBroker(
+            self._request_queue,
+            data_directory,
+            data_file_extension,
+            temp_data_directory,
+            logging_connection,
+            self._exception_handler,
+            delta_time,
+            combi_sensor_ids
+        )
         self._proxy = FTPServerSideProxyProcess()
-        self._proxy_process = Process(target=self._proxy.process, args=(self._request_queue, database_service_factory, self, logging_connection, self._exception_handler))
+        self._proxy_process = Process(
+            target=self._proxy.process,
+            args=(self._request_queue, database_service_factory, self, logging_connection, self._exception_handler)
+        )
         self._proxy_process.start()
 
         # feed the still unstored data files into the listener process
         self._feed_unstored_data_files(unstored_file_paths)
 
-
     def __enter__(self):
         return self
-
 
     def __exit__(self, type_val, value, traceback):
         self._stop_and_join()
@@ -306,21 +324,17 @@ class FTPServerSideProxy(IServerSideProxy):
 
         return unstored_file_paths
 
-
     def _feed_unstored_data_files(self, unstored_file_paths):
         for file_path in unstored_file_paths:
             self._broker.feed_modified_file(file_path)
 
-
     def _stop_and_join(self):
         self._broker.stop_and_join()
-        self._request_queue.put((None,None,None))
+        self._request_queue.put((None, None, None))
         self._proxy_process.join()
-
 
     def acknowledge_persistence(self, finished_id, logger):
         self._broker.send_persistence_acknowledgement(finished_id, logger)
-
 
     def _exception_handler(self, exception):
         self._exception_queue.put(exception)

@@ -16,7 +16,6 @@
 
 from datetime import datetime
 
-
 """General utilities functions.
 
 Functions:
@@ -46,7 +45,7 @@ def is_float(string):
         return False
 
 
-def floor_to_n( val, n ):
+def floor_to_n(val, n):
     """Floors a float to the next integer dividable by n.
     
     Args:
@@ -59,12 +58,12 @@ def floor_to_n( val, n ):
     Raises:
     None
     """
-    floored_val = math.floor( val / n ) * n
+    floored_val = math.floor(val / n) * n
 
     return floored_val
 
 
-def ceil_to_n( val, n ):
+def ceil_to_n(val, n):
     """Ceils a float to the next integer dividable by n.
     
     Args:
@@ -77,7 +76,7 @@ def ceil_to_n( val, n ):
     Raises:
     None
     """
-    ceiled_val = math.ceil( val / n ) * n
+    ceiled_val = math.ceil(val / n) * n
 
     return ceiled_val
 

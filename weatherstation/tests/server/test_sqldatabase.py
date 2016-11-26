@@ -1,12 +1,13 @@
-import unittest
-from weathernetwork.server.weathermessage import WeatherMessage
-from weathernetwork.server.sqldatabase import SQLDatabaseService, SQLWeatherDB
 import datetime
-from weathernetwork.server.exceptions import NotExistingError, AlreadyExistingError
-from weathernetwork.common.sensor import WeatherStationMetadata, RainSensorData
-from weathernetwork.common.sensor import BaseStationSensorData, WindSensorData, CombiSensorData
-from weathernetwork.common.weatherstationdataset import WeatherStationDataset
+import unittest
 from datetime import timedelta
+
+from weathernetwork.common.sensor import BaseStationSensorData, WindSensorData, CombiSensorData
+from weathernetwork.common.sensor import WeatherStationMetadata, RainSensorData
+from weathernetwork.common.weatherstationdataset import WeatherStationDataset
+from weathernetwork.server.exceptions import NotExistingError, AlreadyExistingError
+from weathernetwork.server.sqldatabase import SQLDatabaseService, SQLWeatherDB
+from weathernetwork.server.weathermessage import WeatherMessage
 
 
 class TestSQLDatabaseService(unittest.TestCase):
@@ -51,10 +52,8 @@ class TestSQLDatabaseService(unittest.TestCase):
         self._dataset_4.add_sensor(wind_sensor_data)
         self._dataset_4.add_sensor(combi_sensor_data)
 
-
     def tearDown(self):
         """Finishes each unit test."""
-
 
     def test_add_station(self):
         db_file_name = "data/weather.db"
@@ -67,8 +66,8 @@ class TestSQLDatabaseService(unittest.TestCase):
         if not weather_db.combi_sensor_exists("OUT1"):
             weather_db.add_combi_sensor("OUT1", "outside sensor 1")
         sensor_ids = self._dataset_1.get_all_sensor_ids()
-        test_description = self._dataset_1.get_sensor_description( ("OUT1", "temperature") )
-        test_unit = self._dataset_1.get_sensor_unit( ("OUT1", "humidity") )
+        test_description = self._dataset_1.get_sensor_description(("OUT1", "temperature"))
+        test_unit = self._dataset_1.get_sensor_unit(("OUT1", "humidity"))
 
         if not weather_db.station_exists(weather_station.get_station_id()):
             weather_db.add_station(weather_station)
@@ -78,7 +77,7 @@ class TestSQLDatabaseService(unittest.TestCase):
         weather_db.replace_station(weather_station_2_b)
 
         # testing obtaining single sensor values
-        value = self._dataset_1.get_sensor_value( ("OUT1", "temperature") )
+        value = self._dataset_1.get_sensor_value(("OUT1", "temperature"))
 
         # prepare the database
         weather_db.remove_dataset("TES", self._dataset_1.get_time())
@@ -101,13 +100,11 @@ class TestSQLDatabaseService(unittest.TestCase):
         last_time = datetime.datetime(2016, 9, 27)
         dataset_1 = weather_db.get_data_in_time_range("TES2", first_time, last_time)
 
-
     def test_not_existing_station(self):
         with self.assertRaises(NotExistingError):
             sql_database_service = SQLDatabaseService(self._db_file_name)
             message = WeatherMessage(self._message_ID, self._not_existing_station_ID, self._dataset_1)
             sql_database_service.add_data(message)
-
 
     def test_store_twice(self):
         sql_database_service = SQLDatabaseService(self._db_file_name)

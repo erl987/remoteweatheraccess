@@ -1,7 +1,7 @@
+import sys
 import tblib.pickling_support
 tblib.pickling_support.install()
 
-import sys
 
 class DelayedException(object):
     """Exception base class that can be reraised in other processes including the traceback"""

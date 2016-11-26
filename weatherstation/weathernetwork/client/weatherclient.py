@@ -15,7 +15,9 @@
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
 
-"""Read in data from a TE923-compatible weather station via USB and store the data in a CSV-file compatible to PC-Wetterstation."""
+"""Read in data from a TE923-compatible weather station via USB and store the data in a CSV-file compatible to
+PC-Wetterstation.
+"""
 import sys
 
 from weathernetwork.client import te923ToCSVreader
@@ -27,4 +29,4 @@ input_list = sys.argv
 script_name = input_list.pop(0)
 
 # Read new weather data from the TE923-station and save it in a CSV-file compatible to PC-Wetterstation
-te923ToCSVreader.te923ToCSVreader( data_folder, station_data_file_name, script_name )
+te923ToCSVreader.te923ToCSVreader(data_folder, station_data_file_name, script_name)
