@@ -25,8 +25,11 @@ from multiprocessing import Queue
 def main():
     """Weather server listening for data via FTP.
 
-    Command line arguments:
+    Command line argument:
     configuration INI-file
+
+    Usage:
+    python ftp_weather_server.py config.ini
     """
     # read the configuration file (specified in the first command line argument)
     if len(sys.argv) <= 1 or len(sys.argv) > 1 and sys.argv[1].lower() == "help":

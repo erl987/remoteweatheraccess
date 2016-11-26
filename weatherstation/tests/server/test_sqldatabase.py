@@ -2,9 +2,9 @@ import datetime
 import unittest
 from datetime import timedelta
 
-from weathernetwork.common.sensor import BaseStationSensorData, WindSensorData, CombiSensorData
-from weathernetwork.common.sensor import WeatherStationMetadata, RainSensorData
-from weathernetwork.common.weatherstationdataset import WeatherStationDataset
+from weathernetwork.common.weatherdata import BaseStationSensorData, WindSensorData, CombiSensorData
+from weathernetwork.common.weatherdata import WeatherStationMetadata, RainSensorData
+from common.weatherdata import WeatherStationDataset
 from weathernetwork.server.exceptions import NotExistingError, AlreadyExistingError
 from weathernetwork.server.sqldatabase import SQLDatabaseService, SQLWeatherDB
 from weathernetwork.server.weathermessage import WeatherMessage

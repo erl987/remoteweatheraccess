@@ -24,7 +24,11 @@ from weathernetwork.server.config import WeatherPlotServiceIniFile
 def main():
     """Plotting the weather data for the requested station taking the data from a SQL-database.
     
-    Commandline arguments: station_ID to be plotted, configuration INI-file
+    Commandline arguments:
+    station_ID to be plotted, configuration INI-file
+
+    Usage:
+    python plot_weather_graph.py STATION_ID plot_config.ini
     """
     # read the command line arguments
     if len(sys.argv) != 3:

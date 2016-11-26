@@ -27,7 +27,7 @@ import unittest
 
 from weathernetwork.server import graphs
 from datetime import datetime
-from weathernetwork.common.sensor import CombiSensorData, BaseStationSensorData, RainSensorData
+from weathernetwork.common.weatherdata import CombiSensorData, BaseStationSensorData, RainSensorData
 
 graph_file_name = 'graph.svg'
 graph_directory = './data'

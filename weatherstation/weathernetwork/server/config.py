@@ -1,3 +1,19 @@
+# RemoteWeatherAccess - Weather network connecting to remote stations
+# Copyright(C) 2013-2016 Ralf Rettig (info@personalfme.de)
+#
+# This program is free software: you can redistribute it and / or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.If not, see <http://www.gnu.org/licenses/>
+
 import configparser
 from weathernetwork.server.exceptions import InvalidConfigFileError
 from weathernetwork.server.interface import IIniConfigSection
@@ -89,7 +105,7 @@ class WeatherPlotServiceConfig(BaseWeatherServerConfig):
 
 
 class DatabaseConfigSection(IIniConfigSection):
-    """Configuration of the SQLite-database."""
+    """Configuration part for the SQLite-database."""
 
     # INI-file subsection tags
     _DB_FILE_NAME = "DatabaseFile"
@@ -138,7 +154,7 @@ class DatabaseConfigSection(IIniConfigSection):
 
 
 class FTPReceiverConfigSection(object):
-    """Configuration of the FTP-based weather server."""
+    """Configuration part for the FTP-based weather server."""
 
     # INI-file subsection tags
     _RECEIVER_DIRECTORY = "ReceiverDirectory"
@@ -221,7 +237,7 @@ class FTPReceiverConfigSection(object):
 
 
 class PlotConfigSection(IIniConfigSection):
-    """Configuration of the weather data plotting"""
+    """Configuration part for the weather data plotting"""
 
     # INI-file subsection tags
     _SENSORS_TO_PLOT = "SensorsToPlot"
@@ -367,7 +383,7 @@ class PlotConfigSection(IIniConfigSection):
 
 
 class LogConfigSection(IIniConfigSection):
-    """Configuration of the logging system."""
+    """Configuration part for the logging system."""
 
     # INI-file subsection tags
     _LOG_FILE = "LogFile"
@@ -646,7 +662,6 @@ class WeatherPlotServiceIniFile(BaseWeatherServerIniFile):
 
 class IniFileUtils(object):
     """Utils methods for processing INI-configuration files."""
-
     @staticmethod
     def check_section_for_all_tags(section, required_tags, is_root_level):
         """Checks if the given section contains all required tags.

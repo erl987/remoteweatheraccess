@@ -1,9 +1,25 @@
+# RemoteWeatherAccess - Weather network connecting to remote stations
+# Copyright(C) 2013-2016 Ralf Rettig (info@personalfme.de)
+#
+# This program is free software: you can redistribute it and / or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.If not, see <http://www.gnu.org/licenses/>
+
 from abc import ABCMeta, abstractmethod
 from weathernetwork.server.exceptions import NotExistingError
 
 
-class ISensor(metaclass=ABCMeta):
-    """Interface class for all sensors."""
+class Sensor(metaclass=ABCMeta):
+    """Abstract base class for all sensors."""
 
     def __init__(self, sensor_id):
         self._sensor_id = sensor_id
@@ -31,7 +47,7 @@ class ISensor(metaclass=ABCMeta):
         pass
 
 
-class RainSensorData(ISensor):
+class RainSensorData(Sensor):
     """Data of a rain sensor."""
 
     # name tags defining the subsensor types
@@ -83,7 +99,7 @@ class RainSensorData(ISensor):
         return [RainSensorData.PERIOD, RainSensorData.CUMULATED]
 
 
-class WindSensorData(ISensor):
+class WindSensorData(Sensor):
     """Data of a wind sensor."""
 
     # name tags defining the subsensor types
@@ -149,7 +165,7 @@ class WindSensorData(ISensor):
         return [WindSensorData.AVERAGE, WindSensorData.GUSTS, WindSensorData.DIRECTION, WindSensorData.WIND_CHILL]
 
 
-class CombiSensorData(ISensor):
+class CombiSensorData(Sensor):
     """Data of a combi sensor (temperature / humidity)."""
 
     # name tags defining the subsensor types
@@ -207,7 +223,7 @@ class CombiSensorData(ISensor):
         return [CombiSensorData.TEMPERATURE, CombiSensorData.HUMIDITY]
 
 
-class BaseStationSensorData(ISensor):
+class BaseStationSensorData(Sensor):
     """Data of a base station."""
 
     # name tags defining the subsensor types
@@ -327,3 +343,60 @@ class WeatherStationMetadata(object):
         :rtype:                     float
         """
         return self._rain_calib_factor
+
+
+class WeatherStationDataset(object):
+    """Weather dataset at a moment in time."""
+
+    def __init__(self, time):
+        """
+        Constructor.
+        """
+        self._time = time
+        self._sensor_data = dict()
+
+    def get_time(self):
+        return self._time
+
+    def contains(self, sensor_id):
+        return sensor_id in self._sensor_data
+
+    def get_sensor_value(self, sensor_id_tuple):
+        """
+        Obtains the signal data value of a specified sensor.
+        """
+        sensor_id, subsensor_id = sensor_id_tuple
+
+        return self._sensor_data[sensor_id].get_sensor_value(subsensor_id)
+
+    def get_sensor_object(self, sensor_id):
+        return self._sensor_data[sensor_id]
+
+    def add_sensor(self, data):
+        self._sensor_data[data.get_sensor_id()] = data
+
+    def remove_sensor(self, sensor_id):
+        del self._sensor_data[sensor_id]
+
+    def get_sensor_description(self, sensor_id_tuple):
+        """
+        Obtains the unit of a certain sensor ID.
+        """
+        sensor_id, subsensor_id = sensor_id_tuple
+
+        return self._sensor_data[sensor_id].get_description(subsensor_id)
+
+    def get_sensor_unit(self, sensor_id_tuple):
+        """
+        Obtains the unit of a certain sensor ID.
+        """
+        sensor_id, subsensor_id = sensor_id_tuple
+
+        return self._sensor_data[sensor_id].get_unit(subsensor_id)
+
+    def get_all_sensor_ids(self):
+        sensor_ids = dict()
+        for key, curr_sensor in self._sensor_data.items():
+            sensor_ids[curr_sensor.get_sensor_id()] = curr_sensor.get_subsensor_ids()
+
+        return sensor_ids

@@ -1,8 +1,8 @@
 import unittest
 import datetime
-from weathernetwork.common.sensor import RainSensorData, BaseStationSensorData, WindSensorData, CombiSensorData
-from weathernetwork.common.sensor import WeatherStationMetadata
-from weathernetwork.common.weatherstationdataset import WeatherStationDataset
+from weathernetwork.common.weatherdata import RainSensorData, BaseStationSensorData, WindSensorData, CombiSensorData
+from weathernetwork.common.weatherdata import WeatherStationMetadata
+from common.weatherdata import WeatherStationDataset
 from datetime import timedelta
 from weathernetwork.common.fileformats import PCWetterstationFormatFile
 from weathernetwork.server.sqldatabase import SQLWeatherDB
