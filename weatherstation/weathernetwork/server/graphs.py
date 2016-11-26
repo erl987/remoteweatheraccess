@@ -19,6 +19,7 @@ from weathernetwork.common import utilities
 import matplotlib
 from weathernetwork.server.sqldatabase import SQLWeatherDB
 
+matplotlib.use('Agg')
 from mpl_toolkits.axes_grid1 import host_subplot
 import mpl_toolkits.axisartist as aa
 import matplotlib.pyplot as plt
@@ -28,7 +29,6 @@ import matplotlib.font_manager as fonts
 import datetime
 from datetime import datetime as dt
 from datetime import timedelta
-matplotlib.use('Agg')
 
 
 """Generation of weather data plots.
