@@ -14,25 +14,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
-from weathernetwork.server.interface import IServerSideProxy
-from weathernetwork.common.fileformats import PCWetterstationFormatFile
-from weathernetwork.server.weathermessage import WeatherMessage
-from weathernetwork.common.exceptions import DelayedException
-from weathernetwork.common.logging import MultiprocessLoggerProxy, IMultiProcessLogger
-from weathernetwork.server.exceptions import AlreadyExistingError, NotExistingError
-from weathernetwork.common.exceptions import FileParseError
-
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-import os
-from zipfile import ZipFile
-import time
 import datetime
-from datetime import timedelta
-import threading
-from multiprocessing import Event, Process, Queue
-import signal
 import glob
+import os
+import signal
+import threading
+import time
+from datetime import timedelta
+from multiprocessing import Event, Process, Queue
+from zipfile import ZipFile
+
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
+
+from common.datastructures import WeatherMessage
+from common.exceptions import DelayedException
+from common.exceptions import FileParseError
+from common.fileformats import PCWetterstationFormatFile
+from common.logging import MultiprocessLoggerProxy, IMultiProcessLogger
+from server.exceptions import AlreadyExistingError, NotExistingError
+from server.interface import IServerSideProxy
 
 
 class FileSystemObserver(FileSystemEventHandler):

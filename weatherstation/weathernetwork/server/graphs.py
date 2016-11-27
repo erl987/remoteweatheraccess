@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
-from weathernetwork.common.weatherdata import CombiSensorData, BaseStationSensorData, RainSensorData
+from weathernetwork.common.datastructures import CombiSensorData, BaseStationSensorData, RainSensorData
 from weathernetwork.common import utilities
 import matplotlib
 from weathernetwork.server.sqldatabase import SQLWeatherDB

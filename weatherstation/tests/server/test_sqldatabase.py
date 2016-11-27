@@ -2,12 +2,11 @@ import datetime
 import unittest
 from datetime import timedelta
 
-from weathernetwork.common.weatherdata import BaseStationSensorData, WindSensorData, CombiSensorData
-from weathernetwork.common.weatherdata import WeatherStationMetadata, RainSensorData
-from common.weatherdata import WeatherStationDataset
-from weathernetwork.server.exceptions import NotExistingError, AlreadyExistingError
-from weathernetwork.server.sqldatabase import SQLDatabaseService, SQLWeatherDB
-from weathernetwork.server.weathermessage import WeatherMessage
+from common.datastructures import WeatherStationDataset, WeatherMessage
+from common.datastructures import BaseStationSensorData, WindSensorData, CombiSensorData
+from common.datastructures import WeatherStationMetadata, RainSensorData
+from server.exceptions import NotExistingError, AlreadyExistingError
+from server.sqldatabase import SQLDatabaseService, SQLWeatherDB
 
 
 class TestSQLDatabaseService(unittest.TestCase):

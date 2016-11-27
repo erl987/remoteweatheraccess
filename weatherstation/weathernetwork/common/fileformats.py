@@ -20,9 +20,9 @@ from datetime import datetime as dt
 from datetime import timedelta
 
 from weathernetwork.common.exceptions import PCWetterstationFileParseError, DatasetFormatError
-from weathernetwork.common.weatherdata import CombiSensorData, BaseStationSensorData, WindSensorData, RainSensorData
-from weathernetwork.common.weatherdata import WeatherStationMetadata
-from common.weatherdata import WeatherStationDataset
+from weathernetwork.common.datastructures import CombiSensorData, BaseStationSensorData, WindSensorData, RainSensorData
+from weathernetwork.common.datastructures import WeatherStationMetadata
+from common.datastructures import WeatherStationDataset
 
 
 class PCWetterstationFormatFile(object):
