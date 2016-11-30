@@ -54,6 +54,7 @@
     <Compile Include="weathernetwork\client\te923ToCSVreader.py" />
     <Compile Include="weathernetwork\client\weatherclient.py" />
     <Compile Include="weathernetwork\client\__init__.py" />
+    <Compile Include="weathernetwork\common\datastructures.py" />
     <Compile Include="weathernetwork\common\exceptions.py">
       <SubType>Code</SubType>
     </Compile>
@@ -63,14 +64,7 @@
     <Compile Include="weathernetwork\common\logging.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="weathernetwork\common\delayedexception.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="weathernetwork\common\sensor.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="weathernetwork\common\utilities.py" />
-    <Compile Include="weathernetwork\common\weatherstationdataset.py" />
     <Compile Include="weathernetwork\common\__init__.py" />
     <Compile Include="weathernetwork\server\config.py">
       <SubType>Code</SubType>
@@ -80,15 +74,13 @@
     <Compile Include="weathernetwork\server\ftpbroker.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="weathernetwork\server\weathermessage.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="weathernetwork\server\exceptions.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="weathernetwork\server\interface.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="weathernetwork\server\_sqldatabase_impl.py" />
     <Compile Include="weathernetwork\server\__init__.py" />
     <Compile Include="weathernetwork\__init__.py" />
   </ItemGroup>
