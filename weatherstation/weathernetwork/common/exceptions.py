@@ -15,6 +15,8 @@
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
 import sys
+import tblib.pickling_support
+tblib.pickling_support.install()
 
 
 class Error(Exception):

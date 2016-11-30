@@ -16,10 +16,10 @@
 
 import sqlite3
 
-from common import utilities
-from common.datastructures import WeatherStationMetadata, WindSensorData, RainSensorData, CombiSensorData, \
+from weathernetwork.common import utilities
+from weathernetwork.common.datastructures import WeatherStationMetadata, WindSensorData, RainSensorData, CombiSensorData, \
     BaseStationSensorData
-from server.exceptions import AlreadyExistingError, NotExistingError
+from weathernetwork.server.exceptions import AlreadyExistingError, NotExistingError
 
 
 class _WeatherStationTable(object):
