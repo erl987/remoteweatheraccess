@@ -421,7 +421,7 @@ class _RainSensorTable(object):
         return rain_data
 
 
-class CombiSensorDataTable(object):
+class _CombiSensorDataTable(object):
     """
     Representing the table 'CombiSensorData' within a SQL weather database.
     Note: Any class method call must be embedded within a SQL-database lock (in a with-statement)
@@ -572,7 +572,7 @@ class CombiSensorDataTable(object):
         return combi_data
 
 
-class WeatherDataTable(object):
+class _WeatherDataTable(object):
     """
     Representing the table 'WeatherDataTable' within a SQL weather database.
     Note: Any class method call must be embedded within a SQL-database lock (in a with-statement)
@@ -715,7 +715,7 @@ class WeatherDataTable(object):
         return times, base_data
 
 
-class CombiSensorDefinitionTable(object):
+class _CombiSensorDefinitionTable(object):
     """
     Representing the table 'CombiSensor' within a SQL weather database.
     Note: Any class method call must be embedded within a SQL-database lock (in a with-statement)

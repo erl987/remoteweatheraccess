@@ -22,7 +22,7 @@ from weathernetwork.common.datastructures import WeatherStationDataset
 from weathernetwork.common.logging import MultiprocessLoggerProxy
 from weathernetwork.server.interface import IDatabaseService, IDatabaseServiceFactory
 from weathernetwork.server._sqldatabase_impl import _WeatherStationTable, _WindSensorTable, _RainSensorTable, \
-    CombiSensorDataTable, WeatherDataTable, CombiSensorDefinitionTable
+    _CombiSensorDataTable, _WeatherDataTable, _CombiSensorDefinitionTable
 
 
 class SQLDatabaseService(IDatabaseService):
@@ -154,10 +154,10 @@ class SQLWeatherDB(object):
         # create the SQL tables if required
         with self._sql:
             self._weather_station_table = _WeatherStationTable(self._sql)
-            self._base_station_data_table = WeatherDataTable(self._sql)
+            self._base_station_data_table = _WeatherDataTable(self._sql)
             self._wind_sensor_table = _WindSensorTable(self._sql)
-            self._combi_sensor_data_table = CombiSensorDataTable(self._sql)
-            self._combi_sensor_definition_table = CombiSensorDefinitionTable(self._sql)
+            self._combi_sensor_data_table = _CombiSensorDataTable(self._sql)
+            self._combi_sensor_definition_table = _CombiSensorDefinitionTable(self._sql)
             self._rain_sensor_table = _RainSensorTable(self._sql)
 
             self._sql.execute("PRAGMA foreign_keys = ON")
