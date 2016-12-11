@@ -35,6 +35,7 @@ class _WeatherStationTable(object):
         :type sql:                      sqlite3.Connection
         """
         self._sql = sql
+        self._sql.row_factory = sqlite3.Row
 
         self._sql.execute(" \
         CREATE TABLE IF NOT EXISTS WeatherStation \

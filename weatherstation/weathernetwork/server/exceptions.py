@@ -25,6 +25,7 @@ class NotExistingError(Error):
     def __init__(self, msg):
         """
         Constructor.
+
         :param msg:     error message description
         :type msg:      string
         """
@@ -36,6 +37,7 @@ class AlreadyExistingError(Error):
     def __init__(self, msg):
         """
         Constructor.
+
         :param msg:     error message description
         :type msg:      string
         """
@@ -47,6 +49,7 @@ class InvalidConfigFileError(Error):
     def __init__(self, msg):
         """
         Constructor.
+
         :param msg:     error message description
         :type msg:      string
         """
