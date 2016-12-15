@@ -218,12 +218,12 @@ class SQLWeatherDB(object):
                 time = dataset.get_time()
 
                 # replace the dataset
-                self._base_station_data_table.replace(time, station_id, dataset)
-                self._rain_sensor_table.replace(time, station_id, dataset)
-                self._wind_sensor_table.replace(time, station_id, dataset)
+                self._base_station_data_table.replace(station_id, dataset)
+                self._rain_sensor_table.replace(station_id, dataset)
+                self._wind_sensor_table.replace(station_id, dataset)
                 combi_sensor_descriptions = self._combi_sensor_definition_table.get_sensor_descriptions()
-                self._combi_sensor_data_table.replace(
-                    time, station_id, dataset, available_combi_sensor_ids, combi_sensor_descriptions
+                self._combi_sensor_data_table.replace(station_id, dataset, available_combi_sensor_ids,
+                    combi_sensor_descriptions
                 )  # temperature / humidity
 
     def remove_dataset(self, station_id, time):

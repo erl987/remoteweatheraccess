@@ -15,6 +15,8 @@
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
 from abc import ABCMeta, abstractmethod
+
+from common.utilities import Comparable
 from weathernetwork.server.exceptions import NotExistingError
 
 
@@ -47,7 +49,7 @@ class Sensor(metaclass=ABCMeta):
         pass
 
 
-class RainSensorData(Sensor):
+class RainSensorData(Sensor, Comparable):
     """Data of a rain sensor."""
 
     # name tags defining the subsensor types
@@ -99,7 +101,7 @@ class RainSensorData(Sensor):
         return [RainSensorData.PERIOD, RainSensorData.CUMULATED]
 
 
-class WindSensorData(Sensor):
+class WindSensorData(Sensor, Comparable):
     """Data of a wind sensor."""
 
     # name tags defining the subsensor types
@@ -165,7 +167,7 @@ class WindSensorData(Sensor):
         return [WindSensorData.AVERAGE, WindSensorData.GUSTS, WindSensorData.DIRECTION, WindSensorData.WIND_CHILL]
 
 
-class CombiSensorData(Sensor):
+class CombiSensorData(Sensor, Comparable):
     """Data of a combi sensor (temperature / humidity)."""
 
     # name tags defining the subsensor types
@@ -223,7 +225,7 @@ class CombiSensorData(Sensor):
         return [CombiSensorData.TEMPERATURE, CombiSensorData.HUMIDITY]
 
 
-class BaseStationSensorData(Sensor):
+class BaseStationSensorData(Sensor, Comparable):
     """Data of a base station."""
 
     # name tags defining the subsensor types
@@ -273,7 +275,7 @@ class BaseStationSensorData(Sensor):
         return [BaseStationSensorData.PRESSURE, BaseStationSensorData.UV]
 
 
-class WeatherStationMetadata(object):
+class WeatherStationMetadata(Comparable):
     """Metadata of a weather station."""
 
     def __init__(self, station_id, device_info, location_info, latitude, longitude, height, rain_calib_factor):
@@ -344,22 +346,8 @@ class WeatherStationMetadata(object):
         """
         return self._rain_calib_factor
 
-    def __str__(self):
-        return str(self.__dict__)
 
-    def __eq__(self, other):
-        """Equality operator"""
-        if isinstance(other, self.__class__):
-            return self.__dict__ == other.__dict__
-        else:
-            return False
-
-    def __ne__(self, other):
-        """Non-equality operator"""
-        return not self.__eq__(other)
-
-
-class WeatherStationDataset(object):
+class WeatherStationDataset(Comparable):
     """Weather dataset at a moment in time."""
 
     def __init__(self, time):
@@ -416,7 +404,7 @@ class WeatherStationDataset(object):
         return sensor_ids
 
 
-class WeatherMessage(object):
+class WeatherMessage(Comparable):
     """Class representing a weather data message transmitted via network"""
 
     def __init__(self, message_id, station_id, data):

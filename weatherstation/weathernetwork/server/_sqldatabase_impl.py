@@ -182,6 +182,7 @@ class _WindSensorTable(object):
         :type sql:                      sqlite3.Connection
         """
         self._sql = sql
+        self._sql.row_factory = sqlite3.Row
 
         self._sql.execute(" \
             CREATE TABLE IF NOT EXISTS WindSensorData \
@@ -226,17 +227,16 @@ class _WindSensorTable(object):
             ) VALUES (?,?,?,?,?,?)",
                               data_to_be_written)
 
-    def replace(self, time, station_id, dataset):
+    def replace(self, station_id, dataset):
         """
-        Replaces the dataset for the given time the database table.
+        Replaces the dataset in the database table.
 
-        :param time:                    timepoint for which the dataset should be replaced
-        :type time:                     datetime.datetime
         :param station_id:              station ID for which the dataset should be replaced
         :type station_id:               string
         :param dataset:                 new dataset
         :type dataset:                  common.datastructures.WeatherStationDataset
         """
+        time = dataset.get_time()
         wind_average, wind_gust, wind_direction, wind_chill_temp = dataset.get_sensor_object(
             WindSensorData.WIND).get_all_data()
         self._sql.execute(" \
@@ -256,7 +256,7 @@ class _WindSensorTable(object):
         :param last_time:               end of the time interval (inclusive)
         :type last_time:                datetime.datetime
         :return:                        wind sensor data for all timepoints within the interval
-        :rtype:                         common.datastructures.WindSensorData
+        :rtype:                         list of common.datastructures.WindSensorData
         """
         wind_data_from_db = self._sql.execute(" \
             SELECT speed, gusts, direction, temperature \
@@ -349,19 +349,18 @@ class _RainSensorTable(object):
             else:
                 raise
 
-    def replace(self, time, station_id, dataset):
+    def replace(self, station_id, dataset):
         """
         Replaces an existing dataset in the database table.
         Note: Cumulated rain amounts are not stored in the database.
 
-        :param time:                timepoint for which the dataset should be replaced
-        :type time:                 datetime.datetime
         :param station_id:          station ID for which the dataset should be replaced
         :type station_id:           string
         :param dataset:             new dataset
         :type dataset:              common.datastructures.WeatherStationDataset
         :raise NotExistingError:    if the begin time of the rain sensor data cannot be updated
         """
+        time = dataset.get_time()
         amount, begin_time, *rest = dataset.get_sensor_object(RainSensorData.RAIN).get_all_data()
         num_updated_rows = self._sql.execute(" \
             UPDATE RainSensorData \
@@ -405,7 +404,7 @@ class _RainSensorTable(object):
         :param last_time:           end time of the interval (inclusive)
         :type last_time:            datetime.datetime
         :return:                    rain sensor data within the specified interval
-        :rtype:                     common.datastructures.RainSensorData
+        :rtype:                     list common.datastructures.RainSensorData
         """
         rain_data_from_db = self._sql.execute(" \
             SELECT amount, beginTime \
@@ -505,12 +504,10 @@ class _CombiSensorDataTable(object):
                     else:
                         raise
 
-    def replace(self, time, station_id, dataset, available_combi_sensor_ids, combi_sensor_descriptions):
+    def replace(self, station_id, dataset, available_combi_sensor_ids, combi_sensor_descriptions):
         """
-        Replaces a dataset in the database table for the specified time.
+        Replaces a dataset in the database table.
 
-        :param time:                            time for which the dataset should be replaced
-        :type time:                             datetime.datetime
         :param station_id:                      station ID
         :type station_id:                       string
         :param dataset:                         new dataset
@@ -521,6 +518,7 @@ class _CombiSensorDataTable(object):
         :type combi_sensor_descriptions:        list of string
         :raise NotExistingError:                if a required component does not exist (for example: combi sensor)
         """
+        time = dataset.get_time()
         for sensor_ID in available_combi_sensor_ids:
             temperature, humidity = dataset.get_sensor_object(sensor_ID).get_all_data()
             combi_sensor_description = dataset.get_sensor_object(sensor_ID).get_combi_sensor_description()
@@ -639,18 +637,17 @@ class _WeatherDataTable(object):
                 else:
                     raise
 
-    def replace(self, time, station_id, dataset):
+    def replace(self, station_id, dataset):
         """
-        Replaces a dataset for a timepoint in the table in the database.
+        Replaces a dataset in the table in the database.
 
-        :param time:                    timepoint for which the data should be replaced
-        :type time:                     datetime.datetime
         :param station_id:              station ID
         :type station_id:               string
         :param dataset:                 new dataset
         :type dataset:                  common.datastructures.WeatherStationDataset
         :raise NotExistingError:        if no entry for the given time and station exists in the database
         """
+        time = dataset.get_time()
         pressure, uv = dataset.get_sensor_object(BaseStationSensorData.BASE_STATION).get_all_data()
         num_updated_rows = self._sql.execute(" \
             UPDATE WeatherData \

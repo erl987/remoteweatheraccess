@@ -82,7 +82,8 @@ def ceil_to_n(val, n):
 
 
 def consolidate_ranges(ranges):
-    """Consolidates a list of time ranges by merging all overlapping ranges.
+    """
+    Consolidates a list of time ranges by merging all overlapping ranges.
     
     :param ranges:              list of unmerged time ranges
     :type ranges:               list of datetime tuples
@@ -104,3 +105,17 @@ def consolidate_ranges(ranges):
             result[-1] = (current_begin, current_end)
 
     return result
+
+
+class Comparable(object):
+    """Mix-in class making an object comparable"""
+    def __eq__(self, other):
+        """Equality operator"""
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        else:
+            return False
+
+    def __ne__(self, other):
+        """Non-equality operator"""
+        return not self.__eq__(other)
