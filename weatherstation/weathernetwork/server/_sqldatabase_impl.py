@@ -490,15 +490,16 @@ class _CombiSensorDataTable(object):
         for sensor_ID in available_combi_sensor_ids:
             data_to_be_written = []
             for dataset in data:
-                time = dataset.get_time()
-                temperature, humidity = dataset.get_sensor_object(sensor_ID).get_all_data()
-                combi_sensor_description = dataset.get_sensor_object(sensor_ID).get_combi_sensor_description()
-                if combi_sensor_description:
-                    if combi_sensor_descriptions[sensor_ID] != combi_sensor_description:
-                        raise NotExistingError(
-                            "The combi sensor description of the new data differs from that stored in the database.")
+                if dataset.contains(sensor_ID):
+                    time = dataset.get_time()
+                    temperature, humidity = dataset.get_sensor_object(sensor_ID).get_all_data()
+                    combi_sensor_description = dataset.get_sensor_object(sensor_ID).get_combi_sensor_description()
+                    if combi_sensor_description:
+                        if combi_sensor_descriptions[sensor_ID] != combi_sensor_description:
+                            raise NotExistingError(
+                                "The combi sensor description of the new data differs from that stored in the database.")
 
-                data_to_be_written.append((time, station_id, sensor_ID, temperature, humidity))
+                    data_to_be_written.append((time, station_id, sensor_ID, temperature, humidity))
 
             if data_to_be_written:
                 try:
@@ -534,27 +535,28 @@ class _CombiSensorDataTable(object):
         :type available_combi_sensor_ids:       list of string
         :param combi_sensor_descriptions:       list of the descriptions of all available combi sensors
         :type combi_sensor_descriptions:        list of string
-        :raise NotExistingError:                if a required component does not exist (for example: combi sensor)
+        :raise NotExistingError:                if a required component does not exist (for example: station ID)
         """
         time = dataset.get_time()
         for sensor_ID in available_combi_sensor_ids:
-            temperature, humidity = dataset.get_sensor_object(sensor_ID).get_all_data()
-            combi_sensor_description = dataset.get_sensor_object(sensor_ID).get_combi_sensor_description()
-            if combi_sensor_description:
-                if combi_sensor_descriptions[sensor_ID] != combi_sensor_description:
-                    raise NotExistingError(
-                        "The combi sensor description of the new data differs from that stored in the database."
-                    )
+            if dataset.contains(sensor_ID):
+                temperature, humidity = dataset.get_sensor_object(sensor_ID).get_all_data()
+                combi_sensor_description = dataset.get_sensor_object(sensor_ID).get_combi_sensor_description()
+                if combi_sensor_description:
+                    if combi_sensor_descriptions[sensor_ID] != combi_sensor_description:
+                        raise NotExistingError(
+                            "The combi sensor description of the new data differs from that stored in the database."
+                        )
 
-            num_updated_rows = self._sql.execute(" \
-                UPDATE CombiSensorData \
-                SET temperature=(?), humidity=(?) \
-                WHERE time=(?) AND stationID=(?) AND sensorID=(?)",
-                                                 (temperature, humidity, time, station_id,
-                                                  sensor_ID)).rowcount
+                num_updated_rows = self._sql.execute(" \
+                    UPDATE CombiSensorData \
+                    SET temperature=(?), humidity=(?) \
+                    WHERE time=(?) AND stationID=(?) AND sensorID=(?)",
+                                                     (temperature, humidity, time, station_id,
+                                                      sensor_ID)).rowcount
 
-            if num_updated_rows == 0:
-                raise NotExistingError("The requested combi sensor ID does not exist")
+                if num_updated_rows == 0:
+                    raise NotExistingError("The requested combination of time, station ID and sensor ID does not exist")
 
     def get_data_at_time(self, station_id, time, combi_sensor_descriptions):
         """
