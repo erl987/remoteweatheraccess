@@ -466,14 +466,11 @@ class TestSQLRainSensorTable(unittest.TestCase):
             cumulated = 0
             for sensor_data_line, got_sensor_data_line in zip(sensor_data, got_sensor_data):
                 amount = sensor_data_line.get_sensor_value([RainSensorData.RAIN, RainSensorData.PERIOD])
-                got_amount = got_sensor_data_line.get_sensor_value([RainSensorData.RAIN, RainSensorData.PERIOD])
-                got_cumulated = got_sensor_data_line.get_sensor_value([RainSensorData.RAIN, RainSensorData.CUMULATED])
+                self.assertEqual(amount, got_sensor_data_line.get_sensor_value(RainSensorData.PERIOD))
                 if not is_first:
                     cumulated += amount
 
-                self.assertEqual(cumulated, got_cumulated)
-                self.assertEqual(amount, got_amount)
-                self.assertEqual(sensor_data_line.get_time(), got_sensor_data_line.get_time())
+                self.assertEqual(cumulated, got_sensor_data_line.get_sensor_value(RainSensorData.CUMULATED))
                 is_first = False
 
     def test_add_empty_rain_sensor_data(self):
@@ -529,10 +526,9 @@ class TestSQLRainSensorTable(unittest.TestCase):
             got_sensor_data = rain_sensor_table.get_data(station_id, some_time_before(), some_time_afterwards())
 
         # then:
-            other_amount = other_sensor_data.get_sensor_value([RainSensorData.RAIN, RainSensorData.PERIOD])
-            got_amount = got_sensor_data[0].get_sensor_value([RainSensorData.RAIN, RainSensorData.PERIOD])
-            self.assertEqual(other_amount, got_amount)
-            self.assertEqual(other_sensor_data.get_time(), got_sensor_data[0].get_time())
+        for other_sensor_data_line, got_sensor_data_line in zip([other_sensor_data], got_sensor_data):
+            amount = other_sensor_data_line.get_sensor_value([RainSensorData.RAIN, RainSensorData.PERIOD])
+            self.assertEqual(amount, got_sensor_data_line.get_sensor_value(RainSensorData.PERIOD))
 
     def test_replace_rain_sensor_data_with_invalid_station(self):
         # given:

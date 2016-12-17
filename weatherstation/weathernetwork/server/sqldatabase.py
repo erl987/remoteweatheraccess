@@ -275,7 +275,7 @@ class SQLWeatherDB(object):
                 for sensor_data in combi_data_from_db:
                     curr_dataset.add_sensor(sensor_data)
                 curr_dataset.add_sensor(base)
-                curr_dataset.add_sensor(rain.get_sensor_object(RainSensorData.RAIN))
+                curr_dataset.add_sensor(rain)
                 curr_dataset.add_sensor(wind)
 
                 datasets.append(curr_dataset)

@@ -17,8 +17,8 @@
 import sqlite3
 
 from weathernetwork.common import utilities
-from weathernetwork.common.datastructures import WeatherStationMetadata, WindSensorData, RainSensorData, CombiSensorData, \
-    BaseStationSensorData, WeatherStationDataset
+from weathernetwork.common.datastructures import WeatherStationMetadata, WindSensorData, RainSensorData, \
+    CombiSensorData, BaseStationSensorData, WeatherStationDataset
 from weathernetwork.server.exceptions import AlreadyExistingError, NotExistingError
 
 
@@ -405,7 +405,7 @@ class _RainSensorTable(object):
         :param last_time:           last end time of the interval (inclusive)
         :type last_time:            datetime.datetime
         :return:                    rain sensor data within the specified interval
-        :rtype:                     list of common.datastructures.WeatherStationDataset
+        :rtype:                     list of common.datastructures.RainSensorData
         """
         rain_data_from_db = self._sql.execute(" \
             SELECT amount, beginTime, endTime \
@@ -414,7 +414,7 @@ class _RainSensorTable(object):
             ORDER BY endTime",
                                               (station_id, first_time, last_time)).fetchall()
 
-        datasets = []
+        rain_data = []
         cumulated_rain = 0
         is_first = True
         for rain_data_for_timepoint in rain_data_from_db:
@@ -423,21 +423,19 @@ class _RainSensorTable(object):
                 first_time_with_data = end_time  # only the rain fallen from the first end time is taken into account
 
             # create the dataset (the database does not store cumulated amounts)
-            curr_dataset = WeatherStationDataset(end_time)
             amount = rain_data_for_timepoint["amount"]
             if not is_first:
                 cumulated_rain += amount  # the cumulated rain sum starts always with 0
-            curr_dataset.add_sensor(RainSensorData(
+            rain_data.append(RainSensorData(
                 amount,
                 rain_data_for_timepoint["beginTime"],
                 cumulated_rain,
                 first_time_with_data)
             )
 
-            datasets.append(curr_dataset)
             is_first = False
 
-        return datasets
+        return rain_data
 
 
 class _CombiSensorDataTable(object):
