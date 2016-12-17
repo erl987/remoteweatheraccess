@@ -265,11 +265,7 @@ class SQLWeatherDB(object):
 
             # iterate over all times in the time range in order
             datasets = []
-            cumulated_rain = 0
-            is_first = True
             for time, base, rain, wind in zip(times_in_range, base_data_in_range, rain_in_range, wind_in_range):
-                if is_first:
-                    first_time_with_data = times_in_range[0]
                 combi_data_from_db = self._combi_sensor_data_table.get_data_at_time(
                     station_id, time, combi_sensor_descriptions
                 )
@@ -278,14 +274,8 @@ class SQLWeatherDB(object):
                 curr_dataset = WeatherStationDataset(time)
                 for sensor_data in combi_data_from_db:
                     curr_dataset.add_sensor(sensor_data)
-
                 curr_dataset.add_sensor(base)
-
-                amount, begin_time, *rest = rain.get_all_data()
-                if not is_first:
-                    cumulated_rain += amount
-                curr_dataset.add_sensor(RainSensorData(amount, begin_time, cumulated_rain, first_time_with_data))
-
+                curr_dataset.add_sensor(rain.get_sensor_object(RainSensorData.RAIN))
                 curr_dataset.add_sensor(wind)
 
                 datasets.append(curr_dataset)

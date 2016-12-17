@@ -157,7 +157,7 @@ class RainSensorDataset:
 
     def with_end_time(self, time):
         self._time = time
-        self._begin_time = some_time() - timedelta(minutes=10)
+        self._begin_time = time - timedelta(minutes=10)
         return self
 
     def with_begin_time(self, time):
@@ -453,17 +453,28 @@ class TestSQLRainSensorTable(unittest.TestCase):
         # given:
         rain_sensor_table = _RainSensorTable(self._sql)
         station_id = "TES"
-        sensor_data = [a(rain_sensor_object().with_end_time(some_time()))]
+        sensor_data = [a(rain_sensor_object().with_end_time(some_time())),
+                        a(rain_sensor_object().with_end_time(some_time() + timedelta(minutes=10)))]
 
         # when:
         with self._sql:
             rain_sensor_table.add(station_id, sensor_data)
-            # TODO: it is a design weakness that we do not know from which timepoints the data actually is, this is true for all of these get_data() methods
             got_sensor_data = rain_sensor_table.get_data(station_id, some_time_before(), some_time_afterwards())
 
         # then:
-            for got_data_line, data_line in zip(got_sensor_data, sensor_data):
-                self.assertEqual(got_data_line, data_line.get_sensor_object(RainSensorData.RAIN))
+            is_first = True
+            cumulated = 0
+            for sensor_data_line, got_sensor_data_line in zip(sensor_data, got_sensor_data):
+                amount = sensor_data_line.get_sensor_value([RainSensorData.RAIN, RainSensorData.PERIOD])
+                got_amount = got_sensor_data_line.get_sensor_value([RainSensorData.RAIN, RainSensorData.PERIOD])
+                got_cumulated = got_sensor_data_line.get_sensor_value([RainSensorData.RAIN, RainSensorData.CUMULATED])
+                if not is_first:
+                    cumulated += amount
+
+                self.assertEqual(cumulated, got_cumulated)
+                self.assertEqual(amount, got_amount)
+                self.assertEqual(sensor_data_line.get_time(), got_sensor_data_line.get_time())
+                is_first = False
 
     def test_add_empty_rain_sensor_data(self):
         # given:
@@ -518,8 +529,10 @@ class TestSQLRainSensorTable(unittest.TestCase):
             got_sensor_data = rain_sensor_table.get_data(station_id, some_time_before(), some_time_afterwards())
 
         # then:
-            self.assertEqual(len(got_sensor_data), 1)
-            self.assertEqual(got_sensor_data[0], other_sensor_data.get_sensor_object(RainSensorData.RAIN))
+            other_amount = other_sensor_data.get_sensor_value([RainSensorData.RAIN, RainSensorData.PERIOD])
+            got_amount = got_sensor_data[0].get_sensor_value([RainSensorData.RAIN, RainSensorData.PERIOD])
+            self.assertEqual(other_amount, got_amount)
+            self.assertEqual(other_sensor_data.get_time(), got_sensor_data[0].get_time())
 
     def test_replace_rain_sensor_data_with_invalid_station(self):
         # given:

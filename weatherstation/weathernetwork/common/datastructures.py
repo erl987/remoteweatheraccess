@@ -58,6 +58,18 @@ class RainSensorData(Sensor, Comparable):
     CUMULATED = "cumulated"
 
     def __init__(self, amount, begin_time, cumulated_amount=None, cumulation_begin_time=None):
+        """
+        Constructor.
+
+        :param amount:                  Amount of rain within the present recording period (from begin to end time)
+        :type amount:                   float
+        :param begin_time:              Begin time of present recording, the end time needs to be stored by the caller
+        :type begin_time:               datetime.datetime
+        :param cumulated_amount:        Cumulated rain amount since the cumulation begin time
+        :type cumulated_amount:         float
+        :param cumulation_begin_time:   Cumulation begin time (i.e. the beginning of recording)
+        :type cumulation_begin_time:    datetime.datetime
+        """
         super(self.__class__, self).__init__(RainSensorData.RAIN)
         self._amount = amount
         self._begin_time = begin_time
