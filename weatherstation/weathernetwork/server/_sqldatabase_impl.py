@@ -288,6 +288,7 @@ class _RainSensorTable(object):
         :type sql:                      sqlite3.Connection
         """
         self._sql = sql
+        self._sql.row_factory = sqlite3.Row
 
         self._sql.execute(" \
             CREATE TABLE IF NOT EXISTS RainSensorData \
@@ -369,7 +370,7 @@ class _RainSensorTable(object):
                                              (amount, time, begin_time, station_id)).rowcount
 
         if num_updated_rows == 0:
-            raise NotExistingError("The begin time of the rain sensor data cannot be updated.")
+            raise NotExistingError("The rain amount cannot be updated.")
 
     def _rain_sensor_period_exists(self, station_id, first_time, last_time):
         """
@@ -399,9 +400,9 @@ class _RainSensorTable(object):
 
         :param station_id:          station ID
         :type station_id:           string
-        :param first_time:          begin time of the interval (inclusive)
+        :param first_time:          first end time of the interval (inclusive)
         :type first_time:           datetime.datetime
-        :param last_time:           end time of the interval (inclusive)
+        :param last_time:           last end time of the interval (inclusive)
         :type last_time:            datetime.datetime
         :return:                    rain sensor data within the specified interval
         :rtype:                     list common.datastructures.RainSensorData
@@ -418,6 +419,7 @@ class _RainSensorTable(object):
         for rain_data_for_timepoint in rain_data_from_db:
             rain_data.append(RainSensorData(rain_data_for_timepoint["amount"], rain_data_for_timepoint["beginTime"]))
 
+        # TODO: the cumulated rain amount should be calculated here and not in the caller method
         return rain_data
 
 
@@ -434,6 +436,7 @@ class _CombiSensorDataTable(object):
         :type sql:                      sqlite3.Connection
         """
         self._sql = sql
+        self._sql.row_factory = sqlite3.Row
 
         self._sql.execute(" \
             CREATE TABLE IF NOT EXISTS CombiSensorData \
@@ -584,6 +587,7 @@ class _WeatherDataTable(object):
         :type sql:                      sqlite3.Connection
         """
         self._sql = sql
+        self._sql.row_factory = sqlite3.Row
 
         self._sql.execute(" \
             CREATE TABLE IF NOT EXISTS WeatherData \
@@ -726,6 +730,7 @@ class _CombiSensorDefinitionTable(object):
         :type sql:                      sqlite3.Connection
         """
         self._sql = sql
+        self._sql.row_factory = sqlite3.Row
 
         self._sql.execute(" \
             CREATE TABLE IF NOT EXISTS CombiSensor \

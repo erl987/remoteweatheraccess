@@ -18,11 +18,29 @@ import os
 import sqlite3
 import unittest
 import datetime
+from datetime import timedelta
 
 from tests.builder_acessors import *
-from weathernetwork.common.datastructures import WeatherStationMetadata, WeatherStationDataset, WindSensorData
-from weathernetwork.server._sqldatabase_impl import _WeatherStationTable, _WindSensorTable
+from weathernetwork.common.datastructures import WeatherStationMetadata, WeatherStationDataset, WindSensorData, \
+    RainSensorData
+from weathernetwork.server._sqldatabase_impl import _WeatherStationTable, _WindSensorTable, _RainSensorTable
 from weathernetwork.server.exceptions import NotExistingError, AlreadyExistingError
+
+
+def some_time():
+    return datetime.datetime(2016, 11, 10, 19, 20, 15)
+
+
+def some_time_before():
+    return datetime.datetime(2016, 11, 1, 0, 0, 0)
+
+
+def some_other_time_before():
+    return datetime.datetime(2016, 11, 3, 15, 30, 15)
+
+
+def some_time_afterwards():
+    return datetime.datetime(2016, 12, 1, 0, 0, 0)
 
 
 class Station:
@@ -130,20 +148,40 @@ def wind_sensor_object():
     return WindSensorDataset()
 
 
-def some_time():
-    return datetime.datetime(2016, 11, 10, 19, 20, 15)
+class RainSensorDataset:
+    """Test object builder"""
+    def __init__(self):
+        self._time = datetime.datetime(2016, 12, 15, 13, 30, 45)
+        self._amount = 9.6
+        self._begin_time = self._time - timedelta(minutes=10)
+
+    def with_end_time(self, time):
+        self._time = time
+        self._begin_time = some_time() - timedelta(minutes=10)
+        return self
+
+    def with_begin_time(self, time):
+        self._begin_time = time
+        return self
+
+    def with_amount(self, amount):
+        self._amount = amount
+        return self
+
+    def build(self):
+        weather_dataset = WeatherStationDataset(self._time)
+        rain_sensor_data = RainSensorData(
+            self._amount,
+            self._begin_time
+        )
+        weather_dataset.add_sensor(rain_sensor_data)
+
+        return weather_dataset
 
 
-def some_time_before():
-    return datetime.datetime(2016, 11, 1, 0, 0, 0)
-
-
-def some_other_time_before():
-    return datetime.datetime(2016, 11, 3, 15, 30, 15)
-
-
-def some_time_afterwards():
-    return datetime.datetime(2016, 12, 1, 0, 0, 0)
+def rain_sensor_object():
+    """Test object factory"""
+    return RainSensorDataset()
 
 
 def database_object():
@@ -402,6 +440,129 @@ class TestSQLWindSensorTable(unittest.TestCase):
 
         # then:
             self.assertTrue(not got_sensor_data)
+
+
+class TestSQLRainSensorTable(unittest.TestCase):
+    def setUp(self):
+        self._sql = database_object()
+
+    def tearDown(self):
+        self._sql.close()
+
+    def test_add_rain_sensor_data(self):
+        # given:
+        rain_sensor_table = _RainSensorTable(self._sql)
+        station_id = "TES"
+        sensor_data = [a(rain_sensor_object().with_end_time(some_time()))]
+
+        # when:
+        with self._sql:
+            rain_sensor_table.add(station_id, sensor_data)
+            # TODO: it is a design weakness that we do not know from which timepoints the data actually is, this is true for all of these get_data() methods
+            got_sensor_data = rain_sensor_table.get_data(station_id, some_time_before(), some_time_afterwards())
+
+        # then:
+            for got_data_line, data_line in zip(got_sensor_data, sensor_data):
+                self.assertEqual(got_data_line, data_line.get_sensor_object(RainSensorData.RAIN))
+
+    def test_add_empty_rain_sensor_data(self):
+        # given:
+        rain_sensor_table = _RainSensorTable(self._sql)
+        station_id = "TES"
+
+        # when:
+        with self._sql:
+            rain_sensor_table.add(station_id, [])
+            got_sensor_data = rain_sensor_table.get_data(station_id, some_time_before(), some_time_afterwards())
+
+        # then:
+            self.assertTrue(not got_sensor_data)
+
+    def test_add_rain_sensor_data_with_invalid_begin_time(self):
+        # given:
+        rain_sensor_table = _RainSensorTable(self._sql)
+        station_id = "TES"
+
+        # when:
+        invalid_sensor_data = \
+            [a(rain_sensor_object().with_end_time(some_time()).with_begin_time(some_time_afterwards()))]
+
+        # then:
+        with self._sql:
+            self.assertRaises(ValueError, rain_sensor_table.add, station_id, invalid_sensor_data)
+
+    def test_add_overlapping_rain_sensor_data(self):
+        # given:
+        rain_sensor_table = _RainSensorTable(self._sql)
+        station_id = "TES"
+        sensor_data = [a(rain_sensor_object().with_end_time(some_time()))]
+
+        # when:
+        with self._sql:
+            rain_sensor_table.add(station_id, sensor_data)
+
+        # then:
+            self.assertRaises(AlreadyExistingError, rain_sensor_table.add, station_id, sensor_data)
+
+    def test_replace_rain_sensor_data(self):
+        # given:
+        rain_sensor_table = _RainSensorTable(self._sql)
+        station_id = "TES"
+        sensor_data = [a(rain_sensor_object().with_end_time(some_time()))]
+        other_sensor_data = a(rain_sensor_object().with_amount(3.9).with_end_time(some_time()))
+
+        # when:
+        with self._sql:
+            rain_sensor_table.add(station_id, sensor_data)
+            rain_sensor_table.replace(station_id, other_sensor_data)
+            got_sensor_data = rain_sensor_table.get_data(station_id, some_time_before(), some_time_afterwards())
+
+        # then:
+            self.assertEqual(len(got_sensor_data), 1)
+            self.assertEqual(got_sensor_data[0], other_sensor_data.get_sensor_object(RainSensorData.RAIN))
+
+    def test_replace_rain_sensor_data_with_invalid_station(self):
+        # given:
+        rain_sensor_table = _RainSensorTable(self._sql)
+        station_id = "TES"
+        sensor_data = [a(rain_sensor_object().with_end_time(some_time()))]
+        other_sensor_data = a(rain_sensor_object().with_amount(3.9).with_end_time(some_time()))
+
+        # when:
+        with self._sql:
+            rain_sensor_table.add(station_id, sensor_data)
+
+        # then:
+            self.assertRaises(NotExistingError, rain_sensor_table.replace, "TES2", other_sensor_data)
+
+    def test_get_rain_sensor_data_out_of_range(self):
+        # given:
+        rain_sensor_table = _RainSensorTable(self._sql)
+        station_id = "TES"
+        sensor_data = [a(rain_sensor_object().with_end_time(some_time()))]
+
+        # when:
+        with self._sql:
+            rain_sensor_table.add(station_id, sensor_data)
+            got_sensor_data = rain_sensor_table.get_data(station_id, some_time_before(), some_other_time_before())
+
+        # then:
+            self.assertTrue(not got_sensor_data)
+
+    def test_get_rain_sensor_data_with_invalid_station(self):
+        # given:
+        rain_sensor_table = _RainSensorTable(self._sql)
+        station_id = "TES"
+        sensor_data = [a(rain_sensor_object().with_end_time(some_time()))]
+
+        # when:
+        with self._sql:
+            rain_sensor_table.add(station_id, sensor_data)
+            got_sensor_data = rain_sensor_table.get_data("TES2", some_time_before(), some_time_afterwards())
+
+            # then:
+            self.assertTrue(not got_sensor_data)
+
 
 if __name__ == '__main__':
     unittest.main()
