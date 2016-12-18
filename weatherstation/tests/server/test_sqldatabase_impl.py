@@ -22,9 +22,9 @@ from datetime import timedelta
 
 from tests.builder_acessors import *
 from weathernetwork.common.datastructures import WeatherStationMetadata, WeatherStationDataset, WindSensorData, \
-    RainSensorData, CombiSensorData
+    RainSensorData, CombiSensorData, BaseStationSensorData
 from weathernetwork.server._sqldatabase_impl import _WeatherStationTable, _WindSensorTable, _RainSensorTable, \
-    _CombiSensorDataTable, _CombiSensorDefinitionTable
+    _CombiSensorDataTable, _CombiSensorDefinitionTable, _WeatherDataTable
 from weathernetwork.server.exceptions import NotExistingError, AlreadyExistingError
 
 
@@ -243,6 +243,41 @@ def database_object():
         os.remove(db_file)  # removes an already existing database file
 
     return sqlite3.connect(db_file, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
+
+
+class WeatherDataset:
+    """Test object builder"""
+    def __init__(self):
+        self._time = datetime.datetime(2016, 12, 15, 13, 30, 45)
+        self._pressure = 1308.5
+        self._uv = 5.7
+
+    def with_time(self, time):
+        self._time = time
+        return self
+
+    def with_pressure(self, pressure):
+        self._pressure = pressure
+        return self
+
+    def with_uv(self, uv):
+        self._uv = uv
+        return self
+
+    def build(self):
+        weather_dataset = WeatherStationDataset(self._time)
+        base_station_sensor_data = BaseStationSensorData(
+            self._pressure,
+            self._uv
+        )
+        weather_dataset.add_sensor(base_station_sensor_data)
+
+        return weather_dataset
+
+
+def weather_data_object():
+    """Test object factory"""
+    return WeatherDataset()
 
 
 class TestSQLWeatherStationTable(unittest.TestCase):
@@ -726,6 +761,153 @@ class TestSQLCombiSensorDataTable(unittest.TestCase):
 
         # then:
             self.assertTrue(not got_sensor_data)
+
+
+class TestSQLWeatherDataTable(unittest.TestCase):
+    def setUp(self):
+        self._sql = database_object()
+        self._station_id = "TES"
+        weather_station_table = _WeatherStationTable(self._sql)
+        weather_station_table.add(
+            WeatherStationMetadata(self._station_id, "Device 1", "Location 1", 60.4, -39.9, 121.2, 1.0)
+        )
+
+    def tearDown(self):
+        self._sql.close()
+
+    def test_add_weather_data(self):
+        # given:
+        weather_data_table = _WeatherDataTable(self._sql)
+        weather_data = [a(weather_data_object().with_time(some_time()))]
+
+        # when:
+        with self._sql:
+            weather_data_table.add(self._station_id, weather_data)
+            got_times, got_sensor_data = weather_data_table.get_data(
+                self._station_id, some_time_before(), some_time_afterwards()
+            )
+
+        # then:
+            for got_data_line, data_line in zip(got_sensor_data, weather_data):
+                self.assertEqual(got_data_line, data_line.get_sensor_object(BaseStationSensorData.BASE_STATION))
+
+    def test_add_empty_weather_data(self):
+        # given:
+        weather_data_table = _WeatherDataTable(self._sql)
+
+        # when:
+        with self._sql:
+            weather_data_table.add(self._station_id, [])
+            got_times, got_sensor_data = weather_data_table.get_data(
+                self._station_id, some_time_before(), some_time_afterwards()
+            )
+
+        # then:
+            self.assertTrue(not got_times)
+            self.assertTrue(not got_sensor_data)
+
+    def test_add_weather_data_to_not_existing_station(self):
+        # given:
+        weather_data_table = _WeatherDataTable(self._sql)
+        weather_data = [a(weather_data_object().with_time(some_time()))]
+
+        # when:
+        other_station_id = "TES2"
+
+        # then:
+        with self._sql:
+            self.assertRaises(NotExistingError, weather_data_table.add, other_station_id, weather_data)
+
+    def test_add_weather_data_twice(self):
+        # given:
+        weather_data_table = _WeatherDataTable(self._sql)
+        weather_data = [a(weather_data_object().with_time(some_time()))]
+
+        # when:
+        with self._sql:
+            weather_data_table.add(self._station_id, weather_data)
+
+        # then:
+            self.assertRaises(AlreadyExistingError, weather_data_table.add, self._station_id, weather_data)
+
+    def test_replace_weather_data(self):
+        # given:
+        weather_data_table = _WeatherDataTable(self._sql)
+        weather_data = [a(weather_data_object().with_time(some_time()))]
+        other_weather_data = a(weather_data_object().with_time(some_time()).with_pressure(998.5))
+
+        # when:
+        with self._sql:
+            weather_data_table.add(self._station_id, weather_data)
+            weather_data_table.replace(self._station_id, other_weather_data)
+            got_times, got_weather_data = weather_data_table.get_data(
+                self._station_id, some_time_before(), some_time_afterwards()
+            )
+
+        # then:
+            other_base_data = other_weather_data.get_sensor_object(BaseStationSensorData.BASE_STATION)
+            self.assertEqual(len(got_weather_data), 1)
+            self.assertEqual(
+                got_weather_data[0],
+                other_weather_data.get_sensor_object(BaseStationSensorData.BASE_STATION)
+            )
+
+    def test_replace_weather_data_with_invalid_station(self):
+        # given:
+        weather_data_table = _WeatherDataTable(self._sql)
+        weather_data = [a(weather_data_object().with_time(some_time()))]
+        other_weather_data = a(weather_data_object().with_time(some_time()).with_pressure(998.5))
+
+        # when:
+        with self._sql:
+            weather_data_table.add(self._station_id, weather_data)
+
+        # then:
+            self.assertRaises(NotExistingError, weather_data_table.replace, "TES2", other_weather_data)
+
+    def test_remove_weather_data(self):
+        # given:
+        weather_data_table = _WeatherDataTable(self._sql)
+        weather_data = [a(weather_data_object().with_time(some_time()))]
+
+        # when:
+        with self._sql:
+            weather_data_table.add(self._station_id, weather_data)
+            num_removed = weather_data_table.remove(self._station_id, some_time())
+            got_times, *rest = weather_data_table.get_data(
+                self._station_id, some_time_before(), some_time_afterwards()
+            )
+
+        # then:
+            self.assertEqual(num_removed, 1)
+            self.assertTrue(not got_times)
+
+    def test_remove_not_existing_weather_data(self):
+        # given:
+        weather_data_table = _WeatherDataTable(self._sql)
+        weather_data = [a(weather_data_object().with_time(some_time()))]
+
+        # when:
+        with self._sql:
+            weather_data_table.add(self._station_id, weather_data)
+            num_removed = weather_data_table.remove(self._station_id, some_time_afterwards())
+
+        # then:
+            self.assertEqual(num_removed, 0)
+
+    def test_get_weather_data_out_of_range(self):
+        # given:
+        weather_data_table = _WeatherDataTable(self._sql)
+        weather_data = [a(weather_data_object().with_time(some_time()))]
+
+        # when:
+        with self._sql:
+            weather_data_table.add(self._station_id, weather_data)
+            got_time, *rest = weather_data_table.get_data(self._station_id, some_time_before(), some_other_time_before())
+
+        # then:
+            self.assertTrue(not got_time)
+
 
 if __name__ == '__main__':
     unittest.main()
