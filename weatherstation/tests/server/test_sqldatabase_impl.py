@@ -537,7 +537,7 @@ class TestSQLRainSensorTable(unittest.TestCase):
         rain_sensor_table = _RainSensorTable(self._sql)
         station_id = "TES"
         sensor_data = [a(rain_sensor_object().with_end_time(some_time())),
-                        a(rain_sensor_object().with_end_time(some_time() + timedelta(minutes=10)))]
+                       a(rain_sensor_object().with_end_time(some_time() + timedelta(minutes=10)))]
 
         # when:
         with self._sql:
@@ -709,7 +709,7 @@ class TestSQLCombiSensorDataTable(unittest.TestCase):
         combi_sensor_table = _CombiSensorDataTable(self._sql)
         sensor_data = [a(combi_sensor_object().with_time(some_time()).with_description(self._description))]
         other_sensor_dataset = a(combi_sensor_object().with_time(some_time()).with_temperature(-2.3).
-                               with_description(self._description))
+                                 with_description(self._description))
 
         with self._sql:
             available_combi_sensor_ids = self._combi_sensor_definition_table.get_combi_sensor_ids()
@@ -730,7 +730,7 @@ class TestSQLCombiSensorDataTable(unittest.TestCase):
         combi_sensor_table = _CombiSensorDataTable(self._sql)
         sensor_data = [a(combi_sensor_object().with_time(some_time()).with_description(self._description))]
         other_sensor_dataset = a(combi_sensor_object().with_time(some_time()).with_temperature(-2.3).
-                               with_description(self._description))
+                                 with_description(self._description))
 
         with self._sql:
             available_combi_sensor_ids = self._combi_sensor_definition_table.get_combi_sensor_ids()
@@ -845,7 +845,6 @@ class TestSQLWeatherDataTable(unittest.TestCase):
             )
 
         # then:
-            other_base_data = other_weather_data.get_sensor_object(BaseStationSensorData.BASE_STATION)
             self.assertEqual(len(got_weather_data), 1)
             self.assertEqual(
                 got_weather_data[0],
@@ -903,11 +902,91 @@ class TestSQLWeatherDataTable(unittest.TestCase):
         # when:
         with self._sql:
             weather_data_table.add(self._station_id, weather_data)
-            got_time, *rest = weather_data_table.get_data(self._station_id, some_time_before(), some_other_time_before())
+            got_time, *rest = weather_data_table.get_data(self._station_id, some_time_before(),
+                                                          some_other_time_before())
 
         # then:
             self.assertTrue(not got_time)
 
+
+a_sensor_id = "OUT1"
+a_description = "Outdoor sensor 1"
+another_sensor_id = "OUT2"
+another_description = "Alternative description"
+
+
+class TestSQLCombiSensorDefinitionTable(unittest.TestCase):
+    def setUp(self):
+        self._sql = database_object()
+
+    def tearDown(self):
+        self._sql.close()
+
+    def test_add_combi_sensor(self):
+        # given:
+        combi_sensor_definition_table = _CombiSensorDefinitionTable(self._sql)
+
+        # when:
+        with self._sql:
+            combi_sensor_definition_table.add(a_sensor_id, a_description)
+            combi_sensor_definition_table.add(another_sensor_id, another_description)
+            got_sensor_definitions = combi_sensor_definition_table.get_combi_sensor_ids()
+            got_sensor_descriptions = combi_sensor_definition_table.get_sensor_descriptions()  # type: dict
+
+        # then:
+            self.assertEqual(got_sensor_definitions, [a_sensor_id, another_sensor_id])
+            self.assertEqual(list(got_sensor_descriptions.values()), [a_description, another_description])
+
+    def test_add_already_existing_combi_sensor(self):
+        # given:
+        combi_sensor_definition_table = _CombiSensorDefinitionTable(self._sql)
+
+        # when:
+        with self._sql:
+            combi_sensor_definition_table.add(a_sensor_id, a_description)
+
+        # then:
+            self.assertRaises(AlreadyExistingError, combi_sensor_definition_table.add, a_sensor_id, a_description)
+
+    def test_replace_combi_sensor(self):
+        # given:
+        combi_sensor_definition_table = _CombiSensorDefinitionTable(self._sql)
+
+        # when:
+        with self._sql:
+            combi_sensor_definition_table.add(a_sensor_id, a_description)
+            combi_sensor_definition_table.replace(a_sensor_id, another_description)
+
+            got_sensor_definitions = combi_sensor_definition_table.get_combi_sensor_ids()
+            got_sensor_descriptions = combi_sensor_definition_table.get_sensor_descriptions()  # type: dict
+
+        # then:
+            self.assertEqual(got_sensor_definitions, [a_sensor_id])
+            self.assertEqual(list(got_sensor_descriptions.values()), [another_description])
+
+    def test_replace_not_existing_combi_sensor(self):
+        # given:
+        combi_sensor_definition_table = _CombiSensorDefinitionTable(self._sql)
+
+        # when:
+        with self._sql:
+            combi_sensor_definition_table.add(a_sensor_id, a_description)
+
+        # then:
+            self.assertRaises(NotExistingError, combi_sensor_definition_table.replace,
+                              another_sensor_id, another_description)
+
+    def test_remove_combi_sensor(self):
+        # given:
+        combi_sensor_definition_table = _CombiSensorDefinitionTable(self._sql)
+
+        # when:
+        with self._sql:
+            combi_sensor_definition_table.add(a_sensor_id, a_description)
+            combi_sensor_definition_table.remove(a_sensor_id)
+
+        # then:
+            self.assertFalse(combi_sensor_definition_table.exists(a_sensor_id))
 
 if __name__ == '__main__':
     unittest.main()

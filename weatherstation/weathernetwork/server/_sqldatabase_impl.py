@@ -770,7 +770,7 @@ class _CombiSensorDefinitionTable(object):
             raise AlreadyExistingError("The sensor ID already exists in the database")
         else:
             self._sql.execute(" \
-                INSERT OR IGNORE INTO CombiSensor ( \
+                INSERT INTO CombiSensor ( \
                     sensorID, \
                     description \
                 ) VALUES (?,?)",
