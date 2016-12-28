@@ -17,16 +17,15 @@
 import datetime
 import sqlite3
 
-from weathernetwork.common.datastructures import RainSensorData
 from weathernetwork.common.datastructures import WeatherStationDataset
 from weathernetwork.common.logging import MultiprocessLoggerProxy
-from weathernetwork.server.interface import IDatabaseService, IDatabaseServiceFactory
 from weathernetwork.server._sqldatabase_impl import _WeatherStationTable, _WindSensorTable, _RainSensorTable, \
     _CombiSensorDataTable, _WeatherDataTable, _CombiSensorDefinitionTable
+from weathernetwork.server.interface import IDatabaseService, IDatabaseServiceFactory
 
 
 class SQLDatabaseService(IDatabaseService):
-    """SQL weather database service"""
+    """SQL weather database service serving as a facade"""
 
     def __init__(self, db_file_name, logging_connection=None):
         """
@@ -105,7 +104,7 @@ class SQLDatabaseService(IDatabaseService):
 class SQLDatabaseServiceFactory(IDatabaseServiceFactory):
     """Factory for weather database services"""
 
-    def __init__(self, db_file_name, logging_connection):
+    def __init__(self, db_file_name, logging_connection=None):
         """
         Constructor.
 
@@ -215,16 +214,13 @@ class SQLWeatherDB(object):
         with self._sql:
             available_combi_sensor_ids = self._combi_sensor_definition_table.get_combi_sensor_ids()
             for dataset in data:
-                time = dataset.get_time()
-
                 # replace the dataset
                 self._base_station_data_table.replace(station_id, dataset)
                 self._rain_sensor_table.replace(station_id, dataset)
                 self._wind_sensor_table.replace(station_id, dataset)
                 combi_sensor_descriptions = self._combi_sensor_definition_table.get_sensor_descriptions()
                 self._combi_sensor_data_table.replace(station_id, dataset, available_combi_sensor_ids,
-                    combi_sensor_descriptions
-                )  # temperature / humidity
+                                                      combi_sensor_descriptions)  # temperature / humidity
 
     def remove_dataset(self, station_id, time):
         """
@@ -279,7 +275,6 @@ class SQLWeatherDB(object):
                 curr_dataset.add_sensor(wind)
 
                 datasets.append(curr_dataset)
-                is_first = False
 
         return datasets
 
