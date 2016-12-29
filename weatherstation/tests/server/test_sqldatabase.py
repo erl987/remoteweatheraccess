@@ -151,15 +151,19 @@ class TestSQLWeatherDB(unittest.TestCase):
         # then:
         self.assertRaises(NotExistingError, self._sql_database.add_dataset, other_station_id(), data)
 
-    def test_add_already_existing_data(self):
+    def test_add_dataset_with_implicit_overwriting(self):
         # given:
         data = a(weather_data_object())
+        other_data = a(weather_data_object().with_wind_sensor_data(WindSensorData(120.5, 150.9, 182.3, -0.2)))
 
         # when:
         self._sql_database.add_dataset(station_id(), data)
+        self._sql_database.add_dataset(station_id(), other_data)
+        got_data = self._sql_database.get_data_in_time_range(station_id(), some_time_before(), some_time_afterwards())
 
         # then:
-        self.assertRaises(AlreadyExistingError, self._sql_database.add_dataset, station_id(), data)
+        self.assertEqual(len(got_data), 1)
+        self.assertEqual(got_data[0], other_data)
 
     def test_replace_dataset(self):
         # given:

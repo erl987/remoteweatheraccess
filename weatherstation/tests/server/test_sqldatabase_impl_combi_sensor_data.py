@@ -135,23 +135,6 @@ class TestSQLCombiSensorDataTable(unittest.TestCase):
             for got_sensor_data_line, sensor_data_line in zip(got_sensor_data, sensor_data):
                 self.assertEqual(got_sensor_data_line, sensor_data_line.get_sensor_object(self._sensor_id))
 
-    def test_add_combi_sensor_data_to_existing_data(self):
-        # given:
-        combi_sensor_table = _CombiSensorDataTable(self._sql)
-        station_id = "TES"
-        sensor_data = [a(combi_sensor_object().with_time(some_time()).with_description(self._description))]
-
-        # when:
-        with self._sql:
-            available_combi_sensor_ids = self._combi_sensor_definition_table.get_combi_sensor_ids()
-            combi_sensor_descriptions = self._combi_sensor_definition_table.get_sensor_descriptions()
-            combi_sensor_table.add(station_id, available_combi_sensor_ids, combi_sensor_descriptions,
-                                   sensor_data)
-
-        # then:
-            self.assertRaises(AlreadyExistingError, combi_sensor_table.add, station_id, available_combi_sensor_ids,
-                              combi_sensor_descriptions, sensor_data)
-
     def test_replace_combi_sensor_data(self):
         # given:
         combi_sensor_table = _CombiSensorDataTable(self._sql)

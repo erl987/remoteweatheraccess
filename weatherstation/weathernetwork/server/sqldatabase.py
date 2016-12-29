@@ -45,11 +45,17 @@ class SQLDatabaseService(IDatabaseService):
 
     def add_data(self, message):
         """
-        Adss a dataset to the database.
+        Adds a dataset to the database.
         Note: Logging is only supported if the method is called from another than the main process.
+        If already data exists for the requested station and timepoint, it is replaced silently if this operation
+        is unambiguous.
 
         :param message:                 weather data message to be stored
         :type message:                  common.datastructures.WeatherMessage
+        :raise NotExistingError:        if a requested station or sensor ID is not existing in the database
+        :raise AlreadyExistingError:    if a dataset is already existing in the database for the given station,
+                                        time or sensor ID and the replacement would be ambiguous, in that case the
+                                        database remains unchanged
         """
         data = message.get_data()
         station_id = message.get_station_id()
@@ -171,15 +177,17 @@ class SQLWeatherDB(object):
         """
         Adds a new dataset to the database.
         Note: The performance is limited to about 50 commits/s. Add multiple rows at once for better performance.
-        If already data exists for the requested station, nothing is changed and an exception is thrown.
+        If already data exists for the requested station and timepoint, it is replaced silently if this operation
+        is unambiguous.
 
         :param station_id:              station ID
         :type station_id:               string
         :param data:                    data for (possibly several) timepoints
         :type data:                     list of common.datastructures.WeatherStationDataset
         :raise NotExistingError:        if a requested station or sensor ID is not existing in the database
-        :raise AlreadyExistingError:    if a dataset is already existing in the database for the given station and
-                                        time (and sensor ID)
+        :raise AlreadyExistingError:    if a dataset is already existing in the database for the given station,
+                                        time or sensor ID and the replacement would be ambiguous, in that case the
+                                        database remains unchanged
         """
         if not isinstance(data, list):
             data = [data]
@@ -199,7 +207,7 @@ class SQLWeatherDB(object):
 
     def replace_dataset(self, station_id, data):
         """
-        Replaces an existing dataset.
+        Replaces an existing dataset. For each station, timepoint and sensor ID already data needs to exist.
         Note: The performance is limited to about 50 commits/s. Add multiple rows at once for better performance.
 
         :param station_id:          station ID

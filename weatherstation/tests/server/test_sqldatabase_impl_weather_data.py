@@ -147,18 +147,6 @@ class TestSQLWeatherDataTable(unittest.TestCase):
         with self._sql:
             self.assertRaises(NotExistingError, weather_data_table.add, other_station_id, weather_data)
 
-    def test_add_weather_data_twice(self):
-        # given:
-        weather_data_table = _WeatherDataTable(self._sql)
-        weather_data = [a(weather_data_object().with_time(some_time()))]
-
-        # when:
-        with self._sql:
-            weather_data_table.add(self._station_id, weather_data)
-
-        # then:
-            self.assertRaises(AlreadyExistingError, weather_data_table.add, self._station_id, weather_data)
-
     def test_replace_weather_data(self):
         # given:
         weather_data_table = _WeatherDataTable(self._sql)

@@ -18,7 +18,7 @@ import sqlite3
 
 from weathernetwork.common import utilities
 from weathernetwork.common.datastructures import WeatherStationMetadata, WindSensorData, RainSensorData, \
-    CombiSensorData, BaseStationSensorData, WeatherStationDataset
+    CombiSensorData, BaseStationSensorData
 from weathernetwork.server.exceptions import AlreadyExistingError, NotExistingError
 
 
@@ -484,7 +484,6 @@ class _CombiSensorDataTable(object):
         :type combi_sensor_descriptions:        list of string
         :param data:                            dataset to be added
         :type data:                             list of common.datastructures.WeatherStationDataset
-        :raise AlreadyExistingError:            if a dataset for the specified station and time already exists
         :raise NotExistingError:                if a required component does not exist (for example: combi sensor)
         """
         for sensor_ID in available_combi_sensor_ids:
@@ -497,7 +496,8 @@ class _CombiSensorDataTable(object):
                     if combi_sensor_description:
                         if combi_sensor_descriptions[sensor_ID] != combi_sensor_description:
                             raise NotExistingError(
-                                "The combi sensor description of the new data differs from that stored in the database.")
+                                "The combi sensor description of the new data differs from that stored in the database."
+                            )
 
                     data_to_be_written.append((time, station_id, sensor_ID, temperature, humidity))
 
@@ -514,12 +514,7 @@ class _CombiSensorDataTable(object):
                                           data_to_be_written)
                 except sqlite3.Error as e:
                     if "NULL" in e.args[0].upper():
-                        raise NotExistingError("The combi sensor ID not exist in the database")
-                    elif "UNIQUE" in e.args[0].upper():
-                        raise AlreadyExistingError(
-                            "For the given combi sensor ID (%s), station ID (%s) and time (%s) "
-                            "already data exists in the database" % (sensor_ID, station_id,
-                                                                     str(time)))
+                        raise NotExistingError("The combi sensor ID does not exist in the database")
                     else:
                         raise
 
@@ -622,14 +617,13 @@ class _WeatherDataTable(object):
 
     def add(self, station_id, data):
         """
-        Adds new datasets to the table in the database.
+        Adds new datasets to the table in the database, existing datasets are replaced.
 
         :param station_id:              station ID
         :type station_id:               string
         :param data:                    datasets to be added to the table
         :type data:                     list of common.datastructures.WeatherStationDataset
         :raise NotExistingError:        if the requested station does not exist in the database
-        :raise AlreadyExistingError:    if already a dataset exists for requested station and time
         """
         # obtain the base station data
         data_to_be_written = []
@@ -640,8 +634,9 @@ class _WeatherDataTable(object):
 
         if data_to_be_written:
             try:
+                # if a dataset exists, it will be replaced and all referenced datasets will be deleted
                 self._sql.executemany(" \
-                    INSERT INTO WeatherData ( \
+                    REPLACE INTO WeatherData ( \
                         time, \
                         stationID, \
                         pressure, \
@@ -651,10 +646,6 @@ class _WeatherDataTable(object):
             except sqlite3.Error as e:
                 if "NULL" in e.args[0].upper():
                     raise NotExistingError("The station does not exist in the database")
-                elif "UNIQUE" in e.args[0].upper():
-                    raise AlreadyExistingError(
-                        "For the given station (%s), a dataset for the given time (%s) already "
-                        "exists in the database" % (station_id, str(time)))
                 else:
                     raise
 
