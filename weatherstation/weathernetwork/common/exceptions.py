@@ -75,8 +75,17 @@ class RunInNotAllowedProcessError(Error):
 class DelayedException(Exception):
     """Exception base class that can be reraised in other processes including the traceback"""
     def __init__(self, ee):
+        """
+        Constructor.
+
+        :param ee:      exception to be reraised
+        :type ee:       Exception
+        """
         self.ee = ee
         __,  __, self.tb = sys.exc_info()
 
     def re_raise(self):
+        """
+        Reraises the exception with the original traceback now.
+        """
         raise self.ee.with_traceback(self.tb)
