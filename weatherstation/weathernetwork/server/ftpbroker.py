@@ -352,6 +352,14 @@ class FTPServerSideProxy(IServerSideProxy):
         self._proxy_process.join()
 
     def acknowledge_persistence(self, finished_id, logger):
+        """
+        Performs the acknowledgement of a successful finished message transfer to the client
+
+        :param finished_id:     id of the finished message
+        :type finished_id:      int
+        :param logger:          logging system of the server
+        :type logger:           common.logging.IMultiProcessLogger
+        """
         self._broker.send_persistence_acknowledgement(finished_id, logger)
 
     def _exception_handler(self, exception):

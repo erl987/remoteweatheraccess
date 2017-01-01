@@ -31,32 +31,25 @@ from datetime import datetime as dt
 from datetime import timedelta
 
 
-"""Generation of weather data plots.
-
-Functions:
-get_last_n_days_data:           Returns the data of the latest n days of the datasets stored in all PC-Wetterstation
-                                compatible CSV-files in the specified folder.
-plot_of_last_days:              Plots the weather data of the last n days from all data available in a defined folder.
-
-Global variables:
-delta:                          Assumed width of a single y-axis label set (in pixel).
-"""
-
-delta = 70
+_DELTA = 70  # assumed width of a single y-axis label set (in pixel)
 
 
 def get_last_n_days_data(num_days, db_file_name, station_id, last_time=None):
-    """Returns the data of the latest n days from the specified database.
-    
-    Args:
-    num_days:                   The data for the last 'num_days' before the last entry in the data file will be
+    """
+    Returns the data of the latest n days from the specified database.
+
+    :param num_days:            the data for the last 'num_days' before the last entry in the data file will be
                                 returned.
-    db_file_name:               Name and path of the SQL-database file
-    station_ID:					ID of the required station
-    
-    Returns:                             
-    data:                       Weather dataset of the last 'num_days' before the the last entry in the specified folder
+    :type num_days:             int
+    :param db_file_name:        name and path of the SQL-database file
+    :type db_file_name:         string
+    :param station_id:          id of the required station
+    :type station_id:           string
+    :param last_time:           timepoint of the last required data. If omitted, the last time of the data is used.
+    :type last_time:            datetime.datetime
+    :return:                    weather dataset of the last 'num_days' before the the last entry
                                 containing all sensors stored
+    :rtype:                     list of common.datastructures.WeatherStationDataset
     """
     # Read the required data from the database
     if not last_time:
@@ -70,19 +63,17 @@ def get_last_n_days_data(num_days, db_file_name, station_id, last_time=None):
 
 
 def get_scalings(min_max_sensors):
-    """Obtains the minimum and maximum scalings of the y-axis for the sensors.
-    
-    Args:
-    min_max_sensors:            Dict containing the minimum and maximum values of the sensors in the graph.
-                                Format: min_max_sensors[ sensor_name ]['min'/'max'].
-    
-    Returns:                             
-    num_ticks:                  Number of ticks of the y-axis. 
-    min_max_axis:               Dict containing the minimum and maximum values for all sensors on the axis.
-                                Format: min_max_axis[ sensor_name ]['min'/'max'].
-                                
-    Raises:
-    None
+    """
+    Obtains the minimum and maximum scalings of the y-axis for the sensors.
+
+    :param min_max_sensors:     containing the minimum and maximum values of the sensors in the graph.
+                                example: {"('baseStation', 'pressure')": {'max': 1018.4, 'min': 1018.4}}
+    :type min_max_sensors:      dict(string, dict(string, float))
+    :return:                    number of ticks of the y-axis.
+    :rtype:                     int
+    :return:                    containing the minimum and maximum values for all sensors on the axis.
+                                example: {"('baseStation', 'pressure')": {'max': 1018.4, 'min': 1018.4}}
+    :rtype:                     dict(string, dict(string, float))
     """
     delta_temp = 5.0  # degree C by definition
     delta_p = 5.0  # hPa by definition
@@ -148,25 +139,30 @@ def get_scalings(min_max_sensors):
 
 def plot_of_last_n_days(num_days, db_file_name, station_id, sensors_to_plot, graph_folder, graph_file_name,
                         is_save_to_fig, last_time=None):
-    """Plots the weather data of the last n days from all data available in a defined folder.
-    
-    Args:
-    num_days:                   Last 'num_days' before the last entry in the data file will be plotted.
-    sensors_to_plot:            List with all names of the sensors to be plotted. The names must be identical with
-                                the 'sensor_list' dictionary labels.
-    graph_folder:               Base folder where the graph plot file will be stored, the file is stored in a
-                                subfolder named by the station ID.
-    graph_file_name:            Name of the graph plot file. Any graphics format supported by MATPLOTLIB can be used,
+    """
+    Plots the weather data of the last n days from all data available in a defined folder.
+
+    :param num_days:            last 'num_days' before the last entry in the data file will be plotted
+    :type num_days:             int
+    :param db_file_name:        name of the SQL weather database file
+    :type db_file_name:         string
+    :param station_id:          id of the station
+    :type station_id:           string
+    :param sensors_to_plot:     sensors to be plotted (format: [('baseStation', 'pressure'), ...])
+    :type sensors_to_plot:      list of tuple
+    :param graph_folder:        base folder where the graph plot file will be stored, the file is stored in a
+                                subfolder named by the station ID
+    :type graph_folder:         string
+    :param graph_file_name:     name of the graph plot file. Any graphics format supported by MATPLOTLIB can be used,
                                 for example '.svg' or '.png'.
-    is_save_to_fig:             Flag stating if the graph will be written to file (True) or to a GUI (False)
-    
-    Returns:                             
-    num_plot_datasets:          Number of datasets plotted
-    first_plot_time:            Timepoint of the beginning of the plotted dataset
-    last_plot_time:             Timepoint of the end of the plotted dataset
-                                
-    Raises:
-    None
+    :type graph_file_name:      string
+    :param is_save_to_fig:      flag stating if the graph will be written to file (True) or to a GUI (False)
+    :type is_save_to_fig:       boolean
+    :param last_time:           timepoint of the last required data. If omitted, the last time of the data is used.
+    :type last_time:            datetime.datetime
+    :return:                    number of datasets plotted, timepoint of the beginning of the plotted dataset,
+                                timepoint of the end of the plotted dataset
+    :rtype:                     tuple(int, datetime.datetime, datetime.datetime)
     """
     # Find data for the last n days in the data folder
     data = get_last_n_days_data(num_days, db_file_name, station_id, last_time)
@@ -175,9 +171,9 @@ def plot_of_last_n_days(num_days, db_file_name, station_id, sensors_to_plot, gra
     y_axis_pos = []
     for index, sensor in enumerate(sensors_to_plot):
         if index % 2 == 0:
-            y_axis_pos.append(('left', -index / 2 * delta))
+            y_axis_pos.append(('left', -index / 2 * _DELTA))
         else:
-            y_axis_pos.append(('right', (index - 1) / 2 * delta))
+            y_axis_pos.append(('right', (index - 1) / 2 * _DELTA))
 
     # Generate figure
     plt.figure(figsize=[13.5, 6])
