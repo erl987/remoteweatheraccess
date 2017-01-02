@@ -25,7 +25,7 @@ class IServerSideProxy(metaclass=ABCMeta):
         Performs the acknowledgement of a successful finished message transfer to the client
 
         :param finished_id:     id of the finished message
-        :type finished_id:      int
+        :type finished_id:      str
         :param logger:          logging system of the server
         :type logger:           common.logging.IMultiProcessLogger
         """

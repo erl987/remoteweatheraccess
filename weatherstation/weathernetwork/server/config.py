@@ -15,6 +15,8 @@
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
 import configparser
+from pathlib import Path
+
 from weathernetwork.server.exceptions import InvalidConfigFileError
 from weathernetwork.server.interface import IIniConfigSection
 
@@ -510,6 +512,9 @@ class BaseWeatherServerIniFile(object):
         :param file_name:               name of the INI config file.
         :type file_name:                string
         """
+        if not Path(file_name).is_file():
+            raise InvalidConfigFileError("The file '{}' does not exist".format(file_name))
+
         self._config_file = configparser.ConfigParser()
         self._file_name = file_name
         self._old_optionxform = None
