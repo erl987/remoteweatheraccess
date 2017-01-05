@@ -15,28 +15,17 @@
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
 from datetime import datetime
-
-"""General utilities functions.
-
-Functions:
-is_float:                        Determines if a string is a number.
-floor_to_n:                     Floors a float to the next integer dividable by n.
-ceil_to_n:                      Ceils a float to the next integer dividable by n.
-"""
 import math
 
 
 def is_float(string):
-    """Determines if a string is a number.
-    
-    Args:
-    string:                     String to be checked.   
-    
-    Returns:                             
-    result:                 True if the string is a number, False otherwise.
-                                
-    Raises:
-    None
+    """
+    Determines if a string is a number.
+
+    :param string:              string to be checked
+    :type string:               str
+    :return:                    True if the string is a number, False otherwise
+    :rtype:                     bool
     """
     try:
         float(string)
@@ -46,17 +35,15 @@ def is_float(string):
 
 
 def floor_to_n(val, n):
-    """Floors a float to the next integer dividable by n.
-    
-    Args:
-    val:                        Value to be floored.
-    n:                          The number will be floored to the next integer dividable by this number.
-    
-    Returns:                             
-    floord_val:                 Value floored to the next integer dividable by 'n'.
-                                
-    Raises:
-    None
+    """
+    Floors a float to the next integer dividable by n.
+
+    :param val:                 value to be floored
+    :type val:                  float
+    :param n:                   the number will be floored to the next integer dividable by this number
+    :type n:                    int
+    :return:                    value floored to the next integer dividable by 'n'
+    :rtype:                     float
     """
     floored_val = math.floor(val / n) * n
 
@@ -64,17 +51,15 @@ def floor_to_n(val, n):
 
 
 def ceil_to_n(val, n):
-    """Ceils a float to the next integer dividable by n.
-    
-    Args:
-    val:                        Value to be ceiled.
-    n:                          The number will be ceiled to the next integer dividable by this number.
-    
-    Returns:                             
-    ceiled_val:                 Value ceiled to the next integer dividable by 'n'.
-                                
-    Raises:
-    None
+    """
+    Ceils a float to the next integer dividable by n.
+
+    :param val:                 value to be ceiled
+    :type val:                  float
+    :param n:                   the number will be ceiled to the next integer dividable by this number
+    :type n:                    int
+    :return:                    value ceiled to the next integer dividable by 'n'
+    :rtype:                     float
     """
     ceiled_val = math.ceil(val / n) * n
 
@@ -110,12 +95,24 @@ def consolidate_ranges(ranges):
 class Comparable(object):
     """Mix-in class making an object comparable"""
     def __eq__(self, other):
-        """Equality operator"""
+        """
+        Equality operator.
+
+        :param other:           object to be compared
+        :return:                True if the object are equal, False otherwise
+        :rtype:                 bool
+        """
         if isinstance(other, self.__class__):
             return self.__dict__ == other.__dict__
         else:
             return False
 
     def __ne__(self, other):
-        """Non-equality operator"""
+        """
+        Non-equality operator.
+
+        :param other:           object to be compared
+        :return:                True if the objects are not equal, False otherwise
+        :rtype:                 bool
+        """
         return not self.__eq__(other)

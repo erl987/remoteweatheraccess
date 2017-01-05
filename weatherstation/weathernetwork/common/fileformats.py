@@ -35,7 +35,8 @@ class PCWetterstationFormatFile(object):
     _TIME = "time"  # constant describing a time of day (equivalent to the sensor IDs)
 
     def __init__(self, combi_sensor_ids):
-        """Constructor.
+        """
+        Constructor.
 
         :param combi_sensor_ids:                contains a list with all combi sensor IDs that should be present in the
                                                 file
@@ -69,7 +70,8 @@ class PCWetterstationFormatFile(object):
 
     @staticmethod
     def deletedatafiles(data_folder, data_file_list):
-        """Deletes all given files from a given folder.
+        """
+        Deletes all given files from a given folder.
 
         :param data_folder:                     folder where all given files should be deleted.
                                                 It can be a relative path to the current working directory.
@@ -84,7 +86,8 @@ class PCWetterstationFormatFile(object):
                 os.remove(file_path)
 
     def read(self, file_name, station_id, delta_time=10):
-        """Reads a PC-Wetterstation format file.
+        """
+        Reads a PC-Wetterstation format file.
 
         :param file_name:                       path and name of the data file. It can be a relative path to the
                                                 current working directory.
@@ -138,7 +141,8 @@ class PCWetterstationFormatFile(object):
             raise PCWetterstationFileParseError("Weather data file \"%s\" has invalid format: %s" % (file_name, str(e)))
 
     def _check_file_format(self, indices_list):
-        """Checks for the validity of the file format.
+        """
+        Checks for the validity of the file format.
 
         :param indices_list:                    list containing all (PC-Wetterstation internal) indices of the
                                                 sensors present in the file
@@ -160,7 +164,8 @@ class PCWetterstationFormatFile(object):
         return checked_indices_list
 
     def _parse_single_line(self, time, prev_time, data_dict):
-        """Parses the data from a single line in a PCWetterstation file to a WatherstationDataset-object.
+        """
+        Parses the data from a single line in a PCWetterstation file to a WatherstationDataset-object.
 
         :param time:                            timepoint for which the current data is valid
         :type time:                             datetime
@@ -200,7 +205,8 @@ class PCWetterstationFormatFile(object):
 
     @staticmethod
     def _parse_file_metadata(metadata, station_id):
-        """Parses the metadata information of a PCWetterstation format file.
+        """
+        Parses the metadata information of a PCWetterstation format file.
 
         :param metadata:                        Unparsed line from the PC-Wetterstation data file containing the
                                                 metadata
@@ -246,7 +252,8 @@ class PCWetterstationFormatFile(object):
         return station_metadata, rain_counter_base
 
     def write(self, file_path, data, station_metadata):
-        """Writes a PC-Wetterstation format data file. For each month a single file is written
+        """
+        Writes a PC-Wetterstation format data file. For each month a single file is written
         (following the file format standard)
 
         :param file_path:                       path where the data file will be written to
@@ -291,12 +298,13 @@ class PCWetterstationFormatFile(object):
 
     @staticmethod
     def _in_same_month(first_date, second_date):
-        """Determines if the two dates are within the same month.
+        """
+        Determines if the two dates are within the same month.
 
         :param first_date:                      first date to be compared
-        :type:                                  datetime
+        :type first_date:                       datetime
         :param second_date:                     second date to be compared
-        :type:                                  datetime
+        :type second_date:                      datetime
         :return:                                True if both dates are within the same month, fals otherwise
         :rtype:                                 boolean
         """
@@ -307,7 +315,8 @@ class PCWetterstationFormatFile(object):
 
     @staticmethod
     def _create_settings_header_line(station_metadata):
-        """Helper method for creating the settings header line of a PC-Wetterstation format file.
+        """
+        Helper method for creating the settings header line of a PC-Wetterstation format file.
 
         :param station_metadata:                station metadata to be written to a PC-Wetterstation station header line
         :type station_metadata:                 WeatherStationMetadata object
@@ -329,7 +338,8 @@ class PCWetterstationFormatFile(object):
 
     @staticmethod
     def _date_to_str(date):
-        """Performance efficient converting of a date object to a string.
+        """
+        Performance efficient converting of a date object to a string.
 
         :param date:                            date to be converted
         :type date:                             date
@@ -341,7 +351,8 @@ class PCWetterstationFormatFile(object):
 
     @staticmethod
     def _time_to_str(time):
-        """Performance efficient converting of a time object to a string.
+        """
+        Performance efficient converting of a time object to a string.
 
         :param time:                            time to be converted
         :type time:                             time
@@ -351,7 +362,8 @@ class PCWetterstationFormatFile(object):
         return str(time)[0:-3]  # removes the seconds
 
     def _get_line(self, dataset):
-        """Helper method for preparing a single data line to be written into a PC-Wetterstation format file.
+        """
+        Helper method for preparing a single data line to be written into a PC-Wetterstation format file.
         Also returns header lines describing the sensors.
 
         :param dataset:                         dataset to be converted into a PC-Wetterstation file data line

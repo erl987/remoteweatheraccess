@@ -26,7 +26,6 @@ from weathernetwork.server.interface import IDatabaseService, IDatabaseServiceFa
 
 class SQLDatabaseService(IDatabaseService):
     """SQL weather database service serving as a facade"""
-
     def __init__(self, db_file_name, logging_connection=None):
         """
         Constructor.
@@ -109,7 +108,6 @@ class SQLDatabaseService(IDatabaseService):
 
 class SQLDatabaseServiceFactory(IDatabaseServiceFactory):
     """Factory for weather database services"""
-
     def __init__(self, db_file_name, logging_connection=None):
         """
         Constructor.
@@ -144,7 +142,6 @@ class SQLWeatherDB(object):
     Persistent weather SQL-database.
     SQLlite can handle concurrency, i.e. multiple concurrent objects of the class are allowed at any time.
     """
-
     def __init__(self, db_file):
         """
         Constructor.

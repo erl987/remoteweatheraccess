@@ -22,7 +22,8 @@ from weathernetwork.server.config import WeatherPlotServiceIniFile
 
 
 def main():
-    """Plotting the weather data for the requested station taking the data from a SQL-database.
+    """
+    Plotting the weather data for the requested station taking the data from a SQL-database.
     
     Commandline arguments:
     station_ID to be plotted, configuration INI-file
@@ -64,7 +65,8 @@ def main():
                         num_plot_datasets,
                         first_plot_time,
                         last_plot_time
-                ))
+                    )
+                )
             except Exception as e:
                 logger.log(IMultiProcessLogger.ERROR, repr(e))
 

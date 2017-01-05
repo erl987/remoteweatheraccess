@@ -32,9 +32,9 @@ class MultiProcessConnector(object):
         """
         Constructor.
 
-        :param logging_queue:               Queue for sending log messages to the main logger process
+        :param logging_queue:               queue for sending log messages to the main logger process
         :type logging_queue:                multiprocessing.Queue
-        :param main_logger_pid:             Process ID of the main logger process
+        :param main_logger_pid:             process ID of the main logger process
         :type main_logger_pid:              integer
         """
         self._logging_queue = logging_queue
@@ -44,7 +44,7 @@ class MultiProcessConnector(object):
         """
         Obtains the queue for sending log messages to the main logger process.
 
-        :return:                            Queue for sending log messages
+        :return:                            queue for sending log messages
         :rtype:                             multiprocessing.Queue
         """
         return self._logging_queue
@@ -53,7 +53,7 @@ class MultiProcessConnector(object):
         """
         Obtains the process ID of the main logger process.
 
-        :return:                            Process ID of the main logger process
+        :return:                            process ID of the main logger process
         :rtype:                             integer
         """
         return self._main_logger_pid
@@ -80,9 +80,10 @@ class MultiProcessLogger(IMultiProcessLogger):
     def __init__(self, is_print_to_screen, log_config=None):
         """
         Constructor.
+
         :param is_print_to_screen:          flag stating if the log message is additionally printed to the screen
         :type is_print_to_screen:           boolean
-        :param log_config:                  Configuration of the log. If omitted, the default log system of the
+        :param log_config:                  configuration of the log. If omitted, the default log system of the
                                             platform is used.
         :type log_config:                   LogConfig object
         :raise FileNotFoundError:           if no log file is configured and the operating system has no default
@@ -137,6 +138,7 @@ class MultiProcessLogger(IMultiProcessLogger):
     def get_connection(self):
         """
         Returns the connection that can be used to feed messages from proxies in other processes to the logger process.
+
         :return:                            queue connecting a MultiProcessLoggerProxy in another process to the current
                                             logger
         :rtype:                             multiprocessing.Queue
@@ -175,6 +177,7 @@ class MultiProcessLogger(IMultiProcessLogger):
     def log(self, log_level, message):
         """
         Logging a message.
+
         :param log_level:           log level
         :type log_level:            Python log levels
         :param message:             log message
@@ -192,6 +195,7 @@ class MultiProcessLogger(IMultiProcessLogger):
     def _print_to_screen(timestamp, message):
         """
         Prints a log message to the screen.
+
         :param timestamp:           timestamp of the message
         :type timestamp:            human-readable string
         :param message:             message
@@ -207,7 +211,7 @@ class MultiprocessLoggerProxy(IMultiProcessLogger):
     def __init__(self, logging_connection):
         """Constructor. An existing logging queue for that process will be replaced by the new queue.
 
-        :param logging_connection:  Queue connecting the proxy to the logger within the logging process
+        :param logging_connection:  queue connecting the proxy to the logger within the logging process
         :type logging_connection:   MultiProcessConnector
         """
         # this proxy must not be used from the main logger process
@@ -231,6 +235,7 @@ class MultiprocessLoggerProxy(IMultiProcessLogger):
     def log(self, log_level, message):
         """
         Logging a message.
+
         :param log_level:           log level
         :type log_level:            Python log levels
         :param message:             log message

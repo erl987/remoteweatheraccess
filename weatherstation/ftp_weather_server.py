@@ -23,7 +23,8 @@ from multiprocessing import Queue
 
 
 def main():
-    """Weather server listening for data via FTP.
+    """
+    Weather server listening for data via FTP.
 
     Command line argument:
     configuration INI-file
