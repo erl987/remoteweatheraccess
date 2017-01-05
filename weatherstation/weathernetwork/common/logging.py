@@ -141,7 +141,7 @@ class MultiProcessLogger(IMultiProcessLogger):
 
         :return:                            queue connecting a MultiProcessLoggerProxy in another process to the current
                                             logger
-        :rtype:                             multiprocessing.Queue
+        :rtype:                             MultiProcessConnector
         """
         with self._lock:
             connection = MultiProcessConnector(self._logging_queue, self._main_logger_pid)

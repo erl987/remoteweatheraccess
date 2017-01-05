@@ -266,7 +266,7 @@ class _WindSensorTable(object):
                                               (station_id, first_time, last_time)).fetchall()
 
         wind_data = []
-        for wind_data_for_timepoint in wind_data_from_db:
+        for wind_data_for_timepoint in wind_data_from_db:  # type: dict
             wind_data.append(WindSensorData(wind_data_for_timepoint["speed"],
                                             wind_data_for_timepoint["gusts"],
                                             wind_data_for_timepoint["direction"],
@@ -417,7 +417,7 @@ class _RainSensorTable(object):
         rain_data = []
         cumulated_rain = 0
         is_first = True
-        for rain_data_for_timepoint in rain_data_from_db:
+        for rain_data_for_timepoint in rain_data_from_db:  # type: dict
             end_time = rain_data_for_timepoint["endTime"]
             if is_first:
                 first_time_with_data = end_time  # only the rain fallen from the first end time is taken into account
@@ -480,8 +480,8 @@ class _CombiSensorDataTable(object):
         :type station_id:                       string
         :param available_combi_sensor_ids:      list of all available combi sensor IDs
         :type available_combi_sensor_ids:       list of string
-        :param combi_sensor_descriptions:       list of the descriptions of all available combi sensors
-        :type combi_sensor_descriptions:        list of string
+        :param combi_sensor_descriptions:       descriptions of all available combi sensors
+        :type combi_sensor_descriptions:        dict(string, string)
         :param data:                            dataset to be added
         :type data:                             list of common.datastructures.WeatherStationDataset
         :raise NotExistingError:                if a required component does not exist (for example: combi sensor)
@@ -528,8 +528,8 @@ class _CombiSensorDataTable(object):
         :type dataset:                          common.datastructures.WeatherStationDataset
         :param available_combi_sensor_ids:      list of all available combi sensor IDs
         :type available_combi_sensor_ids:       list of string
-        :param combi_sensor_descriptions:       list of the descriptions of all available combi sensors
-        :type combi_sensor_descriptions:        list of string
+        :param combi_sensor_descriptions:       descriptions of all available combi sensors
+        :type combi_sensor_descriptions:        dict(string, string)
         :raise NotExistingError:                if a required component does not exist (for example: station ID)
         """
         time = dataset.get_time()
@@ -574,7 +574,7 @@ class _CombiSensorDataTable(object):
                                                (station_id, time)).fetchall()
 
         combi_data = []
-        for sensor_data in combi_data_from_db:
+        for sensor_data in combi_data_from_db:  # type: dict
             sensor_id = sensor_data["sensorID"]
             combi_data.append(CombiSensorData(
                 sensor_id,
@@ -718,7 +718,7 @@ class _WeatherDataTable(object):
                                               (station_id, first_time, last_time)).fetchall()
         times = []
         base_data = []
-        for base_data_for_timepoint in base_data_from_db:
+        for base_data_for_timepoint in base_data_from_db:  # type: dict
             times.append(base_data_for_timepoint["time"])
             base_data.append(BaseStationSensorData(base_data_for_timepoint["pressure"], base_data_for_timepoint["UV"]))
 
@@ -816,7 +816,7 @@ class _CombiSensorDefinitionTable(object):
         combi_sensor_rows = self._sql.execute(" \
             SELECT sensorID \
             FROM CombiSensor \
-            ORDER BY sensorID").fetchall()
+            ORDER BY sensorID").fetchall()  # type: list of dict
 
         combi_sensor_ids = [item["sensorID"] for item in combi_sensor_rows]
         return combi_sensor_ids
@@ -842,15 +842,15 @@ class _CombiSensorDefinitionTable(object):
         """
         Obtains the descriptions all combi sensors in the database.
 
-        :return:                        list of the descriptions of all combi sensors in the database
-        :rtype:                         list of string
+        :return:                        descriptions of all combi sensors in the database
+        :rtype:                         dict(string,string)
         """
         combi_sensors = self._sql.execute(" \
             SELECT sensorID, description \
             FROM CombiSensor").fetchall()
 
         sensor_descriptions = dict()
-        for combi_sensor in combi_sensors:
+        for combi_sensor in combi_sensors:  # type: dict
             sensor_descriptions[combi_sensor["sensorID"]] = combi_sensor["description"]
 
         return sensor_descriptions

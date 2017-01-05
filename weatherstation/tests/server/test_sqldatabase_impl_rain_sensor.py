@@ -14,17 +14,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
+import datetime
 import os
 import sqlite3
 import unittest
-import datetime
 from datetime import timedelta
 
 from tests.builder_acessors import *
-from weathernetwork.common.datastructures import WeatherStationMetadata, WeatherStationDataset, WindSensorData, \
-    RainSensorData, CombiSensorData, BaseStationSensorData
-from weathernetwork.server._sqldatabase_impl import _WeatherStationTable, _WindSensorTable, _RainSensorTable, \
-    _CombiSensorDataTable, _CombiSensorDefinitionTable, _WeatherDataTable
+from weathernetwork.common.datastructures import WeatherStationDataset, RainSensorData
+from weathernetwork.server._sqldatabase_impl import _RainSensorTable
 from weathernetwork.server.exceptions import NotExistingError, AlreadyExistingError
 
 

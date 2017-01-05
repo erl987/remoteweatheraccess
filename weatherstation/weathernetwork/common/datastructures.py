@@ -651,7 +651,6 @@ class WeatherStationDataset(Comparable):
         :param sensor_id:           sensor id of the requested sensor
         :type sensor_id:            str
         :return:                    object of the sensor data
-        :rtype:                     Sensor
         """
         return self._sensor_data[sensor_id]
 

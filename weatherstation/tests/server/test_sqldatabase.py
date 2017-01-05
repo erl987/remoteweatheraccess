@@ -26,7 +26,7 @@ from tests.builder_acessors import a
 from weathernetwork.common.datastructures import BaseStationSensorData, WindSensorData, CombiSensorData, WeatherMessage
 from weathernetwork.common.datastructures import WeatherStationDataset
 from weathernetwork.common.datastructures import WeatherStationMetadata, RainSensorData
-from weathernetwork.server.exceptions import NotExistingError, AlreadyExistingError
+from weathernetwork.server.exceptions import NotExistingError
 from weathernetwork.server.interface import IServerSideProxy
 from weathernetwork.server.sqldatabase import SQLWeatherDB, SQLDatabaseServiceFactory
 

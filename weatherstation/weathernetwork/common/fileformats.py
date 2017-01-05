@@ -168,9 +168,9 @@ class PCWetterstationFormatFile(object):
         Parses the data from a single line in a PCWetterstation file to a WatherstationDataset-object.
 
         :param time:                            timepoint for which the current data is valid
-        :type time:                             datetime
+        :type time:                             datetime.datetime
         :param prev_time:                       previous timepoint before the current data is valid
-        :type prev_time:                        datetime
+        :type prev_time:                        datetime.datetime
         :param data_dict:                       all data for the present time point
         :type data_dict:                        dict with the (PC-Wetterstation internal) sensors being the keys
         :return:                                weather dataset
@@ -302,9 +302,9 @@ class PCWetterstationFormatFile(object):
         Determines if the two dates are within the same month.
 
         :param first_date:                      first date to be compared
-        :type first_date:                       datetime
+        :type first_date:                       datetime.datetime
         :param second_date:                     second date to be compared
-        :type second_date:                      datetime
+        :type second_date:                      datetime.datetime
         :return:                                True if both dates are within the same month, fals otherwise
         :rtype:                                 boolean
         """
