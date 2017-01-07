@@ -24,7 +24,7 @@ from weathernetwork.server._sqldatabase_impl import _WeatherStationTable
 from weathernetwork.server.exceptions import NotExistingError, AlreadyExistingError
 
 
-class Station:
+class Station(object):
     """Test object builder"""
     def __init__(self):
         self._station_id = "DEFAULT"

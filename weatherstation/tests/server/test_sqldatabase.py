@@ -59,7 +59,7 @@ def combi_sensor_id():
     return "OUT1"
 
 
-class WeatherDataset:
+class WeatherDataset(object):
     """Test object builder"""
     def __init__(self):
         self._time = some_time()

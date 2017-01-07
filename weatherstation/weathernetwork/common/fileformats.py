@@ -19,6 +19,7 @@ import os
 from datetime import datetime as dt
 from datetime import timedelta
 
+from weathernetwork.common.utilities import extract_bracket_contents
 from weathernetwork.common.exceptions import PCWetterstationFileParseError, DatasetFormatError
 from weathernetwork.common.datastructures import CombiSensorData, BaseStationSensorData, WindSensorData, RainSensorData
 from weathernetwork.common.datastructures import WeatherStationMetadata
@@ -34,13 +35,16 @@ class PCWetterstationFormatFile(object):
     _DATE = "date"  # constant describing a date (equivalent to the sensor IDs)
     _TIME = "time"  # constant describing a time of day (equivalent to the sensor IDs)
 
-    def __init__(self, combi_sensor_ids):
+    def __init__(self, combi_sensor_ids, combi_sensor_descriptions):
         """
         Constructor.
 
-        :param combi_sensor_ids:                contains a list with all combi sensor IDs that should be present in the
-                                                file
+        :param combi_sensor_ids:                contains a list with all combi sensor IDs in the same order as they
+                                                are / will be present in the file. The headings in the file are
+                                                ignored.
         :type combi_sensor_ids:                 list of strings
+        :param combi_sensor_descriptions:       descriptions of the combi sensors in the same order as the IDs
+        :type combi_sensor_descriptions:        list of strings
         :raise PCWetterstationFileParseError:   if more combi sensors than allowed are defined
         """
         # list of required sensors, using the PCWetterstation file format based sensor IDs
@@ -55,8 +59,8 @@ class PCWetterstationFormatFile(object):
         self._sensor_list[(RainSensorData.RAIN, RainSensorData.PERIOD)] = 34
 
         # required combi sensors defined by the user
-        combi_sensor_ids = list(set(combi_sensor_ids))  # make the list unique
         self._combi_sensor_IDs = combi_sensor_ids
+        self._combi_sensor_descriptions = combi_sensor_descriptions
         file_specific_temperature_sensor_id = 1  # temperature sensors have an ID of 1 .. 16 in PCWetterstation files
         file_specific_humidity_sensor_id = 17  # humidity sensors have an ID of 17 ... 32 in PC Wetterstation files
         for combi_sensor in combi_sensor_ids:
@@ -69,7 +73,7 @@ class PCWetterstationFormatFile(object):
                 raise PCWetterstationFileParseError("More combi sensors than allowed by the file format.")
 
     @staticmethod
-    def deletedatafiles(data_folder, data_file_list):
+    def delete_datafiles(data_folder, data_file_list):
         """
         Deletes all given files from a given folder.
 
@@ -98,9 +102,14 @@ class PCWetterstationFormatFile(object):
                                                 data of the first dataset, where this information cannot be derived
                                                 automatically)
         :type delta_time:                       float
-        :raise IOError:                         if the file could not be opened
+        :return:                                weather datasets, rain counter base, station metadata
+        :rtype:                                 tuple(WeatherStationDataset, float, WeatherStationMetadata)
+        :raise FileNotFoundError:               if the file does not exist
         :raise PCWetterstationFileParserError:  if the file could not be parsed
         """
+        if not os.path.isfile(file_name):
+            raise FileNotFoundError("The file '{}' does not exist".format(file_name))
+
         try:
             with open(file_name, 'r', newline='', encoding='latin-1') as f:
                 file_reader = csv.reader(f)
@@ -130,7 +139,7 @@ class PCWetterstationFormatFile(object):
                     time_string = single_line_dict[PCWetterstationFormatFile._TIME]
                     time = dt(*map(int, [date_string[6:], date_string[3:5], date_string[0:2], time_string[:2],
                                          time_string[3:]]))  # performance optimized
-                    if not 'prev_time' in locals():
+                    if 'prev_time' not in locals():
                         prev_time = time - timedelta(
                             seconds=int(round(60 * delta_time)))  # initial guess for the first timepoint in the file
 
@@ -174,15 +183,15 @@ class PCWetterstationFormatFile(object):
         :param data_dict:                       all data for the present time point
         :type data_dict:                        dict with the (PC-Wetterstation internal) sensors being the keys
         :return:                                weather dataset
-        :rtype:                                 WeatherStationDataset object
+        :rtype:                                 WeatherStationDataset
         :raise PCWetterstationFileParseError:   if the data could not be parsed
         """
         try:
             dataset = WeatherStationDataset(time)
-            for combi_sensor in self._combi_sensor_IDs:
+            for combi_sensor, description in zip(self._combi_sensor_IDs, self._combi_sensor_descriptions):
                 temperature = float(data_dict[self._sensor_list[(combi_sensor, CombiSensorData.TEMPERATURE)]])
                 humidity = float(data_dict[self._sensor_list[(combi_sensor, CombiSensorData.HUMIDITY)]])
-                dataset.add_sensor(CombiSensorData(combi_sensor, temperature, humidity))
+                dataset.add_sensor(CombiSensorData(combi_sensor, temperature, humidity, description))
 
             # required sensors
             pressure = float(
@@ -215,7 +224,7 @@ class PCWetterstationFormatFile(object):
         :type station_id:                       string
         :return:                                parsed metadata of the station, reference value of the rain counter at
                                                 the beginning of the data file (in mm)
-        :rtype:                                 WeatherStationMetadata object, float
+        :rtype:                                 tuple(WeatherStationMetadata, float)
         :raise PCWetterstationFileParseError:   if the metadata could not be parsed
         """
         device_info = ""
@@ -223,8 +232,8 @@ class PCWetterstationFormatFile(object):
         station_height = float('NaN')
         rain_calib_factor = float('NaN')
         rain_counter_base = float('NaN')
-        latitude = float('NaN')  # the file format does not contain explicit information on the latitude
-        longitude = float('NaN')  # the file format does not contain explicit information on the latitude
+        latitude = float('NaN')
+        longitude = float('NaN')
 
         try:
             # parse header lines
@@ -238,11 +247,24 @@ class PCWetterstationFormatFile(object):
                     rain_counter_base = float(line_pair[1].replace('mm', ''))
                 elif line_pair[0] == 'Location':
                     location_pair = str.split(line_pair[1], '/')
-                    location_info = location_pair[0]
+                    if '(' and ')' in location_pair[0]:
+                        # if something with brackets is present, this is assumed to contain coordinates
+                        geographical_location_pair = str.split(extract_bracket_contents(location_pair[0]), ',')
+                        latitude = float(geographical_location_pair[0].replace('\N{DEGREE SIGN}', ''))
+                        longitude = float(geographical_location_pair[1].replace('\N{DEGREE SIGN}', ''))
+                        location_info = str.strip(str.split(location_pair[0], '(')[0])
+                    else:
+                        # default behaviour
+                        location_info = location_pair[0]
                     location_pair[1].index('m')  # will raise an exception if the format is wrong
                     station_height = int(location_pair[1].replace('m', ''))
                 elif line_pair[0] == 'Station':
-                    device_info = line_pair[1]
+                    if '(' and ')' in line_pair[1]:
+                        # if something within brackets is present, this is assumed to contain the device info
+                        device_info = extract_bracket_contents(line_pair[1])
+                    else:
+                        # default behaviour
+                        device_info = line_pair[1]
 
             station_metadata = WeatherStationMetadata(station_id, device_info, location_info, latitude, longitude,
                                                       station_height, rain_calib_factor)
@@ -262,7 +284,7 @@ class PCWetterstationFormatFile(object):
                                                 ascending time.
         :type data:                             list of WeatherStationDataset objects
         :param station_metadata:                metadata of the station
-        :type station_metadata:                 WeatherStationMetadata object
+        :type station_metadata:                 WeatherStationMetadata
         :raise DatasetFormatError:              if a required sensor is missing in the data
          """
         # generate settings line for the CSV-file
@@ -305,7 +327,7 @@ class PCWetterstationFormatFile(object):
         :type first_date:                       datetime.datetime
         :param second_date:                     second date to be compared
         :type second_date:                      datetime.datetime
-        :return:                                True if both dates are within the same month, fals otherwise
+        :return:                                True if both dates are within the same month, False otherwise
         :rtype:                                 boolean
         """
         if first_date.month == second_date.month and first_date.year == second_date.year:
@@ -329,10 +351,10 @@ class PCWetterstationFormatFile(object):
         device_info = station_metadata.get_device_info()
         rain_calib_factor = station_metadata.get_rain_calib_factor()
 
-        settings_line = '#Calibrate=' + str('%1.3f' % rain_calib_factor) + ' #Regen0=0mm #Location=' + str(
-            location) + ' (' + str(station_latitude) + '\N{DEGREE SIGN}, ' + \
-                        str(station_longitude) + '\N{DEGREE SIGN}) ' + '/ ' + str(
-            int(station_height)) + 'm #Station=' + str(station_id) + " (" + device_info + ")"
+        settings_line = '#Calibrate=' + str('%1.3f' % rain_calib_factor) + ' #Regen0=0mm #Location=' + \
+                        str(location) + ' (' + str(station_latitude) + '\N{DEGREE SIGN}, ' + \
+                        str(station_longitude) + '\N{DEGREE SIGN}) ' + '/ ' + str(int(station_height)) + \
+                        'm #Station=' + str(station_id) + " (" + device_info + ")"
 
         return settings_line
 
@@ -370,7 +392,8 @@ class PCWetterstationFormatFile(object):
         :type dataset:                          WeatherStationDataset object
         :return:                                data line for the PC-Wetterstation file format, header line for the
                                                 sensor descriptions, units and (PC-Wetterstation internal) sensor IDs
-        :rtype:                                 list of floats, list of strings, list of strings, list of integers
+        :rtype:                                 tuple(list of floats, list of strings, list of strings, list of int)
+        :raise DatasetFormatError:              if a required sensor is missing in the data
         """
         values = []
         sensor_list = []

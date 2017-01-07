@@ -66,14 +66,14 @@ class SQLDatabaseService(IDatabaseService):
         # trigger acknowledgment to the client
         self._notify_observers(message_id)
 
-    def get_combi_sensor_ids(self):
+    def get_combi_sensors(self):
         """
         Obtains the sensor IDs of the combi sensors present in the database.
 
-        :return:                        sensor IDs present in the database
-        :rtype:                         list of string
+        :return:                        sensor IDs, descriptions of all combi sensors in the database
+        :rtype:                         tuple(list of string, list of string)
         """
-        return self._database.get_combi_sensor_ids()
+        return self._database.get_combi_sensors()
 
     def register_observer(self, observer):
         """
@@ -389,17 +389,18 @@ class SQLWeatherDB(object):
 
         return is_existing
 
-    def get_combi_sensor_ids(self):
+    def get_combi_sensors(self):
         """
         Obtains all combi sensors registered in the database.
 
-        :return:                        sensor IDs of all combi sensors in the database
-        :rtype:                         list of string
+        :return:                        sensor IDs, descriptions of all combi sensors in the database
+        :rtype:                         tuple(list of string, list of string)
         """
         with self._sql:
             combi_sensor_ids = self._combi_sensor_definition_table.get_combi_sensor_ids()
+            combi_sensor_descriptions = self._combi_sensor_definition_table.get_sensor_descriptions()
 
-        return combi_sensor_ids
+        return combi_sensor_ids, combi_sensor_descriptions
 
     def remove_combi_sensor(self, sensor_id):
         """

@@ -16,7 +16,7 @@
 
 from abc import ABCMeta, abstractmethod
 
-from common.utilities import Comparable
+from weathernetwork.common.utilities import Comparable
 from weathernetwork.server.exceptions import NotExistingError
 
 

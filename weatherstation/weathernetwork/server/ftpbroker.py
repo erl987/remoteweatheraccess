@@ -143,7 +143,8 @@ class FileSystemObserver(FileSystemEventHandler):
 
 class FTPServerBrokerProcess(object):
     """Broker for the FTP-based weather server"""
-    def __init__(self, data_directory, data_file_extension, temp_data_directory, delta_time, combi_sensor_ids):
+    def __init__(self, data_directory, data_file_extension, temp_data_directory, delta_time, combi_sensor_ids,
+                 combi_sensor_descriptions):
         """
         Constructor.
 
@@ -157,12 +158,15 @@ class FTPServerBrokerProcess(object):
         :type delta_time:               float
         :param combi_sensor_ids:        ids of the combi sensors
         :type combi_sensor_ids:         list of str
+        :param combi_sensor_descriptions: descriptions of the combi sensors
+        :type combi_sensor_descriptions: list of str
         """
         self._data_directory = data_directory
         self._data_file_extension = data_file_extension
         self._temp_data_directory = temp_data_directory
         self._delta_time = delta_time
         self._combi_sensor_IDs = combi_sensor_ids
+        self._combi_sensor_descriptions = combi_sensor_descriptions
 
     def process(self, received_file_queue, request_queue, parent, logging_connection, exception_handler):
         """
@@ -292,14 +296,14 @@ class FTPServerBrokerProcess(object):
             # read a list of WeatherData objects from the unzipped data files
             data = list()
             for curr_file_name in new_data_file_list:
-                weather_file = PCWetterstationFormatFile(self._combi_sensor_IDs)
+                weather_file = PCWetterstationFormatFile(self._combi_sensor_IDs, self._combi_sensor_descriptions)
                 curr_data = weather_file.read(
                     self._temp_data_directory + "/" + curr_file_name, station_id, self._delta_time
                 )
                 data += curr_data[0]
         finally:
             # delete the temporary data files
-            PCWetterstationFormatFile.deletedatafiles(self._temp_data_directory, new_data_file_list)
+            PCWetterstationFormatFile.delete_datafiles(self._temp_data_directory, new_data_file_list)
 
         return data
 
@@ -307,7 +311,7 @@ class FTPServerBrokerProcess(object):
 class FTPBroker(object):
     """Broker for the FTP-based weather server"""
     def __init__(self, request_queue, data_directory, data_file_extension, temp_data_directory, logging_connection,
-                 exception_handler, delta_time, combi_sensor_ids):
+                 exception_handler, delta_time, combi_sensor_ids, combi_sensor_descriptions):
         """
         Constructor.
 
@@ -327,6 +331,8 @@ class FTPBroker(object):
         :type delta_time:               float
         :param combi_sensor_ids:        ids of the combi sensors
         :type combi_sensor_ids:         list of str
+        :param combi_sensor_descriptions: descriptions of the combi sensors
+        :type combi_sensor_descriptions: list of str
         """
         self._data_directory = data_directory
         self._data_file_extension = data_file_extension
@@ -340,7 +346,8 @@ class FTPBroker(object):
         self._filesystem_observer_process.start()
 
         self._broker = FTPServerBrokerProcess(
-            data_directory, data_file_extension, temp_data_directory, delta_time, combi_sensor_ids
+            data_directory, data_file_extension, temp_data_directory, delta_time, combi_sensor_ids,
+            combi_sensor_descriptions
         )
         self._broker_process = Process(
             target=self._broker.process,
@@ -451,7 +458,7 @@ class FTPServerSideProxy(IServerSideProxy):
 
         # obtain the combi sensors existing in the database
         database_service = database_service_factory.create(False)  # no logging, because called from the main process
-        combi_sensor_ids = database_service.get_combi_sensor_ids()
+        combi_sensor_ids, combi_sensor_descriptions = database_service.get_combi_sensors()
 
         # empty the temporary data directory (it may contain unnecessary files after a power failure)
         self._clear_temp_data_directory(temp_data_directory)
@@ -470,7 +477,8 @@ class FTPServerSideProxy(IServerSideProxy):
             logging_connection,
             self._exception_handler,
             delta_time,
-            combi_sensor_ids
+            combi_sensor_ids,
+            combi_sensor_descriptions
         )
         self._proxy = FTPServerSideProxyProcess()
         self._proxy_process = Process(

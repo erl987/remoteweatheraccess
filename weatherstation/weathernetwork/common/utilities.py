@@ -17,6 +17,8 @@
 from datetime import datetime
 import math
 
+from weathernetwork.server.exceptions import NotExistingError
+
 
 def is_float(string):
     """
@@ -90,6 +92,24 @@ def consolidate_ranges(ranges):
             result[-1] = (current_begin, current_end)
 
     return result
+
+
+def extract_bracket_contents(data_string):
+    """
+    Extracts the contents of the first brackets from the given string.
+
+    :param data_string:         string containing brackets
+    :type data_string:          str
+    :return:                    the content of the first bracket
+    :rtype:                     str
+    :raise NotExistingError:    if the data string does not contain opening and closing brackets
+    """
+    if '(' not in data_string or ')' not in data_string:
+        raise NotExistingError("The string does not contain brackets")
+
+    bracket_contents = str.split(str.split(data_string, '(')[1], ')')[0]
+
+    return bracket_contents
 
 
 class Comparable(object):

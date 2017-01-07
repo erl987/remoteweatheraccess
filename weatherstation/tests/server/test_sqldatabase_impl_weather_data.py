@@ -54,7 +54,7 @@ def database_object():
     return sqlite3.connect(db_file, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
 
 
-class WeatherDataset:
+class WeatherDataset(object):
     """Test object builder"""
     def __init__(self):
         self._time = datetime.datetime(2016, 12, 15, 13, 30, 45)

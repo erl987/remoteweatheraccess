@@ -40,7 +40,7 @@ def some_time_afterwards():
     return datetime.datetime(2016, 12, 1, 0, 0, 0)
 
 
-class WindSensorDataset:
+class WindSensorDataset(object):
     """Test object builder"""
     def __init__(self):
         self._time = datetime.datetime(2016, 12, 15, 13, 30, 45)
