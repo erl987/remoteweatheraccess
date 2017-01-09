@@ -30,7 +30,7 @@ from watchdog.observers import Observer
 from weathernetwork.common.datastructures import WeatherMessage
 from weathernetwork.common.exceptions import DelayedException, FileParseError
 from weathernetwork.common.fileformats import PCWetterstationFormatFile
-from weathernetwork.common.logging import MultiprocessLoggerProxy, IMultiProcessLogger
+from weathernetwork.common.logging import MultiProcessLoggerProxy, IMultiProcessLogger
 from weathernetwork.server.exceptions import AlreadyExistingError, NotExistingError
 from weathernetwork.server.interface import IServerSideProxy
 
@@ -185,7 +185,7 @@ class FTPServerBrokerProcess(object):
         """
         try:
             # logger in the main process
-            logger = MultiprocessLoggerProxy(logging_connection)
+            logger = MultiProcessLoggerProxy(logging_connection)
 
             signal.signal(signal.SIGINT, signal.SIG_IGN)
             while True:
@@ -224,7 +224,7 @@ class FTPServerBrokerProcess(object):
         :param full_path:               path of the new file
         :type full_path:                str
         :param logger:                  logger
-        :type logger:                   MultiprocessLoggerProxy
+        :type logger:                   MultiProcessLoggerProxy
         :param parent:                  parent of the object
         :type parent:                   server.ftpbroker.FTPBroker
         :return:                        message id, station id, data from the new file
@@ -412,7 +412,7 @@ class FTPServerSideProxyProcess(object):
             signal.signal(signal.SIGINT, signal.SIG_IGN)
             database_service = database_service_factory.create(True)
             database_service.register_observer(parent)
-            logger = MultiprocessLoggerProxy(logging_connection)
+            logger = MultiProcessLoggerProxy(logging_connection)
 
             while True:
                 # the FTP-broker does not require deserialization of the data

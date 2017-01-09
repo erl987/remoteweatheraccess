@@ -26,6 +26,14 @@ from abc import ABCMeta, abstractmethod
 from weathernetwork.common.exceptions import RunInNotAllowedProcessError
 
 
+def _remove_all_log_handlers():
+    """Removes all log handlers from the root logger"""
+    handlers = logging.getLogger().handlers[:]
+    for handler in handlers:
+        handler.close()
+        logging.getLogger().removeHandler(handler)
+
+
 class MultiProcessConnector(object):
     """Class representing a connector to the main logger process from other subprocesses"""
     def __init__(self, logging_queue, main_logger_pid):
@@ -85,7 +93,7 @@ class MultiProcessLogger(IMultiProcessLogger):
         :type is_print_to_screen:           boolean
         :param log_config:                  configuration of the log. If omitted, the default log system of the
                                             platform is used.
-        :type log_config:                   LogConfig object
+        :type log_config:                   server.config.LogConfigSection
         :raise FileNotFoundError:           if no log file is configured and the operating system has no default
                                             log system
         """
@@ -119,9 +127,7 @@ class MultiProcessLogger(IMultiProcessLogger):
                 raise FileNotFoundError("The OS has no default log system. You need to specify a log file.")
 
     def __enter__(self):
-        """
-        Context manager initializer method.
-        """
+        """Context manager initializer method."""
         with self._lock:
             self._logging_queue = Queue()
             self._thread = threading.Thread(target=self._logger_thread)
@@ -130,10 +136,8 @@ class MultiProcessLogger(IMultiProcessLogger):
         return self
 
     def __exit__(self, type_val, value, traceback):
-        """
-        Context manager exit method.
-        """
-        self.join()
+        """Context manager exit method."""
+        self._join()
 
     def get_connection(self):
         """
@@ -148,20 +152,18 @@ class MultiProcessLogger(IMultiProcessLogger):
 
         return connection
 
-    def join(self):
-        """
-        Stops the underlying thread of the class. Returns only after finishing the thread.
-        """
+    def _join(self):
+        """Stops the underlying thread of the class. Returns only after finishing the thread."""
         with self._lock:
             if self._logging_queue:
                 self._logging_queue.put(None)
             if self._thread:
                 self._thread.join()
-             
+
+            _remove_all_log_handlers()
+
     def _logger_thread(self):
-        """
-        Logger thread waiting for incoming log messages.
-        """
+        """Logger thread waiting for incoming log messages."""
         while True:
             record = self._logging_queue.get()
 
@@ -204,8 +206,8 @@ class MultiProcessLogger(IMultiProcessLogger):
         print(timestamp + ": " + message)
 
 
-class MultiprocessLoggerProxy(IMultiProcessLogger):
-    """Mono-state proxy class (one instance per process) for multiprocessing capable logging within another process."""
+class MultiProcessLoggerProxy(IMultiProcessLogger):
+    """Mono-state proxy class (one instance per process) for multiprocessing capable logging within another process"""
     __shared_state = {}
 
     def __init__(self, logging_connection):
@@ -224,8 +226,7 @@ class MultiprocessLoggerProxy(IMultiProcessLogger):
         self._logger = logging.getLogger()
 
         # remove all handlers already registered (there should be only one)
-        if self._logger.hasHandlers():
-            self._logger.handlers = []
+        _remove_all_log_handlers()
 
         # create a connection to the remote logger within the logging process
         log_queue_handler = logging.handlers.QueueHandler(logging_connection.get_connection_queue())

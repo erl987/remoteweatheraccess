@@ -18,7 +18,7 @@ import datetime
 import sqlite3
 
 from weathernetwork.common.datastructures import WeatherStationDataset
-from weathernetwork.common.logging import MultiprocessLoggerProxy
+from weathernetwork.common.logging import MultiProcessLoggerProxy
 from weathernetwork.server._sqldatabase_impl import _WeatherStationTable, _WindSensorTable, _RainSensorTable, \
     _CombiSensorDataTable, _WeatherDataTable, _CombiSensorDefinitionTable
 from weathernetwork.server.interface import IDatabaseService, IDatabaseServiceFactory
@@ -36,7 +36,7 @@ class SQLDatabaseService(IDatabaseService):
         :type logging_connection:       common.logging.MultiProcessConnector
         """
         if logging_connection:
-            self._logger = MultiprocessLoggerProxy(logging_connection)
+            self._logger = MultiProcessLoggerProxy(logging_connection)
         else:
             self._logger = None
         self._observers = []
