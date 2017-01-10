@@ -43,8 +43,8 @@ class PCWetterstationFormatFile(object):
                                                 are / will be present in the file. The headings in the file are
                                                 ignored.
         :type combi_sensor_ids:                 list of strings
-        :param combi_sensor_descriptions:       descriptions of the combi sensors in the same order as the IDs
-        :type combi_sensor_descriptions:        list of strings
+        :param combi_sensor_descriptions:       descriptions of the combi sensors (with the combi sensor IDs as keys)
+        :type combi_sensor_descriptions:        dict(string, string)
         :raise PCWetterstationFileParseError:   if more combi sensors than allowed are defined
         """
         # list of required sensors, using the PCWetterstation file format based sensor IDs
@@ -188,7 +188,8 @@ class PCWetterstationFormatFile(object):
         """
         try:
             dataset = WeatherStationDataset(time)
-            for combi_sensor, description in zip(self._combi_sensor_IDs, self._combi_sensor_descriptions):
+            for combi_sensor in self._combi_sensor_IDs:
+                description = self._combi_sensor_descriptions[combi_sensor]
                 temperature = float(data_dict[self._sensor_list[(combi_sensor, CombiSensorData.TEMPERATURE)]])
                 humidity = float(data_dict[self._sensor_list[(combi_sensor, CombiSensorData.HUMIDITY)]])
                 dataset.add_sensor(CombiSensorData(combi_sensor, temperature, humidity, description))

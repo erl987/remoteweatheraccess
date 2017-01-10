@@ -37,7 +37,7 @@ def combi_sensor_ids():
 
 
 def combi_sensor_descriptions():
-    return ["outside sensor 1"]
+    return {"OUT1": "outside sensor 1"}
 
 
 def data_file_path():
@@ -82,7 +82,8 @@ class Data(object):
         self._time = datetime.datetime(year=2016, month=9, day=30, hour=23, minute=40)
         self._base_station_sensor_data = BaseStationSensorData(1032.4, 8.5)
         self._wind_sensor_data = WindSensorData(12.4, 43.9, 180.0, 15.2)
-        self._combi_sensor_data = CombiSensorData(combi_sensor_ids()[0], 34.9, 89.7, combi_sensor_descriptions()[0])
+        sensor_id = combi_sensor_ids()[0]
+        self._combi_sensor_data = CombiSensorData(sensor_id, 34.9, 89.7, combi_sensor_descriptions()[sensor_id])
 
         self._rain_sensor_data = [
             RainSensorData(12.5, self._time - timedelta(minutes=10)),

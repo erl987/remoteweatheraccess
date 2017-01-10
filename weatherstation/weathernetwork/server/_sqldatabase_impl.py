@@ -480,8 +480,8 @@ class _CombiSensorDataTable(object):
         :type station_id:                       string
         :param available_combi_sensor_ids:      list of all available combi sensor IDs
         :type available_combi_sensor_ids:       list of string
-        :param combi_sensor_descriptions:       descriptions of all available combi sensors
-        :type combi_sensor_descriptions:        dict(string, string)
+        :param combi_sensor_descriptions:       descriptions of the combi sensors (with the combi sensor IDs as keys)
+        :type combi_sensor_descriptions:        dict(str, str)
         :param data:                            dataset to be added
         :type data:                             list of common.datastructures.WeatherStationDataset
         :raise NotExistingError:                if a required component does not exist (for example: combi sensor)
@@ -528,7 +528,7 @@ class _CombiSensorDataTable(object):
         :type dataset:                          common.datastructures.WeatherStationDataset
         :param available_combi_sensor_ids:      list of all available combi sensor IDs
         :type available_combi_sensor_ids:       list of string
-        :param combi_sensor_descriptions:       descriptions of all available combi sensors
+        :param combi_sensor_descriptions:       descriptions of the combi sensors (with the combi sensor IDs as keys)
         :type combi_sensor_descriptions:        dict(string, string)
         :raise NotExistingError:                if a required component does not exist (for example: station ID)
         """
@@ -561,8 +561,8 @@ class _CombiSensorDataTable(object):
         :type station_id:                       string
         :param time:                            timepoint for which the data is requested
         :type time:                             datetime.datetime
-        :param combi_sensor_descriptions:       list of the descriptions of all available combi sensors
-        :type combi_sensor_descriptions:        list of string
+        :param combi_sensor_descriptions:       descriptions of the combi sensors (with the combi sensor IDs as keys)
+        :type combi_sensor_descriptions:        dict(string, string)
         :return:                                combi sensor data for the time point
         :rtype:                                 list of common.datastructures.CombiSensorData
         """

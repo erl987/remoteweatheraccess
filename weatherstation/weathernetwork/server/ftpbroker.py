@@ -158,8 +158,8 @@ class FTPServerBrokerProcess(object):
         :type delta_time:               float
         :param combi_sensor_ids:        ids of the combi sensors
         :type combi_sensor_ids:         list of str
-        :param combi_sensor_descriptions: descriptions of the combi sensors
-        :type combi_sensor_descriptions: list of str
+        :param combi_sensor_descriptions: descriptions of the combi sensors (with the combi sensor IDs as keys)
+        :type combi_sensor_descriptions: dict(str, str)
         """
         self._data_directory = data_directory
         self._data_file_extension = data_file_extension
@@ -331,8 +331,8 @@ class FTPBroker(object):
         :type delta_time:               float
         :param combi_sensor_ids:        ids of the combi sensors
         :type combi_sensor_ids:         list of str
-        :param combi_sensor_descriptions: descriptions of the combi sensors
-        :type combi_sensor_descriptions: list of str
+        :param combi_sensor_descriptions: descriptions of the combi sensors (with the combi sensor IDs as keys)
+        :type combi_sensor_descriptions: dict(str, str)
         """
         self._data_directory = data_directory
         self._data_file_extension = data_file_extension

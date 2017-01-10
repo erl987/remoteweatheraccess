@@ -71,7 +71,7 @@ class SQLDatabaseService(IDatabaseService):
         Obtains the sensor IDs of the combi sensors present in the database.
 
         :return:                        sensor IDs, descriptions of all combi sensors in the database
-        :rtype:                         tuple(list of string, list of string)
+        :rtype:                         tuple(list of string, dict(string, string))
         """
         return self._database.get_combi_sensors()
 
@@ -394,7 +394,7 @@ class SQLWeatherDB(object):
         Obtains all combi sensors registered in the database.
 
         :return:                        sensor IDs, descriptions of all combi sensors in the database
-        :rtype:                         tuple(list of string, list of string)
+        :rtype:                         tuple(list of string, dict(string, string))
         """
         with self._sql:
             combi_sensor_ids = self._combi_sensor_definition_table.get_combi_sensor_ids()
