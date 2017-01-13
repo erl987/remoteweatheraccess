@@ -54,3 +54,15 @@ class InvalidConfigFileError(Error):
         :type msg:      string
         """
         self.msg = msg
+
+
+class NoContentError(Error):
+    """Raised when the requested content does not exist."""
+    def __init__(self, msg):
+        """
+        Constructor.
+
+        :param msg:     error message description
+        :type msg:      string
+        """
+        self.msg = msg

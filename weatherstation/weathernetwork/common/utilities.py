@@ -14,10 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
-from datetime import datetime
 import math
+from datetime import datetime
 
-from weathernetwork.server.exceptions import NotExistingError
+from weathernetwork.server.exceptions import NoContentError
 
 
 def is_float(string):
@@ -102,10 +102,10 @@ def extract_bracket_contents(data_string):
     :type data_string:          str
     :return:                    the content of the first bracket
     :rtype:                     str
-    :raise NotExistingError:    if the data string does not contain opening and closing brackets
+    :raise NoContentError:      if the data string does not contain opening and closing brackets
     """
     if '(' not in data_string or ')' not in data_string:
-        raise NotExistingError("The string does not contain brackets")
+        raise NoContentError("The string does not contain brackets")
 
     bracket_contents = str.split(str.split(data_string, '(')[1], ')')[0]
 
