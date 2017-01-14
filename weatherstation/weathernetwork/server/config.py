@@ -196,7 +196,7 @@ class FTPReceiverConfigSection(object):
 
         if not data_file_extension.startswith("."):
             data_file_extension = "." + data_file_extension
-        self._data_file_extension = data_file_extension
+        self._data_file_extension = data_file_extension.upper()
 
         self._time_between_data = time_between_data
 

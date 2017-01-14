@@ -1,90 +1,130 @@
-#import unittest
-#from weathernetwork.server.ftpbroker import FTPServerSideProxy
-#from weathernetwork.server.sqldatabase import SQLDatabaseServiceFactory
-#from weathernetwork.server.interface import IServerSideProxy
-#from weathernetwork.server.weathermessage import WeatherMessage
-#from multiprocessing import Queue
+# RemoteWeatherAccess - Weather network connecting to remote stations
+# Copyright(C) 2013-2016 Ralf Rettig (info@personalfme.de)
+#
+# This program is free software: you can redistribute it and / or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.If not, see <http://www.gnu.org/licenses/>
 
-#class TestFTPBroker(unittest.TestCase):
-#    def setUp(self):
-#        """Sets up each unit test."""
-#        db_file_name = "data/weather.db"
-#        self._existing_data_directory = "C:\\Users\\Ralf\\Documents\\test"
-#        self._not_existing_data_directory = "" # this a non-existing fake directory
-#        self._temp_data_directory = "C:\\Users\\Ralf\\Documents\\test\\temp"
-#        self._data_file_extension = ".ZIP"
-#        self._delta_time = 10
+import os
+import shutil
+import threading
+import time
+import unittest
+from functools import partial
+from multiprocessing import Process, Queue
 
-#        self._sql_database_service_factory = SQLDatabaseServiceFactory(db_file_name)
-#        self._exception_queue = Queue()
+from watchdog.events import FileSystemEvent
 
-
-#    def tearDown(self):
-#        """Finishes each unit test."""
-
-#    def _on_message(self, message):
-#        print(message.get_message())
-
-#    def test_proxy(self): # TODO: implement the test
-#        with FTPServerSideProxy(self._sql_database_service_factory, self._existing_data_directory, self._data_file_extension, self._temp_data_directory, self._on_message, self._exception_queue, self._delta_time) as proxy:
-#            pass
-#            ## stall the main thread until the program is finished
-#            #exception_from_subprocess = []
-#            #try:
-#            #    exception_from_subprocess = self._exception_queue.get()
-#            #except KeyboardInterrupt:
-#            #    pass
-
-#            #if exception_from_subprocess:
-#            #    exception_from_subprocess.re_raise()   
+from weathernetwork.server.ftpbroker import FileSystemObserver
 
 
-#    def test_invalid_data_file(self):
-#        with self.assertRaises(IOError):
-#            with FTPServerSideProxy(self._sql_database_service_factory, self._not_existing_data_directory, self._data_file_extension, self._temp_data_directory, self._on_message, self._exception_queue, self._delta_time) as proxy:
-#                # stall the main thread until the program is finished
-#                exception_from_subprocess = []
-#                try:
-#                    exception_from_subprocess = self._exception_queue.get()
-#                except KeyboardInterrupt:
-#                    pass
-
-#                if exception_from_subprocess:
-#                    exception_from_subprocess.re_raise()        
+def data_directory():
+    return "./data/unittests/ftpbroker"
 
 
-#class MockServerSideProxy(IServerSideProxy):
-#    """Interface class for a weather server broker proxy testing mock"""
-
-#    def __init__(self):
-#        self._observers = [];
+def not_existing_data_directory():
+    return "./data/unittests/notexisting"
 
 
-#    def register_listener(self, observer):
-#        """ Registers a new listener.
-#        :param observer:    new listener to be registered
-#        :type observer:     IWeatherPersistenceService
-#        """
-#        self._observers.append(observer)
+def a_file_path():
+    return data_directory() + os.sep + "test.zip"
 
 
-#    def remove_listener(self, observer):
-#        self._observers.remove(observer)
+def create_a_data_file():
+    with open(a_file_path(), "w") as file:
+        file.write("This is a dummy file that has not a valid format.")
 
 
-#    def acknowledge_persistence(self, finished_ID):
-#        print(finished_ID)
+def _exception_handler(exception, queue):
+    queue.put(exception)
 
 
-#    def on_data_received(self, message_ID, station_ID, data):
-#        message = WeatherMessage(message_ID, station_ID, data)
-#        self._notify_listeners(message)
+class TestFileSystemObserver(unittest.TestCase):
+    def setUp(self):
+        self._exception = None
+        self._received_file_queue = Queue()
+
+        if os.path.isdir(data_directory()):
+            shutil.rmtree(data_directory(), ignore_errors=True)
+        os.makedirs(data_directory(), exist_ok=True)  # creates the test directory if required
+
+    def tearDown(self):
+        pass
+
+    def test_on_modified(self):
+        # given:
+        file_system_observer = FileSystemObserver(data_directory())
+        file_system_observer.set_received_file_queue(self._received_file_queue)
+        file_system_observer._processed_files_lock = threading.Lock()
+        modified_event = FileSystemEvent(a_file_path())
+
+        # when:
+        file_system_observer.on_modified(modified_event)
+        time.sleep(0.3)
+
+        # then:
+        self.assertFalse(self._received_file_queue.empty())
+        if not self._received_file_queue.empty():
+            got_filepath = self._received_file_queue.get()
+            self.assertEqual(got_filepath, a_file_path())
+
+    def test_process(self):
+        # given:
+        filesystem_observer = FileSystemObserver(data_directory())
+        filesystem_observer_process = Process(
+            target=filesystem_observer.process, args=(self._received_file_queue, _exception_handler)
+        )
+        filesystem_observer_process.start()
+        time.sleep(1.0)  # significant waiting time is required to start the file watching reliably
+
+        # when:
+        create_a_data_file()
+        got_filepath = self._received_file_queue.get()
+        filesystem_observer.stop()
+
+        # then:
+        self.assertEqual(got_filepath, a_file_path())
+
+    def test_process_exception_transfer(self):
+        # given:
+        exception_queue = Queue()
+        filesystem_observer = FileSystemObserver(not_existing_data_directory())
+
+        # when:
+        filesystem_observer_process = Process(
+            target=filesystem_observer.process, args=(self._received_file_queue,
+                                                      partial(_exception_handler, queue=exception_queue))
+        )
+        filesystem_observer_process.start()
+        got_exception = exception_queue.get()
+
+        # then:
+        self.assertRaises(IOError, got_exception.re_raise)
+
+    def test_feed_modified_file(self):
+        # given:
+        file_system_observer = FileSystemObserver(data_directory())
+        file_system_observer.set_received_file_queue(self._received_file_queue)
+
+        # when:
+        file_system_observer.feed_modified_file(a_file_path())
+        time.sleep(0.3)
+
+        # then:
+        self.assertFalse(self._received_file_queue.empty())
+        if not self._received_file_queue.empty():
+            got_filepath = self._received_file_queue.get()
+            self.assertEqual(got_filepath, a_file_path())
 
 
-#    def _notify_listeners(self, message):
-#        for observer in self._observers:
-#            observer.add_data(message)
-
-
-#if __name__ == '__main__':
-#    unittest.main()
+if __name__ == '__main__':
+    unittest.main()

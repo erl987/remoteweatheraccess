@@ -342,7 +342,7 @@ class PCWetterstationFormatFile(object):
         Helper method for creating the settings header line of a PC-Wetterstation format file.
 
         :param station_metadata:                station metadata to be written to a PC-Wetterstation station header line
-        :type station_metadata:                 WeatherStationMetadata object
+        :type station_metadata:                 WeatherStationMetadata
         :return:                                header line for the PC-Wetterstation file format
         :rtype:                                 string
         """

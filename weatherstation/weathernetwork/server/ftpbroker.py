@@ -135,7 +135,7 @@ class FileSystemObserver(FileSystemEventHandler):
         """
         Feeds a data file manually into the queue of received files.
 
-        :param full_path:               Full path of the file to be fed into the queue of received files.
+        :param full_path:               full path of the file to be fed into the queue of received files.
         :type full_path:                str
         """
         self._received_file_queue.put(full_path)
@@ -235,7 +235,7 @@ class FTPServerBrokerProcess(object):
         file_path, message_id = os.path.split(file)
 
         if file_extension.upper() == self._data_file_extension:
-            station_id = self.get_station_id(message_id)
+            station_id = FTPServerBrokerProcess.get_station_id(message_id)
             if len(station_id) > 0:
                 try:
                     # ensure that the file is in its correct data subdirectory
@@ -278,7 +278,8 @@ class FTPServerBrokerProcess(object):
             while file_still_blocked:
                 try:
                     zip_file = ZipFile(
-                        self._data_directory + '/' + station_id + '/' + message_id + self._data_file_extension, 'r'
+                        self._data_directory + os.sep + station_id + os.sep + message_id + self._data_file_extension,
+                        'r'
                     )
                 except PermissionError:
                     # workaround because the watchdog library cannot monitor the file close event and the file may still
@@ -298,7 +299,7 @@ class FTPServerBrokerProcess(object):
             for curr_file_name in new_data_file_list:
                 weather_file = PCWetterstationFormatFile(self._combi_sensor_IDs, self._combi_sensor_descriptions)
                 curr_data = weather_file.read(
-                    self._temp_data_directory + "/" + curr_file_name, station_id, self._delta_time
+                    self._temp_data_directory + os.sep + curr_file_name, station_id, self._delta_time
                 )
                 data += curr_data[0]
         finally:
@@ -382,7 +383,7 @@ class FTPBroker(object):
         :param logger:                  logger
         :type logger:                   IMultiProcessLogger
         """
-        station_id = self._broker.get_station_id(message_id)
+        station_id = FTPServerBrokerProcess.get_station_id(message_id)
 
         # delete the ZIP-file corresponding to the message ID
         os.remove(self._data_directory + '/' + station_id + '/' + message_id + self._data_file_extension)
@@ -400,7 +401,7 @@ class FTPServerSideProxyProcess(object):
         :param request_queue:           queue used for transfering the processed file metadata further downstream
         :type request_queue:            multiprocessing.queues.Queue
         :param database_service_factory:factory creating SQL database services
-        :type database_service_factory: SQLDatabaseServiceFactory
+        :type database_service_factory: server.sqldatabase.SQLDatabaseServiceFactory
         :param parent:                  parent object
         :type parent:                   FTPServerSideProxy
         :param logging_connection:      connection to the logger in the main process
@@ -445,9 +446,9 @@ class FTPServerSideProxy(IServerSideProxy):
         Constructor.
 
         :param database_service_factory:factory creating SQL database services
-        :type database_service_factory: SQLDatabaseServiceFactory
+        :type database_service_factory: server.sqldatabase.SQLDatabaseServiceFactory
         :param config:                  configuration of the FTP-based weather server
-        :type config:                   FTPReceiverConfigSection
+        :type config:                   server.config.FTPReceiverConfigSection
         :param logging_connection:      connection to the logger in the main process
         :type logging_connection:       common.logging.MultiProcessConnector
         :param exception_queue:         queue for transporting exceptions to the main process
