@@ -110,12 +110,13 @@ class FileSystemObserver(FileSystemEventHandler):
         :param exception_handler:       exception handler callback method receiving all exception from the process
         :type exception_handler:        method
         """
+        filesystem_observer = Observer()
         try:
             # required for correct handling of Crtl + C in a multiprocess environment
             signal.signal(signal.SIGINT, signal.SIG_IGN)
 
             self._processed_files_lock = threading.Lock()
-            filesystem_observer = Observer()
+
             self._received_file_queue = received_file_queue
             if not os.path.isdir(self._data_directory):
                 raise IOError("Data directory \"%s\" not found." % self._data_directory)
@@ -125,11 +126,12 @@ class FileSystemObserver(FileSystemEventHandler):
 
             # wait until stop is signalled
             self._exception_event.wait()
-
-            filesystem_observer.stop()
-            filesystem_observer.join()
         except Exception as e:
             exception_handler(DelayedException(e))
+        finally:
+            if filesystem_observer.is_alive():
+                filesystem_observer.stop()
+                filesystem_observer.join()
 
     def feed_modified_file(self, full_path):
         """
@@ -154,7 +156,7 @@ class FTPServerBrokerProcess(object):
         :type data_file_extension:      str
         :param temp_data_directory:     temporary directory for unzipped the data files
         :type temp_data_directory:      str
-        :param delta_time:              time period between two weather data timepoints
+        :param delta_time:              time period between two weather data timepoints, in minutes
         :type delta_time:               float
         :param combi_sensor_ids:        ids of the combi sensors
         :type combi_sensor_ids:         list of str
@@ -206,14 +208,11 @@ class FTPServerBrokerProcess(object):
 
         :param message_id:              message id to be split
         :type message_id:               str
-        :return:                        extracted message id
+        :return:                        extracted station id
         :rtype:                         str
         """
         splitted_message_id = message_id.split('_')
-        if len(splitted_message_id) > 0:
-            station_id = splitted_message_id[-1]
-        else:
-            station_id = None
+        station_id = splitted_message_id[-1]
 
         return station_id
 
@@ -234,7 +233,7 @@ class FTPServerBrokerProcess(object):
         file, file_extension = os.path.splitext(full_path)
         file_path, message_id = os.path.split(file)
 
-        if file_extension.upper() == self._data_file_extension:
+        if file_extension.upper() == self._data_file_extension.upper():
             station_id = FTPServerBrokerProcess.get_station_id(message_id)
             if len(station_id) > 0:
                 try:
@@ -304,7 +303,8 @@ class FTPServerBrokerProcess(object):
                 data += curr_data[0]
         finally:
             # delete the temporary data files
-            PCWetterstationFormatFile.delete_datafiles(self._temp_data_directory, new_data_file_list)
+            if new_data_file_list:
+                PCWetterstationFormatFile.delete_datafiles(self._temp_data_directory, new_data_file_list)
 
         return data
 
@@ -328,7 +328,7 @@ class FTPBroker(object):
         :type logging_connection:       common.logging.MultiProcessConnector
         :param exception_handler:       exception handler callback method receiving all exception from the process
         :type exception_handler:        method
-        :param delta_time:              time period between two weather data timepoints
+        :param delta_time:              time period between two weather data timepoints, in minutes
         :type delta_time:               float
         :param combi_sensor_ids:        ids of the combi sensors
         :type combi_sensor_ids:         list of str
