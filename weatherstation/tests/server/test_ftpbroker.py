@@ -24,8 +24,8 @@ from multiprocessing import Process, Queue
 
 from watchdog.events import FileSystemEvent
 
-from common.logging import MultiProcessConnector
-from weathernetwork.server.ftpbroker import FileSystemObserver, FTPServerBrokerProcess
+from weathernetwork.common.logging import MultiProcessConnector
+from weathernetwork.server.ftpbroker import FileSystemObserver, FTPServerBrokerProcess, FTPBroker
 
 
 def data_base_directory():
@@ -77,6 +77,18 @@ def prepare_directories():
 
 def _exception_handler(exception, queue):
     queue.put(exception)
+
+
+def get_broker_settings():
+    logging_queue = Queue()
+
+    temp_data_directory = data_base_directory() + os.sep + "temp"
+    delta_time = 10
+    combi_sensor_ids = ["OUT1"]
+    combi_sensor_descriptions = {"OUT1": "outdoor sensor 1"}
+    logging_connection = MultiProcessConnector(logging_queue, 0)
+
+    return temp_data_directory, delta_time, combi_sensor_ids, combi_sensor_descriptions, logging_connection
 
 
 class ParentMock(object):
@@ -170,15 +182,11 @@ class TestFTPServerBrokerProcess(unittest.TestCase):
 
     def _create_broker_process(self):
         request_queue = Queue()
-        logging_queue = Queue()
         exception_queue = Queue()
 
         parent = ParentMock()
-        temp_data_directory = data_base_directory() + os.sep + "temp"
-        delta_time = 10
-        combi_sensor_ids = ["OUT1"]
-        combi_sensor_descriptions = {"OUT1": "outdoor sensor 1"}
-        logging_connection = MultiProcessConnector(logging_queue, 0)
+        temp_data_directory, delta_time, combi_sensor_ids, combi_sensor_descriptions, logging_connection = \
+            get_broker_settings()
 
         broker = FTPServerBrokerProcess(data_base_directory(), data_file_extension(), temp_data_directory,
                                         delta_time, combi_sensor_ids, combi_sensor_descriptions)
@@ -243,6 +251,38 @@ class TestFTPServerBrokerProcess(unittest.TestCase):
 
         # then:
         self.assertEqual(got_station_id, "")
+
+
+class TestFTPBroker(unittest.TestCase):
+    def setUp(self):
+        prepare_directories()
+        create_a_data_file()
+
+    def tearDown(self):
+        pass
+
+    def test_ftpbroker(self):
+        # given:
+        request_queue = Queue()
+
+        temp_data_directory, delta_time, combi_sensor_ids, combi_sensor_descriptions, logging_connection = \
+            get_broker_settings()
+        broker = FTPBroker(request_queue, data_base_directory(), data_file_extension(), temp_data_directory,
+                           logging_connection, _exception_handler, delta_time, combi_sensor_ids,
+                           combi_sensor_descriptions)
+
+        try:
+            # when:
+            broker.feed_modified_file(a_file_path())
+            got_message_id, got_station_id, got_data = request_queue.get(timeout=5.0)
+            got_file_name = got_message_id + data_file_extension()
+
+            # then:
+            self.assertEqual(got_file_name, a_file_name())
+            self.assertEqual(got_station_id, a_station_id())
+            self.assertEqual(len(got_data), 2143)
+        finally:
+            broker.stop_and_join()
 
 
 if __name__ == '__main__':
