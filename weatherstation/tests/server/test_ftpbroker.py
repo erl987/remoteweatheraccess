@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
-
+import datetime
 import os
 import shutil
 import threading
@@ -24,8 +24,13 @@ from multiprocessing import Process, Queue
 
 from watchdog.events import FileSystemEvent
 
-from weathernetwork.common.logging import MultiProcessConnector
-from weathernetwork.server.ftpbroker import FileSystemObserver, FTPServerBrokerProcess, FTPBroker
+from weathernetwork.server.exceptions import NotExistingError
+from weathernetwork.common.datastructures import WeatherMessage
+from weathernetwork.common.datastructures import WeatherStationDataset
+from weathernetwork.server.interface import IDatabaseServiceFactory, IDatabaseService
+from weathernetwork.common.logging import MultiProcessConnector, IMultiProcessLogger
+from weathernetwork.server.ftpbroker import FileSystemObserver, FTPServerBrokerProcess, FTPBroker, \
+    FTPServerSideProxyProcess
 
 
 def data_base_directory():
@@ -91,9 +96,44 @@ def get_broker_settings():
     return temp_data_directory, delta_time, combi_sensor_ids, combi_sensor_descriptions, logging_connection
 
 
-class ParentMock(object):
+class BrokerParentMock(object):
     def send_persistence_acknowledgement(self, message_id, logger):
         pass
+
+
+class ProxyParentMock(object):
+    def __init__(self, result_queue):
+        self._result_queue = result_queue
+
+    def acknowledge_persistence(self, message_id, logger):
+        self._result_queue.put(message_id)
+        logger.log(IMultiProcessLogger.INFO, "Acknowledging persistence")
+
+
+class SQLDatabaseServiceMock(IDatabaseService):
+    def __init__(self, result_queue, is_exception_throwing_db):
+        self._result_queue = result_queue
+        self._is_exception_throwing_db = is_exception_throwing_db
+
+    def add_data(self, message):
+        if self._is_exception_throwing_db:
+            raise NotExistingError("Test exception")
+        else:
+            self._result_queue.put(message)
+
+    def register_observer(self, observer):
+        pass
+
+    def unregister_observer(self, observer):
+        pass
+
+
+class SQLDatabaseServiceFactoryMock(IDatabaseServiceFactory):
+    def __init__(self, result_queue, use_exception_throwing_db):
+        self._database_service_mock = SQLDatabaseServiceMock(result_queue, use_exception_throwing_db)
+
+    def create(self, use_logging):
+        return self._database_service_mock
 
 
 class TestFileSystemObserver(unittest.TestCase):
@@ -184,7 +224,7 @@ class TestFTPServerBrokerProcess(unittest.TestCase):
         request_queue = Queue()
         exception_queue = Queue()
 
-        parent = ParentMock()
+        parent = BrokerParentMock()
         temp_data_directory, delta_time, combi_sensor_ids, combi_sensor_descriptions, logging_connection = \
             get_broker_settings()
 
@@ -283,6 +323,78 @@ class TestFTPBroker(unittest.TestCase):
             self.assertEqual(len(got_data), 2143)
         finally:
             broker.stop_and_join()
+
+
+class TestFTPServerSideProxyProcess(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    @staticmethod
+    def _get_proxy_process_settings(use_exception_throwing_db):
+        request_queue = Queue()
+        logging_queue = Queue()
+        exception_queue = Queue()
+        result_queue = Queue()
+
+        database_service_factory = SQLDatabaseServiceFactoryMock(result_queue, use_exception_throwing_db)
+        parent = ProxyParentMock(result_queue)
+        logging_connection = MultiProcessConnector(logging_queue, 0)
+        dataset_time = datetime.datetime(year=2016, month=5, day=10)
+
+        proxy = FTPServerSideProxyProcess()
+        proxy_process = Process(
+            target=proxy.process, args=(request_queue, database_service_factory, parent, logging_connection,
+                                        partial(_exception_handler, queue=exception_queue)))
+
+        dataset = [WeatherStationDataset(dataset_time)]
+        message_id, __ = os.path.splitext(a_file_name())
+
+        return proxy_process, request_queue, result_queue, exception_queue, message_id, dataset
+
+    def test_process(self):
+        # given:
+        proxy_process, request_queue, result_queue, exception_queue, message_id, dataset = \
+            self._get_proxy_process_settings(use_exception_throwing_db=False)
+        queue_data = (message_id, a_station_id(), dataset)
+
+        try:
+            proxy_process.start()
+
+            # when:
+            request_queue.put(queue_data)
+            received_message = result_queue.get(timeout=5.0)  # type: WeatherMessage
+
+            # then:
+            self.assertEqual(received_message.get_station_id(), a_station_id())
+            self.assertEqual(received_message.get_data(), dataset)
+            self.assertEqual(received_message.get_message_id(), message_id)
+        finally:
+            request_queue.put(None)  # finish the process
+            if proxy_process.is_alive():
+                proxy_process.join()
+
+    def test_process_with_exception(self):
+        # given:
+        proxy_process, request_queue, result_queue, exception_queue, message_id, dataset = \
+            self._get_proxy_process_settings(use_exception_throwing_db=True)
+        queue_data = (message_id, a_station_id(), dataset)
+
+        try:
+            proxy_process.start()
+
+            # when:
+            request_queue.put(queue_data)
+            got_acknowleded_message_id = result_queue.get(timeout=5.0)
+
+            # then:
+            self.assertEqual(got_acknowleded_message_id, message_id)
+        finally:
+            request_queue.put(None)  # finish the process
+            if proxy_process.is_alive():
+                proxy_process.join()
 
 
 if __name__ == '__main__':
