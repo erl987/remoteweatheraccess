@@ -24,13 +24,14 @@ from multiprocessing import Process, Queue
 
 from watchdog.events import FileSystemEvent
 
+from weathernetwork.server.config import FTPReceiverConfigSection
 from weathernetwork.server.exceptions import NotExistingError
 from weathernetwork.common.datastructures import WeatherMessage
 from weathernetwork.common.datastructures import WeatherStationDataset
 from weathernetwork.server.interface import IDatabaseServiceFactory, IDatabaseService
 from weathernetwork.common.logging import MultiProcessConnector, IMultiProcessLogger
 from weathernetwork.server.ftpbroker import FileSystemObserver, FTPServerBrokerProcess, FTPBroker, \
-    FTPServerSideProxyProcess
+    FTPServerSideProxyProcess, FTPServerSideProxy
 
 
 def data_base_directory():
@@ -111,26 +112,33 @@ class ProxyParentMock(object):
 
 
 class SQLDatabaseServiceMock(IDatabaseService):
-    def __init__(self, result_queue, is_exception_throwing_db):
+    def get_combi_sensors(self):
+        return ["OUT1"], {"OUT1": "outdoor sensor 1"}
+
+    def __init__(self, result_queue, has_exception_throwing_add_data, has_exception_throwing_register):
         self._result_queue = result_queue
-        self._is_exception_throwing_db = is_exception_throwing_db
+        self._has_exception_throwing_db = has_exception_throwing_add_data
+        self._has_exception_throwing_register = has_exception_throwing_register
 
     def add_data(self, message):
-        if self._is_exception_throwing_db:
-            raise NotExistingError("Test exception")
+        if self._has_exception_throwing_db:
+            raise NotExistingError("Test exception from add data")
         else:
             self._result_queue.put(message)
 
     def register_observer(self, observer):
-        pass
+        if self._has_exception_throwing_register:
+            raise NotExistingError("Test exception from the observer")
 
     def unregister_observer(self, observer):
         pass
 
 
 class SQLDatabaseServiceFactoryMock(IDatabaseServiceFactory):
-    def __init__(self, result_queue, use_exception_throwing_db):
-        self._database_service_mock = SQLDatabaseServiceMock(result_queue, use_exception_throwing_db)
+    def __init__(self, result_queue, use_db_throwing_on_add_data=False, use_db_throwing_on_register=False):
+        self._database_service_mock = SQLDatabaseServiceMock(result_queue,
+                                                             use_db_throwing_on_add_data,
+                                                             use_db_throwing_on_register)
 
     def create(self, use_logging):
         return self._database_service_mock
@@ -333,13 +341,15 @@ class TestFTPServerSideProxyProcess(unittest.TestCase):
         pass
 
     @staticmethod
-    def _get_proxy_process_settings(use_exception_throwing_db):
+    def _get_proxy_process_settings(use_db_throwing_on_add_data=False, use_db_throwing_on_register=False):
         request_queue = Queue()
         logging_queue = Queue()
         exception_queue = Queue()
         result_queue = Queue()
 
-        database_service_factory = SQLDatabaseServiceFactoryMock(result_queue, use_exception_throwing_db)
+        database_service_factory = SQLDatabaseServiceFactoryMock(result_queue,
+                                                                 use_db_throwing_on_add_data,
+                                                                 use_db_throwing_on_register)
         parent = ProxyParentMock(result_queue)
         logging_connection = MultiProcessConnector(logging_queue, 0)
         dataset_time = datetime.datetime(year=2016, month=5, day=10)
@@ -357,7 +367,7 @@ class TestFTPServerSideProxyProcess(unittest.TestCase):
     def test_process(self):
         # given:
         proxy_process, request_queue, result_queue, exception_queue, message_id, dataset = \
-            self._get_proxy_process_settings(use_exception_throwing_db=False)
+            self._get_proxy_process_settings()
         queue_data = (message_id, a_station_id(), dataset)
 
         try:
@@ -376,10 +386,10 @@ class TestFTPServerSideProxyProcess(unittest.TestCase):
             if proxy_process.is_alive():
                 proxy_process.join()
 
-    def test_process_with_exception(self):
+    def test_process_with_handled_database_exception(self):
         # given:
         proxy_process, request_queue, result_queue, exception_queue, message_id, dataset = \
-            self._get_proxy_process_settings(use_exception_throwing_db=True)
+            self._get_proxy_process_settings(use_db_throwing_on_add_data=True)
         queue_data = (message_id, a_station_id(), dataset)
 
         try:
@@ -396,6 +406,52 @@ class TestFTPServerSideProxyProcess(unittest.TestCase):
             if proxy_process.is_alive():
                 proxy_process.join()
 
+    def test_process_exception_transfer(self):
+        # given:
+        proxy_process, request_queue, result_queue, exception_queue, message_id, dataset = \
+            self._get_proxy_process_settings(use_db_throwing_on_register=True)
+        try:
+            proxy_process.start()
+
+            # when:
+            got_exception = exception_queue.get(timeout=5.0)
+
+            # then:
+            self.assertRaises(NotExistingError, got_exception.re_raise)
+        finally:
+            if proxy_process.is_alive():
+                request_queue.put(None)  # finish the process even if no exception has been thrown
+                proxy_process.join()
+
+
+class TestFTPServerSideProxy(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_process(self):
+        # given:
+        logging_queue = Queue()
+        exception_queue = Queue()
+        result_queue = Queue()
+
+        database_service_factory = SQLDatabaseServiceFactoryMock(result_queue)
+        logging_connection = MultiProcessConnector(logging_queue, 0)
+
+        config = FTPReceiverConfigSection(data_directory(), data_base_directory() + os.sep + "temp",
+                                          data_file_extension(), datetime.timedelta(minutes=10))
+
+        # when:
+        with FTPServerSideProxy(
+                database_service_factory,
+                config,
+                logging_connection,
+                exception_queue) as proxy:
+            proxy._stop_and_join()
+
+        # then: this is a smoke test, all underlying functionality is tested in other tests
 
 if __name__ == '__main__':
     unittest.main()
