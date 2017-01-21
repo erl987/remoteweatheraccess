@@ -38,13 +38,13 @@ def is_float(string):
 
 def floor_to_n(val, n):
     """
-    Floors a float to the next integer dividable by n.
+    Floors a float to the next real number dividable by n.
 
     :param val:                 value to be floored
     :type val:                  float
-    :param n:                   the number will be floored to the next integer dividable by this number
-    :type n:                    int
-    :return:                    value floored to the next integer dividable by 'n'
+    :param n:                   the number will be floored to the next real number dividable by this number
+    :type n:                    float
+    :return:                    value floored to the next real number dividable by 'n'
     :rtype:                     float
     """
     floored_val = math.floor(val / n) * n
@@ -54,13 +54,13 @@ def floor_to_n(val, n):
 
 def ceil_to_n(val, n):
     """
-    Ceils a float to the next integer dividable by n.
+    Ceils a float to the next real number dividable by n.
 
     :param val:                 value to be ceiled
     :type val:                  float
-    :param n:                   the number will be ceiled to the next integer dividable by this number
-    :type n:                    int
-    :return:                    value ceiled to the next integer dividable by 'n'
+    :param n:                   the number will be ceiled to the next real number dividable by this number
+    :type n:                    float
+    :return:                    value ceiled to the next real number dividable by 'n'
     :rtype:                     float
     """
     ceiled_val = math.ceil(val / n) * n

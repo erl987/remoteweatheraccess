@@ -107,6 +107,9 @@ class PCWetterstationFormatFile(object):
         :raise FileNotFoundError:               if the file does not exist
         :raise PCWetterstationFileParserError:  if the file could not be parsed
         """
+        time = None
+        prev_time = None
+
         if not os.path.isfile(file_name):
             raise FileNotFoundError("The file '{}' does not exist".format(file_name))
 
@@ -115,8 +118,8 @@ class PCWetterstationFormatFile(object):
                 file_reader = csv.reader(f)
 
                 # read the four header lines
-                sensor_descriptions = next(file_reader)
-                sensor_units = next(file_reader)
+                next(file_reader)   # sensor descriptions
+                next(file_reader)   # sensor units
                 metadata = ','.join(next(file_reader))
                 station_metadata, rain_counter_base = self._parse_file_metadata(metadata, station_id)
                 indices_list = next(file_reader)
@@ -132,14 +135,14 @@ class PCWetterstationFormatFile(object):
                 # parse the weather data line by line
                 datasets = []
                 for single_line_dict in data:
-                    if 'time' in locals():
+                    if time:
                         prev_time = time
 
                     date_string = single_line_dict[PCWetterstationFormatFile._DATE]
                     time_string = single_line_dict[PCWetterstationFormatFile._TIME]
                     time = dt(*map(int, [date_string[6:], date_string[3:5], date_string[0:2], time_string[:2],
                                          time_string[3:]]))  # performance optimized
-                    if 'prev_time' not in locals():
+                    if not prev_time:
                         prev_time = time - timedelta(
                             seconds=int(round(60 * delta_time)))  # initial guess for the first timepoint in the file
 

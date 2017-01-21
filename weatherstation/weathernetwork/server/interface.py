@@ -53,6 +53,16 @@ class IDatabaseService(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def get_combi_sensors(self):
+        """
+        Obtains the sensor IDs of the combi sensors present in the database.
+
+        :return:                        sensor IDs, descriptions of all combi sensors in the database
+        :rtype:                         tuple(list of string, dict(string, string))
+        """
+        pass
+
+    @abstractmethod
     def register_observer(self, observer):
         """
         Registers a new observer.

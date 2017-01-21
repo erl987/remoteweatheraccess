@@ -438,7 +438,7 @@ class FTPServerSideProxyProcess(object):
 
 class FTPServerSideProxy(IServerSideProxy):
     """
-    Server side proxy for the FTP-based weather server
+    Server side proxy for the FTP-based weather server.
     Needs to be called in a with-clause for correct management of the subprocesses.
     """
     def __init__(self, database_service_factory, config, logging_connection, exception_queue):
@@ -446,7 +446,7 @@ class FTPServerSideProxy(IServerSideProxy):
         Constructor.
 
         :param database_service_factory:factory creating SQL database services
-        :type database_service_factory: server.sqldatabase.SQLDatabaseServiceFactory
+        :type database_service_factory: server.sqldatabase.IDatabaseServiceFactory
         :param config:                  configuration of the FTP-based weather server
         :type config:                   server.config.FTPReceiverConfigSection
         :param logging_connection:      connection to the logger in the main process
