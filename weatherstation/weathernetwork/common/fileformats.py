@@ -22,8 +22,7 @@ from datetime import timedelta
 from weathernetwork.common.utilities import extract_bracket_contents
 from weathernetwork.common.exceptions import PCWetterstationFileParseError, DatasetFormatError
 from weathernetwork.common.datastructures import CombiSensorData, BaseStationSensorData, WindSensorData, RainSensorData
-from weathernetwork.common.datastructures import WeatherStationMetadata
-from weathernetwork.common.datastructures import WeatherStationDataset
+from weathernetwork.common.datastructures import WeatherStationMetadata, WeatherStationDataset
 
 
 class PCWetterstationFormatFile(object):

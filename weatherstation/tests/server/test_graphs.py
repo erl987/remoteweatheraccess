@@ -14,41 +14,137 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
-
-"""Provides unit tests for the graph drawing module.
-
-Unit tests:
-test_plot_of_last_n_days:		Test for the plotting of the graph for the last n days.
-
-Global variables:
-graph_file_name:                Name of the graph file to be stored.
-"""
+import os
+import shutil
 import unittest
-
-from weathernetwork.server import graphs
 from datetime import datetime
-from weathernetwork.common.datastructures import CombiSensorData, BaseStationSensorData, RainSensorData
+from zipfile import ZipFile
 
-graph_file_name = 'graph.svg'
-graph_directory = './data'
-sensors_to_plot = [(BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE),
-                   (RainSensorData.RAIN, RainSensorData.CUMULATED),
-                   ('OUT1', CombiSensorData.TEMPERATURE),
-                   ('OUT1', CombiSensorData.HUMIDITY)]
+from scipy.misc import imread
+from skimage.measure import compare_ssim
+
+from weathernetwork.common.datastructures import CombiSensorData, BaseStationSensorData, RainSensorData, \
+    WeatherStationMetadata
+from weathernetwork.common.fileformats import PCWetterstationFormatFile
+from weathernetwork.server import graphs
+from weathernetwork.server.sqldatabase import SQLWeatherDB
+
+
+def sensors_to_plot():
+    return [(BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE),
+            (RainSensorData.RAIN, RainSensorData.CUMULATED),
+            ("IN", CombiSensorData.TEMPERATURE),
+            ("IN", CombiSensorData.HUMIDITY)]
+
+
+def combi_sensor():
+    return "IN", "inside sensor 1"
+
+
+def the_base_directory():
+    return "./data/unittests/plotting"
+
+
+def the_temp_data_directory():
+    return the_base_directory() + os.sep + "temp"
+
+
+def a_station_id():
+    return "TES2"
+
+
+def a_graph_file_name():
+    return "graph.png"
+
+
+def a_complete_graph_file_name():
+    return the_base_directory() + os.sep + a_station_id() + os.sep + a_graph_file_name()
+
+
+def expected_plot_file_name():
+    return "./tests/testdata/expected_plot.png"
+
+
+def a_data_file():
+    return "./tests/testdata/150315_213115_1345_TES2.zip"
+
+
+def image_similarity_index(image_1_path_name, image_2_path_name):
+    """Calculates the similarity of two images. A structural similarity index of 1.0 means the images are identical."""
+    image_1 = imread(image_1_path_name)
+    image_2 = imread(image_2_path_name)
+
+    similarity = compare_ssim(image_1, image_2, multichannel=True)
+
+    return similarity
+
+
+def prepare_directories():
+    if os.path.isdir(the_base_directory()):
+        shutil.rmtree(the_base_directory(), ignore_errors=False)
+
+    os.makedirs(the_base_directory(), exist_ok=True)
+    os.makedirs(the_temp_data_directory())
+    os.makedirs(the_base_directory() + os.sep + a_station_id())
+
+
+def database_object():
+    """Test database factory"""
+    db_file_name = "sqltest.db"  # that database file should be unique for the tests
+
+    db_file = the_base_directory() + os.sep + db_file_name
+
+    sql_database = SQLWeatherDB(db_file)
+    combi_sensor_id, combi_sensor_description = combi_sensor()
+    sql_database.add_combi_sensor(combi_sensor_id, combi_sensor_description)
+    sql_database.add_station(
+        WeatherStationMetadata(a_station_id(), "TE923 Mebus", "Test City", 49.234, 11.024, 440, 1.0)
+    )
+
+    return sql_database, db_file
+
+
+def load_data_in_database(sql_database: SQLWeatherDB):
+    with ZipFile(a_data_file(), mode='r') as zip_file:
+        data_file_list = zip_file.namelist()
+        zip_file.extractall(the_temp_data_directory())
+
+        # the ZIP-file must contain exactly one data file
+        data_file_name = the_temp_data_directory() + os.sep + data_file_list[0]
+        combi_sensor_id, combi_sensor_description = combi_sensor()
+        weather_file = PCWetterstationFormatFile([combi_sensor_id], {combi_sensor_id: combi_sensor_description})
+
+        data, rain_counter_base, station_metadata = weather_file.read(data_file_name, a_station_id(), 10.0)
+        sql_database.add_dataset(station_metadata.get_station_id(), data)
 
 
 class TestGraphGeneration(unittest.TestCase):
     def setUp(self):
-        """Sets up each unit test."""
-        self._db_file_name = "data/weather.db"
-        self._station_ID = "TES2"
-
-    def test_plot_of_last_n_days(self):
-        graphs.plot_of_last_n_days(7, self._db_file_name, self._station_ID, sensors_to_plot,
-                                   graph_directory, graph_file_name, True, datetime(year=2015, month=3, day=3))
+        prepare_directories()
+        self._sql_database, self._db_file_name = database_object()
 
     def tearDown(self):
-        """Finishes each unit test."""
+        pass
+
+    def test_plot_of_last_n_days(self):
+        # given:
+        image_similarity_threshold = 0.9999  # structural similarity index
+        load_data_in_database(self._sql_database)
+
+        # when:
+        graphs.plot_of_last_n_days(7,
+                                   self._db_file_name,
+                                   a_station_id(),
+                                   sensors_to_plot(),
+                                   the_base_directory(),
+                                   a_graph_file_name(),
+                                   True,
+                                   datetime(year=2015, month=3, day=3))
+
+        # then:
+        image_similarity = image_similarity_index(a_complete_graph_file_name(), expected_plot_file_name())
+        self.assertTrue(image_similarity > image_similarity_threshold)
+
 
 if __name__ == '__main__':
     unittest.main()
