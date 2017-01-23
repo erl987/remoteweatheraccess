@@ -36,7 +36,7 @@ from weathernetwork.server.ftpbroker import FileSystemObserver, FTPServerBrokerP
 
 
 def data_base_directory():
-    return "./data/unittests/ftpbroker"
+    return "../data/unittests/ftpbroker"
 
 
 def data_directory():
@@ -44,7 +44,7 @@ def data_directory():
 
 
 def not_existing_data_directory():
-    return "./data/unittests/notexisting"
+    return "../data/unittests/notexisting"
 
 
 def data_file_extension():

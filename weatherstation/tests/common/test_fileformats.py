@@ -41,7 +41,7 @@ def combi_sensor_descriptions():
 
 
 def data_file_path():
-    return "./data/unittests/fileformats"
+    return "../data/unittests/fileformats"
 
 
 class StationMetadata(object):

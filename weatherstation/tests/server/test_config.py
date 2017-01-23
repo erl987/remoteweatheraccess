@@ -34,7 +34,7 @@ def ini_file_name():
 
 
 def file_directory():
-    return "./data/unittests/config"
+    return "../data/unittests/config"
 
 
 def a_base_config():

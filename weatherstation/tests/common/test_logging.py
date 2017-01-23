@@ -25,7 +25,7 @@ from weathernetwork.server.config import LogConfigSection
 
 
 def log_file_name():
-    return "./data/unittests/logging/test_log.txt"
+    return "../data/unittests/logging/test_log.txt"
 
 
 def message_text():
