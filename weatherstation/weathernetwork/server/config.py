@@ -17,11 +17,12 @@
 import configparser
 from pathlib import Path
 
+from weathernetwork.common.utilities import Comparable
 from weathernetwork.server.exceptions import InvalidConfigFileError
 from weathernetwork.server.interface import IIniConfigSection
 
 
-class BaseWeatherServerConfig(object):
+class BaseWeatherServerConfig(Comparable):
     """Base class for configuration data on the weather server."""
 
     def __init__(self, database_config, log_config):
@@ -112,7 +113,7 @@ class WeatherPlotServiceConfig(BaseWeatherServerConfig):
         return self._plotter_config
 
 
-class DatabaseConfigSection(IIniConfigSection):
+class DatabaseConfigSection(IIniConfigSection, Comparable):
     """Configuration part for the SQLite-database."""
 
     # INI-file subsection tags
@@ -165,7 +166,7 @@ class DatabaseConfigSection(IIniConfigSection):
         config_file_section[DatabaseConfigSection._DB_FILE_NAME] = self.get_db_file_name()
 
 
-class FTPReceiverConfigSection(object):
+class FTPReceiverConfigSection(IIniConfigSection, Comparable):
     """Configuration part for the FTP-based weather server."""
 
     # INI-file subsection tags
@@ -252,7 +253,7 @@ class FTPReceiverConfigSection(object):
         config_file_section[FTPReceiverConfigSection._TIME_BETWEEN_DATA] = str(time_between_data)
 
 
-class PlotConfigSection(IIniConfigSection):
+class PlotConfigSection(IIniConfigSection, Comparable):
     """Configuration part for the weather data plotting"""
 
     # INI-file subsection tags
@@ -342,6 +343,8 @@ class PlotConfigSection(IIniConfigSection):
             sensors_info = []
             for item in splitted_sensors_string[:]:
                 item = item.strip()
+                if item.startswith('(') and item.endswith(')'):
+                    raise InvalidConfigFileError("A sensor definition is missing a subsensor.")
                 if not item.endswith(')'):
                     sensors_info.append(item)
                 else:
@@ -361,9 +364,9 @@ class PlotConfigSection(IIniConfigSection):
                          PlotConfigSection._strip_sensor_name(splitted_sensor_definition[1]))
                     )
                 else:
-                    sensors_to_plot.append(PlotConfigSection._strip_sensor_name(sensor))
-        except Exception:
-            raise InvalidConfigFileError("Definition of the sensors to be plotted is invalid.")
+                    raise InvalidConfigFileError("A sensor definition is not enclosed by brackets.")
+        except Exception as e:
+            raise InvalidConfigFileError("Definition of the sensors to be plotted is invalid: " + str(e))
 
         return sensors_to_plot
 
@@ -408,7 +411,7 @@ class PlotConfigSection(IIniConfigSection):
         config_file_section[PlotConfigSection._TIME_PERIOD_DURATION] = str(self.get_time_period_duration())
 
 
-class LogConfigSection(IIniConfigSection):
+class LogConfigSection(IIniConfigSection, Comparable):
     """Configuration part for the logging system."""
 
     # INI-file subsection tags
@@ -512,14 +515,11 @@ class BaseWeatherServerIniFile(object):
         :param file_name:               name of the INI config file.
         :type file_name:                string
         """
-        if not Path(file_name).is_file():
-            raise InvalidConfigFileError("The file '{}' does not exist".format(file_name))
-
         self._config_file = configparser.ConfigParser()
         self._file_name = file_name
         self._old_optionxform = None
 
-    def get_section(self, section_name):
+    def _get_section(self, section_name):
         """
         Obtains a section from the INI-configuration file.
 
@@ -530,7 +530,7 @@ class BaseWeatherServerIniFile(object):
         """
         return self._config_file[section_name]
 
-    def read(self):
+    def _read(self):
         """
         Reads the basic config data from the INI-file.
 
@@ -538,20 +538,23 @@ class BaseWeatherServerIniFile(object):
         :rtype:                         BaseWeatherServerConfig
         :raise InvalidConfigFileError:  if an entry in the given section is invalid
         """
-        self._config_file.clear()
-        self._config_file.read(self._file_name)
-        if not IniFileUtils.check_section_for_all_tags(
-                self._config_file, BaseWeatherServerIniFile._BASE_SECTIONS, True):
-            raise InvalidConfigFileError("At least one section header is invalid.")
-
         try:
+            if not Path(self._file_name).is_file():
+                raise InvalidConfigFileError("The file '{}' does not exist".format(self._file_name))
+
+            self._config_file.clear()
+            self._config_file.read(self._file_name)
+            if not IniFileUtils.check_section_for_all_tags(
+                    self._config_file, BaseWeatherServerIniFile._BASE_SECTIONS, True):
+                raise InvalidConfigFileError("At least one section header is invalid.")
+
             database_config = DatabaseConfigSection.read_section_from_ini_file(
                 self._config_file[BaseWeatherServerIniFile._DATABASE_SECTION_TAG])
 
             log_section = self._config_file[BaseWeatherServerIniFile._LOG_SECTION_TAG]
             if not IniFileUtils.check_section_for_all_tags(
                     log_section, BaseWeatherServerIniFile._LOG_SUBSECTION_BASE, False):
-                raise InvalidConfigFileError("An entry in the section \"%s\" is invalid." % log_section.name)
+                raise InvalidConfigFileError("An entry in the section \"{}\" is invalid.".format(log_section.name))
             is_default_os_log = log_section.getboolean(BaseWeatherServerIniFile._IS_DEFAULT_OS_LOG)
             if not is_default_os_log:
                 log_config = LogConfigSection.read_section_from_ini_file(
@@ -559,11 +562,11 @@ class BaseWeatherServerIniFile(object):
             else:
                 log_config = None
         except Exception as e:
-            raise InvalidConfigFileError("Error parsing the config file: %s" % str(e))
+            raise InvalidConfigFileError("Error parsing the config file: {}".format(e))
 
         return BaseWeatherServerConfig(database_config, log_config)
 
-    def prepare_writing(self):
+    def _prepare_writing(self):
         """
         Prepares the class for writing a INI-file.
         This method MUST be called by any child before writing to the INI-file.
@@ -574,7 +577,7 @@ class BaseWeatherServerIniFile(object):
         self._old_optionxform = self._config_file.optionxform
         self._config_file.optionxform = str
 
-    def finish_writing(self):
+    def _finish_writing(self):
         """
         Finishes writing to the INI-file.
         This method MUST be called by any child after writing to the INI-file.
@@ -585,7 +588,7 @@ class BaseWeatherServerIniFile(object):
         # reset the original behaviour of the config file handler
         self._config_file.optionxform = self._old_optionxform
 
-    def write(self, config):
+    def _write(self, config):
         """
         Writes configuration data to the INI-file.
 
@@ -605,7 +608,7 @@ class BaseWeatherServerIniFile(object):
         else:
             log_config_section[BaseWeatherServerIniFile._IS_DEFAULT_OS_LOG] = "yes"
 
-    def add_section(self, section_name):
+    def _add_section(self, section_name):
         """
         Creates a new section of the INI-file and returns it.
 
@@ -642,10 +645,10 @@ class FTPWeatherServerIniFile(BaseWeatherServerIniFile):
         :rtype:                         FTPWeatherServerConfig
         :raise InvalidConfigFileError:  if an entry in the given section is invalid
         """
-        base_config = super().read()
+        base_config = super()._read()
 
         try:
-            ftp_receiver_config = FTPReceiverConfigSection.read_section_from_ini_file(super().get_section(
+            ftp_receiver_config = FTPReceiverConfigSection.read_section_from_ini_file(super()._get_section(
                 FTPWeatherServerIniFile._RECEIVER_SECTION_TAG))
         except Exception as e:
             raise InvalidConfigFileError("Error parsing the config file: %s" % str(e))
@@ -662,11 +665,11 @@ class FTPWeatherServerIniFile(BaseWeatherServerIniFile):
         :param config:                  configuration data to be written to the file represented by the object
         :type config:                   FTPWeatherServerConfig
         """
-        super().prepare_writing()
-        super().write(config)
-        config.get_ftp_receiver_settings().write_section_to_ini_file(super().add_section(
+        super()._prepare_writing()
+        super()._write(config)
+        config.get_ftp_receiver_settings().write_section_to_ini_file(super()._add_section(
             FTPWeatherServerIniFile._RECEIVER_SECTION_TAG))
-        super().finish_writing()
+        super()._finish_writing()
 
 
 class WeatherPlotServiceIniFile(BaseWeatherServerIniFile):
@@ -692,10 +695,10 @@ class WeatherPlotServiceIniFile(BaseWeatherServerIniFile):
         :rtype:                         WeatherPlotServiceConfig
         :raise InvalidConfigFileError:  if an entry in the given section is invalid
         """
-        base_config = super().read()
+        base_config = super()._read()
 
         try:
-            plotter_config = PlotConfigSection.read_section_from_ini_file(super().get_section(
+            plotter_config = PlotConfigSection.read_section_from_ini_file(super()._get_section(
                 WeatherPlotServiceIniFile._PLOTTER_SECTION_TAG))
         except Exception as e:
             raise InvalidConfigFileError("Error parsing the config file: %s" % str(e))
@@ -709,11 +712,11 @@ class WeatherPlotServiceIniFile(BaseWeatherServerIniFile):
         :param config:                  configuration data to written to the file represented by the object
         :type config:                   WeatherPlotServiceConfig
         """
-        super().prepare_writing()
-        super().write(config)
-        config.get_plotter_settings().write_section_to_ini_file(super().add_section(
+        super()._prepare_writing()
+        super()._write(config)
+        config.get_plotter_settings().write_section_to_ini_file(super()._add_section(
             WeatherPlotServiceIniFile._PLOTTER_SECTION_TAG))
-        super().finish_writing()
+        super()._finish_writing()
 
 
 class IniFileUtils(object):
@@ -724,7 +727,7 @@ class IniFileUtils(object):
         Checks if the given section contains all required tags.
 
         :param section:                 section of the INI-file to be checked
-        :type section:                  configparser.SectionProxy
+        :type section:                  configparser.SectionProxy or configparser.ConfigParser
         :param required_tags:           required tags for that section
         :type required_tags:            list of strings
         :param is_root_level:           flag stating if the root level is checked
