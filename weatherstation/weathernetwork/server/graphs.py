@@ -233,7 +233,10 @@ def plot_of_last_n_days(num_days, db_file_name, station_id, sensors_to_plot, gra
 
     # Save plot to file
     if is_save_to_fig:
-        plt.savefig(graph_folder + '/' + station_id + '/' + graph_file_name)
+        try:
+            plt.savefig(graph_folder + '/' + station_id + '/' + graph_file_name)
+        except Exception as e:
+            raise FileNotFoundError("Saving the plotted diagram on file failed: {}".format(e))
     else:
         plt.show()
 
