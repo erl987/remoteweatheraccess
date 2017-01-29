@@ -36,15 +36,19 @@ from weathernetwork.server.ftpbroker import FileSystemObserver, FTPServerBrokerP
 
 
 def data_base_directory():
-    return "../data/unittests/ftpbroker"
+    return "./tests/workingDir/ftpbroker"
 
 
 def data_directory():
     return data_base_directory() + os.sep + a_station_id()
 
 
+def temp_directory():
+    return data_base_directory() + os.sep + "temp"
+
+
 def not_existing_data_directory():
-    return "../data/unittests/notexisting"
+    return "./tests/workingDir/notexisting"
 
 
 def data_file_extension():
@@ -80,6 +84,7 @@ def prepare_directories():
     if os.path.isdir(data_directory()):
         shutil.rmtree(data_directory(), ignore_errors=False)
     os.makedirs(data_directory(), exist_ok=True)  # creates the directory if required
+    os.makedirs(temp_directory(), exist_ok=True)
 
 
 def _exception_handler(exception, queue):
@@ -89,13 +94,12 @@ def _exception_handler(exception, queue):
 def get_broker_settings():
     logging_queue = Queue()
 
-    temp_data_directory = data_base_directory() + os.sep + "temp"
     delta_time = 10
     combi_sensor_ids = ["OUT1"]
     combi_sensor_descriptions = {"OUT1": "outdoor sensor 1"}
     logging_connection = MultiProcessConnector(logging_queue, 0)
 
-    return temp_data_directory, delta_time, combi_sensor_ids, combi_sensor_descriptions, logging_connection
+    return delta_time, combi_sensor_ids, combi_sensor_descriptions, logging_connection
 
 
 class BrokerParentMock(object):
@@ -234,10 +238,9 @@ class TestFTPServerBrokerProcess(unittest.TestCase):
         exception_queue = Queue()
 
         parent = BrokerParentMock()
-        temp_data_directory, delta_time, combi_sensor_ids, combi_sensor_descriptions, logging_connection = \
-            get_broker_settings()
+        delta_time, combi_sensor_ids, combi_sensor_descriptions, logging_connection = get_broker_settings()
 
-        broker = FTPServerBrokerProcess(data_base_directory(), data_file_extension(), temp_data_directory,
+        broker = FTPServerBrokerProcess(data_base_directory(), data_file_extension(), temp_directory(),
                                         delta_time, combi_sensor_ids, combi_sensor_descriptions)
         broker_process = Process(
             target=broker.process, args=(self._received_file_queue, request_queue, parent,
@@ -314,9 +317,8 @@ class TestFTPBroker(unittest.TestCase):
         # given:
         request_queue = Queue()
 
-        temp_data_directory, delta_time, combi_sensor_ids, combi_sensor_descriptions, logging_connection = \
-            get_broker_settings()
-        broker = FTPBroker(request_queue, data_base_directory(), data_file_extension(), temp_data_directory,
+        delta_time, combi_sensor_ids, combi_sensor_descriptions, logging_connection = get_broker_settings()
+        broker = FTPBroker(request_queue, data_base_directory(), data_file_extension(), temp_directory(),
                            logging_connection, _exception_handler, delta_time, combi_sensor_ids,
                            combi_sensor_descriptions)
 

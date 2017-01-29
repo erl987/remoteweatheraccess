@@ -43,7 +43,7 @@ def some_time_afterwards():
 
 def database_object():
     """Test database factory"""
-    db_file_path = "../data/unittests/sqltest/"
+    db_file_path = "./tests/workingDir/sqltest/"
     db_file_name = "sqltest.db"  # that database file should be unique for the tests
 
     db_file = db_file_path + '/' + db_file_name

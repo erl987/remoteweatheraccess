@@ -162,7 +162,13 @@ class FTPServerBrokerProcess(object):
         :type combi_sensor_ids:         list of str
         :param combi_sensor_descriptions: descriptions of the combi sensors (with the combi sensor IDs as keys)
         :type combi_sensor_descriptions: dict(str, str)
+        :raise NotADirectoryError:      if the data or the temporary directory are not existing
         """
+        if not os.path.isdir(data_directory):
+            raise NotADirectoryError("The data directory '{}' is not existing.".format(data_directory))
+        if not os.path.isdir(temp_data_directory):
+            raise NotADirectoryError("The temporary directory '{}' is not existing.".format(temp_data_directory))
+
         self._data_directory = data_directory
         self._data_file_extension = data_file_extension
         self._temp_data_directory = temp_data_directory

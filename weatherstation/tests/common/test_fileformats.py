@@ -41,7 +41,7 @@ def combi_sensor_descriptions():
 
 
 def data_file_path():
-    return "../data/unittests/fileformats"
+    return "./tests/workingDir/fileformats"
 
 
 class StationMetadata(object):
@@ -118,7 +118,7 @@ def data_object():
 
 
 def remove_line_from_file(target_file_name, line_number_to_be_deleted):
-    file = open(target_file_name, "r+")
+    file = open(target_file_name, mode="r+", encoding='latin-1')
     content = file.readlines()
     file.seek(0)
     line_number = 1

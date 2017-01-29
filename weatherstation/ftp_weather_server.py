@@ -66,7 +66,7 @@ def main():
                     if exception_from_subprocess:
                         exception_from_subprocess.re_raise()
             except Exception as e:
-                logger.log(IMultiProcessLogger.ERROR, repr(e))
+                logger.log(IMultiProcessLogger.ERROR, str(e))
 
             logger.log(IMultiProcessLogger.INFO, "Server has stopped.")
 

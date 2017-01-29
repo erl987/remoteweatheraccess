@@ -42,7 +42,7 @@ def combi_sensor():
 
 
 def the_base_directory():
-    return "../data/unittests/plotting"
+    return "./tests/workingDir/plotting"
 
 
 def the_temp_data_directory():
