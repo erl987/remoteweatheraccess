@@ -105,7 +105,7 @@ class MultiProcessLogger(IMultiProcessLogger):
 
         # initialize the logger for the present process
         logger = logging.getLogger()
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.INFO)
         if log_config:
             log_file_name = log_config.get_log_file_name()
             max_bytes = log_config.get_max_kbytes_per_files() * 1024
@@ -174,7 +174,7 @@ class MultiProcessLogger(IMultiProcessLogger):
             logger = logging.getLogger(record.name)
             logger.handle(record)
             if self._is_print_to_screen:
-                self._print_to_screen(record.asctime, record.getMessage())
+                self._print_to_screen(record.asctime, record.levelname, record.getMessage())
 
     def log(self, log_level, message):
         """
@@ -191,19 +191,28 @@ class MultiProcessLogger(IMultiProcessLogger):
 
         if self._is_print_to_screen:
             curr_time = datetime.now()
-            self._print_to_screen(curr_time.strftime("%b %d %H:%M:%S"), message)
+            log_level_name = ""
+            if log_level == logging.INFO:
+                log_level_name = "INFO"
+            elif log_level == logging.WARN:
+                log_level_name = "WARNING"
+            elif log_level == logging.ERROR:
+                log_level_name = "ERROR"
+            self._print_to_screen(curr_time.strftime("%b %d %H:%M:%S"), log_level_name, message)
 
     @staticmethod
-    def _print_to_screen(timestamp, message):
+    def _print_to_screen(timestamp, log_level_name, message):
         """
         Prints a log message to the screen.
 
         :param timestamp:           timestamp of the message
         :type timestamp:            human-readable string
+        :param log_level_name:      describing the log level
+        :type log_level_name:       str
         :param message:             message
-        :type message:              string
+        :type message:              str
         """
-        print(timestamp + ": " + message)
+        print(timestamp + " " + log_level_name + ": " + message)
 
 
 class MultiProcessLoggerProxy(IMultiProcessLogger):

@@ -645,7 +645,7 @@ class _WeatherDataTable(object):
                                       data_to_be_written)
             except sqlite3.Error as e:
                 if "NULL" in e.args[0].upper():
-                    raise NotExistingError("The station does not exist in the database")
+                    raise NotExistingError("The station does not exist in the database, nothing has been added.")
                 else:
                     raise
 
