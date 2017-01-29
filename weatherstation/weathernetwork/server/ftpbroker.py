@@ -17,6 +17,7 @@
 import datetime
 import glob
 import os
+import re
 import signal
 import threading
 import time
@@ -218,7 +219,8 @@ class FTPServerBrokerProcess(object):
         :rtype:                         str
         """
         splitted_message_id = message_id.split('_')
-        station_id = splitted_message_id[-1]
+        further_splitted_message_id = splitted_message_id[-1].split('.')
+        station_id = further_splitted_message_id[0]
 
         return station_id
 
@@ -237,7 +239,8 @@ class FTPServerBrokerProcess(object):
         """
         # extract all required information from the name of the transferred data file
         file, file_extension = os.path.splitext(full_path)
-        file_path, message_id = os.path.split(file)
+        file_path, file_name_base = os.path.split(file)
+        message_id = file_name_base + file_extension
 
         if file_extension.upper() == self._data_file_extension.upper():
             station_id = FTPServerBrokerProcess.get_station_id(message_id)
@@ -261,12 +264,12 @@ class FTPServerBrokerProcess(object):
 
         return None, None, None
 
-    def _read_data_files(self, message_id, station_id):
+    def _read_data_files(self, file_name, station_id):
         """
         Unzips and reads a received data file.
 
-        :param message_id:              id of the message
-        :type message_id:               str
+        :param file_name:               name of the data file
+        :type file_name:                str
         :param station_id:              id of the station
         :type station_id:               str
         :return:                        the read data
@@ -282,10 +285,7 @@ class FTPServerBrokerProcess(object):
             counter = 0
             while file_still_blocked:
                 try:
-                    zip_file = ZipFile(
-                        self._data_directory + os.sep + station_id + os.sep + message_id + self._data_file_extension,
-                        'r'
-                    )
+                    zip_file = ZipFile(self._data_directory + os.sep + station_id + os.sep + file_name, 'r')
                 except PermissionError:
                     # workaround because the watchdog library cannot monitor the file close event and the file may still
                     # be open when the "modified" event is signalled
@@ -392,7 +392,7 @@ class FTPBroker(object):
         station_id = FTPServerBrokerProcess.get_station_id(message_id)
 
         # delete the ZIP-file corresponding to the message ID
-        os.remove(self._data_directory + '/' + station_id + '/' + message_id + self._data_file_extension)
+        os.remove(self._data_directory + '/' + station_id + '/' + message_id)
 
         logger.log(IMultiProcessLogger.INFO, "Successfully transferred message %s" % message_id)
 
@@ -542,9 +542,10 @@ class FTPServerSideProxy(IServerSideProxy):
         :rtype:                         list of str
         """
         # recursive search in subdirectories
+        reg_expr = re.compile(data_file_extension, re.IGNORECASE)
         unstored_file_paths = []
         for root, dirnames, filenames in os.walk(data_directory):
-            unstored_file_paths += glob.glob(root + "/*" + data_file_extension)
+            unstored_file_paths += [os.path.join(root, j) for j in filenames if re.search(reg_expr, j)]
 
         return unstored_file_paths
 

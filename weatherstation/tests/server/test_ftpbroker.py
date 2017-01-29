@@ -258,7 +258,7 @@ class TestFTPServerBrokerProcess(unittest.TestCase):
             create_a_data_file()
             self._received_file_queue.put(a_file_path())
             got_message_id, got_station_id, got_data = request_queue.get(timeout=5.0)
-            got_file_name = got_message_id + data_file_extension()
+            got_file_name = got_message_id  # the message id is identical to the file name
 
             # then:
             self.assertEqual(got_file_name, a_file_name())
@@ -326,7 +326,7 @@ class TestFTPBroker(unittest.TestCase):
             # when:
             broker.feed_modified_file(a_file_path())
             got_message_id, got_station_id, got_data = request_queue.get(timeout=5.0)
-            got_file_name = got_message_id + data_file_extension()
+            got_file_name = got_message_id  # the message id is identical to the file name
 
             # then:
             self.assertEqual(got_file_name, a_file_name())
