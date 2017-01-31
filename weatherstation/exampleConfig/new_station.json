@@ -1,0 +1,9 @@
+{
+    "station_id": "NBG",
+    "device_info": "TE923",
+    "location_info": "Nürnberg",
+    "latitude": 49.374,
+    "longitude": 11.017,
+    "height": 330,
+    "rain_calib_factor" : 1.9
+}
