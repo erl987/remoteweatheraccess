@@ -20,13 +20,11 @@ import json
 from weathernetwork.server.sqldatabase import SQLWeatherDB
 
 
-# TODO: functionality for getting the existing stations / sensors is missing ....
-# TODO: it should be possible to remove more than one sensor at once
 def main():
     """
     Program for managing the combi sensors (temperature / humidity) being present in the weather database.
     """
-    if len(sys.argv) != 4 and not (len(sys.argv) == 3 and sys.argv[-1] == "PRINT"):
+    if len(sys.argv) != 4 and not (len(sys.argv) == 3 and sys.argv[-1].upper() == "PRINT"):
         print("Invalid number of arguments.\n"
               "\n"
               "Program for managing the combi sensors (temperature / humidity) being present in the weather "
@@ -36,16 +34,16 @@ def main():
               "Command line arguments:\n"
               "python manage_db_combi_sensors.py [DB_FILE] [PRINT] | [[TYPE] [JSON-FILE|SENSOR ID...]]\n"
               "\n"
-              "DB_FILE: path of the weather database file"
-              "PRINT: prints all combi sensors present in the database"
+              "DB_FILE: path of the weather database file\n"
+              "PRINT: prints all combi sensors present in the database\n"
               "TYPE: type of operation (add | remove | replace)\n"
               "JSON-FILE: containing all required settings for the added / replaced sensors\n"
               "\n"
               "Example usages:\n"
-              "python ftp_weather_server.py ./weather.db add newSensors.json\n"
-              "python ftp_weather_server.py ./weather.db remove OUT1\n"
-              "python ftp_weather_server.py ./weather.db replace newSensors.json\n"
-              "python ftp_weather_server.py print\n"
+              "python manage_db_combi_sensors.py ./weather.db add newSensors.json\n"
+              "python manage_db_combi_sensors.py ./weather.db remove OUT1\n"
+              "python manage_db_combi_sensors.py ./weather.db replace newSensors.json\n"
+              "python manage_db_combi_sensors.py ./weather.db print\n"
               "\n"
               "Necessary format for the JSON-file:\n"
               "{\n"

@@ -349,6 +349,18 @@ class SQLWeatherDB(object):
 
         return station_metadata
 
+    def get_stations(self):
+        """
+        Obtains all stations registered in the database.
+
+        :return:                        list of the IDs of all stations registered in the database
+        :rtype:                         list of string
+        """
+        with self._sql:
+            station_ids = self._weather_station_table.get_stations()
+
+        return station_ids
+
     def add_combi_sensor(self, sensor_id, description):
         """
         Adds a combi sensor (temperature + humidity). If it already exists in the database, nothing is changed.

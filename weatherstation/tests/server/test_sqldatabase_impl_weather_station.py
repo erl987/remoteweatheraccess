@@ -231,7 +231,7 @@ class TestSQLWeatherStationTable(unittest.TestCase):
             self.assertEqual(got_station, station)
 
     def test_get_metadata_of_not_existing_station(self):
-        # given
+        # given:
         weather_station_table = _WeatherStationTable(self._sql)
 
         # when:
@@ -240,6 +240,20 @@ class TestSQLWeatherStationTable(unittest.TestCase):
 
         # then:
             self.assertRaises(NotExistingError, weather_station_table.get_metadata, station_id)
+
+    def test_get_stations(self):
+        # given:
+        weather_station_table = _WeatherStationTable(self._sql)
+        station_id = "TES"
+        station = a(station_object().with_station_id(station_id))
+
+        # when:
+        with self._sql:
+            weather_station_table.add(station)
+            stations = weather_station_table.get_stations()
+
+        # then:
+        self.assertEqual(stations, [station_id])
 
 
 if __name__ == '__main__':

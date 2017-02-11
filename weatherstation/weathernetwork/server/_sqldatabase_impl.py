@@ -168,6 +168,21 @@ class _WeatherStationTable(object):
 
         return station_metadata
 
+    def get_stations(self):
+        """
+        Obtains all stations registered in the database.
+
+        :return:                        list of the IDs of all stations registered in the database
+        :rtype:                         list of string
+        """
+        station_id_rows = self._sql.execute(" \
+            SELECT stationID \
+            FROM WeatherStation \
+            ORDER BY stationID").fetchall()  # type: list of dict
+
+        station_ids = [item["stationID"] for item in station_id_rows]
+        return station_ids
+
 
 class _WindSensorTable(object):
     """

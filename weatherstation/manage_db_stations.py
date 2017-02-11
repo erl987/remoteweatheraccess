@@ -25,23 +25,25 @@ def main():
     """
     Program for managing the stations being present in the weather database.
     """
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 4 and not (len(sys.argv) == 3 and sys.argv[-1].upper() == "PRINT"):
         print("Invalid number of arguments.\n"
               "\n"
               "Program for managing the stations being present in the weather database.\n"
               "WARNING: REMOVING A STATION FROM THE DATABASE REMOVES ALL OF ITS DATA, THIS CANNOT BE UNDONE."
               "\n"
               "Command line arguments:\n"
-              "python manage_db_stations.py [DB_FILE] [TYPE] [JSON-FILE|STATION ID]\n"
+              "python manage_db_stations.py [DB_FILE] [PRINT] | [[TYPE] [JSON-FILE|STATION ID]]\n"
               "\n"
-              "DB_FILE: path of the weather database file"
+              "DB_FILE: path of the weather database file\n"
+              "PRINT: prints all combi sensors present in the database\n"
               "TYPE: type of operation (add | remove | replace)\n"
               "JSON-FILE: containing all required settings for the added / replaced station\n"
               "\n"
               "Example usages:\n"
-              "python ftp_weather_server.py ./weather.db add newStation.json\n"
-              "python ftp_weather_server.py ./weather.db remove TES2\n"
-              "python ftp_weather_server.py ./weather.db replace newStation.json\n"
+              "python manage_db_stations.py ./weather.db add newStation.json\n"
+              "python manage_db_stations.py ./weather.db remove TES2\n"
+              "python manage_db_stations.py ./weather.db replace newStation.json\n"
+              "python manage_db_stations.py ./weather.db print\n"
               "\n"
               "Necessary format for the JSON-file:\n"
               "{\n"
@@ -84,6 +86,22 @@ def main():
             elif operation_type == "REMOVE":
                 if not database.remove_station(station_id):
                     raise SyntaxError("The station {} does not exist in the database".format(station_id))
+            elif operation_type == "PRINT":
+                station_ids = database.get_stations()
+
+                print("Stations in the database:")
+                for station_id in station_ids:
+                    station_metadata = database.get_station_metadata(station_id)
+
+                    device_info = station_metadata.get_device_info()
+                    location_info = station_metadata.get_location_info()
+                    latitude, longitude, height = station_metadata.get_geo_info()
+                    print(station_id + ": "
+                          + location_info + ", "
+                          + device_info + " ("
+                          + str(latitude) + "\N{DEGREE SIGN}, "
+                          + str(longitude) + "\N{DEGREE SIGN}, "
+                          + str(height) + " m)")
             else:
                 raise SyntaxError("Invalid command arguments")
 
