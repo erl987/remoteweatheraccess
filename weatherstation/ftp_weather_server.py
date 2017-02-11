@@ -39,7 +39,7 @@ def main():
         config_file_handler = FTPWeatherServerIniFile(sys.argv[1])
         configuration = config_file_handler.read()
 
-        with MultiProcessLogger(True, configuration.get_log_config()) as logger:
+        with MultiProcessLogger(is_print_to_screen=True, log_config=configuration.get_log_config()) as logger:
             try:
                 exception_queue = Queue()
                 sql_database_service_factory = SQLDatabaseServiceFactory(

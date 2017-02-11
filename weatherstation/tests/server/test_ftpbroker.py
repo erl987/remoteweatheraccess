@@ -282,7 +282,9 @@ class TestFTPServerBrokerProcess(unittest.TestCase):
             # then:
             self.assertRaises(FileNotFoundError, got_exception.re_raise)
         finally:
-            broker_process.join()
+            self._received_file_queue.put(None)  # finish the process
+            if broker_process.is_alive():
+                broker_process.join()
 
     def test_get_station_id(self):
         # given:
@@ -422,8 +424,8 @@ class TestFTPServerSideProxyProcess(unittest.TestCase):
             # then:
             self.assertRaises(NotExistingError, got_exception.re_raise)
         finally:
+            request_queue.put(None)  # finish the process even if no exception has been thrown
             if proxy_process.is_alive():
-                request_queue.put(None)  # finish the process even if no exception has been thrown
                 proxy_process.join()
 
 
