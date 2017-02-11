@@ -32,7 +32,7 @@ def main():
               "WARNING: REMOVING A SENSOR FROM THE DATABASE REMOVES ALL OF ITS DATA, THIS CANNOT BE UNDONE."
               "\n"
               "Command line arguments:\n"
-              "python manage_db_combi_sensors.py [DB_FILE] [PRINT] | [[TYPE] [JSON-FILE|SENSOR ID...]]\n"
+              "python manage_db_combi_sensors.py [DB_FILE] [PRINT] | [[TYPE] [JSON-FILE|SENSOR ID]]\n"
               "\n"
               "DB_FILE: path of the weather database file\n"
               "PRINT: prints all combi sensors present in the database\n"
@@ -48,7 +48,7 @@ def main():
               "Necessary format for the JSON-file:\n"
               "{\n"
               "     \"IN\": \"Innensensor\",\n",
-              "     \"OUT\": \"Außensensor 1\",\n"
+              "     \"OUT\": \"Außensensor 1\"\n"
               "}")
     else:
         db_file_name = sys.argv[1]

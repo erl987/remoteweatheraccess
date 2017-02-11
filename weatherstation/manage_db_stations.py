@@ -53,7 +53,7 @@ def main():
               "     \"latitude\": 49.374,\n",
               "     \"longitude\": 11.017,\n",
               "     \"height\": 330,\n",
-              "     \"rain_calib_factor\": 1.0,\n"
+              "     \"rain_calib_factor\": 1.0\n"
               "}")
     else:
         db_file_name = sys.argv[1]
@@ -89,7 +89,7 @@ def main():
             elif operation_type == "PRINT":
                 station_ids = database.get_stations()
 
-                print("Stations in the database:")
+                print("Stations in the database:\n")
                 for station_id in station_ids:
                     station_metadata = database.get_station_metadata(station_id)
 
