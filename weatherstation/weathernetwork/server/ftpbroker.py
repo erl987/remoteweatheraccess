@@ -394,7 +394,7 @@ class FTPBroker(object):
         # delete the ZIP-file corresponding to the message ID
         os.remove(self._data_directory + '/' + station_id + '/' + message_id)
 
-        logger.log(IMultiProcessLogger.INFO, "Successfully transferred message %s" % message_id)
+        logger.log(IMultiProcessLogger.INFO, "Removed the data file '{}' after processing".format(message_id))
 
 
 class FTPServerSideProxyProcess(object):
@@ -429,15 +429,18 @@ class FTPServerSideProxyProcess(object):
                 message = WeatherMessage(message_id, station_id, raw_data)
                 try:
                     database_service.add_data(message)
+                    if not raw_data:
+                        logger.log(IMultiProcessLogger.WARNING, "Received data for station {} was empty.".format(
+                            station_id))
+                    else:
+                        logger.log(IMultiProcessLogger.INFO, "New data for station '{}' stored ({} - {})".format(
+                                   station_id, raw_data[0].get_time(), raw_data[-1].get_time()))
                 except (NotExistingError, AlreadyExistingError) as e:
                     # the new data will be ignored
                     logger.log(IMultiProcessLogger.WARNING, e.msg)
 
                     # the sender needs to acknowledge anyway, that the data does not need to be stored anymore
                     parent.acknowledge_persistence(message_id, logger)
-
-                if not raw_data:
-                    logger.log(IMultiProcessLogger.WARNING, "Data for station %s was empty." % station_id)
         except Exception as e:
             exception_handler(DelayedException(e))
 
