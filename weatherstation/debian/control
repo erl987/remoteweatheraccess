@@ -1,0 +1,17 @@
+Source: remote-weather-access
+Maintainer: Ralf Rettig <info@personalfme.de>
+Section: python
+Priority: optional
+Build-Depends: python3-all, debhelper (>= 7.4.3)
+Standards-Version: 3.9.1
+
+
+
+
+
+Package: python3-remote-weather-access
+Architecture: all
+Depends: ${misc:Depends}, ${python3:Depends}
+Description: Weather network software (client + server) for collecting da
+
+
