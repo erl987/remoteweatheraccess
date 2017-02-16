@@ -21,6 +21,8 @@ case "$1" in
 		chmod 0777 /var/log/remote-weather-access
 		mkdir -p /etc/remote-weather-access
 		chmod 0777 /etc/remote-weather-access
+		mkdir -p /var/lib/remote-weather-access
+		chmod 0777 /var/lib/remote-weather-access
 		;;
 
     abort-upgrade)

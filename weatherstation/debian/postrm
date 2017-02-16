@@ -26,6 +26,9 @@ case "$1" in
 		fi	
 		if [ -d /etc/remote-weather-access ]; then
 			rmdir --ignore-fail-on-non-empty /etc/remote-weather-access
+		fi
+		if [ -d /var/lib/remote-weather-access ]; then
+			rmdir --ignore-fail-on-non-empty /var/lib/remote-weather-access
 		fi	
 
 		# mask the daemon

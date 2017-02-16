@@ -23,6 +23,7 @@ import threading
 import time
 from datetime import timedelta
 from multiprocessing import Event, Process, Queue
+from pathlib import Path
 from zipfile import ZipFile
 
 from watchdog.events import FileSystemEventHandler
@@ -465,6 +466,12 @@ class FTPServerSideProxy(IServerSideProxy):
         """
         # read the configuration
         data_directory, temp_data_directory, data_file_extension, delta_time = config.get()
+
+        # create the working directories if required
+        temp_data_dir_path = Path(temp_data_directory)
+        temp_data_dir_path.mkdir(exist_ok=True)
+        data_dir_path = Path(data_directory)
+        data_dir_path.mkdir(parents=True, exist_ok=True)
 
         # obtain the combi sensors existing in the database
         database_service = database_service_factory.create(False)  # no logging, because called from the main process
