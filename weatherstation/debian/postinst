@@ -32,17 +32,17 @@ case "$1" in
 		adduser --system --disabled-password --disabled-login --quiet --no-create-home --home /var/empty --group weather-daemon
 	
 		# set up the daemon
-		deb-systemd-helper unmask remote-weather-access.service >/dev/null || true
+		deb-systemd-helper unmask weatherserver.service >/dev/null || true
 
-		if deb-systemd-helper --quiet was-enabled remote-weather-access.service; then
-			deb-systemd-helper enable remote-weather-access.service >/dev/null || true
+		if deb-systemd-helper --quiet was-enabled weatherserver.service; then
+			deb-systemd-helper enable weatherserver.service >/dev/null || true
 		else
-			deb-systemd-helper update-state remote-weather-access.service >/dev/null || true
+			deb-systemd-helper update-state weatherserver.service >/dev/null || true
 		fi
 
 		if [ -d /run/systemd/system ]; then
 			systemctl --system daemon-reload >/dev/null || true
-			deb-systemd-invoke start remote-weather-access.service >/dev/null || true
+			deb-systemd-invoke start weatherserver.service >/dev/null || true
 		fi
 		;;
 

@@ -19,9 +19,9 @@ import shutil
 import unittest
 from multiprocessing import Process
 
-from weathernetwork.common.exceptions import RunInNotAllowedProcessError
-from weathernetwork.common.logging import MultiProcessLogger, MultiProcessLoggerProxy
-from weathernetwork.server.config import LogConfigSection
+from remote_weather_access.common.exceptions import RunInNotAllowedProcessError
+from remote_weather_access.common.logging import MultiProcessLogger, MultiProcessLoggerProxy
+from remote_weather_access.server.config import LogConfigSection
 
 
 def log_file_name():

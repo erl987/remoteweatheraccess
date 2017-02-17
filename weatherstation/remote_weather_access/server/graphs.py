@@ -14,10 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
-from weathernetwork.common.datastructures import CombiSensorData, BaseStationSensorData, RainSensorData
-from weathernetwork.common import utilities
+from remote_weather_access.common.datastructures import CombiSensorData, BaseStationSensorData, RainSensorData
+from remote_weather_access.common import utilities
 import matplotlib
-from weathernetwork.server.sqldatabase import SQLWeatherDB
+from remote_weather_access.server.sqldatabase import SQLWeatherDB
 
 matplotlib.use('Agg')
 from mpl_toolkits.axes_grid1 import host_subplot

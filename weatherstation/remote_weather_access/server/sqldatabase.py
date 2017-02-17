@@ -17,11 +17,11 @@
 import datetime
 import sqlite3
 
-from weathernetwork.common.datastructures import WeatherStationDataset
-from weathernetwork.common.logging import MultiProcessLoggerProxy
-from weathernetwork.server._sqldatabase_impl import _WeatherStationTable, _WindSensorTable, _RainSensorTable, \
+from remote_weather_access.common.datastructures import WeatherStationDataset
+from remote_weather_access.common.logging import MultiProcessLoggerProxy
+from remote_weather_access.server._sqldatabase_impl import _WeatherStationTable, _WindSensorTable, _RainSensorTable, \
     _CombiSensorDataTable, _WeatherDataTable, _CombiSensorDefinitionTable
-from weathernetwork.server.interface import IDatabaseService, IDatabaseServiceFactory
+from remote_weather_access.server.interface import IDatabaseService, IDatabaseServiceFactory
 
 
 class SQLDatabaseService(IDatabaseService):

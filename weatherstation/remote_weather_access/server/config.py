@@ -17,9 +17,9 @@
 import configparser
 from pathlib import Path
 
-from weathernetwork.common.utilities import Comparable
-from weathernetwork.server.exceptions import InvalidConfigFileError
-from weathernetwork.server.interface import IIniConfigSection
+from remote_weather_access.common.utilities import Comparable
+from remote_weather_access.server.exceptions import InvalidConfigFileError
+from remote_weather_access.server.interface import IIniConfigSection
 
 
 class BaseWeatherServerConfig(Comparable):

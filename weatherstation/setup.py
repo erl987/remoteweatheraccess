@@ -28,7 +28,7 @@ def read(fname):
 setup(
     name='remote-weather-access',
     version='0.2.0',
-    packages=find_packages(exclude=('tests', 'weathernetwork.client')),
+    packages=find_packages(exclude=('tests', 'remote_weather_access.client')),
     package_dir={'': '.'},
     url='https://github.com/erl987/remoteweatheraccess',
     license='GNU General Public License 3 or newer',
@@ -46,15 +46,15 @@ setup(
         'matplotlib'
     ],
     data_files=[
-        ('/lib/systemd/system', ['debian/remote-weather-access.service']),
-        ('/etc/remote-weather-access', ['exampleConfig/config_ftp_weather_server.ini'])
+        ('/lib/systemd/system', ['debian/weatherserver.service']),
+        ('/etc/remote-weather-access', ['config/weatherserver.ini'])
     ],
     entry_points={
         'console_scripts': [
-            'weather-server=weathernetwork.ftp_weather_server:main',
-            'manage-db-combi-sensors=weathernetwork.manage_db_combi_sensors:main',
-            'manage-db-stations=weathernetwork.manage_db_stations:main',
-            'plot-weather=weathernetwork.plot_weather_graph:main'
+            'weatherserver=remote_weather_access.ftp_weather_server:main',
+            'manage-weather-combi-sensors=remote_weather_access.manage_db_combi_sensors:main',
+            'manage-weather-stations=remote_weather_access.manage_db_stations:main',
+            'plot-weather=remote_weather_access.plot_weather_graph:main'
         ],
     }
 )

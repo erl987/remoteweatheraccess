@@ -18,8 +18,8 @@ import os
 import sqlite3
 import unittest
 
-from weathernetwork.server._sqldatabase_impl import _CombiSensorDefinitionTable
-from weathernetwork.server.exceptions import NotExistingError, AlreadyExistingError
+from remote_weather_access.server._sqldatabase_impl import _CombiSensorDefinitionTable
+from remote_weather_access.server.exceptions import NotExistingError, AlreadyExistingError
 
 
 def some_sensor_id():

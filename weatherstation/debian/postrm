@@ -36,7 +36,7 @@ case "$1" in
 		    systemctl --system daemon-reload >/dev/null || true
 		fi
 		if [ -x "/usr/bin/deb-systemd-helper" ]; then
-			deb-systemd-helper mask remote-weather-access.service >/dev/null
+			deb-systemd-helper mask weatherserver.service >/dev/null
 		fi
 		;;
 
@@ -46,8 +46,8 @@ case "$1" in
 		    systemctl --system daemon-reload >/dev/null || true
 		fi		
 		if [ -x "/usr/bin/deb-systemd-helper" ]; then
-			deb-systemd-helper purge remote-weather-access.service >/dev/null
-			deb-systemd-helper unmask remote-weather-access.service >/dev/null
+			deb-systemd-helper purge weatherserver.service >/dev/null
+			deb-systemd-helper unmask weatherserver.service >/dev/null
 		fi
 		exit 0
 		;;

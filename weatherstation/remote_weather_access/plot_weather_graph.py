@@ -16,9 +16,9 @@
 
 import sys
 from datetime import datetime
-from weathernetwork.common.logging import IMultiProcessLogger, MultiProcessLogger
-from weathernetwork.server import graphs
-from weathernetwork.server.config import WeatherPlotServiceIniFile
+from remote_weather_access.common.logging import IMultiProcessLogger, MultiProcessLogger
+from remote_weather_access.server import graphs
+from remote_weather_access.server.config import WeatherPlotServiceIniFile
 
 
 def main():

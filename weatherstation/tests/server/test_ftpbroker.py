@@ -25,13 +25,13 @@ from multiprocessing import Process, Queue
 
 from watchdog.events import FileSystemEvent
 
-from weathernetwork.server.config import FTPReceiverConfigSection
-from weathernetwork.server.exceptions import NotExistingError
-from weathernetwork.common.datastructures import WeatherMessage
-from weathernetwork.common.datastructures import WeatherStationDataset
-from weathernetwork.server.interface import IDatabaseServiceFactory, IDatabaseService
-from weathernetwork.common.logging import MultiProcessConnector, IMultiProcessLogger
-from weathernetwork.server.ftpbroker import FileSystemObserver, FTPServerBrokerProcess, FTPBroker, \
+from remote_weather_access.server.config import FTPReceiverConfigSection
+from remote_weather_access.server.exceptions import NotExistingError
+from remote_weather_access.common.datastructures import WeatherMessage
+from remote_weather_access.common.datastructures import WeatherStationDataset
+from remote_weather_access.server.interface import IDatabaseServiceFactory, IDatabaseService
+from remote_weather_access.common.logging import MultiProcessConnector, IMultiProcessLogger
+from remote_weather_access.server.ftpbroker import FileSystemObserver, FTPServerBrokerProcess, FTPBroker, \
     FTPServerSideProxyProcess, FTPServerSideProxy
 
 

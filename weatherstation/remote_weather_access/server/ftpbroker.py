@@ -29,12 +29,12 @@ from zipfile import ZipFile
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from weathernetwork.common.datastructures import WeatherMessage
-from weathernetwork.common.exceptions import DelayedException, FileParseError
-from weathernetwork.common.fileformats import PCWetterstationFormatFile
-from weathernetwork.common.logging import MultiProcessLoggerProxy, IMultiProcessLogger
-from weathernetwork.server.exceptions import AlreadyExistingError, NotExistingError
-from weathernetwork.server.interface import IServerSideProxy
+from remote_weather_access.common.datastructures import WeatherMessage
+from remote_weather_access.common.exceptions import DelayedException, FileParseError
+from remote_weather_access.common.fileformats import PCWetterstationFormatFile
+from remote_weather_access.common.logging import MultiProcessLoggerProxy, IMultiProcessLogger
+from remote_weather_access.server.exceptions import AlreadyExistingError, NotExistingError
+from remote_weather_access.server.interface import IServerSideProxy
 
 
 class FileSystemObserver(FileSystemEventHandler):

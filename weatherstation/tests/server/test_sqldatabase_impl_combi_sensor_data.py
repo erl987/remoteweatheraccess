@@ -20,9 +20,9 @@ import sqlite3
 import unittest
 
 from tests.builder_acessors import *
-from weathernetwork.common.datastructures import WeatherStationDataset, CombiSensorData
-from weathernetwork.server._sqldatabase_impl import _CombiSensorDataTable, _CombiSensorDefinitionTable
-from weathernetwork.server.exceptions import NotExistingError
+from remote_weather_access.common.datastructures import WeatherStationDataset, CombiSensorData
+from remote_weather_access.server._sqldatabase_impl import _CombiSensorDataTable, _CombiSensorDefinitionTable
+from remote_weather_access.server.exceptions import NotExistingError
 
 
 def some_time():

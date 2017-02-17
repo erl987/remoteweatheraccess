@@ -21,13 +21,15 @@ case "$1" in
 	remove|upgrade|deconfigure)
 		# Stop the daemon
 		if [ -d /run/systemd/system ]; then
-			if deb-systemd-helper --quiet is-enabled remote-weather-access.service; then
-				deb-systemd-invoke stop remote-weather-access.service >/dev/null
+			if deb-systemd-helper --quiet is-enabled weatherserver.service; then
+				deb-systemd-invoke stop weatherserver.service >/dev/null
 			fi
 		fi
 
 		# Remove all Python cache directories
-		pyclean -p python3-remote-weather-access
+		if [ -x "pyclean" ]; then
+			pyclean -p python3-remote-weather-access
+		fi
 		;;
 	failed-upgrade)
 		;;

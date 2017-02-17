@@ -17,8 +17,8 @@
 import sys
 import json
 
-from weathernetwork.common.datastructures import WeatherStationMetadata
-from weathernetwork.server.sqldatabase import SQLWeatherDB
+from remote_weather_access.common.datastructures import WeatherStationMetadata
+from remote_weather_access.server.sqldatabase import SQLWeatherDB
 
 
 def main():
