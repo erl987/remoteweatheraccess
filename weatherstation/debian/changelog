@@ -1,4 +1,4 @@
-remote-weather-access (0.2.0-1) unstable; urgency=low
+remote-weather-access (0.2.0-1) xenial; urgency=medium
 
   * source package automatically created by stdeb 0.8.5
 

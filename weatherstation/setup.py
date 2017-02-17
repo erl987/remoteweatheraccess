@@ -13,21 +13,30 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
+import os
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 # build the Debian package with: debuild -b -uc -us
+
+
+def read(fname):
+    """Text file reader."""
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
 
 setup(
     name='remote-weather-access',
     version='0.2.0',
-    packages=['.', 'weathernetwork.common', 'weathernetwork.server'],
+    packages=find_packages(exclude=('tests', 'weathernetwork.client')),
     package_dir={'': '.'},
     url='https://github.com/erl987/remoteweatheraccess',
     license='GNU General Public License 3 or newer',
     author='Ralf Rettig',
     author_email='info@personalfme.de',
-    description='Weather network software (client + server) for collecting data from remote weather stations',
+    description='Weather network software for collecting data from remote stations',
+    long_description=read('README.rst'),
+    platforms='any',
     install_requires=[
         'watchdog',
         'tblib',
@@ -39,5 +48,13 @@ setup(
     data_files=[
         ('/lib/systemd/system', ['debian/remote-weather-access.service']),
         ('/etc/remote-weather-access', ['exampleConfig/config_ftp_weather_server.ini'])
-    ]
+    ],
+    entry_points={
+        'console_scripts': [
+            'weather-server=weathernetwork.ftp_weather_server:main',
+            'manage-db-combi-sensors=weathernetwork.manage_db_combi_sensors:main',
+            'manage-db-stations=weathernetwork.manage_db_stations:main',
+            'plot-weather=weathernetwork.plot_weather_graph:main'
+        ],
+    }
 )

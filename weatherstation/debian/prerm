@@ -25,6 +25,9 @@ case "$1" in
 				deb-systemd-invoke stop remote-weather-access.service >/dev/null
 			fi
 		fi
+
+		# Remove all Python cache directories
+		pyclean -p python3-remote-weather-access
 		;;
 	failed-upgrade)
 		;;

@@ -11,7 +11,7 @@ After=multi-user.target
 Type=simple
 User=weather-daemon
 Restart=always
-ExecStart=/usr/bin/python3 /usr/lib/python3/dist-packages/ftp_weather_server.py /etc/remote-weather-access/config_ftp_weather_server.ini
+ExecStart=/usr/bin/weather-server /etc/remote-weather-access/config_ftp_weather_server.ini
 ExecReload=/bin/kill -TERM $MAINPID
 
 [Install]

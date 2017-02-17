@@ -11,7 +11,7 @@ Standards-Version: 3.9.1
 
 Package: python3-remote-weather-access
 Architecture: all
-Depends: ${misc:Depends}, ${python3:Depends}
-Description: Weather network software (client + server) for collecting da
+Depends: adduser, ${misc:Depends}, ${python3:Depends}
+Description: Weather network software for collecting data from remote stations
 
 
