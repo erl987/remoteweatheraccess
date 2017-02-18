@@ -47,14 +47,15 @@ setup(
     ],
     data_files=[
         ('/lib/systemd/system', ['debian/weatherserver.service']),
-        ('/etc/remote-weather-access', ['config/weatherserver.ini'])
+        ('/etc/remote-weather-access', ['config/weatherserver.ini', 'config/weatherplot.ini']),
+        ('/etc/cron.d', ['debian/remote-weather-access-cron'])
     ],
     entry_points={
         'console_scripts': [
             'weatherserver=remote_weather_access.ftp_weather_server:main',
             'manage-weather-combi-sensors=remote_weather_access.manage_db_combi_sensors:main',
             'manage-weather-stations=remote_weather_access.manage_db_stations:main',
-            'plot-weather=remote_weather_access.plot_weather_graph:main'
+            'weatherplot=remote_weather_access.plot_weather_graph:main'
         ],
     }
 )

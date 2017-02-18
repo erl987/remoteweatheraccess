@@ -32,7 +32,7 @@ def main():
               "WARNING: REMOVING A STATION FROM THE DATABASE REMOVES ALL OF ITS DATA, THIS CANNOT BE UNDONE."
               "\n"
               "Command line arguments:\n"
-              "python manage_db_stations.py [DB_FILE] [PRINT] | [[TYPE] [JSON-FILE|STATION ID]]\n"
+              "manage-weather-stations [DB_FILE] [PRINT] | [[TYPE] [JSON-FILE|STATION ID]]\n"
               "\n"
               "DB_FILE: path of the weather database file\n"
               "PRINT: prints all combi sensors present in the database\n"
@@ -56,12 +56,12 @@ def main():
               "     \"rain_calib_factor\": 1.0\n"
               "}")
     else:
-        db_file_name = sys.argv[1]
-        operation_type = sys.argv[2].upper()
-        station_metadata = None
-        station_id = None
-
         try:
+            db_file_name = sys.argv[1]
+            operation_type = sys.argv[2].upper()
+            station_metadata = None
+            station_id = None
+
             if operation_type == "ADD" or operation_type == "REPLACE":
                 # read the station metadata
                 json_metadata_file = sys.argv[3]

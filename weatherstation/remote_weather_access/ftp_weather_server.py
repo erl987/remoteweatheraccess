@@ -34,41 +34,44 @@ def main():
     """
     # read the configuration file (specified in the first command line argument)
     if len(sys.argv) <= 1 or len(sys.argv) > 1 and sys.argv[1].lower() == "help":
-        print("Weather server listening for data via FTP. Usage: python ftp_weather_server.py config.ini")
+        print("Weather server listening for data via FTP. Usage: weatherserver config.ini")
     else:
-        config_file_handler = FTPWeatherServerIniFile(sys.argv[1])
-        configuration = config_file_handler.read()
+        try:
+            config_file_handler = FTPWeatherServerIniFile(sys.argv[1])
+            configuration = config_file_handler.read()
 
-        with MultiProcessLogger(is_print_to_screen=True, log_config=configuration.get_log_config()) as logger:
-            try:
-                exception_queue = Queue()
-                sql_database_service_factory = SQLDatabaseServiceFactory(
-                    configuration.get_database_config().get_db_file_name(),
-                    logger.get_connection()
-                )
+            with MultiProcessLogger(is_print_to_screen=True, log_config=configuration.get_log_config()) as logger:
+                try:
+                    exception_queue = Queue()
+                    sql_database_service_factory = SQLDatabaseServiceFactory(
+                        configuration.get_database_config().get_db_file_name(),
+                        logger.get_connection()
+                    )
 
-                # main server loop
-                with FTPServerSideProxy(
-                        sql_database_service_factory,
-                        configuration.get_ftp_receiver_settings(),
-                        logger.get_connection(),
-                        exception_queue
-                ):
-                    logger.log(IMultiProcessLogger.INFO, "Server is running.")
-                
-                    # stall the main thread until the program is finished
-                    exception_from_subprocess = None
-                    try:
-                        exception_from_subprocess = exception_queue.get()
-                    except KeyboardInterrupt:
-                        pass
+                    # main server loop
+                    with FTPServerSideProxy(
+                            sql_database_service_factory,
+                            configuration.get_ftp_receiver_settings(),
+                            logger.get_connection(),
+                            exception_queue
+                    ):
+                        logger.log(IMultiProcessLogger.INFO, "Server is running.")
 
-                    if exception_from_subprocess:
-                        exception_from_subprocess.re_raise()
-            except Exception as e:
-                logger.log(IMultiProcessLogger.ERROR, str(e))
+                        # stall the main thread until the program is finished
+                        exception_from_subprocess = None
+                        try:
+                            exception_from_subprocess = exception_queue.get()
+                        except KeyboardInterrupt:
+                            pass
 
-            logger.log(IMultiProcessLogger.INFO, "Server has stopped.")
+                        if exception_from_subprocess:
+                            exception_from_subprocess.re_raise()
+                except Exception as e:
+                    logger.log(IMultiProcessLogger.ERROR, str(e))
+
+                logger.log(IMultiProcessLogger.INFO, "Server has stopped.")
+        except Exception as e:
+            print("An exception occurred: {}".format(str(e)))
 
 
 if __name__ == "__main__":

@@ -14,10 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
+import matplotlib
 from remote_weather_access.common.datastructures import CombiSensorData, BaseStationSensorData, RainSensorData
 from remote_weather_access.common import utilities
-import matplotlib
 from remote_weather_access.server.sqldatabase import SQLWeatherDB
+from remote_weather_access.server.exceptions import NotExistingError
 
 matplotlib.use('Agg')
 from mpl_toolkits.axes_grid1 import host_subplot
@@ -163,9 +164,18 @@ def plot_of_last_n_days(num_days, db_file_name, station_id, sensors_to_plot, gra
     :return:                    number of datasets plotted, timepoint of the beginning of the plotted dataset,
                                 timepoint of the end of the plotted dataset
     :rtype:                     tuple(int, datetime.datetime, datetime.datetime)
+    :raise NotExistingError:    if no data for the requested period is available for the requested station
     """
     # Find data for the last n days in the data folder
     data = get_last_n_days_data(num_days, db_file_name, station_id, last_time)
+
+    if len(data) < 2:
+        exception_string = "No or not enough data available to create a plot for the station '{}' for the last {} " \
+                           "days".format(station_id, num_days)
+        if last_time:
+            exception_string += " since {}".format(last_time)
+
+        raise NotExistingError(exception_string)
 
     # Calculate secondary y-axis positions
     y_axis_pos = []
