@@ -20,6 +20,7 @@ from pathlib import Path
 from remote_weather_access.common.logging import IMultiProcessLogger, MultiProcessLogger
 from remote_weather_access.server import graphs
 from remote_weather_access.server.config import WeatherPlotServiceIniFile
+from remote_weather_access.server.sqldatabase import SQLWeatherDB
 
 
 def main():
@@ -27,17 +28,19 @@ def main():
     Plotting the weather data for the requested station taking the data from a SQL-database.
     
     Commandline arguments:
-    station_ID to be plotted, configuration INI-file
+    station_ID (or "all" stations) to be plotted, configuration INI-file
 
     Usage:
     python plot_weather_graph.py STATION_ID plot_config.ini
+    or: python plot_weather_graph.py ALL plot_config.ini
     """
     # read the command line arguments
     if len(sys.argv) != 3:
-        print("Plotting weather data from a SQL database. Usage: weatherplot STATION_ID plot_config.ini")
+        print("Plotting weather data from a SQL database. Usage:\n\nweatherplot STATION_ID plot_config.ini\n"
+              "weatherplot ALL plot_config.ini")
     else:
         try:
-            station_id = sys.argv[1]
+            entered_station_id = sys.argv[1]
             config_file_name = sys.argv[2]
 
             config_file_handler = WeatherPlotServiceIniFile(config_file_name)
@@ -48,33 +51,41 @@ def main():
                 graph_directory, graph_file_name = configuration.get_plotter_settings().get_graph_file_settings()
 
                 try:
-                    # create the (sub-) directory of the plot if required
-                    plot_dir_path = Path(graph_directory + os.sep + station_id)
-                    try:
-                        plot_dir_path.mkdir(exist_ok=True, parents=True)
-                    except Exception:
-                        raise FileNotFoundError("The directory '{}' could not be created".format(plot_dir_path))
+                    # create plots for all requested stations
+                    if entered_station_id.upper() == "ALL":
+                        weather_db = SQLWeatherDB(configuration.get_database_config().get_db_file_name())
+                        chosen_station_ids = weather_db.get_stations()
+                    else:
+                        chosen_station_ids = [entered_station_id]
 
-                    logger.log(IMultiProcessLogger.INFO, "Started plotting the last {} days for station {}.".format(
-                        time_period_duration, station_id))
-                    num_plot_datasets, first_plot_time, last_plot_time = graphs.plot_of_last_n_days(
-                        time_period_duration,
-                        configuration.get_database_config().get_db_file_name(),
-                        station_id,
-                        configuration.get_plotter_settings().get_sensors_to_plot(),
-                        graph_directory,
-                        graph_file_name,
-                        True
-                    )
-                    logger.log(
-                        IMultiProcessLogger.INFO,
-                        "Finished plotting for station {}, plotted {} datasets ({} - {}).".format(
+                    for station_id in chosen_station_ids:
+                        # create the (sub-) directory of the plot if required
+                        plot_dir_path = Path(graph_directory + os.sep + station_id)
+                        try:
+                            plot_dir_path.mkdir(exist_ok=True, parents=True)
+                        except Exception:
+                            raise FileNotFoundError("The directory '{}' could not be created".format(plot_dir_path))
+
+                        logger.log(IMultiProcessLogger.INFO, "Started plotting the last {} days for station {}.".format(
+                            time_period_duration, station_id))
+                        num_plot_datasets, first_plot_time, last_plot_time = graphs.plot_of_last_n_days(
+                            time_period_duration,
+                            configuration.get_database_config().get_db_file_name(),
                             station_id,
-                            num_plot_datasets,
-                            first_plot_time,
-                            last_plot_time
+                            configuration.get_plotter_settings().get_sensors_to_plot(),
+                            graph_directory,
+                            graph_file_name,
+                            True
                         )
-                    )
+                        logger.log(
+                            IMultiProcessLogger.INFO,
+                            "Finished plotting for station {}, plotted {} datasets ({} - {}).".format(
+                                station_id,
+                                num_plot_datasets,
+                                first_plot_time,
+                                last_plot_time
+                            )
+                        )
                 except Exception as e:
                     logger.log(IMultiProcessLogger.ERROR, repr(e))
         except Exception as e:

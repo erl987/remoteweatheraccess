@@ -3,4 +3,4 @@
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
-*/10 * * * * weather-daemon weatherplot NBG /etc/remote-weather-access/weatherplot.ini > /dev/null 2>&1
+*/10 * * * * weather-daemon weatherplot ALL /etc/remote-weather-access/weatherplot.ini > /dev/null 2>&1
