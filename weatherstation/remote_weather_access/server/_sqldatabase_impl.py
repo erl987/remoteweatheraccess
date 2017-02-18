@@ -74,8 +74,11 @@ class _WeatherStationTable(object):
                     height, \
                     rainCalibFactor) VALUES (?,?,?,?,?,?,?)",
                               (identifier, device, location, latitude, longitude, height, rain_calib_factor))
-        except sqlite3.Error:
-            raise AlreadyExistingError("The station is already existing")
+        except sqlite3.Error as e:
+            if "UNIQUE" in e.args[0].upper():
+                raise AlreadyExistingError("The station is already existing")
+            else:
+                raise
 
     def replace(self, station):
         """
