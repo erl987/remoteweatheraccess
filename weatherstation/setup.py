@@ -48,7 +48,8 @@ setup(
     data_files=[
         ('/lib/systemd/system', ['debian/weatherserver.service']),
         ('/etc/remote-weather-access', ['config/weatherserver.ini', 'config/weatherplot.ini']),
-        ('/etc/cron.d', ['debian/remote-weather-access-cron'])
+        ('/etc/cron.d', ['debian/remote-weather-access-cron']),
+        ('/var/lib/remote-weather-access/templates', ['config/new_station.json', 'config/new_combi_sensors.json'])
     ],
     entry_points={
         'console_scripts': [
