@@ -44,10 +44,10 @@ from datetime import timedelta
 import os
 import shutil
 
-from client import te923ToCSVreader
-from client import stationdata
-from client import lastdata
-from client import te923station
+from remote_weather_access.client import te923ToCSVreader
+from remote_weather_access.client import stationdata
+from remote_weather_access.client import lastdata
+from remote_weather_access.client import te923station
 
 data_folder = './test_data/'
 station_data_file_name = 'stationData.dat'
@@ -78,8 +78,8 @@ class TestProcessToCSV(unittest.TestCase):
         stationdata.write( data_folder + station_data_file_name, rain_calib_factor, station_name, station_height, storage_interval, ftp_passwd, ftp_server, port, ftp_folder )
 
 
-    @patch('client.te923ToCSVreader.dt', SpoofDate)
-    @patch('client.server.FTP', autospec=True)
+    @patch('remote_weather_access.client.te923ToCSVreader.dt', SpoofDate)
+    @patch('remote_weather_access.client.server.FTP', autospec=True)
     def test_first_execution(self, mock_FTP_constructor):
         '''Tests the behviour in case of first execution with no last data file being present.'''
         # Simulate reading of weather data
@@ -93,8 +93,8 @@ class TestProcessToCSV(unittest.TestCase):
         # TODO: implement useful assert
 
 
-    @patch('client.te923ToCSVreader.dt', SpoofDate)
-    @patch('client.server.FTP', autospec=True)
+    @patch('remote_weather_access.client.te923ToCSVreader.dt', SpoofDate)
+    @patch('remote_weather_access.client.server.FTP', autospec=True)
     def test_single_data_read(self, mock_FTP_constructor):
         '''Test the behaviour if one new dataset has been read (i.e. a call between [1.0 ... 2.0[ * storage_interval).'''
         time_last = 1381578982 # in seconds since epoch (CET including possible daylight saving)      
@@ -109,8 +109,8 @@ class TestProcessToCSV(unittest.TestCase):
         # TODO: implement useful assert
 
 
-    @patch('client.te923ToCSVreader.dt', SpoofDate)
-    @patch('client.server.FTP', autospec=True)
+    @patch('remote_weather_access.client.te923ToCSVreader.dt', SpoofDate)
+    @patch('remote_weather_access.client.server.FTP', autospec=True)
     def test_no_new_data_read(self, mock_FTP_constructor):
         '''Test the behaviour if no new dataset has been read (i.e. a call between [0.0 ... 1.0[ * storage_interval).'''
         time_last = 1381578982 # in seconds since epoch (CET including possible daylight saving)   
@@ -132,8 +132,8 @@ class TestProcessToCSV(unittest.TestCase):
         self.assertFalse( is_reading )
 
 
-    @patch('client.te923ToCSVreader.dt', SpoofDate)
-    @patch('client.server.FTP', autospec=True)
+    @patch('remote_weather_access.client.te923ToCSVreader.dt', SpoofDate)
+    @patch('remote_weather_access.client.server.FTP', autospec=True)
     def test_multiple_data_read(self, mock_FTP_constructor):
         '''Test the behaviour if multiple new datasets have been read (i.e. a call > 1.0 * storage_interval).'''
         time_last = 1381578982 # in seconds since epoch (CET including possible daylight saving)      
@@ -151,8 +151,8 @@ class TestProcessToCSV(unittest.TestCase):
         # TODO: implement useful assert
 
 
-    @patch('client.te923ToCSVreader.dt', SpoofDate)
-    @patch('client.server.FTP', autospec=True)
+    @patch('remote_weather_access.client.te923ToCSVreader.dt', SpoofDate)
+    @patch('remote_weather_access.client.server.FTP', autospec=True)
     def test_distant_data_read(self, mock_FTP_constructor):
         '''Test the behaviour if datasets with time gaps in between are read (this requires special handling of rain counters).'''
         time_last = 1381578982 # in seconds since epoch (CET including possible daylight saving)      
@@ -170,9 +170,9 @@ class TestProcessToCSV(unittest.TestCase):
         # TODO: implement useful assert
 
 
-    @patch('client.te923ToCSVreader.dt', SpoofDate)
-    @patch('client.server.dt', SpoofDate)
-    @patch('client.server.FTP', autospec=True)
+    @patch('remote_weather_access.client.te923ToCSVreader.dt', SpoofDate)
+    @patch('remote_weather_access.client.server.dt', SpoofDate)
+    @patch('remote_weather_access.client.server.FTP', autospec=True)
     def test_two_months_read(self, mock_FTP_constructor):
         '''Test the behaviour in case of a month change during the reading.'''
         time_last = 1383259782 # in seconds since epoch (CET including possible daylight saving)      

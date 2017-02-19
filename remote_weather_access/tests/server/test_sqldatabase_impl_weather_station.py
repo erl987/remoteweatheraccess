@@ -19,9 +19,9 @@ import sqlite3
 import unittest
 
 from tests.builder_acessors import *
-from common.datastructures import WeatherStationMetadata
-from server._sqldatabase_impl import _WeatherStationTable
-from server.exceptions import NotExistingError, AlreadyExistingError
+from remote_weather_access.common.datastructures import WeatherStationMetadata
+from remote_weather_access.server._sqldatabase_impl import _WeatherStationTable
+from remote_weather_access.server.exceptions import NotExistingError, AlreadyExistingError
 
 
 class Station(object):

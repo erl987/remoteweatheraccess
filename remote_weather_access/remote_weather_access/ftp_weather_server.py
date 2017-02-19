@@ -15,10 +15,10 @@
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 import signal
 import sys
-from server.ftpbroker import FTPServerSideProxy
-from server.sqldatabase import SQLDatabaseServiceFactory
-from server.config import FTPWeatherServerIniFile
-from common.logging import MultiProcessLogger, IMultiProcessLogger
+from remote_weather_access.server.ftpbroker import FTPServerSideProxy
+from remote_weather_access.server.sqldatabase import SQLDatabaseServiceFactory
+from remote_weather_access.server.config import FTPWeatherServerIniFile
+from remote_weather_access. common.logging import MultiProcessLogger, IMultiProcessLogger
 from multiprocessing import Queue
 
 

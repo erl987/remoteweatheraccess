@@ -16,8 +16,8 @@
 
 from abc import ABCMeta, abstractmethod
 
-from common.utilities import Comparable
-from server.exceptions import NotExistingError
+from remote_weather_access.common.utilities import Comparable
+from remote_weather_access.server.exceptions import NotExistingError
 
 
 class Sensor(metaclass=ABCMeta):

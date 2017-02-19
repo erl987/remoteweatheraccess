@@ -32,8 +32,8 @@ import datetime
 from datetime import datetime as dt
 from collections import OrderedDict
 
-from client import constants
-from common import utilities
+from remote_weather_access.client import constants
+from remote_weather_access.common import utilities
 
 
 data_file_tag = 'EXP'       # indicating a PC-Wetterstation data file

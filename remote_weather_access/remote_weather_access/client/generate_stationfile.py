@@ -27,7 +27,7 @@ ftp_server:                     Name of the FTP-server where the data is transfe
 port:                           Connection port of the FTP-server (default: port 21)
 ftp_folder:                     Directory on the FTP-server where the data is stored
 """
-from client import stationdata
+from remote_weather_access.client import stationdata
 
 station_data_file_name = 'stationData.dat'
 rain_calib_factor = 1.0
