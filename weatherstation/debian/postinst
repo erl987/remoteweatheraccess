@@ -17,6 +17,12 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
+
+USER="weather-daemon"
+PACKAGE="remote-weather-access"
+DAEMON="weatherserver.service"
+
+
 # source debconf library
 . /usr/share/debconf/confmodule
 
@@ -28,9 +34,6 @@ fi
 case "$1" in
 
 	configure)
-		USER="weather-daemon"
-		PACKAGE="remote-weather-access"
-		
 		# create a new user (if not already existing)
 		adduser --system --disabled-password --disabled-login --quiet --no-create-home --home /var/empty --group ${USER}
 
@@ -42,7 +45,6 @@ case "$1" in
 		fi
 	
 		# set up the daemon
-		DAEMON="weatherserver.service"
 		deb-systemd-helper unmask ${DAEMON} >/dev/null || true
 
 		if deb-systemd-helper --quiet was-enabled ${DAEMON}; then

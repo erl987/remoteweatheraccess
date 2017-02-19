@@ -16,13 +16,15 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
+DAEMON="weatherserver.service"
+PACKAGE="remote-weather-access"
 
 case "$1" in
 	remove|upgrade|deconfigure)
 		# Stop the daemon
 		if [ -d /run/systemd/system ]; then
-			if deb-systemd-helper --quiet is-enabled weatherserver.service; then
-				deb-systemd-invoke stop weatherserver.service >/dev/null
+			if deb-systemd-helper --quiet is-enabled ${DAEMON}; then
+				deb-systemd-invoke stop ${DAEMON} >/dev/null
 			fi
 		fi
 

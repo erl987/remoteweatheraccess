@@ -14,11 +14,11 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
+PACKAGE="remote-weather-access"
+
 
 case "$1" in
     install|upgrade)
-		PACKAGE="remote-weather-access"
-
 		mkdir -p /var/log/${PACKAGE}
 		chmod 0755 /var/log/${PACKAGE}
 
@@ -30,6 +30,9 @@ case "$1" in
 
 		mkdir -p /var/lib/${PACKAGE}/templates
 		chmod 0777 /var/lib/${PACKAGE}/templates
+
+		mkdir -p /var/lib/${PACKAGE}/receiver
+		chmod 0755 /var/lib/${PACKAGE}/receiver
 		;;
 
     abort-upgrade)

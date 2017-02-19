@@ -17,18 +17,26 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
+DAEMON="weatherserver.service"
+PACKAGE="remote-weather-access"
 
 case "$1" in
 	remove|abort-install)
 		# the directories will not be removed if they are not empty
-		if [ -d /var/log/remote-weather-access ]; then
-			rmdir --ignore-fail-on-non-empty /var/log/remote-weather-access
+		if [ -d /var/log/${PACKAGE} ]; then
+			rmdir --ignore-fail-on-non-empty /var/log/${PACKAGE}
 		fi	
-		if [ -d /etc/remote-weather-access ]; then
-			rmdir --ignore-fail-on-non-empty /etc/remote-weather-access
+		if [ -d /etc/${PACKAGE} ]; then
+			rmdir --ignore-fail-on-non-empty /etc/${PACKAGE}
 		fi
-		if [ -d /var/lib/remote-weather-access ]; then
-			rmdir --ignore-fail-on-non-empty /var/lib/remote-weather-access
+		if [ -d /var/lib/${PACKAGE}/templates ]; then
+			rmdir --ignore-fail-on-non-empty /var/lib/${PACKAGE}/templates
+		fi
+		if [ -d /var/lib/${PACKAGE}/receiver ]; then
+			rmdir --ignore-fail-on-non-empty /var/lib/${PACKAGE}/receiver
+		fi
+		if [ -d /var/lib/${PACKAGE} ]; then
+			rmdir --ignore-fail-on-non-empty /var/lib/${PACKAGE}
 		fi	
 
 		# mask the daemon
@@ -36,7 +44,7 @@ case "$1" in
 		    systemctl --system daemon-reload >/dev/null || true
 		fi
 		if [ -x "/usr/bin/deb-systemd-helper" ]; then
-			deb-systemd-helper mask weatherserver.service >/dev/null
+			deb-systemd-helper mask ${DAEMON} >/dev/null
 		fi
 		;;
 
@@ -46,8 +54,8 @@ case "$1" in
 		    systemctl --system daemon-reload >/dev/null || true
 		fi		
 		if [ -x "/usr/bin/deb-systemd-helper" ]; then
-			deb-systemd-helper purge weatherserver.service >/dev/null
-			deb-systemd-helper unmask weatherserver.service >/dev/null
+			deb-systemd-helper purge ${DAEMON} >/dev/null
+			deb-systemd-helper unmask ${DAEMON} >/dev/null
 		fi
 		exit 0
 		;;
