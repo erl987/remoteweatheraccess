@@ -29,7 +29,9 @@ case "$1" in
 		fi
 
 		# Remove all Python cache directories
-		pyclean -p python3-remote-weather-access
+		if [ -x /usr/bin/py3clean ]; then
+			py3clean -p python3-${PACKAGE}
+		fi
 		;;
 	failed-upgrade)
 		;;
