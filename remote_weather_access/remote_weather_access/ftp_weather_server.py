@@ -36,6 +36,38 @@ def handler_stop_signals(signum, frame):
     _exception_queue.put(_REGULAR_STOP)
 
 
+def run_on_linux():
+    """
+    Stalls the main thread until the program is finished.
+
+    :return:        exception thrown by a subprocess or _REGULAR_STOP
+    """
+    signal.signal(signal.SIGINT, handler_stop_signals)
+    signal.signal(signal.SIGTERM, handler_stop_signals)
+
+    # wait a regular stop or an exception
+    exception_from_subprocess = _exception_queue.get()
+
+    return exception_from_subprocess
+
+
+def run_on_windows():
+    """
+    Stalls the main thread until the program is finished.
+
+    :return:        exception thrown by a subprocess or None
+    """
+    exception_from_subprocess = None
+
+    # wait for Crtl + C
+    try:
+        exception_from_subprocess = _exception_queue.get()
+    except KeyboardInterrupt:
+        pass
+
+    return exception_from_subprocess
+
+
 def main():
     """
     Weather server listening for data via FTP.
@@ -71,15 +103,10 @@ def main():
                         logger.log(IMultiProcessLogger.INFO, "Server is running.")
 
                         # stall the main thread until the program is finished
-                        if not sys.platform.startswith("win32"):
-                            signal.signal(signal.SIGINT, handler_stop_signals)
-                            signal.signal(signal.SIGTERM, handler_stop_signals)
-
-                        exception_from_subprocess = None
-                        try:
-                            exception_from_subprocess = _exception_queue.get()
-                        except KeyboardInterrupt:
-                            pass
+                        if sys.platform.startswith("win32"):
+                            exception_from_subprocess = run_on_windows()
+                        else:
+                            exception_from_subprocess = run_on_linux()
 
                         if exception_from_subprocess and exception_from_subprocess != _REGULAR_STOP:
                             exception_from_subprocess.re_raise()
