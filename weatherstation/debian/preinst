@@ -17,12 +17,19 @@ set -e
 
 case "$1" in
     install|upgrade)
-		mkdir -p /var/log/remote-weather-access
-		chmod 0777 /var/log/remote-weather-access
-		mkdir -p /etc/remote-weather-access
-		chmod 0777 /etc/remote-weather-access
-		mkdir -p /var/lib/remote-weather-access
-		chmod 0777 /var/lib/remote-weather-access
+		PACKAGE="remote-weather-access"
+
+		mkdir -p /var/log/${PACKAGE}
+		chmod 0755 /var/log/${PACKAGE}
+
+		mkdir -p /etc/${PACKAGE}
+		chmod 0755 /etc/${PACKAGE}
+
+		mkdir -p /var/lib/${PACKAGE}
+		chmod 0755 /var/lib/${PACKAGE}
+
+		mkdir -p /var/lib/${PACKAGE}/templates
+		chmod 0777 /var/lib/${PACKAGE}/templates
 		;;
 
     abort-upgrade)

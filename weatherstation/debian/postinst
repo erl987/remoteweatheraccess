@@ -28,21 +28,32 @@ fi
 case "$1" in
 
 	configure)
+		USER="weather-daemon"
+		PACKAGE="remote-weather-access"
+		
 		# create a new user (if not already existing)
-		adduser --system --disabled-password --disabled-login --quiet --no-create-home --home /var/empty --group weather-daemon
+		adduser --system --disabled-password --disabled-login --quiet --no-create-home --home /var/empty --group ${USER}
+
+		# change the owner of the directories created in preinst
+		if id -u $USER > /dev/null 2>&1; then    
+			chown ${USER}:${USER} /var/log/${PACKAGE}
+			chown -R ${USER}:${USER} /var/lib/${PACKAGE}
+			chmod -R 0777 /var/lib/${PACKAGE}/templates
+		fi
 	
 		# set up the daemon
-		deb-systemd-helper unmask weatherserver.service >/dev/null || true
+		DAEMON="weatherserver.service"
+		deb-systemd-helper unmask ${DAEMON} >/dev/null || true
 
-		if deb-systemd-helper --quiet was-enabled weatherserver.service; then
-			deb-systemd-helper enable weatherserver.service >/dev/null || true
+		if deb-systemd-helper --quiet was-enabled ${DAEMON}; then
+			deb-systemd-helper enable ${DAEMON} >/dev/null || true
 		else
-			deb-systemd-helper update-state weatherserver.service >/dev/null || true
+			deb-systemd-helper update-state ${DAEMON} >/dev/null || true
 		fi
 
 		if [ -d /run/systemd/system ]; then
 			systemctl --system daemon-reload >/dev/null || true
-			deb-systemd-invoke start weatherserver.service >/dev/null || true
+			deb-systemd-invoke start ${DAEMON} >/dev/null || true
 		fi
 		;;
 
