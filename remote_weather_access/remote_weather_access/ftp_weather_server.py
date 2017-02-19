@@ -13,13 +13,27 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
-
+import signal
 import sys
 from remote_weather_access.server.ftpbroker import FTPServerSideProxy
 from remote_weather_access.server.sqldatabase import SQLDatabaseServiceFactory
 from remote_weather_access.server.config import FTPWeatherServerIniFile
 from remote_weather_access.common.logging import MultiProcessLogger, IMultiProcessLogger
 from multiprocessing import Queue
+
+
+_exception_queue = Queue()
+_REGULAR_STOP = "REGULAR_STOP"
+
+
+def handler_stop_signals(signum, frame):
+    """
+    Handles termination events.
+
+    :param signum:  signal number
+    :param frame:   current stack frame
+    """
+    _exception_queue.put(_REGULAR_STOP)
 
 
 def main():
@@ -42,7 +56,6 @@ def main():
 
             with MultiProcessLogger(is_print_to_screen=True, log_config=configuration.get_log_config()) as logger:
                 try:
-                    exception_queue = Queue()
                     sql_database_service_factory = SQLDatabaseServiceFactory(
                         configuration.get_database_config().get_db_file_name(),
                         logger.get_connection()
@@ -53,18 +66,17 @@ def main():
                             sql_database_service_factory,
                             configuration.get_ftp_receiver_settings(),
                             logger.get_connection(),
-                            exception_queue
+                            _exception_queue
                     ):
                         logger.log(IMultiProcessLogger.INFO, "Server is running.")
 
                         # stall the main thread until the program is finished
-                        exception_from_subprocess = None
-                        try:
-                            exception_from_subprocess = exception_queue.get()
-                        except KeyboardInterrupt:
-                            pass
+                        signal.signal(signal.SIGINT, handler_stop_signals)
+                        signal.signal(signal.SIGTERM, handler_stop_signals)
 
-                        if exception_from_subprocess:
+                        exception_from_subprocess = _exception_queue.get()
+
+                        if exception_from_subprocess != _REGULAR_STOP:
                             exception_from_subprocess.re_raise()
                 except Exception as e:
                     logger.log(IMultiProcessLogger.ERROR, str(e))

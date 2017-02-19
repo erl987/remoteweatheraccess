@@ -13,6 +13,7 @@ User=weather-daemon
 Restart=always
 ExecStart=/usr/bin/weatherserver /etc/remote-weather-access/weatherserver.ini
 ExecReload=/bin/kill -TERM $MAINPID
+ExecStop=/bin/kill -TERM $MAINPID
 
 [Install]
 WantedBy=multi-user.target
