@@ -1,5 +1,5 @@
 # RemoteWeatherAccess - Weather network connecting to remote stations
-# Copyright(C) 2013-2016 Ralf Rettig (info@personalfme.de)
+# Copyright(C) 2013-2017 Ralf Rettig (info@personalfme.de)
 #
 # This program is free software: you can redistribute it and / or modify
 # it under the terms of the GNU General Public License as published by
