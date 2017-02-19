@@ -20,8 +20,8 @@ import sqlite3
 import unittest
 
 from tests.builder_acessors import *
-from remote_weather_access.common.datastructures import WeatherStationDataset, WindSensorData
-from remote_weather_access.server._sqldatabase_impl import _WindSensorTable
+from common.datastructures import WeatherStationDataset, WindSensorData
+from server._sqldatabase_impl import _WindSensorTable
 
 
 def some_time():

@@ -17,7 +17,7 @@
 import math
 from datetime import datetime
 
-from remote_weather_access.server.exceptions import NoContentError
+from server.exceptions import NoContentError
 
 
 def is_float(string):

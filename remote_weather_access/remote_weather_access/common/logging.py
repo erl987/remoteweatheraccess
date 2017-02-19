@@ -23,7 +23,7 @@ from multiprocessing import Queue
 from logging.handlers import SysLogHandler, RotatingFileHandler
 from abc import ABCMeta, abstractmethod
 
-from remote_weather_access.common.exceptions import RunInNotAllowedProcessError
+from common.exceptions import RunInNotAllowedProcessError
 
 
 def _remove_all_log_handlers():

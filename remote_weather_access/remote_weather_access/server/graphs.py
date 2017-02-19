@@ -15,10 +15,10 @@
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
 import matplotlib
-from remote_weather_access.common.datastructures import CombiSensorData, BaseStationSensorData, RainSensorData
-from remote_weather_access.common import utilities
-from remote_weather_access.server.sqldatabase import SQLWeatherDB
-from remote_weather_access.server.exceptions import NotExistingError
+from common.datastructures import CombiSensorData, BaseStationSensorData, RainSensorData
+from common import utilities
+from server.sqldatabase import SQLWeatherDB
+from server.exceptions import NotExistingError
 
 matplotlib.use('Agg')
 from mpl_toolkits.axes_grid1 import host_subplot

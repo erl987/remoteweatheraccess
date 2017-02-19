@@ -19,10 +19,10 @@ import os
 from datetime import datetime as dt
 from datetime import timedelta
 
-from remote_weather_access.common.utilities import extract_bracket_contents
-from remote_weather_access.common.exceptions import PCWetterstationFileParseError, DatasetFormatError
-from remote_weather_access.common.datastructures import CombiSensorData, BaseStationSensorData, WindSensorData, RainSensorData
-from remote_weather_access.common.datastructures import WeatherStationMetadata, WeatherStationDataset
+from common.utilities import extract_bracket_contents
+from common.exceptions import PCWetterstationFileParseError, DatasetFormatError
+from common.datastructures import CombiSensorData, BaseStationSensorData, WindSensorData, RainSensorData
+from common.datastructures import WeatherStationMetadata, WeatherStationDataset
 
 
 class PCWetterstationFormatFile(object):

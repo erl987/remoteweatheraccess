@@ -15,10 +15,10 @@
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 import signal
 import sys
-from remote_weather_access.server.ftpbroker import FTPServerSideProxy
-from remote_weather_access.server.sqldatabase import SQLDatabaseServiceFactory
-from remote_weather_access.server.config import FTPWeatherServerIniFile
-from remote_weather_access.common.logging import MultiProcessLogger, IMultiProcessLogger
+from server.ftpbroker import FTPServerSideProxy
+from server.sqldatabase import SQLDatabaseServiceFactory
+from server.config import FTPWeatherServerIniFile
+from common.logging import MultiProcessLogger, IMultiProcessLogger
 from multiprocessing import Queue
 
 
@@ -28,7 +28,7 @@ _REGULAR_STOP = "REGULAR_STOP"
 
 def handler_stop_signals(signum, frame):
     """
-    Handles termination events.
+    Handles termination events, not used under Windows.
 
     :param signum:  signal number
     :param frame:   current stack frame
@@ -71,12 +71,17 @@ def main():
                         logger.log(IMultiProcessLogger.INFO, "Server is running.")
 
                         # stall the main thread until the program is finished
-                        signal.signal(signal.SIGINT, handler_stop_signals)
-                        signal.signal(signal.SIGTERM, handler_stop_signals)
+                        if not sys.platform.startswith("win32"):
+                            signal.signal(signal.SIGINT, handler_stop_signals)
+                            signal.signal(signal.SIGTERM, handler_stop_signals)
 
-                        exception_from_subprocess = _exception_queue.get()
+                        exception_from_subprocess = None
+                        try:
+                            exception_from_subprocess = _exception_queue.get()
+                        except KeyboardInterrupt:
+                            pass
 
-                        if exception_from_subprocess != _REGULAR_STOP:
+                        if exception_from_subprocess and exception_from_subprocess != _REGULAR_STOP:
                             exception_from_subprocess.re_raise()
                 except Exception as e:
                     logger.log(IMultiProcessLogger.ERROR, str(e))

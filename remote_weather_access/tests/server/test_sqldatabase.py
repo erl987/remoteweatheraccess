@@ -21,14 +21,14 @@ from datetime import timedelta
 from multiprocessing import Queue
 from time import sleep
 
-from remote_weather_access.common.logging import MultiProcessConnector
+from common.logging import MultiProcessConnector
 from tests.builder_acessors import a
-from remote_weather_access.common.datastructures import BaseStationSensorData, WindSensorData, CombiSensorData, WeatherMessage
-from remote_weather_access.common.datastructures import WeatherStationDataset
-from remote_weather_access.common.datastructures import WeatherStationMetadata, RainSensorData
-from remote_weather_access.server.exceptions import NotExistingError
-from remote_weather_access.server.interface import IServerSideProxy
-from remote_weather_access.server.sqldatabase import SQLWeatherDB, SQLDatabaseServiceFactory
+from common.datastructures import BaseStationSensorData, WindSensorData, CombiSensorData, WeatherMessage
+from common.datastructures import WeatherStationDataset
+from common.datastructures import WeatherStationMetadata, RainSensorData
+from server.exceptions import NotExistingError
+from server.interface import IServerSideProxy
+from server.sqldatabase import SQLWeatherDB, SQLDatabaseServiceFactory
 
 
 def some_time():

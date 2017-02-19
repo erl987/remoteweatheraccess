@@ -17,10 +17,10 @@ import os
 import sys
 from pathlib import Path
 
-from remote_weather_access.common.logging import IMultiProcessLogger, MultiProcessLogger
-from remote_weather_access.server import graphs
-from remote_weather_access.server.config import WeatherPlotServiceIniFile
-from remote_weather_access.server.sqldatabase import SQLWeatherDB
+from common.logging import IMultiProcessLogger, MultiProcessLogger
+from server import graphs
+from server.config import WeatherPlotServiceIniFile
+from server.sqldatabase import SQLWeatherDB
 
 
 def main():

@@ -16,10 +16,10 @@
 
 import sqlite3
 
-from remote_weather_access.common import utilities
-from remote_weather_access.common.datastructures import WeatherStationMetadata, WindSensorData, RainSensorData, \
+from common import utilities
+from common.datastructures import WeatherStationMetadata, WindSensorData, RainSensorData, \
     CombiSensorData, BaseStationSensorData
-from remote_weather_access.server.exceptions import AlreadyExistingError, NotExistingError
+from server.exceptions import AlreadyExistingError, NotExistingError
 
 
 class _WeatherStationTable(object):

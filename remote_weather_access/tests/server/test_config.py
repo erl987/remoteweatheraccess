@@ -19,8 +19,8 @@ import os
 import shutil
 import unittest
 
-from remote_weather_access.common.datastructures import BaseStationSensorData, RainSensorData
-from remote_weather_access.server.config import DatabaseConfigSection, FTPReceiverConfigSection, PlotConfigSection, \
+from common.datastructures import BaseStationSensorData, RainSensorData
+from server.config import DatabaseConfigSection, FTPReceiverConfigSection, PlotConfigSection, \
     LogConfigSection, FTPWeatherServerIniFile, FTPWeatherServerConfig, WeatherPlotServiceIniFile, \
     WeatherPlotServiceConfig, IniFileUtils
 

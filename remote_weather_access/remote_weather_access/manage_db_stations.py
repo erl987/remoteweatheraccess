@@ -19,8 +19,8 @@ import sys
 import json
 from pathlib import Path
 
-from remote_weather_access.common.datastructures import WeatherStationMetadata
-from remote_weather_access.server.sqldatabase import SQLWeatherDB
+from common.datastructures import WeatherStationMetadata
+from server.sqldatabase import SQLWeatherDB
 
 
 # base directory of the directory where the data files are provided by the FTP-server

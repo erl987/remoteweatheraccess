@@ -22,10 +22,10 @@ from datetime import timedelta
 import shutil
 
 from tests.builder_acessors import a
-from remote_weather_access.common.datastructures import RainSensorData, BaseStationSensorData, WindSensorData, CombiSensorData
-from remote_weather_access.common.datastructures import WeatherStationMetadata, WeatherStationDataset
-from remote_weather_access.common.exceptions import DatasetFormatError, PCWetterstationFileParseError
-from remote_weather_access.common.fileformats import PCWetterstationFormatFile
+from common.datastructures import RainSensorData, BaseStationSensorData, WindSensorData, CombiSensorData
+from common.datastructures import WeatherStationMetadata, WeatherStationDataset
+from common.exceptions import DatasetFormatError, PCWetterstationFileParseError
+from common.fileformats import PCWetterstationFormatFile
 
 
 def station_id():

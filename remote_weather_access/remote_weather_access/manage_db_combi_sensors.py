@@ -17,7 +17,7 @@
 import sys
 import json
 
-from remote_weather_access.server.sqldatabase import SQLWeatherDB
+from server.sqldatabase import SQLWeatherDB
 
 
 def main():
