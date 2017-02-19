@@ -116,6 +116,7 @@ class FileSystemObserver(FileSystemEventHandler):
         try:
             # required for correct handling of Crtl + C in a multiprocess environment
             signal.signal(signal.SIGINT, signal.SIG_IGN)
+            signal.signal(signal.SIGTERM, signal.SIG_IGN)
 
             self._processed_files_lock = threading.Lock()
 
@@ -198,6 +199,7 @@ class FTPServerBrokerProcess(object):
             logger = MultiProcessLoggerProxy(logging_connection)
 
             signal.signal(signal.SIGINT, signal.SIG_IGN)
+            signal.signal(signal.SIGTERM, signal.SIG_IGN)
             while True:
                 full_path = received_file_queue.get()
                 if full_path is None:
@@ -418,6 +420,7 @@ class FTPServerSideProxyProcess(object):
         """
         try:
             signal.signal(signal.SIGINT, signal.SIG_IGN)
+            signal.signal(signal.SIGTERM, signal.SIG_IGN)
             database_service = database_service_factory.create(True)
             database_service.register_observer(parent)
             logger = MultiProcessLoggerProxy(logging_connection)

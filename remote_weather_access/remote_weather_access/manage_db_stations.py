@@ -21,6 +21,7 @@ from pathlib import Path
 
 from remote_weather_access.common.datastructures import WeatherStationMetadata
 from remote_weather_access.server.sqldatabase import SQLWeatherDB
+from remote_weather_access import __version__, package_name
 
 
 # base directory of the directory where the data files are provided by the FTP-server
@@ -34,35 +35,38 @@ def main():
     Program for managing the stations being present in the weather database.
     """
     if len(sys.argv) != 4 and not (len(sys.argv) == 3 and sys.argv[-1].upper() == "PRINT"):
-        print("Invalid number of arguments.\n"
-              "\n"
-              "Program for managing the stations being present in the weather database.\n"
-              "WARNING: REMOVING A STATION FROM THE DATABASE REMOVES ALL OF ITS DATA, THIS CANNOT BE UNDONE."
-              "\n"
-              "Command line arguments:\n"
-              "manage-weather-stations [DB_FILE] [PRINT] | [[TYPE] [JSON-FILE|STATION ID]]\n"
-              "\n"
-              "DB_FILE: path of the weather database file\n"
-              "PRINT: prints all combi sensors present in the database\n"
-              "TYPE: type of operation (add | remove | replace)\n"
-              "JSON-FILE: containing all required settings for the added / replaced station\n"
-              "\n"
-              "Example usages:\n"
-              "manage-weather-stations ./weather.db add newStation.json\n"
-              "manage-weather-stations ./weather.db remove TES2\n"
-              "manage-weather-stations ./weather.db replace newStation.json\n"
-              "manage-weather-stations ./weather.db print\n"
-              "\n"
-              "Necessary format for the JSON-file:\n"
-              "{\n"
-              "     \"station_id\": \"NBG\",\n",
-              "     \"device_info\": \"TE923\",\n",
-              "     \"location_info\": \"Nürnberg\",\n",
-              "     \"latitude\": 49.374,\n",
-              "     \"longitude\": 11.017,\n",
-              "     \"height\": 330,\n",
-              "     \"rain_calib_factor\": 1.0\n"
-              "}")
+        if len(sys.argv) == 2 and sys.argv[-1].lower() == "--version":
+            print("manage-weather-stations, {} version {}".format(package_name, __version__))
+        else:
+            print("Invalid number of arguments.\n"
+                  "\n"
+                  "Program for managing the stations being present in the weather database.\n"
+                  "WARNING: REMOVING A STATION FROM THE DATABASE REMOVES ALL OF ITS DATA, THIS CANNOT BE UNDONE."
+                  "\n"
+                  "Command line arguments:\n"
+                  "manage-weather-stations [[DB_FILE] [PRINT] | [[TYPE] [JSON-FILE|STATION ID]]] | --version\n"
+                  "\n"
+                  "DB_FILE: path of the weather database file\n"
+                  "PRINT: prints all combi sensors present in the database\n"
+                  "TYPE: type of operation (add | remove | replace)\n"
+                  "JSON-FILE: containing all required settings for the added / replaced station\n"
+                  "\n"
+                  "Example usages:\n"
+                  "manage-weather-stations ./weather.db add newStation.json\n"
+                  "manage-weather-stations ./weather.db remove TES2\n"
+                  "manage-weather-stations ./weather.db replace newStation.json\n"
+                  "manage-weather-stations ./weather.db print\n"
+                  "\n"
+                  "Necessary format for the JSON-file:\n"
+                  "{\n"
+                  "     \"station_id\": \"NBG\",\n",
+                  "     \"device_info\": \"TE923\",\n",
+                  "     \"location_info\": \"Nürnberg\",\n",
+                  "     \"latitude\": 49.374,\n",
+                  "     \"longitude\": 11.017,\n",
+                  "     \"height\": 330,\n",
+                  "     \"rain_calib_factor\": 1.0\n"
+                  "}")
     else:
         try:
             db_file_name = sys.argv[1]

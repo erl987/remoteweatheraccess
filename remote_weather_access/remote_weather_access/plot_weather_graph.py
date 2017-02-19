@@ -21,6 +21,7 @@ from remote_weather_access.common.logging import IMultiProcessLogger, MultiProce
 from remote_weather_access.server import graphs
 from remote_weather_access.server.config import WeatherPlotServiceIniFile
 from remote_weather_access.server.sqldatabase import SQLWeatherDB
+from remote_weather_access import __version__, package_name
 
 
 def main():
@@ -36,8 +37,12 @@ def main():
     """
     # read the command line arguments
     if len(sys.argv) != 3:
-        print("Plotting weather data from a SQL database. Usage:\n\nweatherplot STATION_ID plot_config.ini\n"
-              "weatherplot ALL plot_config.ini")
+        if len(sys.argv) == 2 and sys.argv[-1].lower() == "--version":
+            print("weatherplot, {} version {}".format(package_name, __version__))
+        else:
+            print("Plotting weather data from a SQL database. Usage:\n\nweatherplot STATION_ID plot_config.ini\n"
+                  "weatherplot ALL plot_config.ini\n"
+                  "weatherplot --version")
     else:
         try:
             entered_station_id = sys.argv[1]

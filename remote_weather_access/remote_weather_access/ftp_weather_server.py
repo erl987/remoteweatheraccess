@@ -15,11 +15,13 @@
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 import signal
 import sys
+from multiprocessing import Queue
+
+from remote_weather_access.common.logging import MultiProcessLogger, IMultiProcessLogger
+from remote_weather_access.server.config import FTPWeatherServerIniFile
 from remote_weather_access.server.ftpbroker import FTPServerSideProxy
 from remote_weather_access.server.sqldatabase import SQLDatabaseServiceFactory
-from remote_weather_access.server.config import FTPWeatherServerIniFile
-from remote_weather_access. common.logging import MultiProcessLogger, IMultiProcessLogger
-from multiprocessing import Queue
+from remote_weather_access import __version__, package_name
 
 
 _exception_queue = Queue()
@@ -81,6 +83,8 @@ def main():
     # read the configuration file (specified in the first command line argument)
     if len(sys.argv) <= 1 or len(sys.argv) > 1 and sys.argv[1].lower() == "help":
         print("Weather server listening for data via FTP. Usage: weatherserver config.ini")
+    elif len(sys.argv) == 2 and sys.argv[-1].lower() == "--version":
+        print("weatherserver, {} version {}".format(package_name, __version__))
     else:
         try:
             config_file_handler = FTPWeatherServerIniFile(sys.argv[1])
@@ -100,7 +104,7 @@ def main():
                             logger.get_connection(),
                             _exception_queue
                     ):
-                        logger.log(IMultiProcessLogger.INFO, "Server is running.")
+                        logger.log(IMultiProcessLogger.INFO, "Server is running (version {}).".format(__version__))
 
                         # stall the main thread until the program is finished
                         if sys.platform.startswith("win32"):

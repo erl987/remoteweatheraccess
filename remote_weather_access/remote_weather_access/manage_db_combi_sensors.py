@@ -18,6 +18,7 @@ import sys
 import json
 
 from remote_weather_access.server.sqldatabase import SQLWeatherDB
+from remote_weather_access import __version__, package_name
 
 
 def main():
@@ -25,31 +26,34 @@ def main():
     Program for managing the combi sensors (temperature / humidity) being present in the weather database.
     """
     if len(sys.argv) != 4 and not (len(sys.argv) == 3 and sys.argv[-1].upper() == "PRINT"):
-        print("Invalid number of arguments.\n"
-              "\n"
-              "Program for managing the combi sensors (temperature / humidity) being present in the weather "
-              "database.\n"
-              "WARNING: REMOVING A SENSOR FROM THE DATABASE REMOVES ALL OF ITS DATA, THIS CANNOT BE UNDONE."
-              "\n"
-              "Command line arguments:\n"
-              "manage-weather-combi-sensors [DB_FILE] [PRINT] | [[TYPE] [JSON-FILE|SENSOR ID]]\n"
-              "\n"
-              "DB_FILE: path of the weather database file\n"
-              "PRINT: prints all combi sensors present in the database\n"
-              "TYPE: type of operation (add | remove | replace)\n"
-              "JSON-FILE: containing all required settings for the added / replaced sensors\n"
-              "\n"
-              "Example usages:\n"
-              "manage-weather-combi-sensors ./weather.db add newSensors.json\n"
-              "manage-weather-combi-sensors ./weather.db remove OUT1\n"
-              "manage-weather-combi-sensors ./weather.db replace newSensors.json\n"
-              "manage-weather-combi-sensors ./weather.db print\n"
-              "\n"
-              "Necessary format for the JSON-file:\n"
-              "{\n"
-              "     \"IN\": \"Innensensor\",\n",
-              "     \"OUT\": \"Außensensor 1\"\n"
-              "}")
+        if len(sys.argv) == 2 and sys.argv[-1].lower() == "--version":
+            print("manage-weather-combi-sensors, {} version {}".format(package_name, __version__))
+        else:
+            print("Invalid number of arguments.\n"
+                  "\n"
+                  "Program for managing the combi sensors (temperature / humidity) being present in the weather "
+                  "database.\n"
+                  "WARNING: REMOVING A SENSOR FROM THE DATABASE REMOVES ALL OF ITS DATA, THIS CANNOT BE UNDONE."
+                  "\n"
+                  "Command line arguments:\n"
+                  "manage-weather-combi-sensors [[DB_FILE] [PRINT] | [[TYPE] [JSON-FILE|SENSOR ID]]] | --version\n"
+                  "\n"
+                  "DB_FILE: path of the weather database file\n"
+                  "PRINT: prints all combi sensors present in the database\n"
+                  "TYPE: type of operation (add | remove | replace)\n"
+                  "JSON-FILE: containing all required settings for the added / replaced sensors\n"
+                  "\n"
+                  "Example usages:\n"
+                  "manage-weather-combi-sensors ./weather.db add newSensors.json\n"
+                  "manage-weather-combi-sensors ./weather.db remove OUT1\n"
+                  "manage-weather-combi-sensors ./weather.db replace newSensors.json\n"
+                  "manage-weather-combi-sensors ./weather.db print\n"
+                  "\n"
+                  "Necessary format for the JSON-file:\n"
+                  "{\n"
+                  "     \"IN\": \"Innensensor\",\n",
+                  "     \"OUT\": \"Außensensor 1\"\n"
+                  "}")
     else:
         try:
             db_file_name = sys.argv[1]
