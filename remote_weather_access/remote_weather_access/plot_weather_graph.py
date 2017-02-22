@@ -15,7 +15,6 @@
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 import os
 import sys
-from pathlib import Path
 
 from remote_weather_access.common.logging import IMultiProcessLogger, MultiProcessLogger
 from remote_weather_access.server import graphs
@@ -65,11 +64,11 @@ def main():
 
                     for station_id in chosen_station_ids:
                         # create the (sub-) directory of the plot if required
-                        plot_dir_path = Path(graph_directory + os.sep + station_id)
+                        plot_dir_name = graph_directory + os.sep + station_id
                         try:
-                            plot_dir_path.mkdir(exist_ok=True, parents=True)
+                            os.makedirs(plot_dir_name, exist_ok=True)
                         except Exception:
-                            raise FileNotFoundError("The directory '{}' could not be created".format(plot_dir_path))
+                            raise FileNotFoundError("The directory '{}' could not be created".format(plot_dir_name))
 
                         logger.log(IMultiProcessLogger.INFO, "Started plotting the last {} days for station {}.".format(
                             time_period_duration, station_id))

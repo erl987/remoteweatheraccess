@@ -39,8 +39,9 @@ setup(
     description='Weather network software for collecting data from remote stations',
     long_description=read('README.rst'),
     platforms='any',
+    # 'watchdog' is an additional dependency, but is not provided as a Debian package (python3-watchdog)
+    # on Raspbian, it therefore needs to be installed separately via pip (pip3 install watchdog)
     install_requires=[
-        'watchdog',
         'tblib',
         'nose',
         'scikit-image',

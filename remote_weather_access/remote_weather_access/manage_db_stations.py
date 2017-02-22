@@ -17,7 +17,6 @@ import os
 import shutil
 import sys
 import json
-from pathlib import Path
 
 from remote_weather_access.common.datastructures import WeatherStationMetadata
 from remote_weather_access.server.sqldatabase import SQLWeatherDB
@@ -93,23 +92,23 @@ def main():
             database = SQLWeatherDB(db_file_name)
             if operation_type == "ADD":
                 database.add_station(station_metadata)
-                station_dir_path = Path(receiver_directory + os.sep + station_metadata.get_station_id())
+                station_dir_name = receiver_directory + os.sep + station_metadata.get_station_id()
                 try:
-                    station_dir_path.mkdir(exist_ok=True)
-                    shutil.chown(str(station_dir_path), user, group)
+                    os.makedirs(station_dir_name, exist_ok=True)
+                    shutil.chown(station_dir_name, user, group)
                 except Exception as e:
-                    print("WARNING: The directory '{}' could not be created: {}".format(station_dir_path, e))
+                    print("WARNING: The directory '{}' could not be created: {}".format(station_dir_name, e))
             elif operation_type == "REPLACE":
                 database.replace_station(station_metadata)
             elif operation_type == "REMOVE":
                 if not database.remove_station(station_id):
                     raise SyntaxError("The station {} does not exist in the database".format(station_id))
 
-                station_dir_path = receiver_directory + os.sep + station_id
+                station_dir_name = receiver_directory + os.sep + station_id
                 try:
-                    os.rmdir(station_dir_path)
+                    os.rmdir(station_dir_name)
                 except Exception as e:
-                    print("WARNING: The directory '{}' could not be deleted: {}".format(station_dir_path, e))
+                    print("WARNING: The directory '{}' could not be deleted: {}".format(station_dir_name, e))
             elif operation_type == "PRINT":
                 station_ids = database.get_stations()
 
