@@ -8,6 +8,7 @@
       <excludeFolder url="file://$MODULE_DIR$/debian/python3-remote-weather-access" />
       <excludeFolder url="file://$MODULE_DIR$/dist" />
       <excludeFolder url="file://$MODULE_DIR$/remote_weather_access.egg-info" />
+      <excludeFolder url="file://$MODULE_DIR$/tests/workingDir" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.5.2" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
