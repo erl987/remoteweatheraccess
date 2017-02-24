@@ -82,9 +82,27 @@ class FileSystemObserver(FileSystemEventHandler):
         for item in removal_list:
             del self._processed_files[item]
 
+    def on_created(self, event):
+        """
+        Called when a file has been created (or moved).
+
+        :param event:                   file change event
+        :type event:                    watchdog.events.FileSystemEvent
+        """
+        self._event_handler(event)
+
     def on_modified(self, event):
         """
         Called when a file has been modified.
+
+        :param event:                   file change event
+        :type event:                    watchdog.events.FileSystemEvent
+        """
+        self._event_handler(event)
+
+    def _event_handler(self, event):
+        """
+        Handles file created and modified events.
 
         :param event:                   file change event
         :type event:                    watchdog.events.FileSystemEvent

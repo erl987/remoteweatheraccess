@@ -39,9 +39,9 @@ case "$1" in
 
 		# change the owner of the directories created in preinst
 		if id -u $USER > /dev/null 2>&1; then    
-			chown ${USER}:${USER} /var/log/${PACKAGE}
+			chown -R ${USER}:${USER} /var/log/${PACKAGE}
 			chown -R ${USER}:${USER} /var/lib/${PACKAGE}
-			chmod -R 0777 /var/lib/${PACKAGE}/templates
+			chmod -R 0777 /var/lib/${PACKAGE}/templates  # read, write and execute for everyone
 		fi
 	
 		# set up the daemon

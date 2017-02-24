@@ -285,7 +285,7 @@ class PCWetterstationFormatFile(object):
         :type file_path:                        string
         :param data:                            weather data written to the file. It is expected to be sorted by
                                                 ascending time.
-        :type data:                             list of WeatherStationDataset objects
+        :type data:                             list of WeatherStationDataset
         :param station_metadata:                metadata of the station
         :type station_metadata:                 WeatherStationMetadata
         :raise DatasetFormatError:              if a required sensor is missing in the data

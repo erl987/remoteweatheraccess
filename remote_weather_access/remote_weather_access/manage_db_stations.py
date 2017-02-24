@@ -96,6 +96,7 @@ def main():
                 try:
                     os.makedirs(station_dir_name, exist_ok=True)
                     shutil.chown(station_dir_name, user, group)
+                    os.chmod(station_dir_name, 0o775)  # the group requires write access (i.e. the FTP-server)
                 except Exception as e:
                     print("WARNING: The directory '{}' could not be created: {}".format(station_dir_name, e))
             elif operation_type == "REPLACE":
