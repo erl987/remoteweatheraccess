@@ -222,6 +222,52 @@ class TestSQLWeatherDataTable(unittest.TestCase):
         # then:
             self.assertTrue(not got_time)
 
+    def test_get_most_recent_time_with_data(self):
+        # given:
+        weather_data_table = _WeatherDataTable(self._sql)
+        weather_data = [a(weather_data_object().with_time(some_time()))]
+
+        # when:
+        with self._sql:
+            weather_data_table.add(self._station_id, weather_data)
+            most_recent_time = weather_data_table.get_most_recent_time_with_data(self._station_id)
+
+        # then:
+            self.assertEqual(most_recent_time, some_time())
+
+    def test_get_most_recent_time_with_several_stations(self):
+        # given:
+        weather_data_table = _WeatherDataTable(self._sql)
+        station_1 = "TES"
+        weather_data_1 = [a(weather_data_object().with_time(some_time()))]
+        station_2 = "TES2"
+        weather_data_2 = [a(weather_data_object().with_time(some_time())),
+                          a(weather_data_object().with_time(some_time_afterwards()))]
+
+        weather_station_table = _WeatherStationTable(self._sql)
+        weather_station_table.add(
+            WeatherStationMetadata(station_2, "Device 2", "Location 2", 60.4, -39.9, 121.2, 1.0)
+        )
+
+        # when:
+        with self._sql:
+            weather_data_table.add(station_1, weather_data_1)
+            weather_data_table.add(station_2, weather_data_2)
+            most_recent_time_1 = weather_data_table.get_most_recent_time_with_data(station_1)
+            most_recent_time_2 = weather_data_table.get_most_recent_time_with_data(station_2)
+
+        # then:
+            self.assertEqual(most_recent_time_1, some_time())
+            self.assertEqual(most_recent_time_2, some_time_afterwards())
+
+    def test_get_most_recent_time_empty_db(self):
+        # given:
+        weather_data_table = _WeatherDataTable(self._sql)
+
+        # then:
+        with self._sql:
+            self.assertRaises(NotExistingError, weather_data_table.get_most_recent_time_with_data, self._station_id)
+
 
 if __name__ == '__main__':
     unittest.main()

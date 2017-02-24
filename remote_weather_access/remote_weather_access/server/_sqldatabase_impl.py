@@ -742,6 +742,32 @@ class _WeatherDataTable(object):
 
         return times, base_data
 
+    def get_most_recent_time_with_data(self, station_id):
+        """
+        Obtains the latest timepoint in the database with data for the specified station.
+
+        :param station_id:              id of the requested station
+        :type station_id:               str
+        :return:                        most recent time with data for the station
+        :rtype:                         datetime.datetime
+        :raise NotExistingError:        if no data is available for the station
+        """
+        most_recent_time_from_db = self._sql.execute(" \
+            SELECT time \
+            FROM WeatherData \
+            WHERE time=(SELECT MAX(time) \
+                        FROM WeatherData \
+                        WHERE stationID=(?) \
+                        )",
+                                                     (station_id, )).fetchone()  # type: dict
+
+        if most_recent_time_from_db:
+            most_recent_time = most_recent_time_from_db["time"]
+        else:
+            raise NotExistingError("No data available in the database for the station '{}'".format(station_id))
+
+        return most_recent_time
+
 
 class _CombiSensorDefinitionTable(object):
     """

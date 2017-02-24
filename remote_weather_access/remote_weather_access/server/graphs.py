@@ -53,11 +53,12 @@ def get_last_n_days_data(num_days, db_file_name, station_id, last_time=None):
     :rtype:                     list of common.datastructures.WeatherStationDataset
     """
     # Read the required data from the database
+    weather_db = SQLWeatherDB(db_file_name)
+
     if not last_time:
-        last_time = datetime.datetime.utcnow()
+        last_time = weather_db.get_most_recent_time_with_data(station_id)
     first_time = last_time - timedelta(days=num_days)
 
-    weather_db = SQLWeatherDB(db_file_name)
     data = weather_db.get_data_in_time_range(station_id, first_time, last_time)
 
     return data
