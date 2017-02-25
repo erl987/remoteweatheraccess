@@ -642,7 +642,12 @@ class WeatherStationDataset(Comparable):
         """
         sensor_id, subsensor_id = sensor_id_tuple
 
-        return self._sensor_data[sensor_id].get_sensor_value(subsensor_id)
+        try:
+            value = self._sensor_data[sensor_id].get_sensor_value(subsensor_id)
+        except:
+            raise NotExistingError("No data for the sensor '{}'".format(sensor_id))
+
+        return value
 
     def get_sensor_object(self, sensor_id):
         """

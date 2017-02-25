@@ -80,10 +80,11 @@ def reset_logger(logger):
     Raises:
     None
     """
-    if not sys.platform.startswith('linux'):
-        # Close the logger
-        logger.handlers[0].close()
-        logger.removeHandler(logger.handlers[0])
+    # Close all loggers
+    handlers = logging.getLogger().handlers[:]
+    for handler in handlers:
+        handler.close()
+        logging.getLogger().removeHandler(handler)
 
 
 def te923ToCSVreader(data_folder, station_data_file_name, script_name):

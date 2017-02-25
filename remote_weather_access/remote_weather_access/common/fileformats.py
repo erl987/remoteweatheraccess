@@ -16,6 +16,7 @@
 
 import csv
 import os
+from collections import OrderedDict
 from datetime import datetime as dt
 from datetime import timedelta
 
@@ -48,7 +49,7 @@ class PCWetterstationFormatFile(object):
         """
         # list of required sensors, using the PCWetterstation file format based sensor IDs
         # (see page 269 of the manual for PCWetterstation)
-        self._sensor_list = dict()
+        self._sensor_list = OrderedDict()
         self._sensor_list[(BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE)] = 133
         self._sensor_list[(BaseStationSensorData.BASE_STATION, BaseStationSensorData.UV)] = 9
         self._sensor_list[(WindSensorData.WIND, WindSensorData.AVERAGE)] = 35

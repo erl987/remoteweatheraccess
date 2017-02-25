@@ -387,7 +387,7 @@ class TestFTPServerSideProxyProcess(unittest.TestCase):
             self.assertEqual(received_message.get_data(), dataset)
             self.assertEqual(received_message.get_message_id(), message_id)
         finally:
-            request_queue.put(None)  # finish the process
+            request_queue.put((None, None, None))  # finish the process
             if proxy_process.is_alive():
                 proxy_process.join()
 
@@ -407,7 +407,7 @@ class TestFTPServerSideProxyProcess(unittest.TestCase):
             # then:
             self.assertEqual(got_acknowleded_message_id, message_id)
         finally:
-            request_queue.put(None)  # finish the process
+            request_queue.put((None, None, None))  # finish the process
             if proxy_process.is_alive():
                 proxy_process.join()
 
@@ -424,7 +424,7 @@ class TestFTPServerSideProxyProcess(unittest.TestCase):
             # then:
             self.assertRaises(NotExistingError, got_exception.re_raise)
         finally:
-            request_queue.put(None)  # finish the process even if no exception has been thrown
+            request_queue.put((None, None, None))  # finish the process even if no exception has been thrown
             if proxy_process.is_alive():
                 proxy_process.join()
 
