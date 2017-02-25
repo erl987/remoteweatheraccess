@@ -20,11 +20,11 @@ import shutil
 import time
 from zipfile import ZipFile
 
-from common import utilities
+from remote_weather_access.common import utilities
 from remote_weather_access.common.fileformats import PCWetterstationFormatFile
 from remote_weather_access.common.datastructures import WeatherStationDataset, BaseStationSensorData, WindSensorData, \
     CombiSensorData, RainSensorData
-from server.sqldatabase import SQLWeatherDB
+from remote_weather_access.server.sqldatabase import SQLWeatherDB
 
 station_id = "NBG"
 receiver_dir_path = "/var/lib/remote-weather-access/receiver" + os.sep + station_id
@@ -71,6 +71,7 @@ def main():
         dataset.add_sensor(RainSensorData(12.5, next_time - datetime.timedelta(minutes=10)))
         data = [dataset]
 
+        archive_file_name = None
         curr_temp_dir_path = None
         try:
             # create a new temporary directory
@@ -91,7 +92,8 @@ def main():
 
             shutil.copy(archive_file_name, receiver_dir_path)
         finally:
-            os.remove(archive_file_name)
+            if archive_file_name and os.path.exists(archive_file_name):
+                os.remove(archive_file_name)
             if curr_temp_dir_path:
                 shutil.rmtree(curr_temp_dir_path, ignore_errors=True)
 

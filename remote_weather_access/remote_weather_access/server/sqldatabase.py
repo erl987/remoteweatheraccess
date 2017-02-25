@@ -196,8 +196,7 @@ class SQLWeatherDB(object):
             # from here it is guaranteed that a dataset for the given station and time exists in the database
             self._rain_sensor_table.add(station_id, data)
             self._wind_sensor_table.add(station_id, data)
-            available_combi_sensor_ids = self._combi_sensor_definition_table.get_combi_sensor_ids()
-            combi_sensor_descriptions = self._combi_sensor_definition_table.get_sensor_descriptions()
+            available_combi_sensor_ids, combi_sensor_descriptions = self.get_combi_sensors()
             self._combi_sensor_data_table.add(
                 station_id, available_combi_sensor_ids, combi_sensor_descriptions, data
             )  # temperature / humidity
