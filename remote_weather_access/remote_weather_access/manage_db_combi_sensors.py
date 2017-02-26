@@ -87,6 +87,8 @@ def main():
             else:
                 raise SyntaxError("Invalid command arguments")
 
+            if not operation_type == "PRINT":
+                print("You must restart the weather server now to reload the available stations.")
             print("\nOperation was successful.")
         except Exception as e:
             print("Execution failed: {}. Call the command without options for help.".format(e))

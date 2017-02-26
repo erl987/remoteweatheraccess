@@ -532,9 +532,12 @@ class _CombiSensorDataTable(object):
                                           data_to_be_written)
                 except sqlite3.Error as e:
                     if "NULL" in e.args[0].upper():
-                        raise NotExistingError("The combi sensor ID does not exist in the database")
+                        raise NotExistingError("The combi sensor ID does not exist in the database.")
                     else:
                         raise
+            else:
+                raise NotExistingError("Sensor '{}' has no data, the storage in the database was incomplete.".format(
+                                       sensor_ID))
 
     def replace(self, station_id, dataset, available_combi_sensor_ids, combi_sensor_descriptions):
         """

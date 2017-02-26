@@ -34,7 +34,7 @@ archive_file_type = "zip"
 data_file_type = "csv"
 
 min_delay_time = 0.5  # in seconds
-max_delay_time = 600  # in seconds
+max_delay_time = 60   # in seconds
 
 
 def random_delay_time():
@@ -58,10 +58,10 @@ def main():
     database = SQLWeatherDB(db_file_name)
     station_metadata = database.get_station_metadata(station_id)
 
-    # load the combi sensor descriptions from the database
-    combi_sensor_ids, combi_sensor_descriptions = database.get_combi_sensors()
-
     while True:
+        # load the combi sensor descriptions from the database
+        combi_sensor_ids, combi_sensor_descriptions = database.get_combi_sensors()
+
         # create random data
         dataset = WeatherStationDataset(next_time)
         dataset.add_sensor(BaseStationSensorData(1032.4, 8.5))
