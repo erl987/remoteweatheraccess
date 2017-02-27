@@ -119,6 +119,32 @@ class TestUtilities(unittest.TestCase):
     def test_extract_bracket_contents_with_no_brackets(self):
         self.assertRaises(NoContentError, utilities.extract_bracket_contents, a_normal_string())
 
+    def test_get_first_and_last_day_in_month(self):
+        # given:
+        month = 7
+        year = 2017
+        a_date = datetime(day=5, month=month, year=year)
+
+        # when:
+        first_day, last_day = utilities.get_first_and_last_day_of_month(a_date)
+
+        # then:
+        self.assertEqual(first_day, datetime(day=1, month=month, year=year))
+        self.assertEqual(last_day, datetime(day=31, month=month, year=year))
+
+    def test_a_day_in_previous_month(self):
+        # given:
+        month = 7
+        year = 2017
+        a_date = datetime(day=5, month=month, year=year)
+
+        # when:
+        day_in_previous_month = utilities.a_day_in_previous_month(a_date)
+
+        # then:
+        self.assertEqual(day_in_previous_month.month, month - 1)
+        self.assertEqual(day_in_previous_month.year, year)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -13,9 +13,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
-
+import calendar
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from remote_weather_access.server.exceptions import NoContentError
 
@@ -136,3 +136,56 @@ class Comparable(object):
         :rtype:                 bool
         """
         return not self.__eq__(other)
+
+
+def get_first_and_last_day_of_month(date):
+    """
+    Obtains the first and the last day of the month of the requested date.
+
+    :param date:        date for which the first and last day of the month are required
+    :type date:         datetime
+    :return:            first day of month, last day of month
+    :rtype:             (datetime, datetime)
+    """
+    month = datetime(day=1, month=date.month, year=date.year)
+    first_day = get_first_day_of_month(month)
+    last_day = get_last_day_of_month(month)
+    return first_day, last_day
+
+
+def get_first_day_of_month(date):
+    """
+    Obtains the first day of the month of the requested date.
+
+    :param date:        date for which the first day of the month is required
+    :type date:         datetime
+    :return:            first day of month
+    :rtype:             datetime
+    """
+    return datetime(day=1, month=date.month, year=date.year)
+
+
+def get_last_day_of_month(date):
+    """
+    Obtains the last day of the month of the requested date.
+
+    :param date:        date for which the last day of the month is required
+    :type date:         datetime
+    :return:            last day of month
+    :rtype:             datetime
+    """
+    days_in_month = calendar.monthrange(date.year, date.month)[1]
+    return datetime(day=days_in_month, month=date.month, year=date.year,
+                    hour=23, minute=59, second=59, microsecond=999999)
+
+
+def a_day_in_previous_month(date):
+    """
+    Obtains a day in the previous month.
+
+    :param date:        date for which a date in the previous month is required
+    :type date:         datetime
+    :return:            a date in the previous month
+    :rtype:             datetime
+    """
+    return datetime(day=1, month=date.month, year=date.year) - timedelta(days=1)

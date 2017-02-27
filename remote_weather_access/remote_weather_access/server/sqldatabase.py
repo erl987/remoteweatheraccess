@@ -255,7 +255,11 @@ class SQLWeatherDB(object):
         :return:                    weather datasets for the requested timepoints, sorted by ascending time. If no data
                                     exists for the requested range, it is empty.
         :rtype:                     list of common.datastructures.WeatherStationDataset
+        :raise ValueError:          if the first time is after the last time
         """
+        if first_time > last_time:
+            raise ValueError("The first time {} is after the last time {}".format(first_time, last_time))
+
         with self._sql:
             times_in_range, base_data_in_range = \
                 self._base_station_data_table.get_data(station_id, first_time, last_time)
