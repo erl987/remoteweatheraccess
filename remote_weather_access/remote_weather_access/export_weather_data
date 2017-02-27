@@ -1,0 +1,154 @@
+# RemoteWeatherAccess - Weather network connecting to remote stations
+# Copyright(C) 2013-2017 Ralf Rettig (info@personalfme.de)
+#
+# This program is free software: you can redistribute it and / or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.If not, see <http://www.gnu.org/licenses/>
+
+import argparse
+import calendar
+from datetime import datetime
+import os
+
+from remote_weather_access.common.fileformats import PCWetterstationFormatFile
+from remote_weather_access.server.sqldatabase import SQLWeatherDB
+from remote_weather_access import __version__, package_name
+
+
+_ALL_STATIONS = "ALL"
+_INVALID_DATE = datetime(day=1, month=1, year=1000)
+
+
+def get_first_and_last_day_of_month(date):
+    """
+    Obtains the first and the last day of the month of the requested date.
+
+    :param date:        date for which the first and last day of the month are required
+    :type date:         datetime
+    :return:            first day of month, last day of month
+    :rtype:             (datetime, datetime)
+    """
+    month = datetime(day=1, month=date.month, year=date.year)
+    first_day = get_first_day_of_month(month)
+    last_day = get_last_day_of_month(month)
+    return first_day, last_day
+
+
+def get_first_day_of_month(date):
+    """
+    Obtains the first day of the month of the requested date.
+
+    :param date:        date for which the first day of the month is required
+    :type date:         datetime
+    :return:            first day of month
+    :rtype:             datetime
+    """
+    return datetime(day=1, month=date.month, year=date.year)
+
+
+def get_last_day_of_month(date):
+    """
+    Obtains the last day of the month of the requested date.
+
+    :param date:        date for which the last day of the month is required
+    :type date:         datetime
+    :return:            last day of month
+    :rtype:             datetime
+    """
+    days_in_month = calendar.monthrange(date.year, date.month)[1]
+    return datetime(day=days_in_month, month=date.month, year=date.year,
+                    hour=23, minute=59, second=59, microsecond=999999)
+
+
+def convert_to_month(month_str):
+    """
+    Converts a string of the format MM.YYYY to a datetime object.
+
+    :param month_str:   month string in the format MM.YYYY
+    :type month_str:    str
+    :return:            date of the first day of the month
+    :rtype:             datetime
+    """
+    month = datetime.strptime(month_str, "%m.%Y")
+
+    return month
+
+
+def main():
+    """
+    Exporting weather data from the SQL-database into PCWetterstation format files.
+    """
+    parser = argparse.ArgumentParser(description="Exporting weather data from the SQL-database into PCWetterstation "
+                                                 "format files.")
+    parser.add_argument("database_file", metavar="DATABASE-PATH", type=str,
+                        help="path of the SQL-weather database file")
+    parser.add_argument("output_path", metavar="OUTPUT-PATH", type=str,
+                        help="output path of the exported PCWetterstation files")
+    parser.add_argument("--station", "-s", metavar="STATION-ID", type=str, default=_ALL_STATIONS,
+                        help="station for which the data should be exported, default: all stations")
+    parser.add_argument("--period", "-p", metavar="MONTH", nargs=2, type=convert_to_month,
+                        default=[_INVALID_DATE, _INVALID_DATE],
+                        help="time period to be exported (defined by the first and last month, syntax: MM.YYYY),"
+                             "default: latest month in the database")
+    parser.add_argument("--version", "-v", action="version",
+                        version="{} version {}".format(package_name, __version__),
+                        help='show the version information of the program')
+
+    args = parser.parse_args()
+    station_id = args.station
+    db_file_name = args.database_file
+    output_path = args.output_path
+    first_day = get_first_day_of_month(args.period[0])
+    last_day = get_last_day_of_month(args.period[1])
+
+    # export the requested data
+    try:
+        database = SQLWeatherDB(db_file_name)
+        if station_id == _ALL_STATIONS:
+            all_station_ids = database.get_stations()
+        else:
+            all_station_ids = [station_id]
+
+        for curr_station_id in all_station_ids:
+            if first_day == _INVALID_DATE:
+                latest_date = database.get_most_recent_time_with_data(curr_station_id)
+                first_day = get_first_day_of_month(latest_date)
+                last_day = get_last_day_of_month(latest_date)
+
+            data = database.get_data_in_time_range(curr_station_id, first_day, last_day)
+            combi_sensor_ids, combi_sensor_descriptions = database.get_combi_sensors()
+            station_metadata = database.get_station_metadata(curr_station_id)
+
+            # create the subdirectory for the station data if required
+            station_output_path = output_path + os.sep + curr_station_id
+            os.makedirs(station_output_path, exist_ok=True)
+
+            # create automatically all required monthly data files
+            if data:
+                export_file = PCWetterstationFormatFile(combi_sensor_ids, combi_sensor_descriptions)
+                export_file.write(station_output_path, data, station_metadata)
+            else:
+                print("The database '{}' contains no data for the station '{}' in the period {} - {}", db_file_name,
+                      curr_station_id, first_day, last_day)
+
+        if station_id == _ALL_STATIONS:
+            station_text_str = "all stations"
+        else:
+            station_text_str = "station '{}'".format(station_id)
+        print("Successfully exported the data of " + station_text_str + " in the period {} - {} to the base directory "
+                                                                        "'{}'".format(first_day, last_day, output_path))
+    except Exception as e:
+        print("An error occurred: {}".format(e))
+
+
+if __name__ == "__main__":
+    main()
