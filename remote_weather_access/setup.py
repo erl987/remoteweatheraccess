@@ -59,7 +59,8 @@ setup(
             'weatherserver=remote_weather_access.ftp_weather_server:main',
             'manage-weather-combi-sensors=remote_weather_access.manage_db_combi_sensors:main',
             'manage-weather-stations=remote_weather_access.manage_db_stations:main',
-            'weatherplot=remote_weather_access.plot_weather_graph:main'
+            'weatherplot=remote_weather_access.plot_weather_graph:main',
+            'export-weatherdata=remote_weather_access.export_weather_data:main'
         ],
     }
 )

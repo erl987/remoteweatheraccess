@@ -33,6 +33,9 @@ case "$1" in
 
 		mkdir -p /var/lib/${PACKAGE}/receiver
 		chmod 0755 /var/lib/${PACKAGE}/receiver
+
+        mkdir -p /var/lib/${PACKAGE}/export
+		chmod 0755 /var/lib/${PACKAGE}/export
 		;;
 
     abort-upgrade)

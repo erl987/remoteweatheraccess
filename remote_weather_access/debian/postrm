@@ -35,6 +35,9 @@ case "$1" in
 		if [ -d /var/lib/${PACKAGE}/receiver ]; then
 			rmdir --ignore-fail-on-non-empty /var/lib/${PACKAGE}/receiver
 		fi
+        if [ -d /var/lib/${PACKAGE}/export ]; then
+			rmdir --ignore-fail-on-non-empty /var/lib/${PACKAGE}/export
+		fi
 		if [ -d /var/lib/${PACKAGE} ]; then
 			rmdir --ignore-fail-on-non-empty /var/lib/${PACKAGE}
 		fi	
