@@ -129,8 +129,12 @@ class TestUtilities(unittest.TestCase):
         first_day, last_day = utilities.get_first_and_last_day_of_month(a_date)
 
         # then:
-        self.assertEqual(first_day, datetime(day=1, month=month, year=year))
-        self.assertEqual(last_day, datetime(day=31, month=month, year=year))
+        self.assertEqual(first_day.day, 1)
+        self.assertEqual(first_day.month, month)
+        self.assertEqual(first_day.year, year)
+        self.assertEqual(last_day.day, 31)
+        self.assertEqual(last_day.month, month)
+        self.assertEqual(last_day.year, year)
 
     def test_a_day_in_previous_month(self):
         # given:

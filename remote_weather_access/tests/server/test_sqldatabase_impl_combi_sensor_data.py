@@ -109,7 +109,6 @@ class TestSQLCombiSensorDataTable(unittest.TestCase):
         self._station_id = "TES"
         self._combi_sensor_definition_table = _CombiSensorDefinitionTable(self._sql)
         self._combi_sensor_definition_table.add(self._sensor_id, self._description)
-        self._combi_sensor_definition_table.add("OUT2", "outdoor sensor 2")
 
     def tearDown(self):
         self._sql.close()
