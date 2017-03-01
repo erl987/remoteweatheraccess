@@ -79,6 +79,7 @@ def get_scalings(min_max_sensors):
     """
     delta_temp = 5.0  # degree C by definition
     delta_p = 5.0  # hPa by definition
+    max_num_ticks = 10
 
     all_num_ticks = []
     # determine number of ticks
@@ -114,6 +115,8 @@ def get_scalings(min_max_sensors):
         all_num_ticks.append(5)  # default value if no special sensors are present
 
     num_ticks = max(all_num_ticks)
+    if num_ticks > max_num_ticks:
+        num_ticks = max_num_ticks
 
     min_max_axis = dict()
     for key, sensor in min_max_sensors.items():
