@@ -453,8 +453,8 @@ class TestFTPServerSideProxy(unittest.TestCase):
                 database_service_factory,
                 config,
                 logging_connection,
-                exception_queue) as proxy:
-            proxy._stop_and_join()
+                exception_queue):
+            time.sleep(0.5)
 
         # then: this is a smoke test, all underlying functionality is tested in other tests
 
