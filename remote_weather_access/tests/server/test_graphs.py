@@ -15,6 +15,7 @@
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
 import os
+import sys
 import shutil
 import unittest
 from datetime import datetime
@@ -63,7 +64,10 @@ def a_complete_graph_file_name():
 
 
 def expected_plot_file_name():
-    return "./tests/testdata/expected_plot.png"
+    test_data_dir = "./tests/testdata"
+    expected_plot_file = "expected_plot.png"
+
+    return test_data_dir + os.sep + sys.platform + os.sep + expected_plot_file
 
 
 def a_data_file():
