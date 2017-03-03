@@ -102,6 +102,7 @@ class MultiProcessLogger(IMultiProcessLogger):
         self._thread = None
         self._main_logger_pid = os.getpid()
         self._lock = threading.Lock()
+        self._is_joined = False
 
         # initialize the logger for the present process
         logger = logging.getLogger()
@@ -155,12 +156,14 @@ class MultiProcessLogger(IMultiProcessLogger):
     def _join(self):
         """Stops the underlying thread of the class. Returns only after finishing the thread."""
         with self._lock:
-            if self._logging_queue:
-                self._logging_queue.put(None)
-            if self._thread:
-                self._thread.join()
+            if not self._is_joined:
+                self._is_joined = True
+                if self._logging_queue:
+                    self._logging_queue.put(None)
+                if self._thread:
+                    self._thread.join()
 
-            _remove_all_log_handlers()
+                _remove_all_log_handlers()
 
     def _logger_thread(self):
         """Logger thread waiting for incoming log messages."""

@@ -361,6 +361,8 @@ class FTPBroker(object):
         :param combi_sensor_descriptions: descriptions of the combi sensors (with the combi sensor IDs as keys)
         :type combi_sensor_descriptions: dict(str, str)
         """
+        self._is_joined = False
+        self._lock = threading.Lock()
         self._data_directory = data_directory
         self._data_file_extension = data_file_extension
 
@@ -384,10 +386,13 @@ class FTPBroker(object):
 
     def stop_and_join(self):
         """Stops the subprocess of the object and returns afterwards."""
-        self._filesystem_observer.stop()
-        self._filesystem_observer_process.join()
-        self._received_file_queue.put(None)
-        self._broker_process.join()
+        with self._lock:
+            if not self._is_joined:
+                self._is_joined = True
+                self._filesystem_observer.stop()
+                self._filesystem_observer_process.join()
+                self._received_file_queue.put(None)
+                self._broker_process.join()
 
     def feed_modified_file(self, full_path):
         """
@@ -484,6 +489,9 @@ class FTPServerSideProxy(IServerSideProxy):
         :param exception_queue:         queue for transporting exceptions to the main process
         :type exception_queue:          multiprocessing.queues.Queue
         """
+        self._lock = threading.Lock()
+        self._is_joined = False
+
         # read the configuration
         data_directory, temp_data_directory, data_file_extension, delta_time = config.get()
 
@@ -588,14 +596,17 @@ class FTPServerSideProxy(IServerSideProxy):
             self._broker.feed_modified_file(file_path)
 
     def _stop_and_join(self):
-        """Stops the subprocess of the instance and returns afterwards"""
-        self._broker.stop_and_join()
-        self._request_queue.put((None, None, None))
-        self._proxy_process.join()
+        """Stops the subprocess of the instance and returns afterwards, never call it more than once."""
+        with self._lock:
+            if not self._is_joined:
+                self._is_joined = True
+                self._broker.stop_and_join()
+                self._request_queue.put((None, None, None))
+                self._proxy_process.join()
 
     def acknowledge_persistence(self, finished_id, logger):
         """
-        Performs the acknowledgement of a successful finished message transfer to the client
+        Performs the acknowledgement of a successful finished message transfer to the client.
 
         :param finished_id:     id of the finished message
         :type finished_id:      str
