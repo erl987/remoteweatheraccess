@@ -15,6 +15,7 @@
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
 import configparser
+from datetime import datetime
 from pathlib import Path
 
 from remote_weather_access.common.utilities import Comparable
@@ -107,10 +108,38 @@ class WeatherPlotServiceConfig(BaseWeatherServerConfig):
         """
         Obtains the plotter configuration.
 
-        :return:                        configuration of the FTP-based weather server
+        :return:                        configuration of the plotter
         :rtype:                         PlotConfigSection
         """
         return self._plotter_config
+
+
+class ExportServiceConfig(BaseWeatherServerConfig):
+    """Configuration data of the weather data export tool"""
+
+    def __init__(self, database_config, export_config, log_config):
+        """
+        Constructor.
+
+        :param database_config:         SQL-database configuration
+        :type database_config:          DatabaseConfigSection
+        :param export_config:           export configuration
+        :type export_config:            ExportServiceSection
+        :param log_config:              log system configuration. If empty, the default log system of the OS will be
+                                        used.
+        :type log_config:               LogConfigSection
+        """
+        super().__init__(database_config, log_config)
+        self._export_config = export_config
+
+    def get_export_settings(self):
+        """
+        Obtains the export configuration.
+
+        :return:                        export configuration
+        :rtype:                         ExportConfigSection
+        """
+        return self._export_config
 
 
 class DatabaseConfigSection(IIniConfigSection, Comparable):
@@ -496,6 +525,100 @@ class LogConfigSection(IIniConfigSection, Comparable):
         config_file_section[LogConfigSection._NUM_FILES_TO_KEEP] = str(self.get_num_files_to_keep())
 
 
+class ExportConfigSection(IIniConfigSection, Comparable):
+    """Configuration part for the weather data export"""
+
+    # INI-file subsection tags
+    _EXPORT_DIRECTORY = "ExportDirectory"
+    _FIRST_MONTH = "FirstMonth"
+    _LAST_MONTH = "LastMonth"
+    _STATION_ID = "Station"
+
+    _EXPORT_SUBSECTION = [_EXPORT_DIRECTORY, _FIRST_MONTH, _LAST_MONTH, _STATION_ID]
+
+    def __init__(self, export_directory, first_month, last_month, station_id):
+        """
+        Constructor.
+
+        :param export_directory:        path of the directory for the exported data files
+        :type export_directory:         str
+        :param first_month:             first month for data export
+        :type first_month:              datetime
+        :param last_month:              last month for data export
+        :type last_month:               datetime
+        :param station_id:              id of the weather station to be exported
+        :type station_id:               str
+        """
+        self._export_directory = export_directory
+        self._first_month = first_month
+        self._last_month = last_month
+        self._station_id = station_id
+
+    def get_export_directory(self):
+        """
+        Obtains the export directory.
+
+        :return:                        export directory
+        :rtype:                         str
+        """
+        return self._export_directory
+
+    def get_time_period(self):
+        """
+        Obtains the time period for the data export.
+
+        :return:                        first time, last time
+        :rtype:                         (datetime, datetime)
+        """
+        return self._first_month, self._last_month
+
+    def get_station_id(self):
+        """
+        Obtains the id of the station to be exported.
+
+        :return:                        station id
+        :rtype:                         str
+        """
+        return self._station_id
+
+    @staticmethod
+    def read_section_from_ini_file(section):
+        """
+        Reads the export configuration section of the INI-file.
+
+        :param section:                 section containing the export configuration
+        :type section:                  configparser.SectionProxy
+        :return:                        the read section
+        :rtype:                         ExportConfigSection
+        :raise InvalidConfigFileError:  if an entry in the given section is invalid
+        """
+        if not IniFileUtils.check_section_for_all_tags(section, ExportConfigSection._EXPORT_SUBSECTION, False):
+            raise InvalidConfigFileError("An entry in the section \"%s\" is invalid." % section.name)
+
+        export_directory = section.get(ExportConfigSection._EXPORT_DIRECTORY)
+        first_month = datetime.strptime(section.get(ExportConfigSection._FIRST_MONTH), "%m.%Y")
+        last_month = datetime.strptime(section.get(ExportConfigSection._LAST_MONTH), "%m.%Y")
+        station_id = section.get(ExportConfigSection._STATION_ID)
+
+        return ExportConfigSection(export_directory, first_month, last_month, station_id)
+
+    def write_section_to_ini_file(self, config_file_section):
+        """
+        Writes the content of the object to a INI-file section.
+
+        :param config_file_section:     section to contain the export configuration after that method
+                                        call
+        :type config_file_section:      configparser.SectionProxy
+        """
+        first_month, last_month = self.get_time_period()
+
+        # removing the leading and trailing brackets in the string
+        config_file_section[ExportConfigSection._EXPORT_DIRECTORY] = self.get_export_directory()
+        config_file_section[ExportConfigSection._FIRST_MONTH] = first_month
+        config_file_section[ExportConfigSection._FIRST_MONTH] = last_month
+        config_file_section[ExportConfigSection._STATION_ID] = self.get_station_id()
+
+
 class BaseWeatherServerIniFile(object):
     """Base class for weather server INI-files."""
 
@@ -716,6 +839,53 @@ class WeatherPlotServiceIniFile(BaseWeatherServerIniFile):
         super()._write(config)
         config.get_plotter_settings().write_section_to_ini_file(super()._add_section(
             WeatherPlotServiceIniFile._PLOTTER_SECTION_TAG))
+        super()._finish_writing()
+
+
+class ExportServiceIniFile(BaseWeatherServerIniFile):
+    """Config settings for a weather data exporter based on a INI-file."""
+
+    # INI-file main section tags (specific to the present class)
+    _EXPORT_SECTION_TAG = "export"
+    _MAIN_SECTIONS = [_EXPORT_SECTION_TAG]
+
+    def __init__(self, file_name):
+        """
+        Constructor.
+
+        :param file_name:               name of the INI config file.
+        :type file_name:                string
+        """
+        super().__init__(file_name)
+
+    def read(self):
+        """Reads the config data from the INI-file.
+
+        :return:                        the read config data
+        :rtype:                         ExportServiceConfig
+        :raise InvalidConfigFileError:  if an entry in the given section is invalid
+        """
+        base_config = super()._read()
+
+        try:
+            export_config = ExportConfigSection.read_section_from_ini_file(super()._get_section(
+                ExportServiceIniFile._EXPORT_SECTION_TAG))
+        except Exception as e:
+            raise InvalidConfigFileError("Error parsing the config file: %s" % str(e))
+
+        return ExportServiceConfig(base_config.get_database_config(), export_config, base_config.get_log_config())
+
+    def write(self, config):
+        """
+        Writes configuration data to the INI-file.
+
+        :param config:                  configuration data to written to the file represented by the object
+        :type config:                   ExportServiceConfig
+        """
+        super()._prepare_writing()
+        super()._write(config)
+        config.get_export_settings().write_section_to_ini_file(super()._add_section(
+            ExportServiceIniFile._EXPORT_SECTION_TAG))
         super()._finish_writing()
 
 
