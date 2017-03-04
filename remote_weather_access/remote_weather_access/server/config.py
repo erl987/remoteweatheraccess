@@ -626,8 +626,12 @@ class ExportConfigSection(IIniConfigSection, Comparable):
 
         # removing the leading and trailing brackets in the string
         config_file_section[ExportConfigSection._EXPORT_DIRECTORY] = self.get_export_directory()
-        config_file_section[ExportConfigSection._FIRST_MONTH] = first_month
-        config_file_section[ExportConfigSection._FIRST_MONTH] = last_month
+        if first_month == ExportConfigSection.INVALID_DATE:
+            config_file_section[ExportConfigSection._FIRST_MONTH] = ExportConfigSection.LATEST_MONTHS
+            config_file_section[ExportConfigSection._LAST_MONTH] = ExportConfigSection.LATEST_MONTHS
+        else:
+            config_file_section[ExportConfigSection._FIRST_MONTH] = first_month
+            config_file_section[ExportConfigSection._LAST_MONTH] = last_month
         config_file_section[ExportConfigSection._STATION_ID] = self.get_station_id()
 
 

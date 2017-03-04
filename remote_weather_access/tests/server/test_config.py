@@ -14,15 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
-import configparser
 import os
 import shutil
 import unittest
 
 from remote_weather_access.common.datastructures import BaseStationSensorData, RainSensorData
-from remote_weather_access.server.config import DatabaseConfigSection, FTPReceiverConfigSection, PlotConfigSection, \
-    LogConfigSection, FTPWeatherServerIniFile, FTPWeatherServerConfig, WeatherPlotServiceIniFile, \
-    WeatherPlotServiceConfig, IniFileUtils
+from remote_weather_access.server.config import *
 
 
 def db_file_name():
@@ -63,6 +60,15 @@ def a_plotter_service_config():
         time_period_duration=7)
     database_config, log_config = a_base_config()
     return WeatherPlotServiceConfig(database_config, plot_config, log_config)
+
+
+def a_export_service_config():
+    export_config = ExportConfigSection(export_directory="/export_dir",
+                                        first_month=ExportConfigSection.INVALID_DATE,
+                                        last_month=ExportConfigSection.INVALID_DATE,
+                                        station_id=ExportConfigSection.ALL_STATIONS)
+    database_config, log_config = a_base_config()
+    return ExportServiceConfig(database_config, export_config, log_config)
 
 
 def prepare_directories():
@@ -141,6 +147,29 @@ class TestPlotConfigSection(unittest.TestCase):
         self.assertEqual(got_config, expected_config)
 
 
+class TestExportConfigSection(unittest.TestCase):
+    def setUp(self):
+        self._ini_file = configparser.ConfigParser()
+        self._ini_file.optionxform = str
+
+    def tearDown(self):
+        pass
+
+    def test_read_write_section_to_ini_file(self):
+        # given:
+        section_tag = "export"
+        expected_config = a_export_service_config().get_export_settings()
+
+        self._ini_file[section_tag] = {}
+
+        # when:
+        expected_config.write_section_to_ini_file(self._ini_file[section_tag])
+        got_config = ExportConfigSection.read_section_from_ini_file(self._ini_file[section_tag])
+
+        # then:
+        self.assertEqual(got_config, expected_config)
+
+
 class TestLogConfigSection(unittest.TestCase):
     def setUp(self):
         self._ini_file = configparser.ConfigParser()
@@ -195,6 +224,26 @@ class TestWeatherPlotServiceIniFile(unittest.TestCase):
         # given:
         ini_file_config = WeatherPlotServiceIniFile(ini_file_name())
         expected_config = a_plotter_service_config()
+
+        # when:
+        ini_file_config.write(expected_config)
+        got_config = ini_file_config.read()
+
+        # then:
+        self.assertEqual(got_config, expected_config)
+
+
+class TestExportServiceIniFile(unittest.TestCase):
+    def setUp(self):
+        prepare_directories()
+
+    def tearDown(self):
+        pass
+
+    def test_read_write_ini_file(self):
+        # given:
+        ini_file_config = ExportServiceIniFile(ini_file_name())
+        expected_config = a_export_service_config()
 
         # when:
         ini_file_config.write(expected_config)
