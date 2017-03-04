@@ -16,7 +16,6 @@
 
 import argparse
 import os
-from datetime import datetime
 
 from remote_weather_access import __version__, package_name
 from remote_weather_access.common.fileformats import PCWetterstationFormatFile
@@ -24,11 +23,8 @@ from remote_weather_access.common.logging import IMultiProcessLogger
 from remote_weather_access.common.logging import MultiProcessLogger
 from remote_weather_access.common.utilities import get_first_day_of_month, get_last_day_of_month, \
     a_day_in_previous_month
-from remote_weather_access.server.config import ExportServiceIniFile
+from remote_weather_access.server.config import ExportServiceIniFile, ExportConfigSection
 from remote_weather_access.server.sqldatabase import SQLWeatherDB
-
-_ALL_STATIONS = "ALL"
-_INVALID_DATE = datetime(day=1, month=1, year=1000)
 
 
 def get_parameters(config_file):
@@ -55,7 +51,7 @@ def generate_export_file(database, db_file_name, station_id, first_day, last_day
     """
     Creates the export data file for a single station.
     """
-    if first_day == _INVALID_DATE:
+    if first_day == ExportConfigSection.INVALID_DATE:
         latest_date = database.get_most_recent_time_with_data(station_id)
         first_day = get_first_day_of_month(a_day_in_previous_month(latest_date))
         last_day = get_last_day_of_month(latest_date)
@@ -72,7 +68,8 @@ def generate_export_file(database, db_file_name, station_id, first_day, last_day
     if data:
         export_file = PCWetterstationFormatFile(combi_sensor_ids, combi_sensor_descriptions)
         export_file.write(station_output_path, data, station_metadata)
-        logger.log(IMultiProcessLogger.INFO, "Successfully wrote data for the station '{}'".format(station_id))
+        logger.log(IMultiProcessLogger.INFO, "Successfully wrote data for the station '{}' "
+                                             "in the period {} - {}".format(station_id, first_day, last_day))
     else:
         logger.log(IMultiProcessLogger.ERROR, "The database '{}' contains no data for the station '{}' "
                                               "in the period {} - {}".format(db_file_name,
@@ -105,19 +102,24 @@ def main():
                     raise NotADirectoryError("The output directory '{}' does not exists".format(output_path))
 
                 database = SQLWeatherDB(db_file_name)
-                if station_id == _ALL_STATIONS:
+                if station_id == ExportConfigSection.ALL_STATIONS:
                     all_station_ids = database.get_stations()
                 else:
                     all_station_ids = [station_id]
 
                 # initial logging
-                if station_id == _ALL_STATIONS:
+                if station_id == ExportConfigSection.ALL_STATIONS:
                     station_text_str = "the stations {}".format(all_station_ids)
                 else:
                     station_text_str = "station '{}'".format(station_id)
-                logger.log(IMultiProcessLogger.INFO, "Started exporting the data of " + station_text_str +
-                           " in the period {} - {} to the base directory '{}'".format(first_day, last_day,
-                                                                                      output_path))
+                if first_day == ExportConfigSection.INVALID_DATE:
+                    period_text_str = "last two months"
+                else:
+                    period_text_str = "period {} - {}".format(first_day, last_day)
+
+                logger.log(IMultiProcessLogger.INFO, "Started exporting the data of {}"
+                           " in the {} to the base directory '{}'".format(station_text_str, period_text_str,
+                                                                          output_path))
 
                 # export the requested data
                 for curr_station_id in all_station_ids:

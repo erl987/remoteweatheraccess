@@ -528,6 +528,10 @@ class LogConfigSection(IIniConfigSection, Comparable):
 class ExportConfigSection(IIniConfigSection, Comparable):
     """Configuration part for the weather data export"""
 
+    ALL_STATIONS = "ALL"
+    LATEST_MONTHS = "TWO-LATEST"
+    INVALID_DATE = datetime(day=1, month=1, year=1000)
+
     # INI-file subsection tags
     _EXPORT_DIRECTORY = "ExportDirectory"
     _FIRST_MONTH = "FirstMonth"
@@ -596,8 +600,16 @@ class ExportConfigSection(IIniConfigSection, Comparable):
             raise InvalidConfigFileError("An entry in the section \"%s\" is invalid." % section.name)
 
         export_directory = section.get(ExportConfigSection._EXPORT_DIRECTORY)
-        first_month = datetime.strptime(section.get(ExportConfigSection._FIRST_MONTH), "%m.%Y")
-        last_month = datetime.strptime(section.get(ExportConfigSection._LAST_MONTH), "%m.%Y")
+        first_month_str = section.get(ExportConfigSection._FIRST_MONTH)
+        last_month_str = section.get(ExportConfigSection._LAST_MONTH)
+
+        if first_month_str == ExportConfigSection.LATEST_MONTHS or last_month_str == ExportConfigSection.LATEST_MONTHS:
+            first_month = ExportConfigSection.INVALID_DATE
+            last_month = ExportConfigSection.INVALID_DATE
+        else:
+            first_month = datetime.strptime(first_month_str, "%m.%Y")
+            last_month = datetime.strptime(last_month_str, "%m.%Y")
+
         station_id = section.get(ExportConfigSection._STATION_ID)
 
         return ExportConfigSection(export_directory, first_month, last_month, station_id)
