@@ -11,7 +11,7 @@ After=multi-user.target
 Type=simple
 User=weather-daemon
 Restart=always
-ExecStart=/usr/bin/weatherserver /etc/remote-weather-access/weatherserver.ini
+ExecStart=/usr/bin/weatherserver /etc/remote-weather-access/weatherserver.ini -d
 
 [Install]
 WantedBy=multi-user.target

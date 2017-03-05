@@ -84,10 +84,8 @@ def main():
     """
     parser = argparse.ArgumentParser(description="Exporting weather data from the SQL-database into PCWetterstation "
                                                  "format files.")
-    parser.add_argument("ini_file", metavar="INI-FILE", type=str,
-                        help="configuration file")
-    parser.add_argument("--version", "-v", action="version",
-                        version="{} version {}".format(package_name, __version__),
+    parser.add_argument("ini_file", metavar="INI-FILE", type=str, help="configuration file")
+    parser.add_argument("--version", "-v", action="version", version="{} version {}".format(package_name, __version__),
                         help='show the version information of the program')
 
     try:

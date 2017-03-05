@@ -13,6 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
+import argparse
 import signal
 import sys
 from multiprocessing import Queue
@@ -80,46 +81,48 @@ def main():
     Usage:
     python ftp_weather_server.py config.ini
     """
-    # read the configuration file (specified in the first command line argument)
-    if len(sys.argv) <= 1 or len(sys.argv) > 1 and sys.argv[1].lower() == "help":
-        print("Weather server listening for data via FTP. Usage: weatherserver config.ini")
-    elif len(sys.argv) == 2 and sys.argv[-1].lower() == "--version":
-        print("weatherserver, {} version {}".format(package_name, __version__))
-    else:
-        try:
-            config_file_handler = FTPWeatherServerIniFile(sys.argv[1])
-            configuration = config_file_handler.read()
+    parser = argparse.ArgumentParser(description="Weather server listening for data via FTP.")
+    parser.add_argument("ini_file", metavar="INI-FILE", type=str, help="configuration file")
+    parser.add_argument("--demon", "-d", dest="demon_mode", action="store_true", help="run in demon mode")
+    parser.add_argument("--version", "-v", action="version", version="{} version {}".format(package_name, __version__),
+                        help='show the version information of the program')
 
-            with MultiProcessLogger(is_print_to_screen=True, log_config=configuration.get_log_config()) as logger:
-                try:
-                    sql_database_service_factory = SQLDatabaseServiceFactory(
-                        configuration.get_database_config().get_db_file_name(),
-                        logger.get_connection()
-                    )
+    try:
+        args = parser.parse_args()
+        config_file_handler = FTPWeatherServerIniFile(args.ini_file)
+        configuration = config_file_handler.read()
+        do_print_logs = not args.demon_mode
 
-                    # main server loop
-                    with FTPServerSideProxy(
-                            sql_database_service_factory,
-                            configuration.get_ftp_receiver_settings(),
-                            logger.get_connection(),
-                            _exception_queue
-                    ):
-                        logger.log(IMultiProcessLogger.INFO, "Server is running (version {}).".format(__version__))
+        with MultiProcessLogger(is_print_to_screen=do_print_logs, log_config=configuration.get_log_config()) as logger:
+            try:
+                sql_database_service_factory = SQLDatabaseServiceFactory(
+                    configuration.get_database_config().get_db_file_name(),
+                    logger.get_connection()
+                )
 
-                        # stall the main thread until the program is finished
-                        if sys.platform.startswith("win32"):
-                            exception_from_subprocess = run_on_windows()
-                        else:
-                            exception_from_subprocess = run_on_linux()
+                # main server loop
+                with FTPServerSideProxy(
+                        sql_database_service_factory,
+                        configuration.get_ftp_receiver_settings(),
+                        logger.get_connection(),
+                        _exception_queue
+                ):
+                    logger.log(IMultiProcessLogger.INFO, "Server is running (version {}).".format(__version__))
 
-                        if exception_from_subprocess and exception_from_subprocess != _REGULAR_STOP:
-                            exception_from_subprocess.re_raise()
-                except Exception as e:
-                    logger.log(IMultiProcessLogger.ERROR, str(e))
+                    # stall the main thread until the program is finished
+                    if sys.platform.startswith("win32"):
+                        exception_from_subprocess = run_on_windows()
+                    else:
+                        exception_from_subprocess = run_on_linux()
 
-                logger.log(IMultiProcessLogger.INFO, "Server has stopped.")
-        except Exception as e:
-            print("An exception occurred: {}".format(str(e)))
+                    if exception_from_subprocess and exception_from_subprocess != _REGULAR_STOP:
+                        exception_from_subprocess.re_raise()
+            except Exception as e:
+                logger.log(IMultiProcessLogger.ERROR, str(e))
+
+            logger.log(IMultiProcessLogger.INFO, "Server has stopped.")
+    except Exception as e:
+        print("An exception occurred: {}".format(str(e)))
 
 
 if __name__ == "__main__":
