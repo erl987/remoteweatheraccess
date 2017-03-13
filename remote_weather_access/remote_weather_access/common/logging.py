@@ -96,6 +96,7 @@ class MultiProcessLogger(IMultiProcessLogger):
         :type log_config:                   server.config.LogConfigSection
         :raise FileNotFoundError:           if no log file is configured and the operating system has no default
                                             log system
+        :raise NotADirectoryError:          if the log file directory is not existing
         """
         self._is_print_to_screen = is_print_to_screen
         self._logging_queue = None
@@ -109,6 +110,9 @@ class MultiProcessLogger(IMultiProcessLogger):
         logger.setLevel(logging.INFO)
         if log_config:
             log_file_name = log_config.get_log_file_name()
+            log_dir, __ = os.path.split(log_file_name)
+            if not os.path.exists(log_dir):
+                raise NotADirectoryError("The logging directory '{}' does not exist".format(log_dir))
             max_bytes = log_config.get_max_kbytes_per_files() * 1024
             backup_count = log_config.get_num_files_to_keep()
 

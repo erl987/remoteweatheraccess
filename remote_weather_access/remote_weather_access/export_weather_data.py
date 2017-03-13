@@ -97,7 +97,7 @@ def main():
                 if not os.path.isfile(db_file_name):
                     raise FileNotFoundError("The database file '{}' does not exist".format(db_file_name))
                 if not os.path.exists(output_path):
-                    raise NotADirectoryError("The output directory '{}' does not exists".format(output_path))
+                    raise NotADirectoryError("The output directory '{}' does not exist".format(output_path))
 
                 database = SQLWeatherDB(db_file_name)
                 if station_id == ExportConfigSection.ALL_STATIONS:
