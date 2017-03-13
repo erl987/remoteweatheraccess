@@ -19,7 +19,8 @@ from setuptools import setup, find_packages
 
 # build the Python source package (distribution-independent): python3 setup.py sdist
 # build the Debian binary package (actually also distribution-independent):
-# py2dsc-deb remote-weather-access-0.2.0.tar.gz (requires the stdeb package for Python3)
+# py2dsc-deb dist/remote-weather-access-0.2.0.tar.gz (requires the stdeb package for Python3)
+# the created package is located in the subdirectory 'deb_dist'
 
 
 def read(fname):

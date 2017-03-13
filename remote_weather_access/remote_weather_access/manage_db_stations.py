@@ -13,9 +13,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
+import argparse
 import os
 import shutil
-import sys
 import json
 
 from remote_weather_access.common.datastructures import WeatherStationMetadata
@@ -23,97 +23,93 @@ from remote_weather_access.server.sqldatabase import SQLWeatherDB
 from remote_weather_access import __version__, package_name
 
 
-# base directory of the directory where the data files are provided by the FTP-server
-receiver_directory = "/var/lib/remote-weather-access/receiver"
-user = "weather-daemon"   # user running the weather server processes
-group = "weather-daemon"  # group of the user running the weather server processes
-
-
 def main():
     """
     Program for managing the stations being present in the weather database.
     """
-    if len(sys.argv) != 4 and not (len(sys.argv) == 3 and sys.argv[-1].upper() == "PRINT"):
-        if len(sys.argv) == 2 and sys.argv[-1].lower() == "--version":
-            print("manage-weather-stations, {} version {}".format(package_name, __version__))
-        else:
-            print("Invalid number of arguments.\n"
-                  "\n"
-                  "Program for managing the stations being present in the weather database.\n"
-                  "WARNING: REMOVING A STATION FROM THE DATABASE REMOVES ALL OF ITS DATA, THIS CANNOT BE UNDONE."
-                  "\n"
-                  "Command line arguments:\n"
-                  "manage-weather-stations [[DB_FILE] [PRINT] | [[TYPE] [JSON-FILE|STATION ID]]] | --version\n"
-                  "\n"
-                  "DB_FILE: path of the weather database file\n"
-                  "PRINT: prints all combi sensors present in the database\n"
-                  "TYPE: type of operation (add | remove | replace)\n"
-                  "JSON-FILE: containing all required settings for the added / replaced station\n"
-                  "\n"
-                  "Example usages:\n"
-                  "manage-weather-stations ./weather.db add newStation.json\n"
-                  "manage-weather-stations ./weather.db remove TES2\n"
-                  "manage-weather-stations ./weather.db replace newStation.json\n"
-                  "manage-weather-stations ./weather.db print\n"
-                  "\n"
-                  "Necessary format for the JSON-file:\n"
-                  "{\n"
-                  "     \"station_id\": \"NBG\",\n",
-                  "     \"device_info\": \"TE923\",\n",
-                  "     \"location_info\": \"Nürnberg\",\n",
-                  "     \"latitude\": 49.374,\n",
-                  "     \"longitude\": 11.017,\n",
-                  "     \"height\": 330,\n",
-                  "     \"rain_calib_factor\": 1.0\n"
-                  "}")
-    else:
-        try:
-            db_file_name = sys.argv[1]
-            operation_type = sys.argv[2].upper()
-            station_metadata = None
-            station_id = None
+    parser = argparse.ArgumentParser(description="Program for managing the stations being present in the weather "
+                                                 "database. WARNING: REMOVING A STATION FROM THE DATABASE REMOVES ALL "
+                                                 "OF ITS DATA, THIS CANNOT BE UNDONE.")
+    parser.add_argument("db_file", metavar="DATABASE", type=str, help="weather database")
 
-            if operation_type == "ADD" or operation_type == "REPLACE":
-                # read the station metadata
-                json_metadata_file = sys.argv[3]
-                with open(json_metadata_file) as file:
-                    metadata = json.load(file)
-                    station_metadata = WeatherStationMetadata(metadata["station_id"],
-                                                              metadata["device_info"],
-                                                              metadata["location_info"],
-                                                              metadata["latitude"],
-                                                              metadata["longitude"],
-                                                              metadata["height"],
-                                                              metadata["rain_calib_factor"])
-            elif operation_type == "REMOVE":
-                station_id = sys.argv[3]
+    operation_type = parser.add_mutually_exclusive_group(required=True)
+    operation_type.add_argument("--print", "-p", dest="do_print", action="store_true",
+                                help="print all combi sensors present in the database")
+    operation_type.add_argument("--add", "-a", metavar="STATION-DATA-FILE", type=str,
+                                help="add new stations specified in the JSON-file (containing "
+                                     "{\"metadata\": \"description\", ...})")
+    operation_type.add_argument("--remove", "-rm", metavar="STATION-ID", type=str,
+                                help="remove the specified station")
+    operation_type.add_argument("--replace", "-rp", metavar="STATION-DATA-FILE", type=str,
+                                help="replace the station metadata by that specified in the JSON-file (containing "
+                                     "{\"metadata\": \"description\", ...})")
 
-            # update the database
-            database = SQLWeatherDB(db_file_name)
-            if operation_type == "ADD":
-                database.add_station(station_metadata)
-                station_dir_name = receiver_directory + os.sep + station_metadata.get_station_id()
-                try:
-                    os.makedirs(station_dir_name, exist_ok=True)
-                    shutil.chown(station_dir_name, user, group)
-                    os.chmod(station_dir_name, 0o775)  # the group requires write access (i.e. the FTP-server)
-                except Exception as e:
-                    print("WARNING: The directory '{}' could not be created: {}".format(station_dir_name, e))
-            elif operation_type == "REPLACE":
-                database.replace_station(station_metadata)
-            elif operation_type == "REMOVE":
-                if not database.remove_station(station_id):
-                    raise SyntaxError("The station {} does not exist in the database".format(station_id))
+    parser.add_argument("--receiver-directory", "-recv", metavar="RECEIVER-DIRECTORY", type=str,
+                        default="/var/lib/remote-weather-access/receiver",
+                        help="base directory of the subdirectory where the data files are provided by the FTP-server "
+                             "(default: /var/lib/remote-weather-access/receiver)")
+    parser.add_argument("--user", "-u", metavar="USER", type=str, default="weather-daemon",
+                        help="user running the weather server process (default: weather-daemon)")
+    parser.add_argument("--group", "-g", metavar="GROUP", type=str, default="weather-daemon",
+                        help="group of the user running the weather server process (default: weather-daemon)")
 
-                station_dir_name = receiver_directory + os.sep + station_id
-                try:
-                    os.rmdir(station_dir_name)
-                except Exception as e:
-                    print("WARNING: The directory '{}' could not be deleted: {}".format(station_dir_name, e))
-            elif operation_type == "PRINT":
-                station_ids = database.get_stations()
+    parser.add_argument("--version", "-v", action="version", version="{} version {}".format(package_name, __version__),
+                        help='show the version information of the program')
 
-                print("Stations in the database:\n")
+    args = parser.parse_args()
+
+    try:
+        db_file_name = args.db_file
+        station_metadata = None
+        station_id = None
+        json_metadata_file = None
+
+        if args.add:
+            json_metadata_file = args.add
+        if args.replace:
+            json_metadata_file = args.replace
+
+        if json_metadata_file:
+            # read the station metadata
+            with open(json_metadata_file) as file:
+                metadata = json.load(file)
+                station_metadata = WeatherStationMetadata(metadata["station_id"],
+                                                          metadata["device_info"],
+                                                          metadata["location_info"],
+                                                          metadata["latitude"],
+                                                          metadata["longitude"],
+                                                          metadata["height"],
+                                                          metadata["rain_calib_factor"])
+        if args.remove:
+            station_id = args.remove
+
+        # update the database
+        database = SQLWeatherDB(db_file_name)
+        if args.add:
+            database.add_station(station_metadata)
+            station_dir_name = args.receiver_directory + os.sep + station_metadata.get_station_id()
+            try:
+                os.makedirs(station_dir_name, exist_ok=True)
+                shutil.chown(station_dir_name, args.user, args.group)
+                os.chmod(station_dir_name, 0o775)  # the group requires write access (i.e. the FTP-server)
+            except Exception as e:
+                print("WARNING: The directory '{}' could not be created: {}".format(station_dir_name, e))
+        elif args.replace:
+            database.replace_station(station_metadata)
+        elif args.remove:
+            if not database.remove_station(station_id):
+                raise SyntaxError("The station {} does not exist in the database".format(station_id))
+
+            station_dir_name = args.receiver_directory + os.sep + station_id
+            try:
+                os.rmdir(station_dir_name)
+            except Exception as e:
+                print("WARNING: The directory '{}' could not be deleted: {}".format(station_dir_name, e))
+        elif args.do_print:
+            station_ids = database.get_stations()
+
+            print("Stations in the database:\n")
+            if station_ids:
                 for station_id in station_ids:
                     station_metadata = database.get_station_metadata(station_id)
 
@@ -127,11 +123,13 @@ def main():
                           + str(longitude) + "\N{DEGREE SIGN}, "
                           + str(height) + " m)")
             else:
-                raise SyntaxError("Invalid command arguments")
+                print("None")
+        else:
+            raise SyntaxError("Invalid command arguments")
 
-            print("Operation was successful.")
-        except Exception as e:
-            print("Execution failed: {}. Call the command without options for help.".format(e))
+        print("Operation was successful.")
+    except Exception as e:
+        print("Execution failed: {}. Call the command with the option --help for support.".format(e))
 
 
 if __name__ == "__main__":

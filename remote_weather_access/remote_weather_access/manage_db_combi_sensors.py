@@ -86,7 +86,7 @@ def main():
             print("You must restart the weather server now to reload the available stations.")
         print("\nOperation was successful.")
     except Exception as e:
-        print("Execution failed: {}. Call the command without options for help.".format(e))
+        print("Execution failed: {}. Call the command with the option --help for support.".format(e))
 
 
 if __name__ == "__main__":
