@@ -181,7 +181,9 @@ class MultiProcessLogger(IMultiProcessLogger):
             logger = logging.getLogger(record.name)
             logger.handle(record)
             if self._is_print_to_screen:
-                self._print_to_screen(record.asctime, record.levelname, record.getMessage())
+                timestamp = datetime.fromtimestamp(record.created)
+                self._print_to_screen(timestamp.strftime("%b %d %H:%M:%S"), record.levelname,
+                                      record.getMessage())
 
     def log(self, log_level, message):
         """
@@ -212,8 +214,8 @@ class MultiProcessLogger(IMultiProcessLogger):
         """
         Prints a log message to the screen.
 
-        :param timestamp:           timestamp of the message
-        :type timestamp:            human-readable string
+        :param timestamp:           timestamp of the message (human-readable)
+        :type timestamp:            str
         :param log_level_name:      describing the log level
         :type log_level_name:       str
         :param message:             message
