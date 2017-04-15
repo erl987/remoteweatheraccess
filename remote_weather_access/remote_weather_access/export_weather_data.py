@@ -124,7 +124,7 @@ def main():
                     generate_export_file(database, db_file_name, curr_station_id, first_day, last_day, output_path,
                                          logger)
             except Exception as e:
-                logger.log(IMultiProcessLogger.ERROR, repr(e))
+                logger.log(IMultiProcessLogger.ERROR, str(e))
     except Exception as e:
         print("An error occurred: {}".format(e))
 

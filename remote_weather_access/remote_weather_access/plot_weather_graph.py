@@ -83,7 +83,7 @@ def main():
                         )
                     )
             except Exception as e:
-                logger.log(IMultiProcessLogger.ERROR, repr(e))
+                logger.log(IMultiProcessLogger.ERROR, str(e))
     except Exception as e:
         print("An exception occurred: {}".format(e))
 
