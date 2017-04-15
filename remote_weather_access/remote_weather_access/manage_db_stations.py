@@ -28,7 +28,7 @@ def main():
     Program for managing the stations being present in the weather database.
     """
     parser = argparse.ArgumentParser(description="Program for managing the stations being present in the weather "
-                                                 "database. It automatically creates a new directory for receiving"
+                                                 "database. It automatically creates a new directory for receiving "
                                                  "data for the new station. WARNING: REMOVING A STATION FROM THE "
                                                  "DATABASE REMOVES ALL OF ITS DATA, THIS CANNOT BE UNDONE.")
     parser.add_argument("db_file", metavar="DATABASE", type=str, help="weather database")
