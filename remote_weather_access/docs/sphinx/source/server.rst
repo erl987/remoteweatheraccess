@@ -1,5 +1,5 @@
-Weather data server
-===================
+Remote Weather Access
+=====================
 
 Features
 --------
@@ -78,14 +78,14 @@ Steps to build a Debian-package
 
 .. code-block:: bash
 
-	python3 setup.py sdist
+    python3 setup.py sdist
 
 * Build the Debian binary package, it will be located in the 
   sudirectory :file:`./deb_dist`:
 
 .. code-block:: bash
 
-	py2dsc-deb dist/remote-weather-access-0.2.0.tar.gz
+    py2dsc-deb dist/remote-weather-access-0.2.0.tar.gz
 
 
 
@@ -96,7 +96,7 @@ The weather server is installed using the binary Debian-package:
 
 .. code-block:: bash
 
-	sudo dpkg -i ./deb_dist/python3-remote-weather-access_0.2.0-1_all.deb
+    sudo dpkg -i ./deb_dist/python3-remote-weather-access_0.2.0-1_all.deb
 
 
 Missing dependencies can finally be installed by:
