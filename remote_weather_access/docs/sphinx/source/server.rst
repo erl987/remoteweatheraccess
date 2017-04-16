@@ -139,13 +139,13 @@ The weather server is uninstalled as follows. If the configuration files should 
 
 .. code-block:: bash
 
-	sudo apt-get remove weatherserver
+	sudo apt-get remove python3-remote-weather-access
 
 If the configuration files should be removed as well, use:
 
 .. code-block:: bash
 
-	sudo apt-get purge weatherserver
+	sudo apt-get purge python3-remote-weather-access
 
 However, even if using purge, the data files created by the server will not be deleted.
 
