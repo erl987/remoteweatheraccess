@@ -226,6 +226,25 @@ Note also here that you should use root rights. Several combi sensors can be add
 	manage-weather-combi-sensors --help
 
 
+Database backup
+^^^^^^^^^^^^^^^
+
+Regular database backups on a remote device are strongly recommended. The database file must not be simply copied, this may lead to a
+corrupted backup. Instead use the command line tool :command:`sqlite3`:
+
+.. code-block:: bash
+
+    sqlite3 ./weather.db ".backup backup_dir/backup.db"
+
+The created backup file can safely be copied to a backup place. This process can be automatized using a cron-job.
+
+If the tool is not yet installed, you can get via the Debian package manager:
+
+.. code-block:: bash
+
+    sudo apt-get install sqlite3
+
+
 
 Weather data plotting
 ~~~~~~~~~~~~~~~~~~~~~
@@ -273,5 +292,5 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.If not, see <http://www.gnu.org/licenses/>
+along with this program. If not, see <http://www.gnu.org/licenses/>
 

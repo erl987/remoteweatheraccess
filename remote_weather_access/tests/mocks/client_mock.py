@@ -20,6 +20,7 @@ import shutil
 import time
 from zipfile import ZipFile
 
+from remote_weather_access.common import utilities
 from remote_weather_access.server.exceptions import NotExistingError
 from remote_weather_access.common.fileformats import PCWetterstationFormatFile
 from remote_weather_access.common.datastructures import WeatherStationDataset, BaseStationSensorData, WindSensorData, \
@@ -58,7 +59,11 @@ def main():
             next_times.append(database.get_most_recent_time_with_data(station_id) + datetime.timedelta(minutes=10))
         except NotExistingError:
             pass
-    next_time = min(next_times)
+    if next_times:
+        next_time = min(next_times)
+    else:
+        curr_time = datetime.datetime.now()
+        next_time = datetime.datetime.fromtimestamp(utilities.ceil_to_n(curr_time.timestamp(), 10 * 60))
 
     # load the station metadata from the database
     station_metadata = dict()
