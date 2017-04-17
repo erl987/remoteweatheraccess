@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.5.2" project-jdk-type="Python SDK" />
+  <component name="SvnBranchConfigurationManager">
+    <option name="myConfigurationMap">
+      <map>
+        <entry key="$PROJECT_DIR$">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="branchUrls">
+                <list>
+                  <option value="https://svn.radixproductions.selfhost.me/weatherstation/branches" />
+                  <option value="https://svn.radixproductions.selfhost.me/weatherstation/tags" />
+                </list>
+              </option>
+              <option name="trunkUrl" value="https://svn.radixproductions.selfhost.me/weatherstation/trunk" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/lib/te923con">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="branchUrls">
+                <list>
+                  <option value="https://svn.radixproductions.selfhost.me/te923con/branches" />
+                  <option value="https://svn.radixproductions.selfhost.me/te923con/tags" />
+                </list>
+              </option>
+              <option name="trunkUrl" value="https://svn.radixproductions.selfhost.me/te923con/trunk" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="mySupportsUserInfoFilter" value="true" />
+  </component>
+</project>

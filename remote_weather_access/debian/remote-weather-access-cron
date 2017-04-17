@@ -1,0 +1,7 @@
+# /etc/cron.d/remote-weather-access-cron: crontab entries for the remote-weather-access package
+
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+*/10 * * * * weather-daemon weatherplot /etc/remote-weather-access/weatherplot.ini ALL > /dev/null 2>&1
+0 * * * * weather-daemon export-weatherdata /etc/remote-weather-access/weatherexport.ini > /dev/null 2>&1

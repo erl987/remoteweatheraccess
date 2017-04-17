@@ -1,0 +1,18 @@
+# remote-weather-access - Weather network server
+# on Debian, put it under /etc/systemd/system/weatherserver.service
+# start with: systemctl start weatherserver.service
+# enable on boot: systemctl enable weatherserver.service
+
+[Unit]
+Description=remote-weather-access server daemon
+After=multi-user.target
+
+[Service]
+Type=simple
+User=weather-daemon
+Restart=always
+ExecStart=/usr/bin/weatherserver /etc/remote-weather-access/weatherserver.ini -d
+
+[Install]
+WantedBy=multi-user.target
+
