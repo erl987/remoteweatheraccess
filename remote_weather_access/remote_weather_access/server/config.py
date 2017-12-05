@@ -200,18 +200,24 @@ class FTPReceiverConfigSection(IIniConfigSection, Comparable):
 
     # INI-file subsection tags
     _RECEIVER_DIRECTORY = "ReceiverDirectory"
+    _DATA_SUB_DIRECTORY = "DataSubDirectory"
     _TEMP_DIRECTORY = "TempDirectory"
     _DATA_FILE_EXTENSION = "DataFileExtension"
     _TIME_BETWEEN_DATA = "TimeBetweenData"
-    _RECEIVER_SUBSECTION = [_RECEIVER_DIRECTORY, _TEMP_DIRECTORY, _DATA_FILE_EXTENSION, _TIME_BETWEEN_DATA]
+    _RECEIVER_SUBSECTION = [_RECEIVER_DIRECTORY, _DATA_SUB_DIRECTORY, _TEMP_DIRECTORY, _DATA_FILE_EXTENSION,
+                            _TIME_BETWEEN_DATA]
 
-    def __init__(self, receiver_directory, temp_data_directory, data_file_extension, time_between_data):
+    def __init__(self, receiver_directory, data_sub_directory, temp_data_directory, data_file_extension,
+                 time_between_data):
         """
         Constructor.
 
         :param receiver_directory:      root of the directories where the FTP-server saves new data files (in one
                                         subdirectory for each station)
         :type receiver_directory:       string
+        :param data_sub_directory:      name of the subdirectory within the station directory containing the data
+                                        (required for the vsFTPd server for example)
+        :type data_sub_directory:       str
         :param temp_data_directory:     temporary data directory available for the server for processing the new data
                                         files
         :type temp_data_directory:      string
@@ -222,6 +228,7 @@ class FTPReceiverConfigSection(IIniConfigSection, Comparable):
         :type time_between_data:        float
         """
         self._receiver_directory = receiver_directory
+        self._data_sub_directory = data_sub_directory
         self._temp_data_directory = temp_data_directory
 
         if not data_file_extension.startswith("."):
@@ -237,6 +244,9 @@ class FTPReceiverConfigSection(IIniConfigSection, Comparable):
         :return:                        root of the directories where the FTP-server saves new data files (in one
                                         subdirectory for each station)
         :rtype:                         string
+        :return:                        name of the subdirectory within the station directory containing the data
+                                        (required for the vsFTPd server for example)
+        :rtype:                         string
         :return:                        temporary data directory available for the server for processing the new data
                                         files
         :rtype:                         string
@@ -246,7 +256,8 @@ class FTPReceiverConfigSection(IIniConfigSection, Comparable):
                                         in a file), in minutes
         :rtype:                         float
         """
-        return self._receiver_directory, self._temp_data_directory, self._data_file_extension, self._time_between_data
+        return self._receiver_directory, self._data_sub_directory, self._temp_data_directory, \
+               self._data_file_extension, self._time_between_data
 
     @staticmethod
     def read_section_from_ini_file(section):
@@ -261,11 +272,13 @@ class FTPReceiverConfigSection(IIniConfigSection, Comparable):
             raise InvalidConfigFileError("An entry in the section \"%s\" is invalid." % section.name)
 
         receiver_directory = section.get(FTPReceiverConfigSection._RECEIVER_DIRECTORY)
+        data_sub_directory = section.get(FTPReceiverConfigSection._DATA_SUB_DIRECTORY)
         temp_data_directory = section.get(FTPReceiverConfigSection._TEMP_DIRECTORY)
         data_file_extension = section.get(FTPReceiverConfigSection._DATA_FILE_EXTENSION)
         time_between_data = section.getfloat(FTPReceiverConfigSection._TIME_BETWEEN_DATA)
 
-        return FTPReceiverConfigSection(receiver_directory, temp_data_directory, data_file_extension, time_between_data)
+        return FTPReceiverConfigSection(receiver_directory, data_sub_directory, temp_data_directory,
+                                        data_file_extension, time_between_data)
 
     def write_section_to_ini_file(self, config_file_section):
         """
@@ -275,8 +288,9 @@ class FTPReceiverConfigSection(IIniConfigSection, Comparable):
                                         call
         :type config_file_section:      ConfigParser
         """
-        receiver_directory, temp_data_directory, data_file_extension, time_between_data = self.get()
+        receiver_directory, data_sub_directory, temp_data_directory, data_file_extension, time_between_data = self.get()
         config_file_section[FTPReceiverConfigSection._RECEIVER_DIRECTORY] = receiver_directory
+        config_file_section[FTPReceiverConfigSection._DATA_SUB_DIRECTORY] = data_sub_directory
         config_file_section[FTPReceiverConfigSection._TEMP_DIRECTORY] = temp_data_directory
         config_file_section[FTPReceiverConfigSection._DATA_FILE_EXTENSION] = data_file_extension
         config_file_section[FTPReceiverConfigSection._TIME_BETWEEN_DATA] = str(time_between_data)

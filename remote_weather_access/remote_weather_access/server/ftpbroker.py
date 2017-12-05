@@ -165,8 +165,8 @@ class FileSystemObserver(FileSystemEventHandler):
 
 class FTPServerBrokerProcess(object):
     """Broker for the FTP-based weather server"""
-    def __init__(self, data_directory, data_file_extension, temp_data_directory, delta_time, combi_sensor_ids,
-                 combi_sensor_descriptions):
+    def __init__(self, data_directory, data_file_extension, data_sub_directory, temp_data_directory, delta_time,
+                 combi_sensor_ids, combi_sensor_descriptions):
         """
         Constructor.
 
@@ -174,6 +174,9 @@ class FTPServerBrokerProcess(object):
         :type data_directory:           str
         :param data_file_extension:     file extension of the data files (example: ".ZIP")
         :type data_file_extension:      str
+        :param data_sub_directory:      name of the subdirectory within the station directory containing the data
+                                        (required for the vsFTPd server for example)
+        :type data_sub_directory:       str
         :param temp_data_directory:     temporary directory for unzipped the data files
         :type temp_data_directory:      str
         :param delta_time:              time period between two weather data timepoints, in minutes
@@ -191,6 +194,7 @@ class FTPServerBrokerProcess(object):
 
         self._data_directory = data_directory
         self._data_file_extension = data_file_extension
+        self._data_sub_directory = data_sub_directory
         self._temp_data_directory = temp_data_directory
         self._delta_time = delta_time
         self._combi_sensor_IDs = combi_sensor_ids
@@ -267,9 +271,10 @@ class FTPServerBrokerProcess(object):
             if len(station_id) > 0:
                 try:
                     # ensure that the file is in its correct data subdirectory
-                    if not file_path.endswith(station_id):
+                    if not file_path.endswith(station_id + os.sep + self._data_sub_directory):
                         raise FileParseError(
-                            "The data file \"%s\" is not in its correct subdirectory \"%s\"" % (message_id, station_id)
+                            "The data file \"%s\" is not in its correct subdirectory \"%s%s%s\""
+                            % (message_id, station_id, os.sep, self._data_sub_directory)
                         )
 
                     data = self._read_data_files(message_id, station_id)
@@ -305,7 +310,9 @@ class FTPServerBrokerProcess(object):
             counter = 0
             while file_still_blocked:
                 try:
-                    zip_file = ZipFile(self._data_directory + os.sep + station_id + os.sep + file_name, 'r')
+                    file_path = self._data_directory + os.sep + station_id + os.sep + self._data_sub_directory + \
+                                os.sep + file_name
+                    zip_file = ZipFile(file_path, 'r')
                 except PermissionError:
                     # workaround because the watchdog library cannot monitor the file close event and the file may still
                     # be open when the "modified" event is signalled
@@ -337,8 +344,8 @@ class FTPServerBrokerProcess(object):
 
 class FTPBroker(object):
     """Broker for the FTP-based weather server"""
-    def __init__(self, request_queue, data_directory, data_file_extension, temp_data_directory, logging_connection,
-                 exception_handler, delta_time, combi_sensor_ids, combi_sensor_descriptions):
+    def __init__(self, request_queue, data_directory, data_file_extension, data_sub_directory, temp_data_directory,
+                 logging_connection, exception_handler, delta_time, combi_sensor_ids, combi_sensor_descriptions):
         """
         Constructor.
 
@@ -348,6 +355,9 @@ class FTPBroker(object):
         :type data_directory:           str
         :param data_file_extension:     file extension of the data files (example: ".ZIP")
         :type data_file_extension:      str
+        :param data_sub_directory:      name of the subdirectory within the station directory containing the data
+                                        (required for the vsFTPd server for example)
+        :type data_sub_directory:       str
         :param temp_data_directory:     temporary directory for unzipped the data files
         :type temp_data_directory:      str
         :param logging_connection:      connection to the logger in the main process
@@ -363,6 +373,7 @@ class FTPBroker(object):
         """
         self._data_directory = data_directory
         self._data_file_extension = data_file_extension
+        self._data_sub_directory = data_sub_directory
 
         self._received_file_queue = Queue()
         self._filesystem_observer = FileSystemObserver(self._data_directory)
@@ -373,7 +384,7 @@ class FTPBroker(object):
         self._filesystem_observer_process.start()
 
         self._broker = FTPServerBrokerProcess(
-            data_directory, data_file_extension, temp_data_directory, delta_time, combi_sensor_ids,
+            data_directory, data_file_extension, data_sub_directory, temp_data_directory, delta_time, combi_sensor_ids,
             combi_sensor_descriptions
         )
         self._broker_process = Process(
@@ -415,7 +426,7 @@ class FTPBroker(object):
         station_id = FTPServerBrokerProcess.get_station_id(message_id)
 
         # delete the ZIP-file corresponding to the message ID
-        os.remove(self._data_directory + '/' + station_id + '/' + message_id)
+        os.remove(self._data_directory + os.sep + station_id + os.sep + self._data_sub_directory + os.sep + message_id)
 
         logger.log(IMultiProcessLogger.INFO, "Removed the data file '{}' after processing".format(message_id))
 
@@ -488,7 +499,7 @@ class FTPServerSideProxy(IServerSideProxy):
         :type exception_queue:          multiprocessing.queues.Queue
         """
         # read the configuration
-        data_directory, temp_data_directory, data_file_extension, delta_time = config.get()
+        data_directory, data_sub_directory, temp_data_directory, data_file_extension, delta_time = config.get()
 
         # create the working directories if required
         os.makedirs(temp_data_directory, exist_ok=True)
@@ -511,6 +522,7 @@ class FTPServerSideProxy(IServerSideProxy):
             self._request_queue,
             data_directory,
             data_file_extension,
+            data_sub_directory,
             temp_data_directory,
             logging_connection,
             self._exception_handler,
