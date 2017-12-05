@@ -8,14 +8,13 @@ Install a new Raspberry for a new station:
 6. Delete the last data storage file /opt/weatherstation/data/settings_###.dat (if existing)
 7. Make sure that there are no data files EXP_##_##.CSV in the directory /opt/weatherstation/data/
 8. Generate a new user on the FTP-server:
-	htpasswd -p -b /etc/ftpd.passwd 'station name' $(openssl passwd -1 -noverify 'password')
+	htpasswd -p -b /etc/vsftpd/ftpd.passwd 'station name' $(openssl passwd -1 -noverify 'password')
 	The warning can be ignored
 	mkdir /srv/ftp/virtual/'station name'
-	chown -R ftp:ftp /srv/ftp/virtual/'station_name'
+	chown -R vftpd:vsftpd /srv/ftp/virtual/'station_name'
 9.	Adapt the file structure of the FTP-server:
 	/srv/ftp/virtual/'station name'
-		-> newData (ftp:ftp)
-		-> newData/temp (weatherstation:weatherstation)
+		-> newData (vsftpd:vsftpd)
 	chmod -w /srv/ftp/virtual/'station_name'	
 	chmod +rwx /srv/ftp/virtual/'stationName'/newData
 10. Generate internet page for the user
@@ -24,12 +23,6 @@ Install a new Raspberry for a new station:
 	cp /srv/www/ERL /srv/www/'station name'
 	chown
 	Adapt texts in /srv/www/'station name'/index.html
-11.	Generate the data folder for the new station:
-	mkdir /srv/weather/'station name'
-	chown -R weatherstation:weatherstation /srv/weather/'station name'
-12.	Add the station ftp-folder to incrod-control:
-	incrontab -e -u weatherstation
-	Add the line: /srv/ftp/virtual/'station name'/newData IN_CLOSE_WRITE python3 /opt/weatherstation/weatherserver.py $@/$#
 
 -> The weather data can be obtained from http://wetter.radixproductions.selfhost.me/'station name'
 	

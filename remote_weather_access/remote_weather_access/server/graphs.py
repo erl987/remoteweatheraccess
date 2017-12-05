@@ -13,6 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <http://www.gnu.org/licenses/>
+import locale
 
 import matplotlib
 from remote_weather_access.common.datastructures import CombiSensorData, BaseStationSensorData, RainSensorData
@@ -27,6 +28,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib.ticker as ticker
 import matplotlib.font_manager as fonts
+import matplotlib.style as style
 import datetime
 from datetime import datetime as dt
 from datetime import timedelta
@@ -170,6 +172,9 @@ def plot_of_last_n_days(num_days, db_file_name, station_id, sensors_to_plot, gra
     :rtype:                     tuple(int, datetime.datetime, datetime.datetime)
     :raise NotExistingError:    if no data for the requested period is available for the requested station
     """
+    locale.setlocale(locale.LC_TIME, locale.getlocale())
+    style.use("classic")
+
     # Find data for the last n days in the data folder
     data = get_last_n_days_data(num_days, db_file_name, station_id, last_time)
 
@@ -216,7 +221,8 @@ def plot_of_last_n_days(num_days, db_file_name, station_id, sensors_to_plot, gra
         ax[index].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
         ax[index].axis[y_axis_pos[index][0]].minor_ticks.set_color(sensor_color)
         ax[index].axis[y_axis_pos[index][0]].major_ticklabels.set_color(sensor_color)
-        ax[index].axis[y_axis_pos[index][0]].major_ticklabels.set_fontproperties(fonts.FontProperties(weight='bold'))
+        ax[index].axis[y_axis_pos[index][0]].major_ticklabels.set_fontproperties(fonts.FontProperties(weight='bold',
+                                                                                                      size=13))
         ax[index].axis[y_axis_pos[index][0]].major_ticks.set_color(sensor_color)
         ax[index].axis[y_axis_pos[index][0]].line.set_color(sensor_color)
         ax[index].axis[y_axis_pos[index][0]].line.set_linewidth(2.0)
@@ -225,11 +231,13 @@ def plot_of_last_n_days(num_days, db_file_name, station_id, sensors_to_plot, gra
     num_ticks, min_max_axis = get_scalings(min_max_sensors)
     for index, sensor in enumerate(sensors_to_plot):
         ax[index].yaxis.set_major_locator(ticker.LinearLocator(numticks=num_ticks))
+        ax[index].yaxis.get_major_formatter().set_useOffset(False)
         ax[index].set_ylim(min_max_axis[str(sensor)]['min'], min_max_axis[str(sensor)]['max'])
 
     # Configure date axis and grid lines
+    ax[0].set_xlim(times[0], times[-1])
     ax[0].xaxis.set_minor_locator(mdates.HourLocator(byhour=[0, 6, 12, 18]))
-    ax[0].grid(True, which='minor', color='gray', linestyle='dotted', lw=0.5)
+    ax[0].grid(True, which='minor', color='k', linestyle=':', lw=0.1)
     ax[0].axis['bottom'].minor_ticks.set_ticksize(5)
     ax[0].axis['top'].minor_ticks.set_ticksize(5)
     ax[0].xaxis.set_major_locator(mdates.DayLocator())
