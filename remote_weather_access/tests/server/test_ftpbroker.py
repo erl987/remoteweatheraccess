@@ -39,8 +39,12 @@ def data_base_directory():
     return "./tests/workingDir/ftpbroker"
 
 
+def data_sub_directory():
+    return "newData"
+
+
 def data_directory():
-    return data_base_directory() + os.sep + a_station_id()
+    return data_base_directory() + os.sep + a_station_id() + os.sep + data_sub_directory()
 
 
 def temp_directory():
@@ -48,7 +52,7 @@ def temp_directory():
 
 
 def not_existing_data_directory():
-    return "./tests/workingDir/notexisting"
+    return "./tests/workingDir/notexisting" + os.sep + data_sub_directory()
 
 
 def data_file_extension():
@@ -72,12 +76,12 @@ def a_file_path():
 
 
 def a_path_of_invalid_file():
-    return data_base_directory() + os.sep + another_station_id() + os.sep + "message_" + another_station_id() + \
-           data_file_extension()
+    return data_base_directory() + os.sep + another_station_id() + os.sep + data_sub_directory() + os.sep + \
+           "message_" + another_station_id() + data_file_extension()
 
 
 def create_a_data_file():
-    shutil.copy("./tests/testdata" + os.sep + a_file_name(), a_file_path())
+    shutil.copy("./tests" + os.sep + "testdata" + os.sep + a_file_name(), a_file_path())
 
 
 def prepare_directories():
@@ -240,8 +244,8 @@ class TestFTPServerBrokerProcess(unittest.TestCase):
         parent = BrokerParentMock()
         delta_time, combi_sensor_ids, combi_sensor_descriptions, logging_connection = get_broker_settings()
 
-        broker = FTPServerBrokerProcess(data_base_directory(), data_file_extension(), temp_directory(),
-                                        delta_time, combi_sensor_ids, combi_sensor_descriptions)
+        broker = FTPServerBrokerProcess(data_base_directory(), data_file_extension(), data_sub_directory(),
+                                        temp_directory(), delta_time, combi_sensor_ids, combi_sensor_descriptions)
         broker_process = Process(
             target=broker.process, args=(self._received_file_queue, request_queue, parent,
                                          logging_connection, partial(_exception_handler, queue=exception_queue))
@@ -320,8 +324,8 @@ class TestFTPBroker(unittest.TestCase):
         request_queue = Queue()
 
         delta_time, combi_sensor_ids, combi_sensor_descriptions, logging_connection = get_broker_settings()
-        broker = FTPBroker(request_queue, data_base_directory(), data_file_extension(), temp_directory(),
-                           logging_connection, _exception_handler, delta_time, combi_sensor_ids,
+        broker = FTPBroker(request_queue, data_base_directory(), data_file_extension(), data_sub_directory(),
+                           temp_directory(), logging_connection, _exception_handler, delta_time, combi_sensor_ids,
                            combi_sensor_descriptions)
 
         try:
@@ -445,8 +449,9 @@ class TestFTPServerSideProxy(unittest.TestCase):
         database_service_factory = SQLDatabaseServiceFactoryMock(result_queue)
         logging_connection = MultiProcessConnector(logging_queue, 0)
 
-        config = FTPReceiverConfigSection(data_directory(), data_base_directory() + os.sep + "temp",
-                                          data_file_extension(), datetime.timedelta(minutes=10))
+        config = \
+            FTPReceiverConfigSection(data_directory(), data_sub_directory(), data_base_directory() + os.sep + "temp",
+                                     data_file_extension(), 10.0)
 
         # when:
         with FTPServerSideProxy(
@@ -457,6 +462,7 @@ class TestFTPServerSideProxy(unittest.TestCase):
             time.sleep(0.5)
 
         # then: this is a smoke test, all underlying functionality is tested in other tests
+
 
 if __name__ == '__main__':
     unittest.main()

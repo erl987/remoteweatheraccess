@@ -221,5 +221,6 @@ class TestPCWetterstationFormatFile(unittest.TestCase):
         # then:
         self.assertFalse(os.listdir(data_file_path()))
 
+
 if __name__ == '__main__':
     unittest.main()

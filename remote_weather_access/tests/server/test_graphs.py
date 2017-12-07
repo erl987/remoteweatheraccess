@@ -23,7 +23,7 @@ from zipfile import ZipFile
 
 from scipy.misc import imread
 from skimage import color
-from skimage.measure import structural_similarity
+from skimage.measure import compare_ssim
 
 from remote_weather_access.common.datastructures import CombiSensorData, BaseStationSensorData, RainSensorData, \
     WeatherStationMetadata
@@ -79,7 +79,7 @@ def image_similarity_index(image_1_path_name, image_2_path_name):
     image_1 = color.rgb2gray(imread(image_1_path_name))  # color-images are not supported in the version for Raspbian
     image_2 = color.rgb2gray(imread(image_2_path_name))
 
-    similarity = structural_similarity(image_1, image_2)
+    similarity = compare_ssim(image_1, image_2)
 
     return similarity
 

@@ -197,5 +197,6 @@ class TestSQLWindSensorTable(unittest.TestCase):
         # then:
             self.assertTrue(not got_sensor_data)
 
+
 if __name__ == '__main__':
     unittest.main()

@@ -125,5 +125,6 @@ class TestSQLCombiSensorDefinitionTable(unittest.TestCase):
         # then:
             self.assertFalse(combi_sensor_definition_table.exists(some_sensor_id()))
 
+
 if __name__ == '__main__':
     unittest.main()

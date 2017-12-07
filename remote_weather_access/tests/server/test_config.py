@@ -44,6 +44,7 @@ def a_base_config():
 
 def a_weather_server_config():
     ftp_receiver_config = FTPReceiverConfigSection(receiver_directory="./receiver_dir",
+                                                   data_sub_directory="newData",
                                                    temp_data_directory="./temp_dir",
                                                    data_file_extension="ZIP",
                                                    time_between_data=10.0)
@@ -288,6 +289,7 @@ class TestIniFileUtils(unittest.TestCase):
 
         # then:
         self.assertFalse(got_check_result)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -699,7 +699,7 @@ class _WeatherDataTable(object):
         :param station_id:          station ID
         :type station_id:           string
         :param time:                timepoint(s). Multiple times can be deleted at once.
-        :type time:                 list of datatime.datetime
+        :type time:                 list of datetime.datetime or datetime.datetime
         :return:                    number of deleted datasets
         :rtype:                     integer
         """
