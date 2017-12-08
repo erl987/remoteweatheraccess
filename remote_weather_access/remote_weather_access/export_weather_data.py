@@ -69,13 +69,15 @@ def generate_export_file(database, db_file_name, station_id, first_day, last_day
         export_file = PCWetterstationFormatFile(combi_sensor_ids, combi_sensor_descriptions)
         export_file.write(station_output_path, data, station_metadata)
         logger.log(IMultiProcessLogger.INFO, "Successfully wrote data for the station '{}' "
-                                             "in the period {} - {}".format(station_id, first_day, last_day))
+                                             "in the period {} - {}".format(station_id,
+                                                                            first_day,
+                                                                            last_day.replace(microsecond=0)))
     else:
         logger.log(IMultiProcessLogger.ERROR, "The database '{}' contains no data for the station '{}' "
                                               "in the period {} - {}".format(db_file_name,
                                                                              station_id,
                                                                              first_day,
-                                                                             last_day))
+                                                                             last_day.replace(microsecond=0)))
 
 
 def main():
