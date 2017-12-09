@@ -55,33 +55,37 @@ def main():
                     chosen_station_ids = [entered_station_id]
 
                 for station_id in chosen_station_ids:
-                    # create the (sub-) directory of the plot if required
-                    plot_dir_name = graph_directory + os.sep + station_id
                     try:
-                        os.makedirs(plot_dir_name, exist_ok=True)
-                    except Exception:
-                        raise FileNotFoundError("The directory '{}' could not be created".format(plot_dir_name))
+                        # create the (sub-) directory of the plot if required
+                        plot_dir_name = graph_directory + os.sep + station_id
+                        try:
+                            os.makedirs(plot_dir_name, exist_ok=True)
+                        except Exception:
+                            raise FileNotFoundError("The directory '{}' could not be created".format(plot_dir_name))
 
-                    logger.log(IMultiProcessLogger.INFO, "Started plotting the last {} days for station {}.".format(
-                        time_period_duration, station_id))
-                    num_plot_datasets, first_plot_time, last_plot_time = graphs.plot_of_last_n_days(
-                        time_period_duration,
-                        configuration.get_database_config().get_db_file_name(),
-                        station_id,
-                        configuration.get_plotter_settings().get_sensors_to_plot(),
-                        graph_directory,
-                        graph_file_name,
-                        True
-                    )
-                    logger.log(
-                        IMultiProcessLogger.INFO,
-                        "Finished plotting for station {}, plotted {} datasets ({} - {}).".format(
+                        logger.log(IMultiProcessLogger.INFO, "Started plotting the last {} days for station {}.".format(
+                            time_period_duration, station_id))
+                        num_plot_datasets, first_plot_time, last_plot_time = graphs.plot_of_last_n_days(
+                            time_period_duration,
+                            configuration.get_database_config().get_db_file_name(),
                             station_id,
-                            num_plot_datasets,
-                            first_plot_time,
-                            last_plot_time
+                            configuration.get_plotter_settings().get_sensors_to_plot(),
+                            graph_directory,
+                            graph_file_name,
+                            True
                         )
-                    )
+                        logger.log(
+                            IMultiProcessLogger.INFO,
+                            "Finished plotting for station {}, plotted {} datasets ({} - {}).".format(
+                                station_id,
+                                num_plot_datasets,
+                                first_plot_time,
+                                last_plot_time
+                            )
+                        )
+                    except Exception as e:
+                        logger.log(IMultiProcessLogger.ERROR, "Error while plotting data for station '{}': {}".
+                                   format(station_id, str(e)))
             except Exception as e:
                 logger.log(IMultiProcessLogger.ERROR, str(e))
     except Exception as e:

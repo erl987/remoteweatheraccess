@@ -123,8 +123,12 @@ def main():
 
                 # export the requested data
                 for curr_station_id in all_station_ids:
-                    generate_export_file(database, db_file_name, curr_station_id, first_day, last_day, output_path,
-                                         logger)
+                    try:
+                        generate_export_file(database, db_file_name, curr_station_id, first_day, last_day, output_path,
+                                             logger)
+                    except Exception as e:
+                        logger.log(IMultiProcessLogger.ERROR, "Error while processing data for station '{}': {}".
+                                   format(curr_station_id, str(e)))
             except Exception as e:
                 logger.log(IMultiProcessLogger.ERROR, str(e))
     except Exception as e:
