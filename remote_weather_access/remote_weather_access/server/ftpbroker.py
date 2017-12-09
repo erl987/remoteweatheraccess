@@ -165,6 +165,8 @@ class FileSystemObserver(FileSystemEventHandler):
 
 class FTPServerBrokerProcess(object):
     """Broker for the FTP-based weather server"""
+    _MAX_SUPPORTED_NUM_DATASETS = 86400  # the maximum is limited by the available main memory (to ca. 1 year of data)
+
     def __init__(self, data_directory, data_file_extension, data_sub_directory, temp_data_directory, delta_time,
                  combi_sensor_ids, combi_sensor_descriptions):
         """
@@ -329,6 +331,9 @@ class FTPServerBrokerProcess(object):
             # read a list of WeatherData objects from the unzipped data files
             data = list()
             for curr_file_name in new_data_file_list:
+                if len(data) > self._MAX_SUPPORTED_NUM_DATASETS:
+                    raise OverflowError("The ZIP-file contains more datasets than supported (max. {})".
+                                        format(self._MAX_SUPPORTED_NUM_DATASETS))
                 weather_file = PCWetterstationFormatFile(self._combi_sensor_IDs, self._combi_sensor_descriptions)
                 curr_data = weather_file.read(
                     self._temp_data_directory + os.sep + curr_file_name, station_id, self._delta_time
