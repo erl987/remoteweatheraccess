@@ -71,6 +71,14 @@ def a_file_name():
     return "150315_213115_1345_" + a_station_id() + data_file_extension()
 
 
+def a_start_time():
+    return datetime.datetime(day=1, month=3, year=2015)
+
+
+def a_last_time():
+    return datetime.datetime(day=15, month=3, year=2015, hour=21, minute=0)
+
+
 def a_file_path():
     return data_directory() + os.sep + a_file_name()
 
@@ -261,13 +269,15 @@ class TestFTPServerBrokerProcess(unittest.TestCase):
             # when:
             create_a_data_file()
             self._received_file_queue.put(a_file_path())
-            got_message_id, got_station_id, got_data = request_queue.get(timeout=5.0)
+            got_message_id, got_station_id, got_first_time, got_last_time, got_data = request_queue.get(timeout=5.0)
             got_file_name = got_message_id  # the message id is identical to the file name
 
             # then:
             self.assertEqual(got_file_name, a_file_name())
             self.assertEqual(got_station_id, a_station_id())
             self.assertEqual(len(got_data), 2143)
+            self.assertEqual(got_first_time, a_start_time())
+            self.assertEqual(got_last_time, a_last_time())
         finally:
             self._received_file_queue.put(None)  # finish the process
             if broker_process.is_alive():
@@ -331,13 +341,15 @@ class TestFTPBroker(unittest.TestCase):
         try:
             # when:
             broker.feed_modified_file(a_file_path())
-            got_message_id, got_station_id, got_data = request_queue.get(timeout=5.0)
+            got_message_id, got_station_id, got_first_time, got_last_time, got_data = request_queue.get(timeout=5.0)
             got_file_name = got_message_id  # the message id is identical to the file name
 
             # then:
             self.assertEqual(got_file_name, a_file_name())
             self.assertEqual(got_station_id, a_station_id())
             self.assertEqual(len(got_data), 2143)
+            self.assertEqual(got_first_time, a_start_time())
+            self.assertEqual(got_last_time, a_last_time())
         finally:
             broker.stop_and_join()
 
@@ -377,7 +389,7 @@ class TestFTPServerSideProxyProcess(unittest.TestCase):
         # given:
         proxy_process, request_queue, result_queue, exception_queue, message_id, dataset = \
             self._get_proxy_process_settings()
-        queue_data = (message_id, a_station_id(), dataset)
+        queue_data = (message_id, a_station_id(),  a_start_time(), a_last_time(), dataset)
 
         try:
             proxy_process.start()
@@ -399,7 +411,7 @@ class TestFTPServerSideProxyProcess(unittest.TestCase):
         # given:
         proxy_process, request_queue, result_queue, exception_queue, message_id, dataset = \
             self._get_proxy_process_settings(use_db_throwing_on_add_data=True)
-        queue_data = (message_id, a_station_id(), dataset)
+        queue_data = (message_id, a_station_id(), a_start_time(), a_last_time(), dataset)
 
         try:
             proxy_process.start()

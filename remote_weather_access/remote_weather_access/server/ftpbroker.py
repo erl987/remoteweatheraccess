@@ -228,9 +228,9 @@ class FTPServerBrokerProcess(object):
                 if full_path is None:
                     break
 
-                message_id, station_id, data = self._on_new_data(full_path, logger, parent)
+                message_id, station_id, first_time, last_time, data = self._on_new_data(full_path, logger, parent)
                 if message_id:
-                    request_queue.put((message_id, station_id, data))
+                    request_queue.put((message_id, station_id, first_time, last_time, data))
         except Exception as e:
             exception_handler(DelayedException(e))
 
@@ -260,8 +260,10 @@ class FTPServerBrokerProcess(object):
         :type logger:                   MultiProcessLoggerProxy
         :param parent:                  parent of the object
         :type parent:                   server.ftpbroker.FTPBroker
-        :return:                        message id, station id, data from the new file
-        :rtype:                         tuple(str, str, list of common.datastructures.WeatherStationDataset)
+        :return:                        message id, station id, first time of dataset, last time of dataset,
+                                        data from the new file
+        :rtype:                         tuple(str, str, datetime, datetime,
+                                        list of common.datastructures.WeatherStationDataset)
         """
         # extract all required information from the name of the transferred data file
         file, file_extension = os.path.splitext(full_path)
@@ -279,7 +281,7 @@ class FTPServerBrokerProcess(object):
                             % (message_id, station_id, os.sep, self._data_sub_directory)
                         )
 
-                    data = self._read_data_files(message_id, station_id)
+                    data, first_time, last_time = self._read_data_files(message_id, station_id)
                 except FileParseError as e:
                     # invalid file format, ignore the file
                     logger.log(IMultiProcessLogger.WARNING, e.msg)
@@ -287,9 +289,9 @@ class FTPServerBrokerProcess(object):
                     # the sender needs to acknowledge anyway, that the data does not need to be stored anymore
                     parent.send_persistence_acknowledgement(message_id, logger)
                 else:
-                    return message_id, station_id, data
+                    return message_id, station_id, first_time, last_time, data
 
-        return None, None, None
+        return None, None, None, None, None
 
     def _read_data_files(self, file_name, station_id):
         """
@@ -299,11 +301,13 @@ class FTPServerBrokerProcess(object):
         :type file_name:                str
         :param station_id:              id of the station
         :type station_id:               str
-        :return:                        the read data
-        :rtype:                         list of common.datastructures.WeatherStationDataset
+        :return:                        the read data, first time, last time of dataset
+        :rtype:                         list of common.datastructures.WeatherStationDataset, datetime, datetime
         """
         wait_time = 0.05    # wait time between data file reading trials (in seconds)
         max_trials = 100     # reading trials for the data file before a fatal failure is assumed
+        first_time = datetime.datetime.max
+        last_time = datetime.datetime.min
 
         new_data_file_list = None
         try:
@@ -335,16 +339,18 @@ class FTPServerBrokerProcess(object):
                     raise OverflowError("The ZIP-file contains more datasets than supported (max. {})".
                                         format(self._MAX_SUPPORTED_NUM_DATASETS))
                 weather_file = PCWetterstationFormatFile(self._combi_sensor_IDs, self._combi_sensor_descriptions)
-                curr_data = weather_file.read(
+                curr_datasets, __, __, curr_first_time, curr_last_time = weather_file.read(
                     self._temp_data_directory + os.sep + curr_file_name, station_id, self._delta_time
                 )
-                data += curr_data[0]
+                data += curr_datasets
+                first_time = min(first_time, curr_first_time)
+                last_time = max(last_time, curr_last_time)
         finally:
             # delete the temporary data files
             if new_data_file_list:
                 PCWetterstationFormatFile.delete_datafiles(self._temp_data_directory, new_data_file_list)
 
-        return data
+        return data, first_time, last_time
 
 
 class FTPBroker(object):
@@ -463,7 +469,7 @@ class FTPServerSideProxyProcess(object):
 
             while True:
                 # the FTP-broker does not require deserialization of the data
-                message_id, station_id, raw_data = request_queue.get()
+                message_id, station_id, first_time, last_time, raw_data = request_queue.get()
                 if message_id is None:
                     break
                 message = WeatherMessage(message_id, station_id, raw_data)
@@ -474,7 +480,7 @@ class FTPServerSideProxyProcess(object):
                             station_id))
                     else:
                         logger.log(IMultiProcessLogger.INFO, "New data for station '{}' stored ({} - {})".format(
-                                   station_id, raw_data[0].get_time(), raw_data[-1].get_time()))
+                                   station_id, first_time, last_time))
                 except (NotExistingError, AlreadyExistingError) as e:
                     # the new data will be ignored
                     logger.log(IMultiProcessLogger.WARNING, e.msg)

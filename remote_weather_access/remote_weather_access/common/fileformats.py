@@ -102,13 +102,17 @@ class PCWetterstationFormatFile(object):
                                                 data of the first dataset, where this information cannot be derived
                                                 automatically)
         :type delta_time:                       float
-        :return:                                weather datasets, rain counter base, station metadata
-        :rtype:                                 tuple(WeatherStationDataset, float, WeatherStationMetadata)
+        :return:                                weather datasets, rain counter base, station metadata,
+                                                first time of dataset, last time of dataset
+        :rtype:                                 tuple(WeatherStationDataset, float, WeatherStationMetadata,
+                                                datetime, datetime)
         :raise FileNotFoundError:               if the file does not exist
         :raise PCWetterstationFileParserError:  if the file could not be parsed
         """
         time = None
         prev_time = None
+        first_time = dt.max
+        last_time = dt.min
 
         if not os.path.isfile(file_name):
             raise FileNotFoundError("The file '{}' does not exist".format(file_name))
@@ -143,12 +147,15 @@ class PCWetterstationFormatFile(object):
                     time = dt(*map(int, [date_string[6:], date_string[3:5], date_string[0:2], time_string[:2],
                                          time_string[3:]]))  # performance optimized
                     if not prev_time:
+                        first_time = time
                         prev_time = time - timedelta(
                             seconds=int(round(60 * delta_time)))  # initial guess for the first timepoint in the file
 
                     datasets.append(self._parse_single_line(time, prev_time, single_line_dict))
+                if time:
+                    last_time = time
 
-            return datasets, rain_counter_base, station_metadata
+            return datasets, rain_counter_base, station_metadata, first_time, last_time
         except Exception as e:
             raise PCWetterstationFileParseError("Weather data file \"%s\" has invalid format: %s" % (file_name, str(e)))
 

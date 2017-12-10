@@ -134,19 +134,24 @@ def _find_first_month(data):
     """It is assumed that the whole data is from one year and in ascending order"""
     first_month = None
     counter = 0
+    first_time = None
+    last_time_in_first_month = None
     for dataset in data:
         curr_month = datetime.datetime(day=1, month=dataset.get_time().month, year=dataset.get_time().year)
         if not first_month:
             first_month = curr_month
+            first_time = dataset.get_time()
 
         if curr_month != first_month:
             break
+
+        last_time_in_first_month = dataset.get_time()
         counter += 1
 
     first_month_data = data[0:counter]
     first_month_file_name = "EXP" + first_month.strftime('%m_%y') + ".csv"
 
-    return first_month_data, first_month_file_name
+    return first_month_data, first_month_file_name, first_time, last_time_in_first_month
 
 
 class TestPCWetterstationFormatFile(unittest.TestCase):
@@ -161,18 +166,20 @@ class TestPCWetterstationFormatFile(unittest.TestCase):
     def test_read_write(self):
         # given:
         weather_data_file = PCWetterstationFormatFile(combi_sensor_ids(), combi_sensor_descriptions())
-        first_month_data, first_month_file_name = _find_first_month(a(data_object()))
+        first_month_data, first_month_file_name, first_time, last_time = _find_first_month(a(data_object()))
 
         # when:
         weather_data_file.write(
             data_file_path(), a(data_object()), a(station_metadata_object())
         )
-        got_data, got_rain_counter_base, got_station_metadata = weather_data_file.read(
+        got_data, got_rain_counter_base, got_station_metadata, got_first_time, got_last_time = weather_data_file.read(
             data_file_path() + "/" + first_month_file_name, station_id())
 
         # then:
         self.assertEqual(got_data, first_month_data)
         self.assertEqual(got_station_metadata, a(station_metadata_object()))
+        self.assertEqual(got_first_time, first_time)
+        self.assertEqual(got_last_time, last_time)
 
     def test_write_with_not_existing_sensor(self):
         # given:
@@ -196,7 +203,7 @@ class TestPCWetterstationFormatFile(unittest.TestCase):
     def test_read_invalid_file_format(self):
         # given:
         weather_data_file = PCWetterstationFormatFile(combi_sensor_ids(), combi_sensor_descriptions())
-        first_month_data, first_month_file_name = _find_first_month(a(data_object()))
+        __, first_month_file_name, __, __ = _find_first_month(a(data_object()))
 
         # when:
         weather_data_file.write(

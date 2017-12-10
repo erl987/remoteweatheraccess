@@ -119,7 +119,7 @@ def load_data_in_database(sql_database: SQLWeatherDB):
         combi_sensor_id, combi_sensor_description = combi_sensor()
         weather_file = PCWetterstationFormatFile([combi_sensor_id], {combi_sensor_id: combi_sensor_description})
 
-        data, rain_counter_base, station_metadata = weather_file.read(data_file_name, a_station_id(), 10.0)
+        data, __, station_metadata, __, __ = weather_file.read(data_file_name, a_station_id(), 10.0)
         sql_database.add_dataset(station_metadata.get_station_id(), data)
 
 
