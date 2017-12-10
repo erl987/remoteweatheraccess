@@ -11,6 +11,12 @@ After=multi-user.target
 Type=simple
 User=weather-daemon
 Restart=always
+
+# due to the Python startup time and lengthy data processing the default settings are not sufficient to stop a process
+# that fails continuously
+StartLimitBurst=3
+StartLimitInterval=60
+
 ExecStart=/usr/bin/weatherserver /etc/remote-weather-access/weatherserver.ini -d
 
 [Install]
