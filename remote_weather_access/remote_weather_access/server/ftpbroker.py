@@ -488,7 +488,7 @@ class FTPServerSideProxyProcess(object):
                                    station_id, first_time, last_time))
                 except (NotExistingError, AlreadyExistingError) as e:
                     # the new data will be ignored
-                    logger.log(IMultiProcessLogger.WARNING, e.msg)
+                    logger.log(IMultiProcessLogger.WARNING, "The new data was ignored: " + e.msg)
 
                     # the sender needs to acknowledge anyway, that the data does not need to be stored anymore
                     parent.acknowledge_persistence(message_id, logger)
