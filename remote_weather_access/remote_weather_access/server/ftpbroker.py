@@ -272,24 +272,29 @@ class FTPServerBrokerProcess(object):
 
         if file_extension.upper() == self._data_file_extension.upper():
             station_id = FTPServerBrokerProcess.get_station_id(message_id)
-            if len(station_id) > 0:
+
+            # ensure that the file is in its correct data subdirectory
+            if not file_path.endswith(station_id + os.sep + self._data_sub_directory):
+                # invalid file format, ignore the file
+                logger.log(IMultiProcessLogger.WARNING,
+                           "The data file \"{}\" is ignored because it is not in its correct subdirectory \"{}".
+                           format(message_id, station_id) + os.sep + "{}\"".format(self._data_sub_directory))
+            else:
                 try:
-                    # ensure that the file is in its correct data subdirectory
-                    if not file_path.endswith(station_id + os.sep + self._data_sub_directory):
-                        raise FileParseError(
-                            "The data file \"%s\" is not in its correct subdirectory \"%s%s%s\""
-                            % (message_id, station_id, os.sep, self._data_sub_directory)
-                        )
-
                     data, first_time, last_time = self._read_data_files(message_id, station_id)
-                except FileParseError as e:
-                    # invalid file format, ignore the file
-                    logger.log(IMultiProcessLogger.WARNING, e.msg)
-
-                    # the sender needs to acknowledge anyway, that the data does not need to be stored anymore
-                    parent.send_persistence_acknowledgement(message_id, logger)
-                else:
                     return message_id, station_id, first_time, last_time, data
+                except Exception as e:
+                    # corrupt file, but with correct type and in its correct subdirectory
+                    logger.log(IMultiProcessLogger.ERROR, "Corrupt file: " + str(e))
+
+                    # the corrupt file needs to be deleted in order not to be processed again
+                    os.remove(self._data_directory + os.sep + station_id + os.sep + self._data_sub_directory +
+                              os.sep + message_id)
+                    logger.log(IMultiProcessLogger.INFO,
+                               "Removed the corrupt data file '{}'".format(message_id))
+        else:
+            logger.log(IMultiProcessLogger.WARNING, "The file \"{}\" is ignored because its type is not \"*{}\"".
+                       format(full_path, self._data_file_extension))
 
         return None, None, None, None, None
 
