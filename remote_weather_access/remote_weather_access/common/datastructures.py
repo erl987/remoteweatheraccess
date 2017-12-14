@@ -156,9 +156,9 @@ class RainSensorData(Sensor, Comparable):
         :raise NotExistingError:    if the subsensor id does not exist
         """
         if subsensor_id == RainSensorData.PERIOD:
-            description = "rain"
+            description = "Regen"
         elif subsensor_id == RainSensorData.CUMULATED:
-            description = "cumulated rain"
+            description = "Regen"
         else:
             raise NotExistingError("Invalid subsensor \"%s\" for a rain sensor" % subsensor_id)
 
@@ -375,9 +375,9 @@ class CombiSensorData(Sensor, Comparable):
         :raise NotExistingError:    if the subsensor id does not exist
         """
         if subsensor_id == CombiSensorData.TEMPERATURE:
-            description = "temperature"
+            description = "Temperatur"
         elif subsensor_id == CombiSensorData.HUMIDITY:
-            description = "humidity"
+            description = "Feuchte"
         else:
             raise NotExistingError("Invalid subsensor \"%s\" for a combi sensor" % subsensor_id)
 
@@ -486,7 +486,7 @@ class BaseStationSensorData(Sensor, Comparable):
         :raise NotExistingError:    if the subsensor id does not exist
         """
         if subsensor_id == BaseStationSensorData.PRESSURE:
-            description = "pressure"
+            description = "Luftdruck"
         elif subsensor_id == BaseStationSensorData.UV:
             description = "UV"
         else:
