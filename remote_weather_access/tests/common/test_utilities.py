@@ -149,6 +149,16 @@ class TestUtilities(unittest.TestCase):
         self.assertEqual(day_in_previous_month.month, month - 1)
         self.assertEqual(day_in_previous_month.year, year)
 
+    def generate_random_id(self):
+        # given:
+        a_size = 10
+
+        # when:
+        random_id = utilities.generate_random_id(a_size)
+
+        # then:
+        self.assertEqual(len(random_id), a_size)
+
 
 if __name__ == '__main__':
     unittest.main()

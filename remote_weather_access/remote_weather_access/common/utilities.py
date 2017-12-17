@@ -15,6 +15,8 @@
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 import calendar
 import math
+import random
+import string
 from datetime import datetime, timedelta
 
 from remote_weather_access.server.exceptions import NoContentError
@@ -189,3 +191,15 @@ def a_day_in_previous_month(date):
     :rtype:             datetime
     """
     return datetime(day=1, month=date.month, year=date.year) - timedelta(days=1)
+
+
+def generate_random_id(size):
+    """
+    Generates a random string containing lower case letters and digits.
+
+    :param size:        string length
+    :type size:         int
+    :return:            the random string
+    :rtype:             str
+    """
+    return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(size))

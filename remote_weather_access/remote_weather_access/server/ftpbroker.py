@@ -15,6 +15,7 @@
 # along with this program.If not, see <http://www.gnu.org/licenses/>
 
 import datetime
+import shutil
 import glob
 import os
 import re
@@ -28,6 +29,7 @@ from zipfile import ZipFile
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
+from remote_weather_access.common.utilities import generate_random_id
 from remote_weather_access.common.datastructures import WeatherMessage
 from remote_weather_access.common.exceptions import DelayedException, FileParseError
 from remote_weather_access.common.fileformats import PCWetterstationFormatFile
@@ -309,10 +311,12 @@ class FTPServerBrokerProcess(object):
         :return:                        the read data, first time, last time of dataset
         :rtype:                         list of common.datastructures.WeatherStationDataset, datetime, datetime
         """
-        wait_time = 0.05    # wait time between data file reading trials (in seconds)
+        wait_time = 0.1      # wait time between data file reading trials (in seconds)
         max_trials = 100     # reading trials for the data file before a fatal failure is assumed
         first_time = datetime.datetime.max
         last_time = datetime.datetime.min
+        curr_temp_data_directory = self._temp_data_directory + os.sep + station_id + "-" + generate_random_id(12)
+        os.makedirs(curr_temp_data_directory, exist_ok=True)
 
         new_data_file_list = None
         try:
@@ -335,7 +339,7 @@ class FTPServerBrokerProcess(object):
                     file_still_blocked = False
                     with zip_file:
                         new_data_file_list = zip_file.namelist()
-                        zip_file.extractall(self._temp_data_directory)
+                        zip_file.extractall(curr_temp_data_directory)
 
             # read a list of WeatherData objects from the unzipped data files
             data = list()
@@ -345,15 +349,14 @@ class FTPServerBrokerProcess(object):
                                         format(self._MAX_SUPPORTED_NUM_DATASETS))
                 weather_file = PCWetterstationFormatFile(self._combi_sensor_IDs, self._combi_sensor_descriptions)
                 curr_datasets, __, __, curr_first_time, curr_last_time = weather_file.read(
-                    self._temp_data_directory + os.sep + curr_file_name, station_id, self._delta_time
+                    curr_temp_data_directory + os.sep + curr_file_name, station_id, self._delta_time
                 )
                 data += curr_datasets
                 first_time = min(first_time, curr_first_time)
                 last_time = max(last_time, curr_last_time)
         finally:
             # delete the temporary data files
-            if new_data_file_list:
-                PCWetterstationFormatFile.delete_datafiles(self._temp_data_directory, new_data_file_list)
+            shutil.rmtree(curr_temp_data_directory, ignore_errors=True)
 
         return data, first_time, last_time
 
