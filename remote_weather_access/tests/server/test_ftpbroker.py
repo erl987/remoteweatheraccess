@@ -132,6 +132,9 @@ class SQLDatabaseServiceMock(IDatabaseService):
     def get_combi_sensors(self):
         return ["OUT1"], {"OUT1": "outdoor sensor 1"}
 
+    def get_stations(self):
+        return [a_station_id()]
+
     def __init__(self, result_queue, has_exception_throwing_add_data, has_exception_throwing_register):
         self._result_queue = result_queue
         self._has_exception_throwing_db = has_exception_throwing_add_data
@@ -172,7 +175,7 @@ class TestFileSystemObserver(unittest.TestCase):
 
     def test_on_modified(self):
         # given:
-        file_system_observer = FileSystemObserver(data_base_directory())
+        file_system_observer = FileSystemObserver(data_base_directory(), [a_station_id()], data_sub_directory())
         file_system_observer.set_received_file_queue(self._received_file_queue)
         file_system_observer._processed_files_lock = threading.Lock()
         modified_event = FileSystemEvent(a_file_path())
@@ -186,7 +189,7 @@ class TestFileSystemObserver(unittest.TestCase):
 
     def test_process(self):
         # given:
-        filesystem_observer = FileSystemObserver(data_base_directory())
+        filesystem_observer = FileSystemObserver(data_base_directory(), [a_station_id()], data_sub_directory())
         filesystem_observer_process = Process(
             target=filesystem_observer.process, args=(self._received_file_queue, _exception_handler)
         )
@@ -208,7 +211,7 @@ class TestFileSystemObserver(unittest.TestCase):
     def test_process_exception_transfer(self):
         # given:
         exception_queue = Queue()
-        filesystem_observer = FileSystemObserver(not_existing_data_directory())
+        filesystem_observer = FileSystemObserver(not_existing_data_directory(), [a_station_id()], data_sub_directory())
 
         # when:
         filesystem_observer_process = Process(
@@ -226,7 +229,7 @@ class TestFileSystemObserver(unittest.TestCase):
 
     def test_feed_modified_file(self):
         # given:
-        file_system_observer = FileSystemObserver(data_base_directory())
+        file_system_observer = FileSystemObserver(data_base_directory(), [a_station_id()], data_sub_directory())
         file_system_observer.set_received_file_queue(self._received_file_queue)
 
         # when:
@@ -335,8 +338,8 @@ class TestFTPBroker(unittest.TestCase):
 
         delta_time, combi_sensor_ids, combi_sensor_descriptions, logging_connection = get_broker_settings()
         broker = FTPBroker(request_queue, data_base_directory(), data_file_extension(), data_sub_directory(),
-                           temp_directory(), logging_connection, _exception_handler, delta_time, combi_sensor_ids,
-                           combi_sensor_descriptions)
+                           temp_directory(), [a_station_id()], logging_connection, _exception_handler, delta_time,
+                           combi_sensor_ids, combi_sensor_descriptions)
 
         try:
             # when:

@@ -63,6 +63,16 @@ class IDatabaseService(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def get_stations(self):
+        """
+        Obtains all stations registered in the database.
+
+        :return:                        list of the IDs of all stations registered in the database
+        :rtype:                         list of string
+        """
+        pass
+
+    @abstractmethod
     def register_observer(self, observer):
         """
         Registers a new observer.

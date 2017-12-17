@@ -40,14 +40,20 @@ from remote_weather_access.server.interface import IServerSideProxy
 
 class FileSystemObserver(FileSystemEventHandler):
     """Watcher for file system changes"""
-    def __init__(self, data_directory):
+    def __init__(self, data_directory, subdirectory_whitelist, data_subdirectory):
         """
         Constructor.
 
         :param data_directory:          watch directory
         :type data_directory:           str
+        :param subdirectory_whitelist:  list of all allowed subdirectories within the data directory
+        :type subdirectory_whitelist:   list of str
+        :param data_subdirectory:       outermost data subdirectory (example "newData" ->: "./TES2/newData")
+        :type data_subdirectory:        str
         """
         self._data_directory = data_directory
+        self._subdirectory_whitelist = subdirectory_whitelist
+        self._data_subdirectory = data_subdirectory
         self._received_file_queue = None
         self._exception_event = Event()
         self._processed_files_lock = None
@@ -113,14 +119,15 @@ class FileSystemObserver(FileSystemEventHandler):
             # ensure that this file has not yet been processed
             # (workaround for the watchdog library reporting possibly multiple "modified" events for a single file)
             full_path = event.src_path
-            curr_time = datetime.datetime.utcnow()
-            with self._processed_files_lock:
-                self._remove_outdated_processed_files(curr_time)
-                already_processed = full_path in self._processed_files
-                self._processed_files[full_path] = curr_time
+            if self._is_path_in_whitelist(full_path):
+                curr_time = datetime.datetime.utcnow()
+                with self._processed_files_lock:
+                    self._remove_outdated_processed_files(curr_time)
+                    already_processed = full_path in self._processed_files
+                    self._processed_files[full_path] = curr_time
 
-            if not already_processed:
-                self._received_file_queue.put(full_path)
+                if not already_processed:
+                    self._received_file_queue.put(full_path)
 
     def process(self, received_file_queue, exception_handler):
         """
@@ -162,7 +169,25 @@ class FileSystemObserver(FileSystemEventHandler):
         :param full_path:               full path of the file to be fed into the queue of received files.
         :type full_path:                str
         """
-        self._received_file_queue.put(full_path)
+        if self._is_path_in_whitelist(full_path):
+            self._received_file_queue.put(full_path)
+
+    def _is_path_in_whitelist(self, path):
+        """
+        Determines if a full path within the observed directory tree is allowed by the whitelist.
+
+        :param path:                    full path of the file
+        :type path:                     str
+        :return:                        if the path represents a file allowed by the whitelist
+        :rtype:                         bool
+        """
+        dir_path, __ = os.path.split(path)
+        parent_path, data_subdirectory = os.path.split(dir_path)
+        __, subdirectory = os.path.split(parent_path)
+        is_in_whitelist = \
+            data_subdirectory == self._data_subdirectory and subdirectory in self._subdirectory_whitelist
+
+        return is_in_whitelist
 
 
 class FTPServerBrokerProcess(object):
@@ -364,7 +389,8 @@ class FTPServerBrokerProcess(object):
 class FTPBroker(object):
     """Broker for the FTP-based weather server"""
     def __init__(self, request_queue, data_directory, data_file_extension, data_sub_directory, temp_data_directory,
-                 logging_connection, exception_handler, delta_time, combi_sensor_ids, combi_sensor_descriptions):
+                 subdirectory_whitelist, logging_connection, exception_handler, delta_time, combi_sensor_ids,
+                 combi_sensor_descriptions):
         """
         Constructor.
 
@@ -379,6 +405,8 @@ class FTPBroker(object):
         :type data_sub_directory:       str
         :param temp_data_directory:     temporary directory for unzipped the data files
         :type temp_data_directory:      str
+        :param subdirectory_whitelist:  list of all allowed subdirectories within the data directory
+        :type subdirectory_whitelist:   list of str
         :param logging_connection:      connection to the logger in the main process
         :type logging_connection:       common.logging.MultiProcessConnector
         :param exception_handler:       exception handler callback method receiving all exception from the process
@@ -395,7 +423,7 @@ class FTPBroker(object):
         self._data_sub_directory = data_sub_directory
 
         self._received_file_queue = Queue()
-        self._filesystem_observer = FileSystemObserver(self._data_directory)
+        self._filesystem_observer = FileSystemObserver(self._data_directory, subdirectory_whitelist, data_sub_directory)
         self._filesystem_observer_process = Process(
             target=self._filesystem_observer.process, args=(self._received_file_queue, exception_handler)
         )
@@ -524,9 +552,10 @@ class FTPServerSideProxy(IServerSideProxy):
         os.makedirs(temp_data_directory, exist_ok=True)
         os.makedirs(data_directory, exist_ok=True)
 
-        # obtain the combi sensors existing in the database
+        # obtain the necessary information from the database
         database_service = database_service_factory.create(False)  # no logging, because called from the main process
         combi_sensor_ids, combi_sensor_descriptions = database_service.get_combi_sensors()
+        station_id_list = database_service.get_stations()
 
         # empty the temporary data directory (it may contain unnecessary files after a power failure)
         self._clear_temp_data_directory(temp_data_directory)
@@ -543,6 +572,7 @@ class FTPServerSideProxy(IServerSideProxy):
             data_file_extension,
             data_sub_directory,
             temp_data_directory,
+            station_id_list,
             logging_connection,
             self._exception_handler,
             delta_time,

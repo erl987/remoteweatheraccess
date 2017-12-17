@@ -75,6 +75,15 @@ class SQLDatabaseService(IDatabaseService):
         """
         return self._database.get_combi_sensors()
 
+    def get_stations(self):
+        """
+        Obtains all stations registered in the database.
+
+        :return:                        list of the IDs of all stations registered in the database
+        :rtype:                         list of string
+        """
+        return self._database.get_stations()
+
     def register_observer(self, observer):
         """
         Registers a new observer.
