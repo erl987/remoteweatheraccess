@@ -294,7 +294,7 @@ class TestFTPServerBrokerProcess(unittest.TestCase):
 
             # when:
             self._received_file_queue.put(a_path_of_invalid_file())
-            got_exception = exception_queue.get(timeout=5.0)
+            got_exception = exception_queue.get(timeout=6.0)
 
             # then:
             self.assertRaises(FileNotFoundError, got_exception.re_raise)

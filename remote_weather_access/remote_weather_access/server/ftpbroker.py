@@ -31,7 +31,7 @@ from watchdog.observers import Observer
 
 from remote_weather_access.common.utilities import generate_random_id
 from remote_weather_access.common.datastructures import WeatherMessage
-from remote_weather_access.common.exceptions import DelayedException, FileParseError
+from remote_weather_access.common.exceptions import DelayedException
 from remote_weather_access.common.fileformats import PCWetterstationFormatFile
 from remote_weather_access.common.logging import MultiProcessLoggerProxy, IMultiProcessLogger
 from remote_weather_access.server.exceptions import AlreadyExistingError, NotExistingError
@@ -336,8 +336,8 @@ class FTPServerBrokerProcess(object):
         :return:                        the read data, first time, last time of dataset
         :rtype:                         list of common.datastructures.WeatherStationDataset, datetime, datetime
         """
-        wait_time = 0.1      # wait time between data file reading trials (in seconds)
-        max_trials = 100     # reading trials for the data file before a fatal failure is assumed
+        wait_time = 1.0  # wait time between data file reading trials (in seconds)
+        max_trials = 5   # reading trials for the data file before a fatal failure is assumed
         first_time = datetime.datetime.max
         last_time = datetime.datetime.min
         curr_temp_data_directory = self._temp_data_directory + os.sep + station_id + "-" + generate_random_id(12)
@@ -353,7 +353,7 @@ class FTPServerBrokerProcess(object):
                     file_path = self._data_directory + os.sep + station_id + os.sep + self._data_sub_directory + \
                                 os.sep + file_name
                     zip_file = ZipFile(file_path, 'r')
-                except PermissionError:
+                except:
                     # workaround because the watchdog library cannot monitor the file close event and the file may still
                     # be open when the "modified" event is signalled
                     counter += 1
