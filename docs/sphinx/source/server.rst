@@ -76,14 +76,14 @@ Steps to build a Debian-package
 
 * Unzip the source code in a suitable directory and change to that directory
 * Build the Python source package, it will be located in the 
-  sudirectory :file:`./dist`:
+  sudirectory *./dist*:
 
 .. code-block:: bash
 
     python3 setup.py sdist
 
 * Build the Debian binary package, it will be located in the 
-  sudirectory :file:`./deb_dist`:
+  sudirectory *./deb_dist*:
 
 .. code-block:: bash
 
@@ -116,7 +116,7 @@ Check that the server is running:
 
 	sudo systemctl status weatherserver
 
-This command should return :command:`active (running)` if everything is ok:
+This command should return *active (running)* if everything is ok:
 
 .. code-block:: bash
  
@@ -187,9 +187,9 @@ After a change of the configuration, a restart of the daemon is required:
 	sudo systemctl restart weatherserver
 
 
-The central configuration file for the weather server is the file :file:`/etc/remote-weather-access/weatherserver.ini`. It allows to adjust all settings. The default settings are suitable for most machines.
+The central configuration file for the weather server is the file */etc/remote-weather-access/weatherserver.ini*. It allows to adjust all settings. The default settings are suitable for most machines.
 
-The weather data for all stations is stored in the database file defined in the configuration. By default its location is :file:`/var/lib/remote-weather-access/weather.db` and should not be edited manually.
+The weather data for all stations is stored in the database file defined in the configuration. By default its location is */var/lib/remote-weather-access/weather.db* and should not be edited manually.
 
 
 The weather database needs to be configured to contain the required client weather stations as well as the combi (temperature/humidity) sensors that are normally connected to the weather stations. As they may be varying in their purpose (inside, outside, ...) and number, they need to be specified separately.
@@ -198,13 +198,13 @@ The weather database needs to be configured to contain the required client weath
 Configuring the weather stations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The weather stations in the database are configured using the command line tool :command:`manage-weather-stations`. A weather station is added by:
+The weather stations in the database are configured using the command line tool *manage-weather-stations*. A weather station is added by:
 
 .. code-block:: bash
 
 	sudo manage-weather-stations --add /var/lib/remote-weather-access/templates/new_station.json /var/lib/remote-weather-access/weather.db
 
-Note that you should use root rights in order to obtain write access to the weather database that is normally owned by the weather daemon user. You need to adapt the JSON-configuration file to contain your station metadata. The command line tool :command:`manage-weather-stations` helps in all tasks related to managing the stations in the database. You can get detailed information using:
+Note that you should use root rights in order to obtain write access to the weather database that is normally owned by the weather daemon user. You need to adapt the JSON-configuration file to contain your station metadata. The command line tool *manage-weather-stations* helps in all tasks related to managing the stations in the database. You can get detailed information using:
 
 .. code-block:: bash
 
@@ -215,13 +215,13 @@ Note that you should use root rights in order to obtain write access to the weat
 Configuring the combi (temperature/humidity) sensors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The combi sensors in the database are configured using the command line tool :command:`manage-weather-combi-sensors`. Combi sensors are variable sensors that may have varying purposes are therefore are not provided by default in the database. The sensor is identified by its name. Several stations can use sensors with an identical name. Combi sensors are added by:
+The combi sensors in the database are configured using the command line tool *manage-weather-combi-sensors*. Combi sensors are variable sensors that may have varying purposes are therefore are not provided by default in the database. The sensor is identified by its name. Several stations can use sensors with an identical name. Combi sensors are added by:
 
 .. code-block:: bash
 
 	sudo manage-weather-combi-sensors --add /var/lib/remote-weather-access/templates/new_combi_sensors.json /var/lib/remote-weather-access/weather.db
 
-Note also here that you should use root rights. Several combi sensors can be added at once in the JSON-configuration file. Also the command line tool :command:`manage-weather-combi-sensors` helps in all tasks related to managing the combi sensors. Detailed information is available using:
+Note also here that you should use root rights. Several combi sensors can be added at once in the JSON-configuration file. Also the command line tool *manage-weather-combi-sensors* helps in all tasks related to managing the combi sensors. Detailed information is available using:
 
 .. code-block:: bash
 
@@ -232,7 +232,7 @@ Database backup
 ^^^^^^^^^^^^^^^
 
 Regular database backups on a remote device are strongly recommended. The database file must not be simply copied, this may lead to a
-corrupted backup. Instead use the command line tool :command:`sqlite3`:
+corrupted backup. Instead use the command line tool *sqlite3*:
 
 .. code-block:: bash
 
@@ -251,15 +251,15 @@ If the tool is not yet installed, you can get via the Debian package manager:
 Weather data plotting
 ~~~~~~~~~~~~~~~~~~~~~
 
-For each weather station in the database, a new data plot is automatically generated every 10 minutes. The details are configured in the file :file:`/etc/remote-weather-access/weatherplot.ini`. Most default settings should be appropriate, possibly the sensors to be plotted have to be adjusted.
+For each weather station in the database, a new data plot is automatically generated every 10 minutes. The details are configured in the file */etc/remote-weather-access/weatherplot.ini*. Most default settings should be appropriate, possibly the sensors to be plotted have to be adjusted.
 
-The plots are stored in the directory :file:`/var/lib/remote-weather-access/plots` in one subdirectory for each station. Web front-ends can directly use these files for presenting the weather data to the user.
+The plots are stored in the directory */var/lib/remote-weather-access/plots* in one subdirectory for each station. Web front-ends can directly use these files for presenting the weather data to the user.
 
 
 Weather data export
 ~~~~~~~~~~~~~~~~~~~
 
-The weather data of each station is exported once per hour into CSV-files that are formatted as specified for the software PCWetterstation. The CSV-files are stored in subdirectories of the directory :file:`/var/lib/remote-weather-access/export`. The data in these directories can be for example provided via a FTP-server. The exporting is configured in the file :file:`/etc/remote-weather-access/weatherexport.ini`.
+The weather data of each station is exported once per hour into CSV-files that are formatted as specified for the software PCWetterstation. The CSV-files are stored in subdirectories of the directory */var/lib/remote-weather-access/export*. The data in these directories can be for example provided via a FTP-server. The exporting is configured in the file */etc/remote-weather-access/weatherexport.ini*.
 
 
 Interfaces to front-ends
