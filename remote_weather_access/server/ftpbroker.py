@@ -1,0 +1,684 @@
+# RemoteWeatherAccess - Weather network connecting to remote stations
+# Copyright(C) 2013-2017 Ralf Rettig (info@personalfme.de)
+#
+# This program is free software: you can redistribute it and / or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.If not, see <http://www.gnu.org/licenses/>
+
+import datetime
+import shutil
+import glob
+import os
+import re
+import signal
+import threading
+import time
+from datetime import timedelta
+from multiprocessing import Event, Process, Queue
+from zipfile import ZipFile
+
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
+
+from remote_weather_access.common.utilities import generate_random_id
+from remote_weather_access.common.datastructures import WeatherMessage
+from remote_weather_access.common.exceptions import DelayedException
+from remote_weather_access.common.fileformats import PCWetterstationFormatFile
+from remote_weather_access.common.logging import MultiProcessLoggerProxy, IMultiProcessLogger
+from remote_weather_access.server.exceptions import AlreadyExistingError, NotExistingError
+from remote_weather_access.server.interface import IServerSideProxy
+
+
+class FileSystemObserver(FileSystemEventHandler):
+    """Watcher for file system changes"""
+    def __init__(self, data_directory, subdirectory_whitelist, data_subdirectory):
+        """
+        Constructor.
+
+        :param data_directory:          watch directory
+        :type data_directory:           str
+        :param subdirectory_whitelist:  list of all allowed subdirectories within the data directory
+        :type subdirectory_whitelist:   list of str
+        :param data_subdirectory:       outermost data subdirectory (example "newData" ->: "./TES2/newData")
+        :type data_subdirectory:        str
+        """
+        self._data_directory = data_directory
+        self._subdirectory_whitelist = subdirectory_whitelist
+        self._data_subdirectory = data_subdirectory
+        self._received_file_queue = None
+        self._exception_event = Event()
+        self._processed_files_lock = None
+        self._processed_files = dict()
+
+    def stop(self):
+        """Stops watching."""
+        self._exception_event.set()
+
+    def set_received_file_queue(self, received_file_queue):
+        """
+        (Re-) sets the queue for transferring detected file changes.
+
+        :param received_file_queue:     queue for that will transfer detected file changes
+        :type received_file_queue:      multiprocessing.queues.Queue
+        """
+        self._received_file_queue = received_file_queue
+
+    def _remove_outdated_processed_files(self, curr_time, max_keeping_time=10):
+        """
+        Removes too old processed message IDs from the list.
+
+        :param curr_time:               current UTC-time
+        :type curr_time:                datetime.datetime
+        :param  max_keeping_time:       maximum time period to consider files to be processed
+                                        (in seconds)
+        :type max_keeping_time:         int
+        """
+        removal_list = []
+        for file in self._processed_files.keys():
+            if (curr_time - self._processed_files[file]) > timedelta(seconds=max_keeping_time):
+                removal_list.append(file)
+
+        for item in removal_list:
+            del self._processed_files[item]
+
+    def on_created(self, event):
+        """
+        Called when a file has been created (or moved).
+
+        :param event:                   file change event
+        :type event:                    watchdog.events.FileSystemEvent
+        """
+        self._event_handler(event)
+
+    def on_modified(self, event):
+        """
+        Called when a file has been modified.
+
+        :param event:                   file change event
+        :type event:                    watchdog.events.FileSystemEvent
+        """
+        self._event_handler(event)
+
+    def _event_handler(self, event):
+        """
+        Handles file created and modified events.
+
+        :param event:                   file change event
+        :type event:                    watchdog.events.FileSystemEvent
+        """
+        if not event.is_directory:
+            # ensure that this file has not yet been processed
+            # (workaround for the watchdog library reporting possibly multiple "modified" events for a single file)
+            full_path = event.src_path
+            if self._is_path_in_whitelist(full_path):
+                curr_time = datetime.datetime.utcnow()
+                with self._processed_files_lock:
+                    self._remove_outdated_processed_files(curr_time)
+                    already_processed = full_path in self._processed_files
+                    self._processed_files[full_path] = curr_time
+
+                if not already_processed:
+                    self._received_file_queue.put(full_path)
+
+    def process(self, received_file_queue, exception_handler):
+        """
+        The file watcher process.
+
+        :param received_file_queue:     queue transfering the detected changed files
+        :type received_file_queue:      multiprocessing.queues.Queue
+        :param exception_handler:       exception handler callback method receiving all exception from the process
+        :type exception_handler:        method
+        """
+        filesystem_observer = Observer()
+        try:
+            # required for correct handling of Crtl + C in a multiprocess environment
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+            signal.signal(signal.SIGTERM, signal.SIG_IGN)
+
+            self._processed_files_lock = threading.Lock()
+
+            self._received_file_queue = received_file_queue
+            if not os.path.isdir(self._data_directory):
+                raise IOError("Data directory \"%s\" not found." % self._data_directory)
+
+            filesystem_observer.schedule(self, self._data_directory, recursive=True)
+            filesystem_observer.start()
+
+            # wait until stop is signalled
+            self._exception_event.wait()
+        except Exception as e:
+            exception_handler(DelayedException(e))
+        finally:
+            if filesystem_observer.is_alive():
+                filesystem_observer.stop()
+                filesystem_observer.join()
+
+    def feed_modified_file(self, full_path):
+        """
+        Feeds a data file manually into the queue of received files.
+
+        :param full_path:               full path of the file to be fed into the queue of received files.
+        :type full_path:                str
+        """
+        if self._is_path_in_whitelist(full_path):
+            self._received_file_queue.put(full_path)
+
+    def _is_path_in_whitelist(self, path):
+        """
+        Determines if a full path within the observed directory tree is allowed by the whitelist.
+
+        :param path:                    full path of the file
+        :type path:                     str
+        :return:                        if the path represents a file allowed by the whitelist
+        :rtype:                         bool
+        """
+        dir_path, __ = os.path.split(path)
+        parent_path, data_subdirectory = os.path.split(dir_path)
+        __, subdirectory = os.path.split(parent_path)
+        is_in_whitelist = \
+            data_subdirectory == self._data_subdirectory and subdirectory in self._subdirectory_whitelist
+
+        return is_in_whitelist
+
+
+class FTPServerBrokerProcess(object):
+    """Broker for the FTP-based weather server"""
+    _MAX_SUPPORTED_NUM_DATASETS = 86400  # the maximum is limited by the available main memory (to ca. 1 year of data)
+
+    def __init__(self, data_directory, data_file_extension, data_sub_directory, temp_data_directory, delta_time,
+                 combi_sensor_ids, combi_sensor_descriptions):
+        """
+        Constructor.
+
+        :param data_directory:          watch directory
+        :type data_directory:           str
+        :param data_file_extension:     file extension of the data files (example: ".ZIP")
+        :type data_file_extension:      str
+        :param data_sub_directory:      name of the subdirectory within the station directory containing the data
+                                        (required for the vsFTPd server for example)
+        :type data_sub_directory:       str
+        :param temp_data_directory:     temporary directory for unzipped the data files
+        :type temp_data_directory:      str
+        :param delta_time:              time period between two weather data timepoints, in minutes
+        :type delta_time:               float
+        :param combi_sensor_ids:        ids of the combi sensors
+        :type combi_sensor_ids:         list of str
+        :param combi_sensor_descriptions: descriptions of the combi sensors (with the combi sensor IDs as keys)
+        :type combi_sensor_descriptions: dict(str, str)
+        :raise NotADirectoryError:      if the data or the temporary directory are not existing
+        """
+        if not os.path.isdir(data_directory):
+            raise NotADirectoryError("The data directory '{}' is not existing.".format(data_directory))
+        if not os.path.isdir(temp_data_directory):
+            raise NotADirectoryError("The temporary directory '{}' is not existing.".format(temp_data_directory))
+
+        self._data_directory = data_directory
+        self._data_file_extension = data_file_extension
+        self._data_sub_directory = data_sub_directory
+        self._temp_data_directory = temp_data_directory
+        self._delta_time = delta_time
+        self._combi_sensor_IDs = combi_sensor_ids
+        self._combi_sensor_descriptions = combi_sensor_descriptions
+
+    def process(self, received_file_queue, request_queue, parent, logging_connection, exception_handler):
+        """
+        The broker process.
+
+        :param received_file_queue:     queue used for obtaining the received weather data files
+        :type received_file_queue:      multiprocessing.queues.Queue
+        :param request_queue:           queue used for transfering the processed file metadata further downstream
+        :type request_queue:            multiprocessing.queues.Queue
+        :param parent:                  parent object
+        :type parent:                   FTPBroker
+        :param logging_connection:      connection to the logger in the main process
+        :type logging_connection:       common.logging.MultiProcessConnector
+        :param exception_handler:       exception handler callback method receiving all exception from the process
+        :type exception_handler:        method
+        """
+        try:
+            # logger in the main process
+            logger = MultiProcessLoggerProxy(logging_connection)
+
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+            signal.signal(signal.SIGTERM, signal.SIG_IGN)
+            while True:
+                full_path = received_file_queue.get()
+                if full_path is None:
+                    break
+
+                message_id, station_id, first_time, last_time, data = self._on_new_data(full_path, logger, parent)
+                if message_id:
+                    request_queue.put((message_id, station_id, first_time, last_time, data))
+        except Exception as e:
+            exception_handler(DelayedException(e))
+
+    @staticmethod
+    def get_station_id(message_id):
+        """
+        Obtains the station ID from a message id.
+
+        :param message_id:              message id to be split
+        :type message_id:               str
+        :return:                        extracted station id
+        :rtype:                         str
+        """
+        splitted_message_id = message_id.split('_')
+        further_splitted_message_id = splitted_message_id[-1].split('.')
+        station_id = further_splitted_message_id[0]
+
+        return station_id
+
+    def _on_new_data(self, full_path, logger, parent):
+        """
+        Called when a new file has been received via FTP (i.e. modified)
+
+        :param full_path:               path of the new file
+        :type full_path:                str
+        :param logger:                  logger
+        :type logger:                   MultiProcessLoggerProxy
+        :param parent:                  parent of the object
+        :type parent:                   server.ftpbroker.FTPBroker
+        :return:                        message id, station id, first time of dataset, last time of dataset,
+                                        data from the new file
+        :rtype:                         tuple(str, str, datetime, datetime,
+                                        list of common.datastructures.WeatherStationDataset)
+        """
+        # extract all required information from the name of the transferred data file
+        file, file_extension = os.path.splitext(full_path)
+        file_path, file_name_base = os.path.split(file)
+        message_id = file_name_base + file_extension
+
+        if file_extension.upper() == self._data_file_extension.upper():
+            station_id = FTPServerBrokerProcess.get_station_id(message_id)
+
+            # ensure that the file is in its correct data subdirectory
+            if not file_path.endswith(station_id + os.sep + self._data_sub_directory):
+                # invalid file format, ignore the file
+                logger.log(IMultiProcessLogger.WARNING,
+                           "The data file \"{}\" is ignored because it is not in its correct subdirectory \"{}".
+                           format(message_id, station_id) + os.sep + "{}\"".format(self._data_sub_directory))
+            else:
+                try:
+                    data, first_time, last_time = self._read_data_files(message_id, station_id)
+                    return message_id, station_id, first_time, last_time, data
+                except Exception as e:
+                    # corrupt file, but with correct type and in its correct subdirectory
+                    logger.log(IMultiProcessLogger.ERROR, "Corrupt file: " + str(e))
+
+                    # the corrupt file needs to be deleted in order not to be processed again
+                    os.remove(self._data_directory + os.sep + station_id + os.sep + self._data_sub_directory +
+                              os.sep + message_id)
+                    logger.log(IMultiProcessLogger.INFO,
+                               "Removed the corrupt data file '{}'".format(message_id))
+        else:
+            logger.log(IMultiProcessLogger.WARNING, "The file \"{}\" is ignored because its type is not \"*{}\"".
+                       format(full_path, self._data_file_extension))
+
+        return None, None, None, None, None
+
+    def _read_data_files(self, file_name, station_id):
+        """
+        Unzips and reads a received data file.
+
+        :param file_name:               name of the data file
+        :type file_name:                str
+        :param station_id:              id of the station
+        :type station_id:               str
+        :return:                        the read data, first time, last time of dataset
+        :rtype:                         list of common.datastructures.WeatherStationDataset, datetime, datetime
+        """
+        wait_time = 1.0  # wait time between data file reading trials (in seconds)
+        max_trials = 5   # reading trials for the data file before a fatal failure is assumed
+        first_time = datetime.datetime.max
+        last_time = datetime.datetime.min
+        curr_temp_data_directory = self._temp_data_directory + os.sep + station_id + "-" + generate_random_id(12)
+        os.makedirs(curr_temp_data_directory, exist_ok=True)
+
+        new_data_file_list = None
+        try:
+            # extract data from the ZIP-file(s)
+            file_still_blocked = True
+            counter = 0
+            while file_still_blocked:
+                try:
+                    file_path = self._data_directory + os.sep + station_id + os.sep + self._data_sub_directory + \
+                                os.sep + file_name
+                    zip_file = ZipFile(file_path, 'r')
+                except:
+                    # workaround because the watchdog library cannot monitor the file close event and the file may still
+                    # be open when the "modified" event is signalled
+                    counter += 1
+                    if counter > max_trials:
+                        raise
+                    time.sleep(wait_time)
+                else:
+                    file_still_blocked = False
+                    with zip_file:
+                        new_data_file_list = zip_file.namelist()
+                        zip_file.extractall(curr_temp_data_directory)
+
+            # read a list of WeatherData objects from the unzipped data files
+            data = list()
+            for curr_file_name in new_data_file_list:
+                if len(data) > self._MAX_SUPPORTED_NUM_DATASETS:
+                    raise OverflowError("The ZIP-file contains more datasets than supported (max. {})".
+                                        format(self._MAX_SUPPORTED_NUM_DATASETS))
+                weather_file = PCWetterstationFormatFile(self._combi_sensor_IDs, self._combi_sensor_descriptions)
+                curr_datasets, __, __, curr_first_time, curr_last_time = weather_file.read(
+                    curr_temp_data_directory + os.sep + curr_file_name, station_id, self._delta_time
+                )
+                data += curr_datasets
+                first_time = min(first_time, curr_first_time)
+                last_time = max(last_time, curr_last_time)
+        finally:
+            # delete the temporary data files
+            shutil.rmtree(curr_temp_data_directory, ignore_errors=True)
+
+        return data, first_time, last_time
+
+
+class FTPBroker(object):
+    """Broker for the FTP-based weather server"""
+    def __init__(self, request_queue, data_directory, data_file_extension, data_sub_directory, temp_data_directory,
+                 subdirectory_whitelist, logging_connection, exception_handler, delta_time, combi_sensor_ids,
+                 combi_sensor_descriptions):
+        """
+        Constructor.
+
+        :param request_queue:           queue used for transfering the processed file metadata further downstream
+        :type request_queue:            multiprocessing.queues.Queue
+        :param data_directory:          watch directory
+        :type data_directory:           str
+        :param data_file_extension:     file extension of the data files (example: ".ZIP")
+        :type data_file_extension:      str
+        :param data_sub_directory:      name of the subdirectory within the station directory containing the data
+                                        (required for the vsFTPd server for example)
+        :type data_sub_directory:       str
+        :param temp_data_directory:     temporary directory for unzipped the data files
+        :type temp_data_directory:      str
+        :param subdirectory_whitelist:  list of all allowed subdirectories within the data directory
+        :type subdirectory_whitelist:   list of str
+        :param logging_connection:      connection to the logger in the main process
+        :type logging_connection:       common.logging.MultiProcessConnector
+        :param exception_handler:       exception handler callback method receiving all exception from the process
+        :type exception_handler:        method
+        :param delta_time:              time period between two weather data timepoints, in minutes
+        :type delta_time:               float
+        :param combi_sensor_ids:        ids of the combi sensors
+        :type combi_sensor_ids:         list of str
+        :param combi_sensor_descriptions: descriptions of the combi sensors (with the combi sensor IDs as keys)
+        :type combi_sensor_descriptions: dict(str, str)
+        """
+        self._data_directory = data_directory
+        self._data_file_extension = data_file_extension
+        self._data_sub_directory = data_sub_directory
+
+        self._received_file_queue = Queue()
+        self._filesystem_observer = FileSystemObserver(self._data_directory, subdirectory_whitelist, data_sub_directory)
+        self._filesystem_observer_process = Process(
+            target=self._filesystem_observer.process, args=(self._received_file_queue, exception_handler)
+        )
+        self._filesystem_observer.set_received_file_queue(self._received_file_queue)
+        self._filesystem_observer_process.start()
+
+        self._broker = FTPServerBrokerProcess(
+            data_directory, data_file_extension, data_sub_directory, temp_data_directory, delta_time, combi_sensor_ids,
+            combi_sensor_descriptions
+        )
+        self._broker_process = Process(
+            target=self._broker.process,
+            args=(self._received_file_queue, request_queue, self, logging_connection, exception_handler)
+        )
+        self._broker_process.start()
+        self._is_joined = False
+
+    def stop_and_join(self):
+        """Stops the subprocess of the object and returns afterwards, not thread-safe."""
+        if not self._is_joined:
+            self._is_joined = True
+            self._filesystem_observer.stop()
+            self._filesystem_observer_process.join()
+            self._received_file_queue.put(None)
+            self._broker_process.join()
+
+    def feed_modified_file(self, full_path):
+        """
+        Feeds a data file manually into the queue of received files.
+
+        :param full_path:               full path of the file to be fed into the queue of received files.
+        :type full_path:                str
+        """
+        self._filesystem_observer.feed_modified_file(full_path)
+
+    def send_persistence_acknowledgement(self, message_id, logger):
+        """
+        Sends the acknowledgement of a message being successfully stored in the SQL database to the client.
+        The FTP-based data transfer relies only on an acknowledgement of the FTP-server and thus only performs local
+        cleanup and logging.
+
+        :param message_id:              id of the message
+        :type message_id:               str
+        :param logger:                  logger
+        :type logger:                   IMultiProcessLogger
+        """
+        station_id = FTPServerBrokerProcess.get_station_id(message_id)
+
+        # delete the ZIP-file corresponding to the message ID
+        os.remove(self._data_directory + os.sep + station_id + os.sep + self._data_sub_directory + os.sep + message_id)
+
+        logger.log(IMultiProcessLogger.INFO, "Removed the data file '{}' after processing".format(message_id))
+
+
+class FTPServerSideProxyProcess(object):
+    """Subprocess for a server side proxy for the FTP-based weather server"""
+    @staticmethod
+    def process(request_queue, database_service_factory, parent, logging_connection, exception_handler):
+        """
+        The process of the server side proxy.
+
+        :param request_queue:           queue used for transfering the processed file metadata further downstream
+        :type request_queue:            multiprocessing.queues.Queue
+        :param database_service_factory:factory creating SQL database services
+        :type database_service_factory: server.sqldatabase.SQLDatabaseServiceFactory
+        :param parent:                  parent object
+        :type parent:                   FTPServerSideProxy
+        :param logging_connection:      connection to the logger in the main process
+        :type logging_connection:       common.logging.MultiProcessConnector
+        :param exception_handler:       exception handler callback method receiving all exception from the process
+        :type exception_handler:        method
+        """
+        try:
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+            signal.signal(signal.SIGTERM, signal.SIG_IGN)
+            database_service = database_service_factory.create(True)
+            database_service.register_observer(parent)
+            logger = MultiProcessLoggerProxy(logging_connection)
+
+            while True:
+                # the FTP-broker does not require deserialization of the data
+                message_id, station_id, first_time, last_time, raw_data = request_queue.get()
+                if message_id is None:
+                    break
+                message = WeatherMessage(message_id, station_id, raw_data)
+                try:
+                    database_service.add_data(message)
+                    if not raw_data:
+                        logger.log(IMultiProcessLogger.WARNING, "Received data for station {} was empty.".format(
+                            station_id))
+                    else:
+                        logger.log(IMultiProcessLogger.INFO, "New data for station '{}' stored ({} - {})".format(
+                                   station_id, first_time, last_time))
+                except (NotExistingError, AlreadyExistingError) as e:
+                    # the new data will be ignored
+                    logger.log(IMultiProcessLogger.WARNING, "The new data was ignored: " + e.msg)
+
+                    # the sender needs to acknowledge anyway, that the data does not need to be stored anymore
+                    parent.acknowledge_persistence(message_id, logger)
+        except Exception as e:
+            exception_handler(DelayedException(e))
+
+
+class FTPServerSideProxy(IServerSideProxy):
+    """
+    Server side proxy for the FTP-based weather server.
+    Needs to be called in a with-clause for correct management of the subprocesses.
+    """
+    def __init__(self, database_service_factory, config, logging_connection, exception_queue):
+        """
+        Constructor.
+
+        :param database_service_factory:factory creating SQL database services
+        :type database_service_factory: server.sqldatabase.IDatabaseServiceFactory
+        :param config:                  configuration of the FTP-based weather server
+        :type config:                   server.config.FTPReceiverConfigSection
+        :param logging_connection:      connection to the logger in the main process
+        :type logging_connection:       common.logging.MultiProcessConnector
+        :param exception_queue:         queue for transporting exceptions to the main process
+        :type exception_queue:          multiprocessing.queues.Queue
+        """
+        # read the configuration
+        data_directory, data_sub_directory, temp_data_directory, data_file_extension, delta_time = config.get()
+
+        # create the working directories if required
+        os.makedirs(temp_data_directory, exist_ok=True)
+        os.makedirs(data_directory, exist_ok=True)
+
+        # obtain the necessary information from the database
+        database_service = database_service_factory.create(False)  # no logging, because called from the main process
+        combi_sensor_ids, combi_sensor_descriptions = database_service.get_combi_sensors()
+        station_id_list = database_service.get_stations()
+
+        # empty the temporary data directory (it may contain unnecessary files after a power failure)
+        self._clear_temp_data_directory(temp_data_directory)
+
+        # find all still unstored data files
+        unstored_file_paths = self._find_all_data_files(data_directory, data_file_extension)
+
+        # start the listener processes
+        self._exception_queue = exception_queue
+        self._request_queue = Queue()
+        self._broker = FTPBroker(
+            self._request_queue,
+            data_directory,
+            data_file_extension,
+            data_sub_directory,
+            temp_data_directory,
+            station_id_list,
+            logging_connection,
+            self._exception_handler,
+            delta_time,
+            combi_sensor_ids,
+            combi_sensor_descriptions
+        )
+        self._proxy = FTPServerSideProxyProcess()
+        self._proxy_process = Process(
+            target=self._proxy.process,
+            args=(self._request_queue, database_service_factory, self, logging_connection, self._exception_handler)
+        )
+        self._proxy_process.start()
+
+        self._lock = threading.Lock()
+        self._is_joined = False
+
+        # feed the still unstored data files into the listener process
+        self._feed_unstored_data_files(unstored_file_paths)
+
+    def __enter__(self):
+        """
+        Enter method for context managers.
+
+        :return:                    the class instance
+        :rtype:                     FTPServerSideProxy
+        """
+        return self
+
+    def __exit__(self, type_val, value, traceback):
+        """
+        Exit method for context managers.
+
+        :param type_val:            exception type
+        :param value:               exception value
+        :param traceback:           exception traceback
+        """
+        self._stop_and_join()
+
+    @staticmethod
+    def _clear_temp_data_directory(temp_data_directory):
+        """
+        Clears the temporary data directory.
+
+        :param temp_data_directory: temporary data directory
+        :type temp_data_directory:  str
+        """
+        files = glob.glob(temp_data_directory + '/*')
+        for f in files:
+            os.remove(f)
+
+    @staticmethod
+    def _find_all_data_files(data_directory, data_file_extension):
+        """
+        Finds all data files in the data directory and all subdirectories.
+        All files in the data directory are assumed to be unsaved in the SQL database.
+
+        :param data_directory:          data directory
+        :type data_directory:           str
+        :param data_file_extension:     file extension of the data files (example: ".ZIP")
+        :type data_file_extension:      str
+        :return:                        all unstored files
+        :rtype:                         list of str
+        """
+        # recursive search in subdirectories
+        reg_expr = re.compile(data_file_extension, re.IGNORECASE)
+        unstored_file_paths = []
+        for root, dirnames, filenames in os.walk(data_directory):
+            unstored_file_paths += [os.path.join(root, j) for j in filenames if re.search(reg_expr, j)]
+
+        return unstored_file_paths
+
+    def _feed_unstored_data_files(self, unstored_file_paths):
+        """
+        Feeds all unstored files into the queue of received files.
+
+        :param unstored_file_paths:     list of the unstored weather data files
+        :type unstored_file_paths:      list of str
+        """
+        for file_path in unstored_file_paths:
+            self._broker.feed_modified_file(file_path)
+
+    def _stop_and_join(self):
+        """Stops the subprocess of the instance and returns afterwards, never call it more than once."""
+        with self._lock:
+            if not self._is_joined:
+                self._is_joined = True
+                self._broker.stop_and_join()
+                self._request_queue.put((None, None, None))
+                self._proxy_process.join()
+
+    def acknowledge_persistence(self, finished_id, logger):
+        """
+        Performs the acknowledgement of a successful finished message transfer to the client.
+
+        :param finished_id:     id of the finished message
+        :type finished_id:      str
+        :param logger:          logging system of the server
+        :type logger:           common.logging.IMultiProcessLogger
+        """
+        self._broker.send_persistence_acknowledgement(finished_id, logger)
+
+    def _exception_handler(self, exception):
+        """
+        Exception handler passing any exception to the main process.
+
+        :param exception:       exception risen by a subprocess
+        :type exception:        DelayedException
+        """
+        self._exception_queue.put(exception)

@@ -1,0 +1,50 @@
+#!/bin/sh
+# preinst script for nest
+#
+# see: dh_installdeb(1)
+
+set -e
+
+# summary of how this script can be called:
+#        * <new-preinst> `install'
+#        * <new-preinst> `install' <old-version>
+#        * <new-preinst> `upgrade' <old-version>
+#        * <old-preinst> `abort-upgrade' <new-version>
+#
+# for details, see http://www.debian.org/doc/debian-policy/ or
+# the debian-policy package
+
+PACKAGE="remote-weather-access"
+
+
+case "$1" in
+    install|upgrade)
+		mkdir -p /var/log/${PACKAGE}
+		chmod 0755 /var/log/${PACKAGE}
+
+		mkdir -p /etc/${PACKAGE}
+		chmod 0755 /etc/${PACKAGE}
+
+		mkdir -p /var/lib/${PACKAGE}
+		chmod 0755 /var/lib/${PACKAGE}
+
+		mkdir -p /var/lib/${PACKAGE}/templates
+		chmod 0777 /var/lib/${PACKAGE}/templates
+
+		mkdir -p /var/lib/${PACKAGE}/receiver
+		chmod 0755 /var/lib/${PACKAGE}/receiver
+
+        mkdir -p /var/lib/${PACKAGE}/export
+		chmod 0755 /var/lib/${PACKAGE}/export
+		;;
+
+    abort-upgrade)
+    	;;
+
+    *)
+        echo "preinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0

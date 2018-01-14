@@ -1,0 +1,9 @@
+{
+    "station_id": "TES",
+    "device_info": "TE923",
+    "location_info": "Musterstadt",
+    "latitude": 59.0,
+    "longitude": 15.0,
+    "height": 52,
+    "rain_calib_factor" : 1.9
+}
