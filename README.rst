@@ -15,7 +15,9 @@ Features
 Client
 ------
 
-The client software is currently legacy code, see :file:'./docs/README_client.txt' for some further documentation.
+The client software is currently legacy code, read about details in the `client documentation`_.
+
+.. _client documentation: ./docs/README_client.txt
 
 
 Quickstart
@@ -31,4 +33,6 @@ Quickstart
 Further information
 -------------------
 
-See the documentation in :file:'./docs/sphinx/source/server.rst'.
+Extensive information about the server configuration can be found in the `server documentation`_.
+
+.. _server documentation: ./docs/sphinx/source/server.rst
