@@ -14,7 +14,9 @@ Features
 Client
 ------
 
-The client software is currently legacy code, see :file:`README_client.txt` for some further documentation.
+The client software is currently legacy code, see `README_client.txt`_ for some further documentation.
+
+.. _README_client.txt: ../../README_client.txt
 
 
 Quickstart
