@@ -1,0 +1,18 @@
+# remote-weather-access - Client mock
+# on Debian, put it under /etc/systemd/system/clientmock.service
+# start with: systemctl start clientmock.service
+# enable on boot: systemctl enable clientmock.service
+
+[Unit]
+Description=remote-weather-access client mock
+After=multi-user.target
+
+[Service]
+Type=simple
+User=weather-daemon
+Restart=always
+ExecStart=/usr/bin/python3 /usr/lib/python3/dist-packages/remote_weather_access/client_mock.py
+
+[Install]
+WantedBy=multi-user.target
+
