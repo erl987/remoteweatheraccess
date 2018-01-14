@@ -24,5 +24,5 @@ Install a new Raspberry for a new station:
 	chown
 	Adapt texts in /srv/www/'station name'/index.html
 
--> The weather data can be obtained from http://wetter.radixproductions.selfhost.me/'station name'
+-> The weather data can be obtained from http://station.com/'station name'
 	

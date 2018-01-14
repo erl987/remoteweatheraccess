@@ -1,9 +1,9 @@
 {
-    "station_id": "NBG",
+    "station_id": "TES",
     "device_info": "TE923",
-    "location_info": "Nürnberg",
-    "latitude": 49.374,
-    "longitude": 11.017,
-    "height": 330,
+    "location_info": "Musterstadt",
+    "latitude": 59.0,
+    "longitude": 15.0,
+    "height": 52,
     "rain_calib_factor" : 1.9
 }
