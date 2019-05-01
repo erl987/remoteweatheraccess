@@ -6,8 +6,8 @@ from http import HTTPStatus
 import dateutil
 import pytest
 
-from server_v2 import server
-from server_v2.server import db
+from . import server
+from .server import db
 
 
 @pytest.fixture
