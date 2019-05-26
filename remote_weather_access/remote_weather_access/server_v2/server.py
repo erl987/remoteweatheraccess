@@ -127,12 +127,7 @@ def deserialize_base_station_dataset(json):
         raise APIError('Required Content-Type is `application/json`', status_code=HTTPStatus.BAD_REQUEST)
 
     request_object = base_station_schema.load(json)
-    timepoint = request_object.data.timepoint
-    temp = request_object.data.temp
-    humidity = request_object.data.humidity
-    dataset = BaseStationData(timepoint, temp, humidity)
-
-    return dataset
+    return request_object.data
 
 
 def to_utc(dt):
