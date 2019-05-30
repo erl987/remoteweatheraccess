@@ -51,6 +51,8 @@ ma = Marshmallow(app)
 flask_bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
+INVALID_PASSWORD_SALT = flask_bcrypt.generate_password_hash("invalid")
+
 
 # the permissions are increasing in ascending order
 class Role(Enum):
@@ -534,7 +536,7 @@ def login():
             access_token = create_access_token(identity={'name': user_from_db.name, 'role': user_from_db.role},
                                                fresh=True)
     else:
-        flask_bcrypt.check_password_hash('this', 'that')  # to give always the same runtime
+        flask_bcrypt.check_password_hash(INVALID_PASSWORD_SALT, 'something')  # to give always the same runtime
 
     if access_token:
         return jsonify({'user': submitted_user['name'], 'token': access_token}), HTTPStatus.OK
