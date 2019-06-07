@@ -1,0 +1,9 @@
+FROM python:3.7.2-alpine3.9
+
+COPY . /
+
+RUN  apk add --no-cache libc-dev python3-dev gcc openssl-dev libffi-dev && pip install -r requirements.txt
+
+EXPOSE 8000
+
+ENTRYPOINT ["/usr/local/bin/gunicorn", "--config", "/config/gunicorn.conf", "--log-config", "/config/logging.conf", "-b", ":8000", "wsgi:app"]

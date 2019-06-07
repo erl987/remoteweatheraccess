@@ -1,0 +1,56 @@
+import os
+from datetime import timedelta
+
+
+class Config(object):
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    PROJECT_ROOT = os.environ.get('BASEDIR', os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+    BCRYPT_LOG_ROUNDS = 13
+
+
+class ProdConfig(Config):
+    ENV = 'prod'
+    DEBUG = False
+    DB_NAME = 'weather-backend.sqlite'
+    DB_PATH = os.path.join(Config.PROJECT_ROOT, 'instance')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL',
+                                             'sqlite:///' + os.path.join(DB_PATH, DB_NAME))
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=1)
+
+
+class DevConfig(Config):
+    ENV = 'dev'
+    DEBUG = True
+    DB_NAME = 'dev.sqlite'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(Config.PROJECT_ROOT, DB_NAME)
+    JWT_SECRET_KEY = 'SECRET-KEY'
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=10)
+
+
+class TestConfig(Config):
+    ENV = 'test'
+    TESTING = True
+    DEBUG = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite://'
+    JWT_SECRET_KEY = 'SECRET-KEY'
+    BCRYPT_LOG_ROUNDS = 4  # for faster tests; needs at least 4 to avoid "ValueError: Invalid rounds"
+    JWT_HEADER_TYPE = 'Bearer'
+    JWT_BLACKLIST_ENABLED = False
+
+
+LOGGING_CONFIG = {
+    'version': 1,
+    'formatters': {'default': {
+        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    }},
+    'handlers': {'wsgi': {
+        'class': 'logging.StreamHandler',
+        'stream': 'ext://flask.logging.wsgi_errors_stream',
+        'formatter': 'default'
+    }},
+    'root': {
+        'level': 'INFO',
+        'handlers': ['wsgi']
+    }
+}
