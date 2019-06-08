@@ -50,7 +50,7 @@ def access_level_required(required_role: Role):
 
             user_role = get_jwt_claims()['role']
             user_role_id = Role[user_role].value
-            if user_role_id >= required_role.value:
+            if user_role_id == required_role.value:
                 current_app.logger.info('Approved authorization of user \'{}\' for access level \'{}\''.format(
                     get_jwt_identity(), required_role.name))
                 return fn(*args, **kwargs)
