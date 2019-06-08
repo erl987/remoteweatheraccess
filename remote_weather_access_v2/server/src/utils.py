@@ -1,3 +1,5 @@
+import random
+import string
 from enum import Enum
 from functools import wraps
 from http import HTTPStatus
@@ -60,3 +62,8 @@ def access_level_required(required_role: Role):
 
         return wrapper
     return decorator
+
+
+def generate_random_password(string_length=8):
+    password_characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(password_characters) for i in range(string_length))

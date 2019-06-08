@@ -6,6 +6,7 @@ class Config(object):
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     PROJECT_ROOT = os.environ.get('BASEDIR', os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+    DB_PATH = os.path.join(PROJECT_ROOT, 'instance')
     BCRYPT_LOG_ROUNDS = 13
 
 
@@ -13,17 +14,15 @@ class ProdConfig(Config):
     ENV = 'prod'
     DEBUG = False
     DB_NAME = 'weather-backend.sqlite'
-    DB_PATH = os.path.join(Config.PROJECT_ROOT, 'instance')
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL',
-                                             'sqlite:///' + os.path.join(DB_PATH, DB_NAME))
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///' + os.path.join(Config.DB_PATH, DB_NAME))
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=1)
 
 
 class DevConfig(Config):
     ENV = 'dev'
     DEBUG = True
-    DB_NAME = 'dev.sqlite'
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(Config.PROJECT_ROOT, DB_NAME)
+    DB_NAME = 'weather-backend-dev.sqlite'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(Config.DB_PATH, DB_NAME)
     JWT_SECRET_KEY = 'SECRET-KEY'
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=10)
 

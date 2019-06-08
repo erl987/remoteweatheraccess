@@ -1,7 +1,7 @@
 from sqlalchemy.orm import validates
 
 from ..extensions import db, flask_bcrypt
-from ..utils import ROLES, Role
+from ..utils import ROLES, Role, generate_random_password
 
 
 class FullUser(db.Model):
@@ -28,7 +28,7 @@ class FullUser(db.Model):
 def generate_default_admin_user():
     default_admin = FullUser()
     default_admin.name = 'admin'
-    default_admin.password = 'admin1234'
+    default_admin.password = generate_random_password()
     default_admin.role = Role.ADMIN.name
 
     return default_admin
