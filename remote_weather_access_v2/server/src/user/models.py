@@ -1,7 +1,7 @@
 from sqlalchemy.orm import validates
 
-from ..extensions import db
-from ..utils import ROLES
+from ..extensions import db, flask_bcrypt
+from ..utils import ROLES, Role
 
 
 class FullUser(db.Model):
@@ -20,3 +20,19 @@ class FullUser(db.Model):
     def save_to_db(self):
         db.session.add(self)
         db.session.commit()
+
+
+def generate_default_admin_user():
+    default_admin = FullUser()
+    default_admin.name = 'admin'
+    default_admin.password = flask_bcrypt.generate_password_hash('admin1234')
+    default_admin.role = Role.ADMIN.name
+
+    return default_admin
+
+
+class DefaultAdminCreationStatus(db.Model):
+    __tablename__ = 'defaultAdminCreationStatus'
+
+    id = db.Column(db.Integer, primary_key=True)
+    isDefaultAdminCreated = db.Column(db.Boolean, unique=True, nullable=False)

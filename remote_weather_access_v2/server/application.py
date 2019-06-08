@@ -2,6 +2,7 @@ from logging.config import dictConfig
 
 from flask import Flask
 
+from src.user.models import DefaultAdminCreationStatus, generate_default_admin_user
 from src.user.routes import user_blueprint
 from src.weatherdata.routes import weatherdata_blueprint
 from src.errorhandlers import handle_invalid_usage, unauthorized_response
@@ -53,5 +54,19 @@ if __name__ == '__main__':
     app = create_app(DevConfig())
     with app.app_context():
         db.create_all()
+
+        default_admin_query_result = DefaultAdminCreationStatus.query.first()
+        was_default_admin_already_created = False
+        if default_admin_query_result and default_admin_query_result.isDefaultAdminCreated:
+            was_default_admin_already_created = True
+
+        if not was_default_admin_already_created:
+            # this user is only intended for the first usage and needs to be deleted by the user!
+            default_admin_creation_status = DefaultAdminCreationStatus()
+            default_admin_creation_status.isDefaultAdminCreated = True
+            db.session.add(default_admin_creation_status)
+
+            db.session.add(generate_default_admin_user())
+            db.session.commit()
 
     app.run(host='0.0.0.0')
