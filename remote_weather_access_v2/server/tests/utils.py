@@ -55,13 +55,13 @@ def client_with_admin_permissions():
 
 
 @pytest.fixture
-def client_with_user_permissions():
+def client_with_push_user_permissions():
     app = create_app(TestConfig())
     client = app.test_client()
     logging.getLogger("wsgi").parent.handlers = []
 
     with app.test_request_context():
-        admin_access_token = create_access_token(identity={'name': 'pytest_user', 'role': Role.USER.name},
+        admin_access_token = create_access_token(identity={'name': 'pytest_user', 'role': Role.PUSH_USER.name},
                                                  expires_delta=False, fresh=True)
     client.environ_base['HTTP_AUTHORIZATION'] = 'Bearer {}'.format(admin_access_token)
 

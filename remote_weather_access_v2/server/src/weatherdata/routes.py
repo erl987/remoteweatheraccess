@@ -15,7 +15,7 @@ weatherdata_blueprint = Blueprint('data', __name__, url_prefix='/api/v1/data')
 
 
 @weatherdata_blueprint.route('', methods=['POST'])
-@access_level_required(Role.USER)
+@access_level_required(Role.PUSH_USER)
 @rollback_and_raise_exception
 def add_weather_dataset():
     try:
@@ -68,7 +68,7 @@ def get_weather_datasets():
 
 
 @weatherdata_blueprint.route('/<id>', methods=['PUT'])
-@access_level_required(Role.USER)
+@access_level_required(Role.PUSH_USER)
 @rollback_and_raise_exception
 def update_weather_dataset(id):
     try:
@@ -99,7 +99,7 @@ def update_weather_dataset(id):
 
 
 @weatherdata_blueprint.route('/<id>', methods=['DELETE'])
-@access_level_required(Role.USER)
+@access_level_required(Role.PUSH_USER)
 @rollback_and_raise_exception
 def delete_weather_dataset(id):
     existing_dataset = BaseStationData.query.get(id)

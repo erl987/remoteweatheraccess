@@ -11,8 +11,8 @@ from .exceptions import raise_api_error, APIError
 
 
 class Role(Enum):
-    GUEST = 0
-    USER = 1
+    PULL_USER = 0
+    PUSH_USER = 1
     ADMIN = 2
 
 
