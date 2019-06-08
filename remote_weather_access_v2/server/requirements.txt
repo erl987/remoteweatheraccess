@@ -1,8 +1,9 @@
-gunicorn
-json-logging-py
-flask-marshmallow
-flask-sqlalchemy
-marshmallow-sqlalchemy
-flask-bcrypt
-flask_jwt_extended
-pytz
+gunicorn==19.6.0
+json-logging-py==0.2
+flask==1.0.3
+flask-marshmallow=0.10.0
+flask-sqlalchemy==2.3.2
+flask-bcrypt==0.7.1
+flask_jwt_extended==3.18.2
+marshmallow-sqlalchemy==0.16.1
+pytz==2016.7
