@@ -59,6 +59,13 @@ def test_create_dataset_with_wrong_content_type(client_with_user_permissions):
     assert result.status_code == HTTPStatus.BAD_REQUEST
 
 
+@pytest.mark.usefixtures('client_without_permissions', 'a_dataset')
+def test_create_dataset_without_required_permissions(client_without_permissions, a_dataset):
+    result = client_without_permissions.post('/api/v1/data', json=a_dataset)
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.UNAUTHORIZED
+
+
 @pytest.mark.usefixtures('client_with_user_permissions', 'a_dataset', 'another_dataset')
 def test_delete_dataset(client_with_user_permissions, a_dataset, another_dataset):
     create_result = client_with_user_permissions.post('/api/v1/data', json=a_dataset)
@@ -74,6 +81,13 @@ def test_delete_not_existing_dataset(client_with_user_permissions, a_dataset):
     result = client_with_user_permissions.delete('/api/v1/data/1')
     assert len(result.data) == 0  # no JSON, as the body is empty
     assert result.status_code == HTTPStatus.NO_CONTENT
+
+
+@pytest.mark.usefixtures('client_without_permissions', 'a_dataset')
+def test_delete_dataset_without_required_permissions(client_without_permissions, a_dataset):
+    result = client_without_permissions.delete('/api/v1/data/1')
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.UNAUTHORIZED
 
 
 @pytest.mark.usefixtures('client_with_user_permissions', 'a_dataset', 'an_updated_dataset')
@@ -122,6 +136,13 @@ def test_update_dataset_with_wrong_content_type(client_with_user_permissions):
     result = client_with_user_permissions.put('/api/v1/data/1', data={}, content_type='text/html')
     assert 'error' in result.get_json()
     assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_without_permissions', 'an_updated_dataset')
+def test_update_dataset_without_required_permissions(client_without_permissions, an_updated_dataset):
+    result = client_without_permissions.put('/api/v1/data/1', json=an_updated_dataset)
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.UNAUTHORIZED
 
 
 @pytest.mark.usefixtures('client_with_user_permissions', 'a_dataset')
