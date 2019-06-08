@@ -66,7 +66,11 @@ if __name__ == '__main__':
             default_admin_creation_status.isDefaultAdminCreated = True
             db.session.add(default_admin_creation_status)
 
-            db.session.add(generate_default_admin_user())
+            default_admin_user = generate_default_admin_user()
+            db.session.add(default_admin_user)
             db.session.commit()
+            app.logger.warn('Added a new default ADMIN user \'{}\' with password \'{}\' to the database. '
+                            'Create an own admin user with another password and delete the default '
+                            'admin user immediately!'.format(default_admin_user.name, default_admin_user.password))
 
     app.run(host='0.0.0.0')

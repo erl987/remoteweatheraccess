@@ -27,11 +27,7 @@ def add_user():
 
     existing_user = FullUser.query.filter_by(name=new_user.name).first()
     if not existing_user:
-        new_user.password = flask_bcrypt.generate_password_hash(new_user.password)
-        new_user.role = new_user.role.upper()
-        db.session.add(new_user)
-        db.session.commit()
-
+        new_user.save_to_db()
         response = jsonify({'name': new_user.name, 'role': new_user.role})
         current_app.logger.info('Added new user \'{}\' to the database (role: \'{}\')'.format(new_user.name,
                                                                                               new_user.role))
@@ -79,9 +75,9 @@ def update_user(id):
                        status_code=HTTPStatus.CONFLICT,
                        location='/api/v1/data/{}'.format(existing_user.id))
 
-    existing_user.password = flask_bcrypt.generate_password_hash(new_user.password)
+    existing_user.password = new_user.password
     existing_user.role = new_user.role
-    db.session.commit()
+    existing_user.save_to_db(do_add=False)
     current_app.logger.info('Updated user \'{}\' in the database (role: \'{}\')'.format(existing_user.name,
                                                                                         existing_user.role))
 

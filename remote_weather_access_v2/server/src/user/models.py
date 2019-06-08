@@ -17,15 +17,18 @@ class FullUser(db.Model):
         assert value.upper() in ROLES
         return value
 
-    def save_to_db(self):
-        db.session.add(self)
+    def save_to_db(self, do_add=True):
+        self.password = flask_bcrypt.generate_password_hash(self.password)
+        self.role = self.role.upper()
+        if do_add:
+            db.session.add(self)
         db.session.commit()
 
 
 def generate_default_admin_user():
     default_admin = FullUser()
     default_admin.name = 'admin'
-    default_admin.password = flask_bcrypt.generate_password_hash('admin1234')
+    default_admin.password = 'admin1234'
     default_admin.role = Role.ADMIN.name
 
     return default_admin
