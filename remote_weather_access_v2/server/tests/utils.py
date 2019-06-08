@@ -32,14 +32,42 @@ def another_dataset() -> dict:
 
 
 @pytest.fixture
-def client():
+def client_without_permissions():
+    app = create_app(TestConfig())
+    client = app.test_client()
+    logging.getLogger("wsgi").parent.handlers = []
+
+    yield client
+
+
+@pytest.fixture
+def client_with_admin_permissions():
     app = create_app(TestConfig())
     client = app.test_client()
     logging.getLogger("wsgi").parent.handlers = []
 
     with app.test_request_context():
-        admin_access_token = create_access_token(identity={'name': 'pytest', 'role': Role.ADMIN.name},
+        admin_access_token = create_access_token(identity={'name': 'pytest_admin', 'role': Role.ADMIN.name},
                                                  expires_delta=False, fresh=True)
     client.environ_base['HTTP_AUTHORIZATION'] = 'Bearer {}'.format(admin_access_token)
 
     yield client
+
+
+@pytest.fixture
+def client_with_user_permissions():
+    app = create_app(TestConfig())
+    client = app.test_client()
+    logging.getLogger("wsgi").parent.handlers = []
+
+    with app.test_request_context():
+        admin_access_token = create_access_token(identity={'name': 'pytest_user', 'role': Role.USER.name},
+                                                 expires_delta=False, fresh=True)
+    client.environ_base['HTTP_AUTHORIZATION'] = 'Bearer {}'.format(admin_access_token)
+
+    yield client
+
+
+def drop_permissions(client):
+    del client.environ_base['HTTP_AUTHORIZATION']
+    return client
