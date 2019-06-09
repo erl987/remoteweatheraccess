@@ -78,5 +78,5 @@ def test_login(client_with_admin_permissions, a_user):
     client = drop_permissions(client_with_admin_permissions)
     login_result = client.post('/api/v1/login', json=a_user)
     assert login_result.get_json()['user'] == a_user['name']
-    assert login_result.get_json()['token'] == 'INVALID'  # TODO: verify the role in the token and the timestamp ...
+    assert len(login_result.get_json()['token']) > 0
     assert login_result.status_code == HTTPStatus.OK
