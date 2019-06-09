@@ -11,7 +11,6 @@ from .utils import client_without_permissions, client_with_push_user_permissions
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset')
 def test_create_dataset(client_with_push_user_permissions, a_dataset):
     result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset)
-    print(result.get_json())
     returned_json = result.get_json()
     a_dataset_with_same_id = dict(a_dataset)
     a_dataset_with_same_id['id'] = returned_json['id']

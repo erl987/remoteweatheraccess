@@ -32,6 +32,30 @@ def another_dataset() -> dict:
 
 
 @pytest.fixture
+def a_user() -> dict:
+    yield dict(
+        name='test_user',
+        password='d5df93*!B',
+        role='PUSH_USER')
+
+
+@pytest.fixture
+def an_updated_user() -> dict:
+    yield dict(
+        name='test_user',
+        password='updated_pw',
+        role='ADMIN')
+
+
+@pytest.fixture
+def another_user() -> dict:
+    yield dict(
+        name='test_user_2',
+        password='bdfdfd53*!B',
+        role='PULL_USER')
+
+
+@pytest.fixture
 def client_without_permissions():
     app = create_app(TestConfig())
     client = app.test_client()

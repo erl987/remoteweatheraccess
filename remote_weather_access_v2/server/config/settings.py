@@ -36,6 +36,7 @@ class TestConfig(Config):
     BCRYPT_LOG_ROUNDS = 4  # for faster tests; needs at least 4 to avoid "ValueError: Invalid rounds"
     JWT_HEADER_TYPE = 'Bearer'
     JWT_BLACKLIST_ENABLED = False
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=10)
 
 
 LOGGING_CONFIG = {
