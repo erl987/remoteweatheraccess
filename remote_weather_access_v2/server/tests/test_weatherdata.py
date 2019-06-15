@@ -31,8 +31,8 @@ def test_create_two_datasets(client_with_push_user_permissions, a_dataset, anoth
     assert result_2.status_code == HTTPStatus.CREATED
 
 
-@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset')
-def test_create_same_dataset_twice(client_with_push_user_permissions, a_dataset, another_dataset):
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset')
+def test_create_same_dataset_twice(client_with_push_user_permissions, a_dataset):
     result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset)
     assert result.status_code == HTTPStatus.CREATED
 
@@ -51,7 +51,7 @@ def test_create_dataset_with_invalid_body(client_with_push_user_permissions, a_d
     assert result.status_code == HTTPStatus.BAD_REQUEST
 
 
-@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset')
+@pytest.mark.usefixtures('client_with_push_user_permissions')
 def test_create_dataset_with_wrong_content_type(client_with_push_user_permissions):
     result = client_with_push_user_permissions.post('/api/v1/data', data={}, content_type='text/html')
     assert 'error' in result.get_json()

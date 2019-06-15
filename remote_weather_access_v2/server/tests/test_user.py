@@ -2,8 +2,8 @@ from http import HTTPStatus
 
 import pytest
 
-from .utils import client_with_admin_permissions, a_user, another_user, an_updated_user,\
-    drop_permissions  # required as a fixture
+from .utils import client_with_admin_permissions, client_with_push_user_permissions, client_without_permissions, \
+    a_user, another_user, an_updated_user, drop_permissions  # required as a fixture
 
 
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
@@ -19,6 +19,55 @@ def test_create_user(client_with_admin_permissions, a_user):
     location_result = client_with_admin_permissions.get(result.headers['Location'])
     assert location_result.get_json() == returned_json
     assert location_result.status_code == HTTPStatus.OK
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions', 'a_user', 'another_user')
+def test_create_two_users(client_with_admin_permissions, a_user, another_user):
+    result = client_with_admin_permissions.post('/api/v1/user', json=a_user)
+    assert result.status_code == HTTPStatus.CREATED
+
+    result_2 = client_with_admin_permissions.post('/api/v1/user', json=another_user)
+    assert result_2.status_code == HTTPStatus.CREATED
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
+def test_create_same_user_twice(client_with_admin_permissions, a_user):
+    result = client_with_admin_permissions.post('/api/v1/user', json=a_user)
+    assert result.status_code == HTTPStatus.CREATED
+
+    result_2 = client_with_admin_permissions.post('/api/v1/user', json=a_user)
+    assert 'error' in result_2.get_json()
+    assert result_2.status_code == HTTPStatus.CONFLICT
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
+def test_create_user_with_invalid_body(client_with_admin_permissions, a_user):
+    invalid_user = dict(a_user)
+    del invalid_user['name']
+    result = client_with_admin_permissions.post('/api/v1/user', json=invalid_user)
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions')
+def test_create_user_with_wrong_content_type(client_with_admin_permissions):
+    result = client_with_admin_permissions.post('/api/v1/user', data={}, content_type='text/html')
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_without_permissions', 'a_user')
+def test_create_dataset_without_required_permissions(client_without_permissions, a_user):
+    result = client_without_permissions.post('/api/v1/user', json=a_user)
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_user')
+def test_create_dataset_with_insufficient_permissions(client_with_push_user_permissions, a_user):
+    result = client_with_push_user_permissions.post('/api/v1/user', json=a_user)
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.FORBIDDEN
 
 
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
