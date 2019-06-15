@@ -7,7 +7,7 @@ from .utils import client_with_admin_permissions, a_user, another_user, an_updat
 
 
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
-def test_create_dataset(client_with_admin_permissions, a_user):
+def test_create_user(client_with_admin_permissions, a_user):
     result = client_with_admin_permissions.post('/api/v1/user', json=a_user)
     returned_json = result.get_json()
     a_user_with_same_id = dict(a_user)
@@ -22,7 +22,7 @@ def test_create_dataset(client_with_admin_permissions, a_user):
 
 
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
-def test_get_one_weather_dataset(client_with_admin_permissions, a_user):
+def test_get_one_user(client_with_admin_permissions, a_user):
     create_result = client_with_admin_permissions.post('/api/v1/user', json=a_user)
     id = create_result.get_json()['id']
     get_result = client_with_admin_permissions.get('/api/v1/user/{}'.format(id))
@@ -34,7 +34,7 @@ def test_get_one_weather_dataset(client_with_admin_permissions, a_user):
 
 
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_user', 'another_user')
-def test_get_weather_datasets_all(client_with_admin_permissions, a_user, another_user):
+def test_users_all(client_with_admin_permissions, a_user, another_user):
     a_user_create_result = client_with_admin_permissions.post('/api/v1/user', json=a_user)
     another_user_create_result = client_with_admin_permissions.post('/api/v1/user', json=another_user)
     search_result = client_with_admin_permissions.get('api/v1/user')
@@ -47,7 +47,7 @@ def test_get_weather_datasets_all(client_with_admin_permissions, a_user, another
 
 
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_user', 'an_updated_user')
-def test_update_dataset(client_with_admin_permissions, a_user, an_updated_user):
+def test_update_user(client_with_admin_permissions, a_user, an_updated_user):
     create_result = client_with_admin_permissions.post('/api/v1/user', json=a_user)
     id = create_result.get_json()['id']
     update_result = client_with_admin_permissions.put('/api/v1/user/{}'.format(id), json=an_updated_user)
@@ -63,7 +63,7 @@ def test_update_dataset(client_with_admin_permissions, a_user, an_updated_user):
 
 
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_user', 'another_user')
-def test_delete_dataset(client_with_admin_permissions, a_user, another_user):
+def test_delete_user(client_with_admin_permissions, a_user, another_user):
     create_result = client_with_admin_permissions.post('/api/v1/user', json=a_user)
     client_with_admin_permissions.post('/api/v1/user', json=another_user)
     user_id = create_result.get_json()['id']
