@@ -245,3 +245,39 @@ def test_login(client_with_admin_permissions, a_user):
     assert login_result.get_json()['user'] == a_user['name']
     assert len(login_result.get_json()['token']) > 0
     assert login_result.status_code == HTTPStatus.OK
+
+
+@pytest.mark.usefixtures('client_without_permissions', 'a_user')
+def test_login_with_invalid_body(client_without_permissions, a_user):
+    invalid_user = dict(a_user)
+    del invalid_user['name']
+    result = client_without_permissions.post('/api/v1/login', json=invalid_user)
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_without_permissions')
+def test_login_with_wrong_content_type(client_without_permissions):
+    result = client_without_permissions.post('/api/v1/login', data={}, content_type='text/html')
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions', 'a_user', 'another_user')
+def test_login_with_wrong_user(client_with_admin_permissions, a_user, another_user):
+    client_with_admin_permissions.post('/api/v1/user', json=a_user)
+    client = drop_permissions(client_with_admin_permissions)
+    login_result = client.post('/api/v1/login', json=another_user)
+    assert 'error' in login_result.get_json()
+    assert login_result.status_code == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
+def test_login_with_wrong_password(client_with_admin_permissions, a_user):
+    client_with_admin_permissions.post('/api/v1/user', json=a_user)
+    client = drop_permissions(client_with_admin_permissions)
+    user_with_invalid_password = dict(a_user)
+    user_with_invalid_password['password'] = 'something'
+    login_result = client.post('/api/v1/login', json=user_with_invalid_password)
+    assert 'error' in login_result.get_json()
+    assert login_result.status_code == HTTPStatus.UNAUTHORIZED
