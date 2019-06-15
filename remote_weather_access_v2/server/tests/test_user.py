@@ -216,6 +216,27 @@ def test_delete_user(client_with_admin_permissions, a_user, another_user):
     assert delete_result.status_code == HTTPStatus.OK
 
 
+@pytest.mark.usefixtures('client_with_admin_permissions')
+def test_delete_not_existing_user(client_with_admin_permissions):
+    result = client_with_admin_permissions.delete('/api/v1/user/1')
+    assert len(result.data) == 0  # no JSON, as the body is empty
+    assert result.status_code == HTTPStatus.NO_CONTENT
+
+
+@pytest.mark.usefixtures('client_without_permissions')
+def test_delete_user_without_required_permissions(client_without_permissions):
+    result = client_without_permissions.delete('/api/v1/user/1')
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions')
+def test_delete_user_with_insufficient_permissions(client_with_push_user_permissions):
+    result = client_with_push_user_permissions.put('/api/v1/user/1')
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.FORBIDDEN
+
+
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
 def test_login(client_with_admin_permissions, a_user):
     client_with_admin_permissions.post('/api/v1/user', json=a_user)

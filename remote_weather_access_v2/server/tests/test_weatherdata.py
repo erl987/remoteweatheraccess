@@ -75,8 +75,8 @@ def test_delete_dataset(client_with_push_user_permissions, a_dataset, another_da
     assert delete_result.status_code == HTTPStatus.OK
 
 
-@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset')
-def test_delete_not_existing_dataset(client_with_push_user_permissions, a_dataset):
+@pytest.mark.usefixtures('client_with_push_user_permissions')
+def test_delete_not_existing_dataset(client_with_push_user_permissions):
     result = client_with_push_user_permissions.delete('/api/v1/data/1')
     assert len(result.data) == 0  # no JSON, as the body is empty
     assert result.status_code == HTTPStatus.NO_CONTENT
