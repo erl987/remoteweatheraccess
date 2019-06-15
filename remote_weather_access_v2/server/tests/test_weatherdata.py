@@ -104,7 +104,7 @@ def test_update_dataset(client_with_push_user_permissions, a_dataset, an_updated
     assert location_result.status_code == HTTPStatus.OK
 
 
-@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'an_updated_dataset')
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'an_updated_dataset')
 def test_update_dataset_when_not_existing(client_with_push_user_permissions, an_updated_dataset):
     update_result = client_with_push_user_permissions.put('/api/v1/data/1', json=an_updated_dataset)
     assert 'error' in update_result.get_json()
@@ -130,7 +130,7 @@ def test_update_dataset_with_invalid_body(client_with_push_user_permissions, a_d
     assert result.status_code == HTTPStatus.BAD_REQUEST
 
 
-@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset')
+@pytest.mark.usefixtures('client_with_push_user_permissions')
 def test_update_dataset_with_wrong_content_type(client_with_push_user_permissions):
     result = client_with_push_user_permissions.put('/api/v1/data/1', data={}, content_type='text/html')
     assert 'error' in result.get_json()
