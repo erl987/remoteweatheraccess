@@ -82,8 +82,8 @@ def test_delete_not_existing_dataset(client_with_push_user_permissions, a_datase
     assert result.status_code == HTTPStatus.NO_CONTENT
 
 
-@pytest.mark.usefixtures('client_without_permissions', 'a_dataset')
-def test_delete_dataset_without_required_permissions(client_without_permissions, a_dataset):
+@pytest.mark.usefixtures('client_without_permissions')
+def test_delete_dataset_without_required_permissions(client_without_permissions):
     result = client_without_permissions.delete('/api/v1/data/1')
     assert 'error' in result.get_json()
     assert result.status_code == HTTPStatus.UNAUTHORIZED
@@ -156,7 +156,7 @@ def test_get_one_weather_dataset(client_with_push_user_permissions, a_dataset):
     assert get_result.status_code == HTTPStatus.OK
 
 
-@pytest.mark.usefixtures('client_without_permissions', 'a_dataset')
+@pytest.mark.usefixtures('client_without_permissions')
 def test_get_one_dataset_that_does_not_exist(client_without_permissions):
     result = client_without_permissions.get('/api/v1/data/1')
     assert 'error' in result.get_json()

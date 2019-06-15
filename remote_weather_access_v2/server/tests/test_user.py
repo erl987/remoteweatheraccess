@@ -82,8 +82,36 @@ def test_get_one_user(client_with_admin_permissions, a_user):
     assert get_result.status_code == HTTPStatus.OK
 
 
+@pytest.mark.usefixtures('client_with_admin_permissions')
+def test_get_one_user_that_does_not_exist(client_with_admin_permissions):
+    result = client_with_admin_permissions.get('/api/v1/user/1')
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions')
+def test_get_one_user_with_invalid_id(client_with_admin_permissions):
+    result = client_with_admin_permissions.get('/api/v1/user/letters')
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_without_permissions')
+def test_get_one_user_without_required_permissions(client_without_permissions):
+    result = client_without_permissions.get('/api/v1/user/1')
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions')
+def test_get_one_user_with_insufficient_permissions(client_with_push_user_permissions):
+    result = client_with_push_user_permissions.get('/api/v1/user/1')
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.FORBIDDEN
+
+
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_user', 'another_user')
-def test_users_all(client_with_admin_permissions, a_user, another_user):
+def test_get_all_users(client_with_admin_permissions, a_user, another_user):
     a_user_create_result = client_with_admin_permissions.post('/api/v1/user', json=a_user)
     another_user_create_result = client_with_admin_permissions.post('/api/v1/user', json=another_user)
     search_result = client_with_admin_permissions.get('api/v1/user')
@@ -93,6 +121,27 @@ def test_users_all(client_with_admin_permissions, a_user, another_user):
                                                          another_user_create_result.get_json()]))
     assert search_result_ids == create_result_ids
     assert search_result.status_code == HTTPStatus.OK
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions')
+def test_get_all_users_when_empty_list(client_with_admin_permissions):
+    search_result = client_with_admin_permissions.get('api/v1/user')
+    assert len(search_result.get_json()) == 0
+    assert search_result.status_code == HTTPStatus.OK
+
+
+@pytest.mark.usefixtures('client_without_permissions')
+def test_get_all_users_without_required_permissions(client_without_permissions):
+    result = client_without_permissions.get('/api/v1/user')
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_user')
+def test_get_all_users_with_insufficient_permissions(client_with_push_user_permissions):
+    result = client_with_push_user_permissions.get('/api/v1/user')
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.FORBIDDEN
 
 
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_user', 'an_updated_user')
