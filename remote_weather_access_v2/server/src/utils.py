@@ -1,5 +1,6 @@
 import random
 import string
+import re
 from enum import Enum
 from functools import wraps
 from http import HTTPStatus
@@ -19,6 +20,9 @@ class Role(Enum):
 
 
 ROLES = set(item.name for item in Role)
+
+
+USER_NAME_REGEX = re.compile(r'^(?![-._])(?!.*[_.-]{2})[\w.-]{3,30}(?<![-._])$')
 
 
 def to_utc(dt):

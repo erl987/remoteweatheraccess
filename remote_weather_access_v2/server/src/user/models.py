@@ -1,17 +1,14 @@
-import re
 from http import HTTPStatus
 
 from sqlalchemy.orm import validates
 
 from ..exceptions import APIError
 from ..extensions import db, flask_bcrypt
-from ..utils import ROLES, Role, generate_random_password
+from ..utils import ROLES, Role, generate_random_password, USER_NAME_REGEX
 
 
 class FullUser(db.Model):
     __tablename__ = 'users'
-
-    _USER_NAME_REGEX = re.compile(r'^(?![-._])(?!.*[_.-]{2})[\w.-]{3,30}(?<![-._])$')
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
@@ -26,12 +23,16 @@ class FullUser(db.Model):
 
     @validates('name')
     def validate_name(self, key, value):
-        if FullUser._USER_NAME_REGEX.match(value) is None:
-            raise APIError('User name does not fulfill constraints (3-30 characters, only letters, digits and "-_.")'
-                           .format(id), status_code=HTTPStatus.BAD_REQUEST)
+        if USER_NAME_REGEX.match(value) is None:
+            raise APIError('User name does not fulfill the constraints (3-30 characters, only letters, '
+                           'digits and "-_.")'.format(id), status_code=HTTPStatus.BAD_REQUEST)
         return value
 
     def save_to_db(self, do_add=True):
+        if len(self.password) < 3 or len(self.password) > 30:
+            raise APIError('Password does not fulfill constraints (3-30 characters)',
+                           status_code=HTTPStatus.BAD_REQUEST)
+
         self.password = flask_bcrypt.generate_password_hash(self.password)
         self.role = self.role.upper()
         if do_add:

@@ -58,6 +58,15 @@ def test_create_user_with_invalid_role(client_with_admin_permissions, a_user):
 
 
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
+def test_create_user_with_too_long_password(client_with_admin_permissions, a_user):
+    invalid_user = dict(a_user)
+    invalid_user['password'] = ''.join(['a' for i in range(0, 31)])
+    result = client_with_admin_permissions.post('/api/v1/user', json=invalid_user)
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
 def test_create_same_user_twice(client_with_admin_permissions, a_user):
     result = client_with_admin_permissions.post('/api/v1/user', json=a_user)
     assert result.status_code == HTTPStatus.CREATED
@@ -84,14 +93,14 @@ def test_create_user_with_wrong_content_type(client_with_admin_permissions):
 
 
 @pytest.mark.usefixtures('client_without_permissions', 'a_user')
-def test_create_dataset_without_required_permissions(client_without_permissions, a_user):
+def test_create_user_without_required_permissions(client_without_permissions, a_user):
     result = client_without_permissions.post('/api/v1/user', json=a_user)
     assert 'error' in result.get_json()
     assert result.status_code == HTTPStatus.UNAUTHORIZED
 
 
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_user')
-def test_create_dataset_with_insufficient_permissions(client_with_push_user_permissions, a_user):
+def test_create_user_with_insufficient_permissions(client_with_push_user_permissions, a_user):
     result = client_with_push_user_permissions.post('/api/v1/user', json=a_user)
     assert 'error' in result.get_json()
     assert result.status_code == HTTPStatus.FORBIDDEN
@@ -212,6 +221,44 @@ def test_update_user_with_invalid_body(client_with_admin_permissions, a_user):
     assert result.status_code == HTTPStatus.BAD_REQUEST
 
 
+@pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
+def test_update_user_with_invalid_name(client_with_admin_permissions, a_user):
+    invalid_user = dict(a_user)
+    invalid_user['name'] = 'abc;'
+    result = client_with_admin_permissions.put('/api/v1/user/1', json=invalid_user)
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
+def test_update_user_with_too_long_name(client_with_admin_permissions, a_user):
+    invalid_user = dict(a_user)
+    invalid_user['name'] = ''.join(['a' for i in range(0, 31)])
+    result = client_with_admin_permissions.put('/api/v1/user/1', json=invalid_user)
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
+def test_update_user_with_invalid_role(client_with_admin_permissions, a_user):
+    invalid_user = dict(a_user)
+    invalid_user['role'] = 'ADMIN;'
+    result = client_with_admin_permissions.put('/api/v1/user/1', json=invalid_user)
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
+def test_update_user_with_too_long_password(client_with_admin_permissions, a_user):
+    create_result = client_with_admin_permissions.post('/api/v1/user', json=a_user)
+    id = create_result.get_json()['id']
+    user_with_too_long_new_password = dict(a_user)
+    user_with_too_long_new_password['password'] = ''.join(['a' for i in range(0, 31)])
+    result = client_with_admin_permissions.put('/api/v1/user/{}'.format(id), json=user_with_too_long_new_password)
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
 @pytest.mark.usefixtures('client_with_admin_permissions')
 def test_update_user_with_wrong_content_type(client_with_admin_permissions):
     result = client_with_admin_permissions.put('/api/v1/user/1', data={}, content_type='text/html')
@@ -246,6 +293,13 @@ def test_delete_user(client_with_admin_permissions, a_user, another_user):
 @pytest.mark.usefixtures('client_with_admin_permissions')
 def test_delete_not_existing_user(client_with_admin_permissions):
     result = client_with_admin_permissions.delete('/api/v1/user/1')
+    assert len(result.data) == 0  # no JSON, as the body is empty
+    assert result.status_code == HTTPStatus.NO_CONTENT
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions')
+def test_delete_user_with_invalid_input(client_with_admin_permissions):
+    result = client_with_admin_permissions.delete('/api/v1/user/something;')
     assert len(result.data) == 0  # no JSON, as the body is empty
     assert result.status_code == HTTPStatus.NO_CONTENT
 
@@ -308,3 +362,30 @@ def test_login_with_wrong_password(client_with_admin_permissions, a_user):
     login_result = client.post('/api/v1/login', json=user_with_invalid_password)
     assert 'error' in login_result.get_json()
     assert login_result.status_code == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.usefixtures('client_without_permissions', 'a_user')
+def test_login_with_invalid_name(client_without_permissions, a_user):
+    invalid_user = dict(a_user)
+    invalid_user['name'] = 'abc;'
+    login_result = client_without_permissions.post('/api/v1/login', json=invalid_user)
+    assert 'error' in login_result.get_json()
+    assert login_result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_without_permissions', 'a_user')
+def test_login_with_too_long_name(client_without_permissions, a_user):
+    invalid_user = dict(a_user)
+    invalid_user['name'] = ''.join(['a' for i in range(0, 31)])
+    result = client_without_permissions.post('/api/v1/login', json=invalid_user)
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_without_permissions', 'a_user')
+def test_login_with_too_long_password(client_without_permissions, a_user):
+    invalid_user = dict(a_user)
+    invalid_user['password'] = ''.join(['a' for i in range(0, 31)])
+    result = client_without_permissions.post('/api/v1/login', json=invalid_user)
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
