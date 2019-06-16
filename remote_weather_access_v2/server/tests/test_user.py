@@ -31,6 +31,33 @@ def test_create_two_users(client_with_admin_permissions, a_user, another_user):
 
 
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
+def test_create_user_with_invalid_name(client_with_admin_permissions, a_user):
+    invalid_user = dict(a_user)
+    invalid_user['name'] = 'abc;'
+    result = client_with_admin_permissions.post('/api/v1/user', json=invalid_user)
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
+def test_create_user_with_too_long_name(client_with_admin_permissions, a_user):
+    invalid_user = dict(a_user)
+    invalid_user['name'] = ''.join(['a' for i in range(0, 31)])
+    result = client_with_admin_permissions.post('/api/v1/user', json=invalid_user)
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
+def test_create_user_with_invalid_role(client_with_admin_permissions, a_user):
+    invalid_user = dict(a_user)
+    invalid_user['role'] = 'ADMIN;'
+    result = client_with_admin_permissions.post('/api/v1/user', json=invalid_user)
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
 def test_create_same_user_twice(client_with_admin_permissions, a_user):
     result = client_with_admin_permissions.post('/api/v1/user', json=a_user)
     assert result.status_code == HTTPStatus.CREATED

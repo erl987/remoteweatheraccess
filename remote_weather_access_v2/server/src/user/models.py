@@ -1,11 +1,17 @@
+import re
+from http import HTTPStatus
+
 from sqlalchemy.orm import validates
 
+from ..exceptions import APIError
 from ..extensions import db, flask_bcrypt
 from ..utils import ROLES, Role, generate_random_password
 
 
 class FullUser(db.Model):
     __tablename__ = 'users'
+
+    _USER_NAME_REGEX = re.compile(r'^(?![-._])(?!.*[_.-]{2})[\w.-]{3,30}(?<![-._])$')
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
@@ -14,7 +20,15 @@ class FullUser(db.Model):
 
     @validates('role')
     def validate_role(self, key, value):
-        assert value.upper() in ROLES
+        if value.upper() not in ROLES:
+            raise APIError('Role not existing', status_code=HTTPStatus.BAD_REQUEST)
+        return value
+
+    @validates('name')
+    def validate_name(self, key, value):
+        if FullUser._USER_NAME_REGEX.match(value) is None:
+            raise APIError('User name does not fulfill constraints (3-30 characters, only letters, digits and "-_.")'
+                           .format(id), status_code=HTTPStatus.BAD_REQUEST)
         return value
 
     def save_to_db(self, do_add=True):
