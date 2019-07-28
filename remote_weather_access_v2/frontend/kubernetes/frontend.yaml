@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: weather-frontend-service
+  labels:
+    app.kubernetes.io/name: weather-app
+    app.kubernetes.io/instance: weather-app-12345
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: nginx
+    app.kubernetes.io/managed-by: helm
+spec:
+  selector:
+      app.kubernetes.io/name: weather-app
+      app.kubernetes.io/instance: weather-app-12345
+      tier: frontend
+  ports:
+    - protocol: TCP
+      port: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-frontend-deployment
+  labels:
+    app.kubernetes.io/name: weather-app
+    app.kubernetes.io/instance: weather-app-12345
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: nginx
+    app.kubernetes.io/managed-by: helm
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: weather-app
+      app.kubernetes.io/instance: weather-app-12345
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: weather-app
+        app.kubernetes.io/instance: weather-app-12345
+        tier: frontend
+    spec:
+      containers:
+        - name: weather-frontend
+          image: ralf/weather-frontend:0.1
+          ports:
+            - name: http
+              containerPort: 80
+          volumeMounts:
+            - name: nginx-configs
+              mountPath: /etc/nginx/conf.d
+            - mountPath: /usr/share/nginx/html/ECK
+              name: content-eck
+            - mountPath: /usr/share/nginx/html/NBG
+              name: content-nbg
+            - mountPath: /usr/share/nginx/html/SOL
+              name: content-sol
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+      volumes:
+        - name : nginx-configs
+          configMap:
+            name: nginx-config
+        - name: content-eck
+          hostPath:
+            path: /opt/weather-app/ECK
+        - name: content-nbg
+          hostPath:
+            path: /opt/weather-app/NBG
+        - name: content-sol
+          hostPath:
+            path: /opt/weather-app/SOL
