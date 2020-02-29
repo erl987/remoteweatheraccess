@@ -6,7 +6,7 @@ from ..extensions import db
 from ..exceptions import raise_api_error, APIError
 from ..utils import Role
 from .serializers import deserialize_base_station_dataset, base_station_schema, time_range_schema, \
-    base_stations_schema, TimeRangeSchema
+    base_stations_schema, TimeRangeSchema, deserialize_weather_data_message
 from .models import BaseStationData
 from ..utils import access_level_required, rollback_and_raise_exception, to_utc
 
@@ -19,7 +19,8 @@ weatherdata_blueprint = Blueprint('data', __name__, url_prefix='/api/v1/data')
 @rollback_and_raise_exception
 def add_weather_dataset():
     try:
-        new_dataset = deserialize_base_station_dataset(request.json)
+        new_dataset = deserialize_weather_data_message(request.json)
+        #new_dataset = deserialize_base_station_dataset(request.json)
     except Exception as e:
         raise raise_api_error(e, status_code=HTTPStatus.BAD_REQUEST)
 
