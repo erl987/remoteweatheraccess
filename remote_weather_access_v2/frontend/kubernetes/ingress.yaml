@@ -1,0 +1,27 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: "weather-app-ingress-service"
+  labels:
+    app.kubernetes.io/name: weather-app
+    app.kubernetes.io/instance: weather-app-12345
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/part-of: nginx
+    app.kubernetes.io/managed-by: helm
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+#  tls:
+#    - hosts:
+#        - radixproductions.selfhost.me
+#      secretName: letsencrypt-certs
+  rules:
+    - #host: radixproductions.srvdns.de
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: weather-frontend-service
+              servicePort: 80
