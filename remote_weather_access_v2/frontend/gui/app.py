@@ -2,6 +2,7 @@ from datetime import timedelta, datetime
 
 import dash
 from dash.dependencies import Input, Output
+import utils.dash_reusable_components as drc
 import dash_core_components as dcc
 import dash_html_components as html
 import dateutil
@@ -13,9 +14,7 @@ from remote_weather_access.server.sqldatabase import SQLWeatherDB
 db_file_name = r"C:\Users\Ralf\Documents\code\remote-weather-access\remote_weather_access_v2\frontend\gui\weather.db"
 initial_time_period = timedelta(days=7)
 
-external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
-
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app = dash.Dash(__name__)
 
 sensor_mapping = {"uv": {"description": "Luftdruck",
                          "id": (BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE)},
@@ -49,43 +48,130 @@ for internal_sensor_id, sensor_info in sensor_mapping.items():
     available_sensors.append({"label": sensor_info["description"], "value": internal_sensor_id})
 
 available_stations = []
+station_info_tabs = []
 for station_id in weather_db.get_stations():
     available_stations.append({"label": station_id, "value": station_id})
+    station_metadata = weather_db.get_station_metadata(station_id)
+    device = station_metadata.get_device_info()
+    location = station_metadata.get_location_info()
+    latitude, longitude, height = station_metadata.get_geo_info()
+    if latitude > 0:
+        latitude_str = "{}\N{DEGREE SIGN} N".format(latitude)
+    else:
+        latitude_str = "{}\N{DEGREE SIGN} S".format(latitude)
+    if longitude > 0:
+        longitude_str = "{}\N{DEGREE SIGN} O".format(longitude)
+    else:
+        longitude_str = "{}\N{DEGREE SIGN} W".format(longitude)
+
+    station_info_tabs.append(
+        dcc.Tab(
+            label=station_id,
+            value=station_id,
+            children=[
+                html.Div(
+                    id="location_info_div_{}".format(station_id),
+                    children=[
+                    html.P(children="Standort"),
+                        dcc.Input(
+                            id="location_info_{}".format(station_id),
+                            placeholder=location,
+                        )
+                    ]
+                ),
+                html.Div(
+                    id="height_info_div_{}".format(station_id),
+                    children=[
+                        html.P(children="Höhe"),
+                        dcc.Input(
+                            id="height_info_{}".format(station_id),
+                            placeholder="{} m".format(height),
+                        )
+                    ]
+                ),
+                html.Div(
+                    id="coordinates_info_div_{}".format(station_id),
+                    children=[
+                        html.P(children="Koordinaten"),
+                        dcc.Input(
+                            id="coordinates_info_{}".format(station_id),
+                            placeholder="{} / {}".format(latitude_str, longitude_str),
+                        )
+                    ]
+                ),
+                html.Div(
+                    id="device_info_div_{}".format(station_id),
+                    children=[
+                        html.P(children="Wetterstation"),
+                        dcc.Input(
+                            id="device_info_{}".format(station_id),
+                            placeholder=device,
+                        )
+                    ]
+                )
+            ]
+        )
+    )
 
 app.layout = html.Div(children=[
     html.H1(children="Wetterdaten"),
 
-    dcc.Graph(id="weather-data-graph"),
-
-    html.H2(children="Sensoren"),
-
-    dcc.Dropdown(
-      id="sensor-dropdown",
-      options=available_sensors,
-      value=available_sensors[0]["value"],
-      multi=True
-    ),
-
-    html.H2(children="Station"),
-
-    dcc.Dropdown(
-        id="station-dropdown",
-        options=available_stations,
-        value=available_stations[-1]["value"],
-        multi=True
-    ),
-
-    html.H2(children="Zeitraum"),
-
     html.Div(
-        dcc.DatePickerRange(
-            id="time-period-picker",
-            min_date_allowed=datetime(2000, 1, 1),
-            max_date_allowed=last_time,
-            initial_visible_month=last_time,
-            start_date=last_time - initial_time_period,
-            end_date=last_time
-        )
+        children=[
+
+            html.Div(
+                children=[
+
+                    html.Div(
+                        children=[
+
+                            html.Div(
+                                children=[
+                                    drc.NamedDropdown(
+                                        name="Sensoren",
+                                        id="sensor-dropdown",
+                                        options=available_sensors,
+                                        value=available_sensors[0]["value"],
+                                        multi=True
+                                    ),
+
+                                    drc.NamedDropdown(
+                                        name="Station",
+                                        id="station-dropdown",
+                                        options=available_stations,
+                                        value=available_stations[-1]["value"],
+                                        multi=True
+                                    ),
+
+                                    drc.NamedDatePickerRange(
+                                        name="Zeitraum",
+                                        id="time-period-picker",
+                                        min_date_allowed=datetime(2000, 1, 1),
+                                        max_date_allowed=last_time,
+                                        initial_visible_month=last_time,
+                                        start_date=last_time - initial_time_period,
+                                        end_date=last_time
+                                    ),
+
+                                    dcc.Tabs(
+                                        id="station-info-tabs",
+                                        children=station_info_tabs
+                                    ),
+                                ],
+                                style={'width': '20%', 'display': 'inline-block'}
+                            ),
+
+                            html.Div(
+                                children=[
+                                    dcc.Graph(id="weather-data-graph")
+                                ],
+                                style={'width': '80%', 'display': 'inline-block'}
+                            )
+                        ]
+                    )
+                ]
+            )
+        ]
     )
 ])
 
