@@ -159,7 +159,8 @@ class SQLWeatherDB(object):
         :type db_file:              string
         """
         # open the database
-        self._sql = sqlite3.connect(db_file, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
+        self._sql = sqlite3.connect(db_file, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES,
+                                    check_same_thread=False)
         self._sql.row_factory = sqlite3.Row
 
         # create the SQL tables if required
