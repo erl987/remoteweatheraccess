@@ -200,13 +200,31 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
             data = weather_db.get_data_in_time_range(station_id, start_time, end_time)
             time = [line.get_time() for line in data]
             sensor_data = [float(line.get_sensor_value(sensor_tuple)) for line in data]
-            plot_data.append({"x": time, "y": sensor_data,
-                              "name": "{} - {}".format(station_id, sensor_description)})
+            plot_data.append({"x": time,
+                              "y": sensor_data,
+                              "name": "{} - {}".format(station_id, sensor_description),
+                              "linewidth": 2})
 
     figure_config = {
         "data": plot_data,
         "layout": {
-            "title": "Wetterdaten"
+            "plot_bgcolor": "#282b38",
+            "paper_bgcolor": "#282b38",
+            "xaxis": {
+                "color":  "#a5b1cd",
+                "linewidth": 2,
+                "gridcolor": "#a5b1cd"
+            },
+            "yaxis": {
+                "color": "#a5b1cd",
+                "linewidth": 2,
+                "gridcolor": "#a5b1cd"
+            },
+            "legend": {
+                "font": {
+                    "color": "#a5b1cd"
+                }
+            }
         }
     }
 
