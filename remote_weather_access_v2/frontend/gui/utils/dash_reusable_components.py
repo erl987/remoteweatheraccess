@@ -54,6 +54,16 @@ def NamedDatePickerRange(name, **kwargs):
     )
 
 
+def NamedTabs(name, **kwargs):
+    return html.Div(
+        style={"margin": "10px 0 px"},
+        children=[
+            html.P(className="label", children=f"{name}:", style={"margin-left": "3px"}),
+            dcc.Tabs(**kwargs)
+        ]
+    )
+
+
 def NamedRadioItems(name, **kwargs):
     return html.Div(
         style={"padding": "20px 10px 25px 4px"},

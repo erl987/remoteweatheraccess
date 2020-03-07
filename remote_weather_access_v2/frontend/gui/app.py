@@ -16,6 +16,20 @@ initial_time_period = timedelta(days=7)
 
 app = dash.Dash(__name__)
 
+tab_style = {
+    'borderBottom': '1px solid #d6d6d6',
+    'padding': '6px',
+    'fontWeight': 'bold'
+}
+
+tab_selected_style = {
+    'borderTop': '1px solid #d6d6d6',
+    'borderBottom': '1px solid #d6d6d6',
+    'backgroundColor': '#119DFF',
+    'color': 'white',
+    'padding': '6px'
+}
+
 sensor_mapping = {"uv": {"description": "Luftdruck",
                          "id": (BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE)},
                   "pressure": {"description": "UV",
@@ -68,14 +82,15 @@ for station_id in weather_db.get_stations():
         dcc.Tab(
             label=station_id,
             value=station_id,
-            className='custom-tab',
-            selected_className='custom-tab--selected',
+            style=tab_style,
+            selected_style=tab_selected_style,
             children=[
                 html.Div(
                     id="location_info_div_{}".format(station_id),
                     children=[
-                    html.P(className="label", children="Standort"),
+                        html.P(className="label", children="Standort:"),
                         dcc.Input(
+                            className="input",
                             id="location_info_{}".format(station_id),
                             placeholder=location,
                         )
@@ -84,8 +99,9 @@ for station_id in weather_db.get_stations():
                 html.Div(
                     id="height_info_div_{}".format(station_id),
                     children=[
-                        html.P(className="label", children="Höhe"),
+                        html.P(className="label", children="Höhe:"),
                         dcc.Input(
+                            className="input",
                             id="height_info_{}".format(station_id),
                             placeholder="{} m".format(height),
                         )
@@ -94,8 +110,9 @@ for station_id in weather_db.get_stations():
                 html.Div(
                     id="coordinates_info_div_{}".format(station_id),
                     children=[
-                        html.P(className="label", children="Koordinaten"),
+                        html.P(className="label", children="Koordinaten:"),
                         dcc.Input(
+                            className="input",
                             id="coordinates_info_{}".format(station_id),
                             placeholder="{} / {}".format(latitude_str, longitude_str),
                         )
@@ -104,8 +121,9 @@ for station_id in weather_db.get_stations():
                 html.Div(
                     id="device_info_div_{}".format(station_id),
                     children=[
-                        html.P(className="label", children="Wetterstation"),
+                        html.P(className="label", children="Wetterstation:"),
                         dcc.Input(
+                            className="input",
                             id="device_info_{}".format(station_id),
                             placeholder=device,
                         )
@@ -125,6 +143,16 @@ app.layout = html.Div(
             id="configuration",
 
             children=[
+                drc.NamedDatePickerRange(
+                    name="Zeitraum",
+                    id="time-period-picker",
+                    min_date_allowed=datetime(2000, 1, 1),
+                    max_date_allowed=last_time,
+                    initial_visible_month=last_time,
+                    start_date=last_time - initial_time_period,
+                    end_date=last_time
+                ),
+
                 drc.NamedDropdown(
                     name="Sensoren",
                     id="sensor-dropdown",
@@ -141,20 +169,11 @@ app.layout = html.Div(
                     multi=True
                 ),
 
-                drc.NamedDatePickerRange(
-                    name="Zeitraum",
-                    id="time-period-picker",
-                    min_date_allowed=datetime(2000, 1, 1),
-                    max_date_allowed=last_time,
-                    initial_visible_month=last_time,
-                    start_date=last_time - initial_time_period,
-                    end_date=last_time
-                ),
-
-                dcc.Tabs(
+                drc.NamedTabs(
+                    name="Stationsdaten",
                     id="station-info-tabs",
-                    parent_className='custom-tabs',
-                    className='custom-tabs-container',
+                    parent_className='station-info-tabs',
+                    className='station-info-tabs-container',
                     children=station_info_tabs
                 ),
             ]

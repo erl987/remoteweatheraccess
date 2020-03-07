@@ -12,6 +12,22 @@ body {
     font-size: 20px;
 }
 
+.input {
+    color: #a5b1cd;
+    font-size: 18px;
+    width: 80%;
+    background-color: #282b38;
+    border: 1px solid gray;
+    border-radius: 4px;
+}
+
+.station-info-tabs {
+    border: 1px solid gray;
+    border-radius: 4px;
+    background-color: #2f3445;
+    padding: 10px;
+}
+
 #configuration {
     float: left;
     width: 25%;
@@ -20,25 +36,6 @@ body {
 #diagram {
     float: right;
     width: 70%;
-}
-
-/* Tabs */
-.custom-tabs {
-    border-radius: 4px;
-    background-color: #2f3445;
-    border: 1px solid #a5b1cd;
-}
-
-.custom-tab {
-    font-weight: bold;
-    color: red;
-    background-color: blue;
-}
-
-.custom-tab--selected {
-    font-weight: lighter;
-    color: blue;
-    background-color: red;
 }
 
 /* Dropdowns
