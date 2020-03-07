@@ -68,11 +68,13 @@ for station_id in weather_db.get_stations():
         dcc.Tab(
             label=station_id,
             value=station_id,
+            className='custom-tab',
+            selected_className='custom-tab--selected',
             children=[
                 html.Div(
                     id="location_info_div_{}".format(station_id),
                     children=[
-                    html.P(children="Standort"),
+                    html.P(className="label", children="Standort"),
                         dcc.Input(
                             id="location_info_{}".format(station_id),
                             placeholder=location,
@@ -82,7 +84,7 @@ for station_id in weather_db.get_stations():
                 html.Div(
                     id="height_info_div_{}".format(station_id),
                     children=[
-                        html.P(children="Höhe"),
+                        html.P(className="label", children="Höhe"),
                         dcc.Input(
                             id="height_info_{}".format(station_id),
                             placeholder="{} m".format(height),
@@ -92,7 +94,7 @@ for station_id in weather_db.get_stations():
                 html.Div(
                     id="coordinates_info_div_{}".format(station_id),
                     children=[
-                        html.P(children="Koordinaten"),
+                        html.P(className="label", children="Koordinaten"),
                         dcc.Input(
                             id="coordinates_info_{}".format(station_id),
                             placeholder="{} / {}".format(latitude_str, longitude_str),
@@ -102,7 +104,7 @@ for station_id in weather_db.get_stations():
                 html.Div(
                     id="device_info_div_{}".format(station_id),
                     children=[
-                        html.P(children="Wetterstation"),
+                        html.P(className="label", children="Wetterstation"),
                         dcc.Input(
                             id="device_info_{}".format(station_id),
                             placeholder=device,
@@ -113,67 +115,61 @@ for station_id in weather_db.get_stations():
         )
     )
 
-app.layout = html.Div(children=[
-    html.H1(children="Wetterdaten"),
+app.layout = html.Div(
+    id="app-container",
 
-    html.Div(
-        children=[
+    children=[
+        html.H1(className="heading", children="Wetterdaten"),
 
-            html.Div(
-                children=[
+        html.Div(
+            id="configuration",
 
-                    html.Div(
-                        children=[
+            children=[
+                drc.NamedDropdown(
+                    name="Sensoren",
+                    id="sensor-dropdown",
+                    options=available_sensors,
+                    value=available_sensors[0]["value"],
+                    multi=True
+                ),
 
-                            html.Div(
-                                children=[
-                                    drc.NamedDropdown(
-                                        name="Sensoren",
-                                        id="sensor-dropdown",
-                                        options=available_sensors,
-                                        value=available_sensors[0]["value"],
-                                        multi=True
-                                    ),
+                drc.NamedDropdown(
+                    name="Station",
+                    id="station-dropdown",
+                    options=available_stations,
+                    value=available_stations[-1]["value"],
+                    multi=True
+                ),
 
-                                    drc.NamedDropdown(
-                                        name="Station",
-                                        id="station-dropdown",
-                                        options=available_stations,
-                                        value=available_stations[-1]["value"],
-                                        multi=True
-                                    ),
+                drc.NamedDatePickerRange(
+                    name="Zeitraum",
+                    id="time-period-picker",
+                    min_date_allowed=datetime(2000, 1, 1),
+                    max_date_allowed=last_time,
+                    initial_visible_month=last_time,
+                    start_date=last_time - initial_time_period,
+                    end_date=last_time
+                ),
 
-                                    drc.NamedDatePickerRange(
-                                        name="Zeitraum",
-                                        id="time-period-picker",
-                                        min_date_allowed=datetime(2000, 1, 1),
-                                        max_date_allowed=last_time,
-                                        initial_visible_month=last_time,
-                                        start_date=last_time - initial_time_period,
-                                        end_date=last_time
-                                    ),
+                dcc.Tabs(
+                    id="station-info-tabs",
+                    parent_className='custom-tabs',
+                    className='custom-tabs-container',
+                    children=station_info_tabs
+                ),
+            ]
+        ),
 
-                                    dcc.Tabs(
-                                        id="station-info-tabs",
-                                        children=station_info_tabs
-                                    ),
-                                ],
-                                style={'width': '20%', 'display': 'inline-block'}
-                            ),
+        html.Div(
+            id="diagram",
 
-                            html.Div(
-                                children=[
-                                    dcc.Graph(id="weather-data-graph")
-                                ],
-                                style={'width': '80%', 'display': 'inline-block'}
-                            )
-                        ]
-                    )
-                ]
-            )
-        ]
-    )
-])
+            children=[
+                dcc.Graph(id="weather-data-graph",
+                          style={"height": "70vh"})
+            ]
+        )
+    ]
+)
 
 
 @app.callback(

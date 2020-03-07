@@ -1,0 +1,193 @@
+body {
+    background-color: #282b38;
+}
+
+.heading {
+    color: #95969a;
+    font-size: 30px;
+}
+
+.label {
+    color: #95969a;
+    font-size: 20px;
+}
+
+#configuration {
+    float: left;
+    width: 25%;
+}
+
+#diagram {
+    float: right;
+    width: 70%;
+}
+
+/* Tabs */
+.custom-tabs {
+    border-radius: 4px;
+    background-color: #2f3445;
+    border: 1px solid #a5b1cd;
+}
+
+.custom-tab {
+    font-weight: bold;
+    color: red;
+    background-color: blue;
+}
+
+.custom-tab--selected {
+    font-weight: lighter;
+    color: blue;
+    background-color: red;
+}
+
+/* Dropdowns
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.Select-control {
+    color: #a5b1cd;
+}
+
+.Select {
+    color: #a5b1cd;
+}
+
+.Select-menu-outer {
+    background-color: #2f3445;
+    border: 1px solid gray;
+}
+
+.Select div {
+    background-color: #2f3445;
+}
+
+.Select-menu-outer div:hover {
+    background-color: rgba(255, 255, 255, 0.01);
+}
+
+.Select-value-label {
+    color: #a5b1cd !important;
+}
+
+.Select--single > .Select-control .Select-value, .Select-placeholder {
+    border: 1px solid gray;
+    border-radius: 4px;
+}
+
+.card {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    width: 80%;
+    padding: 2rem 0;
+}
+
+#last-card {
+    border-bottom: none;
+}
+
+.graph-title {
+    font-size: 2rem;
+    margin: 15% 0 0 25%;
+}
+
+#button-zero-threshold {
+    background-color: #2f3445;
+    color: #a5b1cd;
+    border-color: gray;
+}
+
+#button-zero-threshold:hover {
+    border-color: white;
+}
+
+#button-card {
+    display: flex;
+    flex-direction: column;
+}
+
+#first-card {
+    padding-top: 0;
+}
+
+@media (max-width: 1500px) {
+    .rc-slider-mark-text {
+        font-size: 0.7vw;
+    }
+}
+
+@media (max-width: 950px) {
+    .rc-slider-mark-text {
+        font-size: 1.5vw;
+    }
+}
+
+
+@media (max-width: 650px) {
+    .rc-slider-mark-text {
+        font-size: 2vw;
+    }
+}
+
+
+@media (min-width: 1301px) {
+    #left-column {
+        flex: 1 20%;
+        margin: 0 3rem 0 0;
+        max-height: 83rem;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    .card {
+        padding-left: 2rem;
+    }
+}
+
+@media (max-width: 1300px) {
+    #left-column {
+        flex: 1 20%;
+        margin: 0 3rem 0 0;
+        max-height: 70rem;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+}
+
+@media (max-width: 1200px) {
+    #button-zero-threshold {
+        font-size: 0.8rem;
+        padding: 0
+    }
+}
+
+@media (max-width: 950px) {
+    #button-zero-threshold {
+        font-size: 1.0rem;
+        padding: 0
+    }
+}
+
+@media (max-width: 950px) {
+    #left-column {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0;
+        max-height: none;
+        max-width: none;
+    }
+}
+
+@media (max-width: 700px) {
+    #first-card {
+        margin: 0;
+        padding-right: 0;
+        padding-left: 0;
+    }
+}
+
+
+/* Remove Undo
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+#graph-line-roc-curve .modebar, #graph-pie-confusion-matrix .modebar {
+    display: none;
+}
