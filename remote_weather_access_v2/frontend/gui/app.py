@@ -88,8 +88,8 @@ for station_id in weather_db.get_stations():
                 html.Div(
                     id="location_info_div_{}".format(station_id),
                     children=[
-                        html.P(className="label", children="Standort:"),
-                        dcc.Input(
+                        drc.NamedInput(
+                            name="Standort",
                             className="input",
                             id="location_info_{}".format(station_id),
                             placeholder=location,
@@ -99,8 +99,8 @@ for station_id in weather_db.get_stations():
                 html.Div(
                     id="height_info_div_{}".format(station_id),
                     children=[
-                        html.P(className="label", children="Höhe:"),
-                        dcc.Input(
+                        drc.NamedInput(
+                            name="Höhe",
                             className="input",
                             id="height_info_{}".format(station_id),
                             placeholder="{} m".format(height),
@@ -110,8 +110,8 @@ for station_id in weather_db.get_stations():
                 html.Div(
                     id="coordinates_info_div_{}".format(station_id),
                     children=[
-                        html.P(className="label", children="Koordinaten:"),
-                        dcc.Input(
+                        drc.NamedInput(
+                            name="Koordinaten",
                             className="input",
                             id="coordinates_info_{}".format(station_id),
                             placeholder="{} / {}".format(latitude_str, longitude_str),
@@ -121,8 +121,8 @@ for station_id in weather_db.get_stations():
                 html.Div(
                     id="device_info_div_{}".format(station_id),
                     children=[
-                        html.P(className="label", children="Wetterstation:"),
-                        dcc.Input(
+                        drc.NamedInput(
+                            name="Wetterstation",
                             className="input",
                             id="device_info_{}".format(station_id),
                             placeholder=device,
