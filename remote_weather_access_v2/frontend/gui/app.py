@@ -16,20 +16,6 @@ initial_time_period = timedelta(days=7)
 
 app = dash.Dash(__name__)
 
-tab_style = {
-    'borderBottom': '1px solid #d6d6d6',
-    'padding': '6px',
-    'fontWeight': 'bold'
-}
-
-tab_selected_style = {
-    'borderTop': '1px solid #d6d6d6',
-    'borderBottom': '1px solid #d6d6d6',
-    'backgroundColor': '#ff4444',
-    'color': 'white',
-    'padding': '6px'
-}
-
 config_plots = {"locale": "de"}
 
 sensor_mapping = {"uv": {"description": "Luftdruck",
@@ -82,10 +68,10 @@ for station_id in weather_db.get_stations():
 
     station_info_tabs.append(
         dcc.Tab(
+            className="station-info-tab--selector",
             label=station_id,
             value=station_id,
-            style=tab_style,
-            selected_style=tab_selected_style,
+            selected_className="station-info-tab--selected",
             children=[
                 html.Div(
                     id="location_info_div_{}".format(station_id),
@@ -152,7 +138,10 @@ app.layout = html.Div(
                     max_date_allowed=last_time,
                     initial_visible_month=last_time,
                     start_date=last_time - initial_time_period,
-                    end_date=last_time
+                    end_date=last_time,
+                    display_format="DD.MM.YYYY",
+                    start_date_placeholder_text="Datum auswählen ...",
+                    first_day_of_week=1
                 ),
 
                 drc.NamedDropdown(
@@ -186,8 +175,7 @@ app.layout = html.Div(
 
             children=[
                 dcc.Graph(id="weather-data-graph",
-                          config=config_plots,
-                          style={"height": "70vh"})
+                          config=config_plots)
             ]
         )
     ]

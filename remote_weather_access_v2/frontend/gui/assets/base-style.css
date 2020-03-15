@@ -13,6 +13,13 @@ body {
     font-size: 18px;
 }
 
+#configuration {
+    float: left;
+    width: 25%;
+}
+
+/* Inputs
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
 .input {
     color: white;
     font-size: 16px;
@@ -22,21 +29,44 @@ body {
     border-radius: 4px;
 }
 
-.station-info-tabs {
+/* Tabs
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+#configuration .station-info-tabs {
     border: 1px solid #a5b1cd;
     border-radius: 4px;
     background-color: #2f3445;
     padding: 10px;
 }
 
-#configuration {
-    float: left;
-    width: 25%;
+#configuration .station-info-tab--selector {
+    border-bottom: 1px solid #d6d6d6;
+    padding: 6px;
+    font-weight: bold;
 }
 
+#configuration .station-info-tab--selected {
+    border-top: 1px solid #d6d6d6;
+    border-bottom: 1px solid #d6d6d6;
+    background-color: #ff4444;
+    color: white;
+    padding: 6px;
+}
+
+/* Diagram
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
 #diagram {
     float: right;
     width: 70%;
+}
+
+#weather-data-graph {
+    height: 70vh;
+}
+
+/* Date picker
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+#time-period-picker {
+    font-size: 30px;
 }
 
 /* Dropdowns
