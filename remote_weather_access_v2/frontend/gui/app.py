@@ -30,6 +30,8 @@ tab_selected_style = {
     'padding': '6px'
 }
 
+config_plots = {"locale": "de"}
+
 sensor_mapping = {"uv": {"description": "Luftdruck",
                          "id": (BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE)},
                   "pressure": {"description": "UV",
@@ -184,6 +186,7 @@ app.layout = html.Div(
 
             children=[
                 dcc.Graph(id="weather-data-graph",
+                          config=config_plots,
                           style={"height": "70vh"})
             ]
         )
