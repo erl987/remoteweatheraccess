@@ -65,19 +65,43 @@ body {
 
 /* Date picker
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
-#time-period-picker {
-    font-size: 30px;
+/* Will edit everything selected including everything between a range of dates */
+#configuration .CalendarDay__selected_span {
+    background-color: #ff4444;
+    border: none;
+    color: white;
 }
+
+/* Will edit selected date or the endpoints of a range of dates */
+#configuration .CalendarDay__selected {
+    background-color: #ff4444;
+    border: none;
+    color: white;
+}
+
+/* Will edit when hovered over. _span style also has this property */
+#configuration .CalendarDay__selected:hover {
+  background-color: orange;
+  color: white;
+}
+
+/* Will edit when the second date (end date) in a range of dates
+   is not yet selected. Edits the dates between your mouse and said date */
+#configuration .CalendarDay__hovered_span, .CalendarDay__hovered_span {
+  background-color: orange;
+  color: white;
+}
+
 
 /* Dropdowns
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 #configuration .Select--multi .Select-value {
-  background-color: #ff4444;
-  color: white;
+    background-color: #ff4444;
+    color: white;
 }
 
 #configuration .VirtualizedSelectFocusedOption {
-  background-color: #ffeedd;
+    background-color: #ffeedd;
 }
 
 #configuration .Select-control {

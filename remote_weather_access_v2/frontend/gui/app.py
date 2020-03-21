@@ -2,6 +2,8 @@ from datetime import timedelta, datetime
 
 import dash
 from dash.dependencies import Input, Output
+from dash.exceptions import PreventUpdate
+
 import utils.dash_reusable_components as drc
 import dash_core_components as dcc
 import dash_html_components as html
@@ -136,11 +138,12 @@ app.layout = html.Div(
                     id="time-period-picker",
                     min_date_allowed=datetime(2000, 1, 1),
                     max_date_allowed=last_time,
-                    initial_visible_month=last_time,
                     start_date=last_time - initial_time_period,
                     end_date=last_time,
                     display_format="DD.MM.YYYY",
-                    start_date_placeholder_text="Datum auswählen ...",
+                    stay_open_on_select=True,
+                    start_date_placeholder_text="Startdatum",
+                    end_date_placeholder_text="Enddatum",
                     first_day_of_week=1
                 ),
 
@@ -192,6 +195,9 @@ app.layout = html.Div(
 def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
     start_time = dateutil.parser.parse(start_time_str)
     end_time = dateutil.parser.parse(end_time_str)
+
+    if end_time < start_time:
+        raise PreventUpdate
 
     if isinstance(chosen_stations, str):
         chosen_stations = [chosen_stations]
