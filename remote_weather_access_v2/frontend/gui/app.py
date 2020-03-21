@@ -44,8 +44,16 @@ for station_id in weather_db.get_stations():
     last_time = max(last_time, weather_db.get_most_recent_time_with_data(station_id))
 combi_sensor_ids, combi_sensor_descriptions = weather_db.get_combi_sensors()
 for id in combi_sensor_ids:
-    sensor_mapping["{}_temp".format(id)] = {"description": "{} Temperatur".format(id), "id": (id, "temperature")}
-    sensor_mapping["{}_humid".format(id)] = {"description": "{} Luftfeuchte".format(id), "id": (id, "humidity")}
+    if id == "IN":
+        description = "innen"
+    elif id.startswith("OUT"):
+        description = "außen"
+    else:
+        description = "unknown"
+    sensor_mapping["{}_temp".format(id)] = {"description": "Temperatur {}".format(description),
+                                            "id": (id, "temperature")}
+    sensor_mapping["{}_humid".format(id)] = {"description": "Luftfeuchte {}".format(description),
+                                             "id": (id, "humidity")}
 
 available_sensors = []
 for internal_sensor_id, sensor_info in sensor_mapping.items():
@@ -54,11 +62,13 @@ for internal_sensor_id, sensor_info in sensor_mapping.items():
 available_stations = []
 station_info_tabs = []
 for station_id in weather_db.get_stations():
-    available_stations.append({"label": station_id, "value": station_id})
     station_metadata = weather_db.get_station_metadata(station_id)
     device = station_metadata.get_device_info()
     location = station_metadata.get_location_info()
     latitude, longitude, height = station_metadata.get_geo_info()
+    splitted_location_info = location.split("/")
+    station_town = splitted_location_info[0]
+    available_stations.append({"label": station_town, "value": station_id})
     if latitude > 0:
         latitude_str = "{}\N{DEGREE SIGN} N".format(latitude)
     else:
@@ -71,7 +81,7 @@ for station_id in weather_db.get_stations():
     station_info_tabs.append(
         dcc.Tab(
             className="station-info-tab--selector",
-            label=station_id,
+            label=station_town,
             value=station_id,
             selected_className="station-info-tab--selected",
             children=[
