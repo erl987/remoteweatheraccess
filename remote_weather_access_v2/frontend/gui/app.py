@@ -266,6 +266,7 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
             data = weather_db.get_data_in_time_range(station_id, start_time, end_time)
             time = [line.get_time() for line in data]
             sensor_data = [float(line.get_sensor_value(sensor_tuple)) for line in data]
+            sensor_unit = data[0].get_sensor_unit(sensor_tuple)
             plot_data.append({"x": time,
                               "y": sensor_data,
                               "name": "{} - {}".format(station_id, sensor_description),
@@ -280,7 +281,7 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
             else:
                 axis_name = "yaxis{}".format(sensor_index + 1)
             figure_layout[axis_name] = {
-                "title": sensor_description,
+                "title": "{} / {}".format(sensor_description, sensor_unit),
                 "titlefont": {
                     "color": color_list[color_index]
                 },
