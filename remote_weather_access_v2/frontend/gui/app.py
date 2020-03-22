@@ -1,4 +1,5 @@
 from datetime import timedelta, datetime
+from math import ceil
 
 import dash
 from dash.dependencies import Input, Output
@@ -20,6 +21,7 @@ app = dash.Dash(__name__)
 
 config_plots = {"locale": "de"}
 
+# default plot.ly colors
 color_list = [
     "#1f77b4",  # muted blue
     "#ff7f0e",  # safety orange
@@ -33,9 +35,6 @@ color_list = [
     "#17becf"]  # blue-teal
 
 SECONDARY_AXIS_OFFSET = 0.07
-MAX_NUM_PLOTTED_SENSORS_PER_SIDE = 3
-LEFT_MAIN_AXIS_POS = (MAX_NUM_PLOTTED_SENSORS_PER_SIDE - 1) * SECONDARY_AXIS_OFFSET
-RIGHT_MAIN_AXIS_POS = 1 - (MAX_NUM_PLOTTED_SENSORS_PER_SIDE - 1) * SECONDARY_AXIS_OFFSET
 
 sensor_mapping = {"uv": {"description": "Luftdruck",
                          "id": (BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE)},
@@ -62,8 +61,7 @@ figure_layout = {
         "tickformat": "%a\n%d.%m.%Y",
         "color": "#a5b1cd",
         "linewidth": 2,
-        "gridcolor": "#a5b1cd",
-        "domain": [LEFT_MAIN_AXIS_POS, RIGHT_MAIN_AXIS_POS]
+        "gridcolor": "#a5b1cd"
     },
     "legend": {
         "font": {
@@ -248,8 +246,20 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
     if isinstance(sensors, str):
         sensors = [sensors]
 
+    num_axis_on_left = ceil(len(sensors) / 2)
+    num_axis_on_right = ceil((len(sensors) - 1) / 2)
+    left_main_axis_pos = num_axis_on_left * SECONDARY_AXIS_OFFSET
+    right_main_axis_pos = 1 - num_axis_on_right * SECONDARY_AXIS_OFFSET
+
+    figure_layout["xaxis"]["domain"] = [left_main_axis_pos, right_main_axis_pos]
+
     plot_data = []
+    color_index = 0
     for sensor_index, internal_sensor_id in enumerate(sensors):
+        color_index += 1
+        if color_index >= len(color_list):
+            color_index = 0
+
         sensor_tuple = sensor_mapping[internal_sensor_id]["id"]
         sensor_description = sensor_mapping[internal_sensor_id]["description"]
         for station_id in chosen_stations:
@@ -260,7 +270,7 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
                               "y": sensor_data,
                               "name": "{} - {}".format(station_id, sensor_description),
                               "line": {
-                                  "color": color_list[sensor_index],  # TODO: add an assert for out of bounds ...
+                                  "color": color_list[color_index],
                                   "width": 2,
                               },
                               "yaxis": "y{}".format(sensor_index + 1)})
@@ -272,12 +282,12 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
             figure_layout[axis_name] = {
                 "title": sensor_description,
                 "titlefont": {
-                    "color": color_list[sensor_index]
+                    "color": color_list[color_index]
                 },
                 "tickfont": {
-                    "color": color_list[sensor_index]
+                    "color": color_list[color_index]
                 },
-                "linecolor": color_list[sensor_index]
+                "linecolor": color_list[color_index]
             }
 
             if sensor_index == 0:
@@ -289,10 +299,10 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
 
             if sensor_index % 2 == 0:
                 figure_layout[axis_name]["side"] = "left"
-                figure_layout[axis_name]["position"] = LEFT_MAIN_AXIS_POS - sensor_index / 2 * SECONDARY_AXIS_OFFSET
+                figure_layout[axis_name]["position"] = left_main_axis_pos - sensor_index / 2 * SECONDARY_AXIS_OFFSET
             else:
                 figure_layout[axis_name]["side"] = "right"
-                figure_layout[axis_name]["position"] = RIGHT_MAIN_AXIS_POS +\
+                figure_layout[axis_name]["position"] = right_main_axis_pos +\
                                                        (sensor_index - 1) / 2 * SECONDARY_AXIS_OFFSET
 
     figure_config = {
