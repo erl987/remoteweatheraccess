@@ -20,6 +20,23 @@ app = dash.Dash(__name__)
 
 config_plots = {"locale": "de"}
 
+color_list = [
+    "#1f77b4",  # muted blue
+    "#ff7f0e",  # safety orange
+    "#2ca02c",  # cooked asparagus green
+    "#d62728",  # brick red
+    "#9467bd",  # muted purple
+    "#8c564b",  # chestnut brown
+    "#e377c2",  # raspberry yogurt pink
+    "#7f7f7f",  # middle gray
+    "#bcbd22",  # curry yellow-green
+    "#17becf"]  # blue-teal
+
+SECONDARY_AXIS_OFFSET = 0.07
+MAX_NUM_PLOTTED_SENSORS_PER_SIDE = 3
+LEFT_MAIN_AXIS_POS = (MAX_NUM_PLOTTED_SENSORS_PER_SIDE - 1) * SECONDARY_AXIS_OFFSET
+RIGHT_MAIN_AXIS_POS = 1 - (MAX_NUM_PLOTTED_SENSORS_PER_SIDE - 1) * SECONDARY_AXIS_OFFSET
+
 sensor_mapping = {"uv": {"description": "Luftdruck",
                          "id": (BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE)},
                   "pressure": {"description": "UV",
@@ -37,6 +54,23 @@ sensor_mapping = {"uv": {"description": "Luftdruck",
                   "wind_chill": {"description": "Windchilltemperatur",
                                  "id": (WindSensorData.WIND, WindSensorData.WIND_CHILL)}
                   }
+
+figure_layout = {
+    "plot_bgcolor": "#282b38",
+    "paper_bgcolor": "#282b38",
+    "xaxis": {
+        "tickformat": "%a\n%d.%m.%Y",
+        "color": "#a5b1cd",
+        "linewidth": 2,
+        "gridcolor": "#a5b1cd",
+        "domain": [LEFT_MAIN_AXIS_POS, RIGHT_MAIN_AXIS_POS]
+    },
+    "legend": {
+        "font": {
+            "color": "#a5b1cd"
+        }
+    }
+}
 
 weather_db = SQLWeatherDB(db_file_name)
 last_time = datetime.min
@@ -215,7 +249,7 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
         sensors = [sensors]
 
     plot_data = []
-    for internal_sensor_id in sensors:
+    for sensor_index, internal_sensor_id in enumerate(sensors):
         sensor_tuple = sensor_mapping[internal_sensor_id]["id"]
         sensor_description = sensor_mapping[internal_sensor_id]["description"]
         for station_id in chosen_stations:
@@ -225,29 +259,45 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
             plot_data.append({"x": time,
                               "y": sensor_data,
                               "name": "{} - {}".format(station_id, sensor_description),
-                              "linewidth": 2})
+                              "line": {
+                                  "color": color_list[sensor_index],  # TODO: add an assert for out of bounds ...
+                                  "width": 2,
+                              },
+                              "yaxis": "y{}".format(sensor_index + 1)})
+
+            if sensor_index == 0:
+                axis_name = "yaxis"
+            else:
+                axis_name = "yaxis{}".format(sensor_index + 1)
+            figure_layout[axis_name] = {
+                "title": sensor_description,
+                "titlefont": {
+                    "color": color_list[sensor_index]
+                },
+                "tickfont": {
+                    "color": color_list[sensor_index]
+                },
+                "linecolor": color_list[sensor_index]
+            }
+
+            if sensor_index == 0:
+                figure_layout[axis_name]["gridcolor"] = "#a5b1cd"
+
+            if sensor_index > 0:
+                figure_layout[axis_name]["anchor"] = "free"
+                figure_layout[axis_name]["overlaying"] = "y"
+
+            if sensor_index % 2 == 0:
+                figure_layout[axis_name]["side"] = "left"
+                figure_layout[axis_name]["position"] = LEFT_MAIN_AXIS_POS - sensor_index / 2 * SECONDARY_AXIS_OFFSET
+            else:
+                figure_layout[axis_name]["side"] = "right"
+                figure_layout[axis_name]["position"] = RIGHT_MAIN_AXIS_POS +\
+                                                       (sensor_index - 1) / 2 * SECONDARY_AXIS_OFFSET
 
     figure_config = {
         "data": plot_data,
-        "layout": {
-            "plot_bgcolor": "#282b38",
-            "paper_bgcolor": "#282b38",
-            "xaxis": {
-                "color":  "#a5b1cd",
-                "linewidth": 2,
-                "gridcolor": "#a5b1cd"
-            },
-            "yaxis": {
-                "color": "#a5b1cd",
-                "linewidth": 2,
-                "gridcolor": "#a5b1cd"
-            },
-            "legend": {
-                "font": {
-                    "color": "#a5b1cd"
-                }
-            }
-        }
+        "layout": figure_layout
     }
 
     return figure_config
