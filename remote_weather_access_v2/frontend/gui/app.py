@@ -34,6 +34,9 @@ color_list = [
     "#bcbd22",  # curry yellow-green
     "#17becf"]  # blue-teal
 
+background_color = "#282b38"
+graph_front_color = "#a5b1cd"
+
 # default plot.ly styles
 dash_list = ["solid", "dash", "dot", "dashdot"]
 
@@ -58,17 +61,16 @@ sensor_mapping = {"uv": {"description": "Luftdruck",
                   }
 
 figure_layout = {
-    "plot_bgcolor": "#282b38",
-    "paper_bgcolor": "#282b38",
+    "plot_bgcolor": background_color,
+    "paper_bgcolor": background_color,
     "xaxis": {
-        "tickformat": "%a\n%d.%m.%Y",
-        "color": "#a5b1cd",
+        "color": graph_front_color,
         "linewidth": 2,
-        "gridcolor": "#a5b1cd"
+        "gridcolor": graph_front_color
     },
     "legend": {
         "font": {
-            "color": "#a5b1cd"
+            "color": graph_front_color
         }
     }
 }
@@ -284,7 +286,11 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
                                       "width": 2,
                                       "dash": dash_list[dash_index]
                                   },
-                                  "yaxis": "y{}".format(sensor_index + 1)})
+                                  "yaxis": "y{}".format(sensor_index + 1),
+                                  "hoverlabel": {
+                                      "namelength": "-1"
+                                  }
+                                  })
 
                 if sensor_index == 0:
                     axis_name = "yaxis"
@@ -302,7 +308,7 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
                 }
 
                 if sensor_index == 0:
-                    figure_layout[axis_name]["gridcolor"] = "#a5b1cd"
+                    figure_layout[axis_name]["gridcolor"] = graph_front_color
 
                 if sensor_index > 0:
                     figure_layout[axis_name]["anchor"] = "free"
