@@ -304,7 +304,8 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
                     "tickfont": {
                         "color": color_list[color_index]
                     },
-                    "linecolor": color_list[color_index]
+                    "linecolor": color_list[color_index],
+                    "zeroline": False
                 }
 
                 if sensor_index == 0:
@@ -313,6 +314,7 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
                 if sensor_index > 0:
                     figure_layout[axis_name]["anchor"] = "free"
                     figure_layout[axis_name]["overlaying"] = "y"
+                    figure_layout[axis_name]["showgrid"] = False
 
                 if sensor_index % 2 == 0:
                     figure_layout[axis_name]["side"] = "left"
