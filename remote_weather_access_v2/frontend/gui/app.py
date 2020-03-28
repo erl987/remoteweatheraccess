@@ -34,6 +34,9 @@ color_list = [
     "#bcbd22",  # curry yellow-green
     "#17becf"]  # blue-teal
 
+# default plot.ly styles
+dash_list = ["solid", "dash", "dot", "dashdot"]
+
 SECONDARY_AXIS_OFFSET = 0.07
 
 sensor_mapping = {"uv": {"description": "Luftdruck",
@@ -254,7 +257,7 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
     figure_layout["xaxis"]["domain"] = [left_main_axis_pos, right_main_axis_pos]
 
     plot_data = []
-    color_index = 0
+    color_index = -1
     for sensor_index, internal_sensor_id in enumerate(sensors):
         color_index += 1
         if color_index >= len(color_list):
@@ -262,49 +265,56 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
 
         sensor_tuple = sensor_mapping[internal_sensor_id]["id"]
         sensor_description = sensor_mapping[internal_sensor_id]["description"]
-        for station_id in chosen_stations:
+        dash_index = -1
+        for station_index, station_id in enumerate(chosen_stations):
+            dash_index += 1
+            if dash_index >= len(dash_list):
+                dash_index = 0
+
             data = weather_db.get_data_in_time_range(station_id, start_time, end_time)
             time = [line.get_time() for line in data]
             sensor_data = [float(line.get_sensor_value(sensor_tuple)) for line in data]
-            sensor_unit = data[0].get_sensor_unit(sensor_tuple)
-            plot_data.append({"x": time,
-                              "y": sensor_data,
-                              "name": "{} - {}".format(station_id, sensor_description),
-                              "line": {
-                                  "color": color_list[color_index],
-                                  "width": 2,
-                              },
-                              "yaxis": "y{}".format(sensor_index + 1)})
+            if len(data) > 0:
+                sensor_unit = data[0].get_sensor_unit(sensor_tuple)
+                plot_data.append({"x": time,
+                                  "y": sensor_data,
+                                  "name": "{} - {}".format(station_id, sensor_description),
+                                  "line": {
+                                      "color": color_list[color_index],
+                                      "width": 2,
+                                      "dash": dash_list[dash_index]
+                                  },
+                                  "yaxis": "y{}".format(sensor_index + 1)})
 
-            if sensor_index == 0:
-                axis_name = "yaxis"
-            else:
-                axis_name = "yaxis{}".format(sensor_index + 1)
-            figure_layout[axis_name] = {
-                "title": "{} / {}".format(sensor_description, sensor_unit),
-                "titlefont": {
-                    "color": color_list[color_index]
-                },
-                "tickfont": {
-                    "color": color_list[color_index]
-                },
-                "linecolor": color_list[color_index]
-            }
+                if sensor_index == 0:
+                    axis_name = "yaxis"
+                else:
+                    axis_name = "yaxis{}".format(sensor_index + 1)
+                figure_layout[axis_name] = {
+                    "title": "{} / {}".format(sensor_description, sensor_unit),
+                    "titlefont": {
+                        "color": color_list[color_index]
+                    },
+                    "tickfont": {
+                        "color": color_list[color_index]
+                    },
+                    "linecolor": color_list[color_index]
+                }
 
-            if sensor_index == 0:
-                figure_layout[axis_name]["gridcolor"] = "#a5b1cd"
+                if sensor_index == 0:
+                    figure_layout[axis_name]["gridcolor"] = "#a5b1cd"
 
-            if sensor_index > 0:
-                figure_layout[axis_name]["anchor"] = "free"
-                figure_layout[axis_name]["overlaying"] = "y"
+                if sensor_index > 0:
+                    figure_layout[axis_name]["anchor"] = "free"
+                    figure_layout[axis_name]["overlaying"] = "y"
 
-            if sensor_index % 2 == 0:
-                figure_layout[axis_name]["side"] = "left"
-                figure_layout[axis_name]["position"] = left_main_axis_pos - sensor_index / 2 * SECONDARY_AXIS_OFFSET
-            else:
-                figure_layout[axis_name]["side"] = "right"
-                figure_layout[axis_name]["position"] = right_main_axis_pos +\
-                                                       (sensor_index - 1) / 2 * SECONDARY_AXIS_OFFSET
+                if sensor_index % 2 == 0:
+                    figure_layout[axis_name]["side"] = "left"
+                    figure_layout[axis_name]["position"] = left_main_axis_pos - sensor_index / 2 * SECONDARY_AXIS_OFFSET
+                else:
+                    figure_layout[axis_name]["side"] = "right"
+                    figure_layout[axis_name]["position"] = right_main_axis_pos +\
+                                                           (sensor_index - 1) / 2 * SECONDARY_AXIS_OFFSET
 
     figure_config = {
         "data": plot_data,
