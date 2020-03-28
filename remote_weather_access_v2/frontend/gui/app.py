@@ -66,7 +66,15 @@ figure_layout = {
     "xaxis": {
         "color": graph_front_color,
         "linewidth": 2,
-        "gridcolor": graph_front_color
+        "gridcolor": graph_front_color,
+        "tickformatstops": [{
+            "dtickrange": [None, 36000000],
+            "value": "%d.%m.\n%H:%M h"
+        },
+        {
+            "dtickrange": [36000000, None],
+            "value": "%a\n%d.%m.%Y"
+        }]
     },
     "legend": {
         "font": {
