@@ -12,6 +12,7 @@ import dateutil
 
 from remote_weather_access.common.datastructures import BaseStationSensorData, RainSensorData, WindSensorData
 from remote_weather_access.server.sqldatabase import SQLWeatherDB
+from utils import plot_config
 
 
 db_file_name = r"C:\Users\Ralf\Documents\code\remote-weather-access\remote_weather_access_v2\frontend\gui\weather.db"
@@ -42,10 +43,10 @@ dash_list = ["solid", "dash", "dot", "dashdot"]
 
 SECONDARY_AXIS_OFFSET = 0.07
 
-sensor_mapping = {"uv": {"description": "Luftdruck",
-                         "id": (BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE)},
-                  "pressure": {"description": "UV",
-                               "id": (BaseStationSensorData.BASE_STATION, BaseStationSensorData.UV)},
+sensor_mapping = {"pressure": {"description": "Luftdruck",
+                               "id": (BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE)},
+                  "uv": {"description": "UV",
+                         "id": (BaseStationSensorData.BASE_STATION, BaseStationSensorData.UV)},
                   "rain_cumulated": {"description": "Regen",
                                      "id": (RainSensorData.RAIN, RainSensorData.CUMULATED)},
                   "rain_period": {"description": "Regenrate",
@@ -69,9 +70,8 @@ figure_layout = {
         "gridcolor": graph_front_color,
         "tickformatstops": [{
             "dtickrange": [None, 36000000],
-            "value": "%d.%m.\n%H:%M h"
-        },
-        {
+            "value": "%d.%m.\n%H:%M"
+        }, {
             "dtickrange": [36000000, None],
             "value": "%a\n%d.%m.%Y"
         }]
@@ -266,6 +266,21 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
 
     figure_layout["xaxis"]["domain"] = [left_main_axis_pos, right_main_axis_pos]
 
+    min_max_sensors = {}
+    for internal_sensor_id in sensors:
+        sensor_tuple = sensor_mapping[internal_sensor_id]["id"]
+        min_data = float("inf")
+        max_data = float("-inf")
+        for station_index, station_id in enumerate(chosen_stations):
+            data = weather_db.get_data_in_time_range(station_id, start_time, end_time)
+            sensor_data = [float(line.get_sensor_value(sensor_tuple)) for line in data]
+            min_data = min(sensor_data)
+            max_data = max(sensor_data)
+        min_max_sensors[sensor_tuple] = {"min": min_data, "max": max_data}
+
+    num_ticks, min_max_limits = plot_config.get_scalings(min_max_sensors)
+
+
     plot_data = []
     color_index = -1
     for sensor_index, internal_sensor_id in enumerate(sensors):
@@ -313,7 +328,9 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
                         "color": color_list[color_index]
                     },
                     "linecolor": color_list[color_index],
-                    "zeroline": False
+                    "zeroline": False,
+                    "nticks": num_ticks,
+                    "range": [min_max_limits[sensor_tuple]["min"], min_max_limits[sensor_tuple]["max"]]
                 }
 
                 if sensor_index == 0:
