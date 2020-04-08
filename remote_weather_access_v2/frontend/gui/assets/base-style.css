@@ -1,11 +1,78 @@
 body {
-    background-color: #282b38;
-    font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    background-color: #1e2130;
+    color: #f3f5f4;
+    font-family: "Open Sans", sans-serif;
+    width: 100%;
+    height: 100vh;
+    max-width: 100% !important;
+    overflow-x: hidden;
+    margin: 0;
 }
 
-.heading {
+.banner {
+    background-color: #1e2130;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    border-bottom: 1px solid #4B5460;
+    padding-left: 3.8rem;
+    padding-right: 3.0rem;
     color: #95969a;
-    font-size: 30px;
+}
+
+#banner-text {
+    border-top: 5px;
+    border-bottom: 5px;
+}
+
+#links {
+  	display: flex;
+}
+
+.banner-item {
+    margin: 5px;
+}
+
+.link-item {
+    color: #95969a;
+    margin: 5px 15px;
+}
+
+.link-item:link {
+    background-color: #1e2130;
+    text-decoration: none;
+}
+
+.link-item:visited {
+    text-decoration: none;
+}
+
+.link-item:hover {
+    text-decoration: underline;
+}
+
+.link-item:active {
+    text-decoration: underline;
+}
+
+#internal-links {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.banner h5 {
+    font-family: 'Open Sans Semi Bold', sans-serif;
+    font-weight: 500;
+    line-height: 1.2;
+    font-size: 2rem;
+    letter-spacing: 0.1rem;
+    text-transform: uppercase;
+}
+
+.banner h6 {
+    font-size: 1.6rem;
+    line-height: 1;
 }
 
 .label {
@@ -16,6 +83,10 @@ body {
 #configuration {
     float: left;
     width: 25%;
+    background: #161a28;
+    padding: 1.0rem;
+    border-left: 3.0rem solid #1e2130;
+    border-right: 0.5rem solid #1e2130;
 }
 
 /* Inputs
@@ -35,6 +106,7 @@ body {
     border: 1px solid #a5b1cd;
     border-radius: 4px;
     background-color: #2f3445;
+    color: black;
     padding: 10px;
 }
 
@@ -56,7 +128,8 @@ body {
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 #diagram {
     float: right;
-    width: 70%;
+    width: 67.6%;
+    border-right: 3.0rem solid #1e2130;
 }
 
 #weather-data-graph {

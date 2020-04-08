@@ -34,7 +34,7 @@ color_list = [
     "#bcbd22",  # curry yellow-green
     "#17becf"]  # blue-teal
 
-background_color = "#282b38"
+background_color = "#161a28"
 graph_front_color = "#a5b1cd"
 
 # default plot.ly styles
@@ -181,58 +181,102 @@ app.layout = html.Div(
     id="app-container",
 
     children=[
-        html.H1(className="heading", children="Wetterdaten"),
-
         html.Div(
-            id="configuration",
-
+            id="banner",
+            className="banner",
             children=[
-                drc.NamedDatePickerRange(
-                    name="Zeitraum",
-                    id="time-period-picker",
-                    min_date_allowed=datetime(2000, 1, 1),
-                    max_date_allowed=last_time,
-                    start_date=last_time - initial_time_period,
-                    end_date=last_time,
-                    display_format="DD.MM.YYYY",
-                    stay_open_on_select=True,
-                    start_date_placeholder_text="Startdatum",
-                    end_date_placeholder_text="Enddatum",
-                    first_day_of_week=1
+                html.Div(
+                    id="banner-text",
+                    children=[
+                        html.H5(
+                            className="banner-item",
+                            children=["Wetterdaten"]),
+                        html.H6(
+                            className="banner-item",
+                            children=["Wetter für die Welt"])
+                    ]
                 ),
-
-                drc.NamedDropdown(
-                    name="Sensoren",
-                    id="sensor-dropdown",
-                    options=available_sensors,
-                    value=available_sensors[0]["value"],
-                    multi=True
-                ),
-
-                drc.NamedDropdown(
-                    name="Station",
-                    id="station-dropdown",
-                    options=available_stations,
-                    value=available_stations[-1]["value"],
-                    multi=True
-                ),
-
-                drc.NamedTabs(
-                    name="Stationsdaten",
-                    id="station-info-tabs",
-                    parent_className='station-info-tabs',
-                    className='station-info-tabs-container',
-                    children=station_info_tabs
-                ),
+                html.Div(
+                    id="links",
+                    children=[
+                        dcc.Link(
+                            id="data-protection-link",
+                            className="link-item",
+                            children=["Datenschutz"],
+                            href="/datenschutz"
+                        ),
+                        dcc.Link(
+                            id="contact-link",
+                            className="link-item",
+                            children=["Kontakt"],
+                            href="/kontakt"
+                        ),
+                        dcc.Link(
+                            id="impress-link",
+                            className="link-item",
+                            children=["Impressum"],
+                            href="/impressum"
+                        )
+                    ]
+                )
             ]
         ),
 
         html.Div(
-            id="diagram",
-
+            id="content",
             children=[
-                dcc.Graph(id="weather-data-graph",
-                          config=config_plots)
+                html.Div(
+                    id="configuration",
+
+                    children=[
+                        drc.NamedDatePickerRange(
+                            name="Zeitraum",
+                            id="time-period-picker",
+                            min_date_allowed=datetime(2000, 1, 1),
+                            max_date_allowed=last_time,
+                            start_date=last_time - initial_time_period,
+                            end_date=last_time,
+                            display_format="DD.MM.YYYY",
+                            stay_open_on_select=True,
+                            start_date_placeholder_text="Startdatum",
+                            end_date_placeholder_text="Enddatum",
+                            first_day_of_week=1
+                        ),
+
+                        drc.NamedDropdown(
+                            name="Sensoren",
+                            id="sensor-dropdown",
+                            options=available_sensors,
+                            value=available_sensors[0]["value"],
+                            multi=True
+                        ),
+
+                        drc.NamedDropdown(
+                            name="Station",
+                            id="station-dropdown",
+                            options=available_stations,
+                            value=available_stations[-1]["value"],
+                            multi=True
+                        ),
+
+                        drc.NamedTabs(
+                            name="Stationsdaten",
+                            id="station-info-tabs",
+                            parent_className='station-info-tabs',
+                            className='station-info-tabs-container',
+                            children=station_info_tabs
+                        ),
+                    ]
+                ),
+
+                html.Div(
+                    id="diagram",
+
+                    children=[
+                        dcc.Graph(id="weather-data-graph",
+                                  config=config_plots)
+                    ]
+                )
             ]
         )
     ]
