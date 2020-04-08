@@ -36,6 +36,7 @@ color_list = [
 
 background_color = "#161a28"
 graph_front_color = "#a5b1cd"
+diagram_font_size = 14
 
 # default plot.ly styles
 dash_list = ["solid", "dash", "dot", "dashdot"]
@@ -73,11 +74,18 @@ figure_layout = {
         }, {
             "dtickrange": [36000000, None],
             "value": "%a\n%d.%m.%Y"
-        }]
+        }],
+        "titlefont": {
+            "size": diagram_font_size
+        },
+        "tickfont": {
+            "size": diagram_font_size
+        },
     },
     "legend": {
         "font": {
-            "color": graph_front_color
+            "color": graph_front_color,
+            "size": diagram_font_size
         }
     }
 }
@@ -193,29 +201,35 @@ app.layout = html.Div(
                             children=["Wetterdaten"]),
                         html.H6(
                             className="banner-item",
-                            children=["Wetter für die Welt"])
+                            children=["Rettigs Wetternetzwerk"])
                     ]
                 ),
                 html.Div(
-                    id="links",
+                    id="link-container",
                     children=[
-                        dcc.Link(
-                            id="data-protection-link",
-                            className="link-item",
-                            children=["Datenschutz"],
-                            href="/datenschutz"
-                        ),
-                        dcc.Link(
-                            id="contact-link",
-                            className="link-item",
-                            children=["Kontakt"],
-                            href="/kontakt"
-                        ),
-                        dcc.Link(
-                            id="impress-link",
-                            className="link-item",
-                            children=["Impressum"],
-                            href="/impressum"
+                        html.Div(id="link-container-empty-placeholder"),
+                        html.Div(
+                            id="links",
+                            children=[
+                                dcc.Link(
+                                    id="data-protection-link",
+                                    className="link-item",
+                                    children=["Datenschutz"],
+                                    href="/datenschutz"
+                                ),
+                                dcc.Link(
+                                    id="contact-link",
+                                    className="link-item",
+                                    children=["Kontakt"],
+                                    href="/kontakt"
+                                ),
+                                dcc.Link(
+                                    id="impress-link",
+                                    className="link-item",
+                                    children=["Impressum"],
+                                    href="/impressum"
+                                )
+                            ]
                         )
                     ]
                 )
@@ -375,10 +389,12 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
                 figure_layout[axis_name] = {
                     "title": "{} / {}".format(sensor_description, sensor_unit),
                     "titlefont": {
-                        "color": color_list[color_index]
+                        "color": color_list[color_index],
+                        "size": diagram_font_size
                     },
                     "tickfont": {
-                        "color": color_list[color_index]
+                        "color": color_list[color_index],
+                        "size": diagram_font_size
                     },
                     "linecolor": color_list[color_index],
                     "zeroline": False,

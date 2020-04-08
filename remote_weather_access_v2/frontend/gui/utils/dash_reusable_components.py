@@ -38,7 +38,7 @@ def NamedDropdown(name, **kwargs):
     return html.Div(
         style={"margin": "10px 0px"},
         children=[
-            html.P(className="label", children=f"{name}:", style={"margin-left": "3px"}),
+            html.P(className="label", children=f"{name}", style={"margin-left": "3px"}),
             dcc.Dropdown(**kwargs),
         ],
     )
@@ -58,7 +58,7 @@ def NamedDatePickerRange(name, **kwargs):
     return html.Div(
         style={"margin": "10px 0 px"},
         children=[
-            html.P(className="label", children=f"{name}:", style={"margin-left": "3px"}),
+            html.P(className="label", children=f"{name}", style={"margin-left": "3px"}),
             dcc.DatePickerRange(**kwargs)
         ]
     )
@@ -68,7 +68,7 @@ def NamedTabs(name, **kwargs):
     return html.Div(
         style={"margin": "10px 0 px"},
         children=[
-            html.P(className="label", children=f"{name}:", style={"margin-left": "3px"}),
+            html.P(className="label", children=f"{name}", style={"margin-left": "3px"}),
             dcc.Tabs(**kwargs)
         ]
     )
