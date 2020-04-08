@@ -9,6 +9,20 @@ body {
     margin: 0;
 }
 
+#app-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.label {
+    color: #95969a;
+    font-size: 18px;
+}
+
+/* Banner
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
 .banner {
     background-color: #1e2130;
     display: flex;
@@ -20,17 +34,31 @@ body {
     color: #95969a;
 }
 
+.banner h5 {
+    font-family: 'Open Sans Semi Bold', sans-serif;
+    font-weight: 500;
+    line-height: 1.2;
+    font-size: 2rem;
+    letter-spacing: 0.1rem;
+    text-transform: uppercase;
+}
+
+.banner h6 {
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
 #banner-text {
     border-top: 5px;
     border-bottom: 5px;
 }
 
-#links {
-  	display: flex;
-}
-
 .banner-item {
     margin: 5px;
+}
+
+#links {
+  	display: flex;
 }
 
 .link-item {
@@ -55,30 +83,17 @@ body {
     text-decoration: underline;
 }
 
-#internal-links {
+/* Copyright notice
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+#copyright-notice {
     display: flex;
-    flex-direction: row;
-    align-items: center;
+    flex-direction: row-reverse;
+    padding-right: 3.0rem;
 }
 
-.banner h5 {
-    font-family: 'Open Sans Semi Bold', sans-serif;
-    font-weight: 500;
-    line-height: 1.2;
-    font-size: 2rem;
-    letter-spacing: 0.1rem;
-    text-transform: uppercase;
-}
-
-.banner h6 {
-    font-size: 1.6rem;
-    line-height: 1;
-}
-
-.label {
-    color: #95969a;
-    font-size: 18px;
-}
+/* Configuration
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 #configuration {
     float: left;

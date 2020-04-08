@@ -278,6 +278,16 @@ app.layout = html.Div(
                     ]
                 )
             ]
+        ),
+
+        html.Div(
+            id="copyright-notice",
+            children=[
+                html.P(
+                    className="label",
+                    children=["Copyright (C) 2020 Ralf Rettig"]
+                )
+            ]
         )
     ]
 )
