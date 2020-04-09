@@ -2,8 +2,9 @@ from datetime import timedelta, datetime
 from math import ceil
 
 import dash
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
+import dash_bootstrap_components as dbc
 
 import utils.dash_reusable_components as drc
 import dash_core_components as dcc
@@ -16,9 +17,10 @@ from utils import plot_config
 
 
 db_file_name = r"C:\Users\Ralf\Documents\code\remote-weather-access\remote_weather_access_v2\frontend\gui\weather.db"
+data_protection_policy_filename = r"assets/data-protection-policy.md"
 initial_time_period = timedelta(days=7)
 
-app = dash.Dash(__name__)
+app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 config_plots = {"locale": "de"}
 
@@ -42,6 +44,9 @@ diagram_font_size = 14
 dash_list = ["solid", "dash", "dot", "dashdot"]
 
 SECONDARY_AXIS_OFFSET = 0.07
+
+with open(data_protection_policy_filename, "r", encoding="utf8") as data_protection_policy_file:
+    data_protection_policy_text = data_protection_policy_file.read()
 
 sensor_mapping = {"pressure": {"description": "Luftdruck",
                                "id": (BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE)},
@@ -211,24 +216,16 @@ app.layout = html.Div(
                         html.Div(
                             id="links",
                             children=[
-                                dcc.Link(
-                                    id="data-protection-link",
-                                    className="link-item",
-                                    children=["Datenschutz"],
-                                    href="/datenschutz"
-                                ),
-                                dcc.Link(
-                                    id="contact-link",
-                                    className="link-item",
-                                    children=["Kontakt"],
-                                    href="/kontakt"
-                                ),
-                                dcc.Link(
-                                    id="impress-link",
-                                    className="link-item",
-                                    children=["Impressum"],
-                                    href="/impressum"
-                                )
+                                drc.ModalDialog(
+                                    id="data-protection-policy",
+                                    button_text="Datenschutz",
+                                    dialog_header="Datenschutzerklärung",
+                                    dialog_content=data_protection_policy_text,
+                                    className="link-item"),
+                                dbc.Button(
+                                    "Impressum",
+                                    id="open-impressum",
+                                    className="link-item")
                             ]
                         )
                     ]
@@ -305,6 +302,17 @@ app.layout = html.Div(
         )
     ]
 )
+
+
+@app.callback(
+    Output("data-protection-policy-dialog", "is_open"),
+    [Input("open-data-protection-policy", "n_clicks"), Input("close-data-protection-policy", "n_clicks")],
+    [State("data-protection-policy-dialog", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
 
 
 @app.callback(

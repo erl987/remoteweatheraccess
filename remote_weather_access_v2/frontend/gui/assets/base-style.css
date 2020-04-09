@@ -66,13 +66,12 @@ body {
 }
 
 #links {
+    display: flex;
     padding-bottom: 5px;
 }
 
 .link-item {
-    color: #95969a;
-    margin: 5px 15px;
-    padding-bottom: 0;
+    margin: 0 5px;
 }
 
 .link-item:link {

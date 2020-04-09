@@ -2,6 +2,7 @@ from textwrap import dedent
 
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_bootstrap_components as dbc
 
 
 # Display utility functions
@@ -102,4 +103,29 @@ def DemoDescription(filename, strip=False):
             "font-family": "Roboto, sans-serif",
         },
         children=dcc.Markdown(dedent(text)),
+    )
+
+
+def ModalDialog(id, button_text, dialog_header, dialog_content, className):
+    return html.Div(
+        children=[
+            dbc.Button(
+                button_text,
+                id="open-{}".format(id),
+                className=className),
+            dbc.Modal(
+                id="{}-dialog".format(id),
+                size="xl",
+                children=[
+                    dbc.ModalHeader(dialog_header),
+                    dbc.ModalBody(dcc.Markdown(dialog_content)),
+                    dbc.ModalFooter(
+                        dbc.Button(
+                            "Schließen",
+                            id="close-{}".format(id),
+                            className="ml-auto")
+                    ),
+                ]
+            )
+        ]
     )
