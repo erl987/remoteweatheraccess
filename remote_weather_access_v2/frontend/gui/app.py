@@ -18,6 +18,7 @@ from utils import plot_config
 
 db_file_name = r"C:\Users\Ralf\Documents\code\remote-weather-access\remote_weather_access_v2\frontend\gui\weather.db"
 data_protection_policy_filename = r"assets/data-protection-policy.md"
+impress_filename = r"assets/impress.md"
 initial_time_period = timedelta(days=7)
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -47,6 +48,9 @@ SECONDARY_AXIS_OFFSET = 0.07
 
 with open(data_protection_policy_filename, "r", encoding="utf8") as data_protection_policy_file:
     data_protection_policy_text = data_protection_policy_file.read()
+
+with open(impress_filename, "r", encoding="utf8") as impress_file:
+    impress_text = impress_file.read()
 
 sensor_mapping = {"pressure": {"description": "Luftdruck",
                                "id": (BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE)},
@@ -222,9 +226,11 @@ app.layout = html.Div(
                                     dialog_header="Datenschutzerklärung",
                                     dialog_content=data_protection_policy_text,
                                     className="link-item"),
-                                dbc.Button(
-                                    "Impressum",
-                                    id="open-impressum",
+                                drc.ModalDialog(
+                                    id="impress",
+                                    button_text="Impressum",
+                                    dialog_header="Impressum und Haftung",
+                                    dialog_content=impress_text,
                                     className="link-item")
                             ]
                         )
@@ -308,6 +314,17 @@ app.layout = html.Div(
     Output("data-protection-policy-dialog", "is_open"),
     [Input("open-data-protection-policy", "n_clicks"), Input("close-data-protection-policy", "n_clicks")],
     [State("data-protection-policy-dialog", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+
+@app.callback(
+    Output("impress-dialog", "is_open"),
+    [Input("open-impress", "n_clicks"), Input("close-impress", "n_clicks")],
+    [State("impress-dialog", "is_open")],
 )
 def toggle_modal(n1, n2, is_open):
     if n1 or n2:
