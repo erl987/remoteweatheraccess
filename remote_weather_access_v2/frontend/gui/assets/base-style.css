@@ -91,6 +91,25 @@ body {
     text-decoration: underline;
 }
 
+
+/* Modal dialogs
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.modal-dialog-content p {
+    text-align: justify;
+}
+
+.modal-dialog-content h1 {
+    font-size: 2.0rem;
+    font-weight: bold;
+}
+
+.modal-dialog-content h2 {
+    font-size: 1.5rem;
+    font-weight: bolder;
+}
+
+
 /* Copyright notice
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 

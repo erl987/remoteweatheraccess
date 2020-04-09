@@ -117,8 +117,9 @@ def ModalDialog(id, button_text, dialog_header, dialog_content, className):
                 id="{}-dialog".format(id),
                 size="xl",
                 children=[
-                    dbc.ModalHeader(dialog_header),
-                    dbc.ModalBody(dcc.Markdown(dialog_content)),
+                    dbc.ModalBody(
+                        dcc.Markdown(dialog_content),
+                        className="modal-dialog-content"),
                     dbc.ModalFooter(
                         dbc.Button(
                             "Schließen",
