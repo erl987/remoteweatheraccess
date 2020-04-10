@@ -22,6 +22,14 @@ body {
     margin-top: 2.0rem;
 }
 
+#content {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding-left: 3.0rem;
+    padding-right: 3.0rem;
+}
+
 /* Banner
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
@@ -31,7 +39,7 @@ body {
     flex-direction: row;
     justify-content: space-between;
     border-bottom: 3px solid #4B5460;
-    padding-left: 3.8rem;
+    padding-left: 3.0rem;
     padding-right: 3.0rem;
     color: rgb(220, 220, 220);
 }
@@ -124,12 +132,21 @@ body {
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 #configuration {
-    float: left;
     width: 25%;
     background: #161a28;
     padding: 0 1.0rem 1.0rem;
-    border-left: 3.0rem solid #1e2130;
     border-right: 0.5rem solid #1e2130;
+}
+
+/* Configuration
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+#diagram {
+    width: 75%;
+}
+
+#weather-data-graph {
+    height: 70vh;
 }
 
 /* Inputs
@@ -165,18 +182,6 @@ body {
     background-color: #ff4444;
     color: white;
     padding: 6px;
-}
-
-/* Diagram
-–––––––––––––––––––––––––––––––––––––––––––––––––– */
-#diagram {
-    float: right;
-    width: 67.6%;
-    border-right: 3.0rem solid #1e2130;
-}
-
-#weather-data-graph {
-    height: 70vh;
 }
 
 /* Date picker
