@@ -263,6 +263,7 @@ app.layout = html.Div(
                         drc.NamedDropdown(
                             name="Sensoren",
                             id="sensor-dropdown",
+                            placeholder="Auswählen ...",
                             options=available_sensors,
                             value=available_sensors[0]["value"],
                             multi=True
@@ -271,6 +272,7 @@ app.layout = html.Div(
                         drc.NamedDropdown(
                             name="Station",
                             id="station-dropdown",
+                            placeholder="Auswählen ...",
                             options=available_stations,
                             value=available_stations[-1]["value"],
                             multi=True
@@ -279,8 +281,8 @@ app.layout = html.Div(
                         drc.NamedTabs(
                             name="Stationsdaten",
                             id="station-info-tabs",
-                            parent_className='station-info-tabs',
-                            className='station-info-tabs-container',
+                            parent_className="station-info-tabs",
+                            className="station-info-tabs-container",
                             children=station_info_tabs
                         ),
                     ]
@@ -330,6 +332,20 @@ def toggle_modal(n1, n2, is_open):
     if n1 or n2:
         return not is_open
     return is_open
+
+
+@app.callback(
+    Output("station-info-tabs", "value"),
+    [Input(component_id="station-dropdown", component_property="value")]
+)
+def update_station_info_tabs(chosen_stations):
+    if isinstance(chosen_stations, str):
+        chosen_stations = [chosen_stations]
+
+    if len(chosen_stations) > 0:
+        return chosen_stations[-1]
+    else:
+        raise PreventUpdate
 
 
 @app.callback(
