@@ -33,12 +33,12 @@ body {
     border-bottom: 3px solid #4B5460;
     padding-left: 3.8rem;
     padding-right: 3.0rem;
-    color: #95969a;
+    color: rgb(220, 220, 220);
 }
 
 .banner h5 {
     font-family: 'Open Sans Semi Bold', sans-serif;
-    font-weight: 500;
+    font-weight: bold;
     line-height: 1.2;
     font-size: 2rem;
     letter-spacing: 0.1rem;
@@ -47,6 +47,7 @@ body {
 
 .banner h6 {
     font-size: 1.6rem;
+    font-weight: bolder;
     line-height: 1;
 }
 
