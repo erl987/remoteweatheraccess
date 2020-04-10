@@ -22,6 +22,7 @@ impress_filename = r"assets/impress.md"
 initial_time_period = timedelta(days=7)
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+app.title = "Wetterdaten"
 
 config_plots = {"locale": "de"}
 
@@ -367,27 +368,32 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
     if isinstance(sensors, str):
         sensors = [sensors]
 
-    num_axis_on_left = ceil(len(sensors) / 2)
-    num_axis_on_right = ceil((len(sensors) - 1) / 2)
-    left_main_axis_pos = num_axis_on_left * SECONDARY_AXIS_OFFSET
-    right_main_axis_pos = 1 - num_axis_on_right * SECONDARY_AXIS_OFFSET
+    if "range" in figure_layout["xaxis"]:
+        del figure_layout["xaxis"]["range"]
+    if "type" in figure_layout["xaxis"]:
+        del figure_layout["xaxis"]["type"]
 
-    figure_layout["xaxis"]["domain"] = [left_main_axis_pos, right_main_axis_pos]
+    if len(chosen_stations) > 0 and len(sensors) > 0:
+        num_axis_on_left = ceil(len(sensors) / 2)
+        num_axis_on_right = ceil((len(sensors) - 1) / 2)
+        left_main_axis_pos = num_axis_on_left * SECONDARY_AXIS_OFFSET
+        right_main_axis_pos = 1 - num_axis_on_right * SECONDARY_AXIS_OFFSET
 
-    min_max_sensors = {}
-    for internal_sensor_id in sensors:
-        sensor_tuple = sensor_mapping[internal_sensor_id]["id"]
-        min_data = float("inf")
-        max_data = float("-inf")
-        for station_index, station_id in enumerate(chosen_stations):
-            data = weather_db.get_data_in_time_range(station_id, start_time, end_time)
-            sensor_data = [float(line.get_sensor_value(sensor_tuple)) for line in data]
-            min_data = min(min_data, min(sensor_data))
-            max_data = max(max_data, max(sensor_data))
-        min_max_sensors[sensor_tuple] = {"min": min_data, "max": max_data}
+        figure_layout["xaxis"]["domain"] = [left_main_axis_pos, right_main_axis_pos]
 
-    num_ticks, min_max_limits = plot_config.get_scalings(min_max_sensors)
+        min_max_sensors = {}
+        for internal_sensor_id in sensors:
+            sensor_tuple = sensor_mapping[internal_sensor_id]["id"]
+            min_data = float("inf")
+            max_data = float("-inf")
+            for station_index, station_id in enumerate(chosen_stations):
+                data = weather_db.get_data_in_time_range(station_id, start_time, end_time)
+                sensor_data = [float(line.get_sensor_value(sensor_tuple)) for line in data]
+                min_data = min(min_data, min(sensor_data))
+                max_data = max(max_data, max(sensor_data))
+            min_max_sensors[sensor_tuple] = {"min": min_data, "max": max_data}
 
+        num_ticks, min_max_limits = plot_config.get_scalings(min_max_sensors)
 
     plot_data = []
     color_index = -1
@@ -458,6 +464,21 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
                     figure_layout[axis_name]["side"] = "right"
                     figure_layout[axis_name]["position"] = right_main_axis_pos +\
                                                            (sensor_index - 1) / 2 * SECONDARY_AXIS_OFFSET
+    if len(plot_data) == 0:
+        figure_layout["yaxis"] = {
+            "title": "",
+            "tickfont": {
+                "color": graph_front_color,
+                "size": diagram_font_size
+            },
+            "linecolor": graph_front_color,
+            "zeroline": False,
+            "gridcolor": graph_front_color,
+            "range": [0, 100]
+        }
+
+        figure_layout["xaxis"]["range"] = [last_time - initial_time_period, last_time]
+        figure_layout["xaxis"]["type"] = "date"
 
     figure_config = {
         "data": plot_data,
