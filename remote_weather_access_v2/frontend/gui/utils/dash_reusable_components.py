@@ -49,7 +49,7 @@ def NamedInput(name, **kwargs):
     return html.Div(
         style={"margin": "10px 0px"},
         children=[
-            html.P(className="label", children=f"{name}:", style={"margin-left": "3px"}),
+            html.P(className="label", children=f"{name}", style={"margin-left": "3px"}),
             dcc.Input(**kwargs)
         ]
     )
