@@ -96,7 +96,8 @@ figure_layout = {
         "font": {
             "color": graph_front_color,
             "size": diagram_font_size
-        }
+        },
+        "orientation": "h"
     }
 }
 
