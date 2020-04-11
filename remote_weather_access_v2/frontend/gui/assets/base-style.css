@@ -13,6 +13,8 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    padding-left: 2%;
+    padding-right: 2%;
 }
 
 .label {
@@ -25,9 +27,7 @@ body {
 #content {
     display: flex;
     flex-direction: row;
-    justify-content: flex-start;
-    padding-left: 3.0rem;
-    padding-right: 3.0rem;
+    align-items: stretch;
 }
 
 /* Banner
@@ -39,8 +39,6 @@ body {
     flex-direction: row;
     justify-content: space-between;
     border-bottom: 3px solid #4B5460;
-    padding-left: 3.0rem;
-    padding-right: 3.0rem;
     color: rgb(220, 220, 220);
 }
 
@@ -132,17 +130,17 @@ body {
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 #configuration {
-    width: 25%;
     background: #161a28;
     padding: 0 1.0rem 1.0rem;
     border-right: 0.5rem solid #1e2130;
 }
 
-/* Configuration
+/* Diagram
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 #diagram {
-    width: 75%;
+    flex: auto;
+    border: 3px solid red;
 }
 
 #weather-data-graph {
@@ -174,6 +172,7 @@ body {
     border-bottom: 1px solid #d6d6d6;
     padding: 6px;
     font-weight: bold;
+    min-width: max-content;
 }
 
 #configuration .station-info-tab--selected {
