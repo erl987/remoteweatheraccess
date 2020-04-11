@@ -202,6 +202,8 @@ app.layout = html.Div(
     id="app-container",
 
     children=[
+        dcc.Location(id='url', refresh=False),
+
         html.Div(
             id="banner",
             className="banner",
@@ -348,6 +350,19 @@ def update_station_info_tabs(chosen_stations):
 
     if len(chosen_stations) > 0:
         return chosen_stations[-1]
+    else:
+        raise PreventUpdate
+
+
+@app.callback(dash.dependencies.Output("station-dropdown", "value"),
+              [dash.dependencies.Input("url", "pathname")])
+def display_page(pathname):
+    provided_station_id = pathname.replace("/", "").upper()
+
+    if provided_station_id in weather_db.get_stations():
+        return provided_station_id
+    elif len(provided_station_id) == 0:
+        return available_stations[-1]["value"]
     else:
         raise PreventUpdate
 
