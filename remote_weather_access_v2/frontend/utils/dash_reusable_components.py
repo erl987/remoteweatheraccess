@@ -107,7 +107,7 @@ def DemoDescription(filename, strip=False):
     )
 
 
-def ModalDialog(id, button_text, dialog_header, dialog_content, className):
+def ModalDialog(id, button_text, dialog_content, className):
     return html.Div(
         children=[
             dbc.Button(

@@ -16,7 +16,7 @@ from remote_weather_access.server.sqldatabase import SQLWeatherDB
 from utils import plot_config
 
 
-db_file_name = r"C:\Users\Ralf\Documents\code\remote-weather-access\remote_weather_access_v2\frontend\gui\weather.db"
+db_file_name = r"./weather.db"
 data_protection_policy_filename = r"assets/data-protection-policy.md"
 impress_filename = r"assets/impress.md"
 initial_time_period = timedelta(days=7)
@@ -229,13 +229,11 @@ app.layout = html.Div(
                                 drc.ModalDialog(
                                     id="data-protection-policy",
                                     button_text="Datenschutz",
-                                    dialog_header="Datenschutzerklärung",
                                     dialog_content=data_protection_policy_text,
                                     className="link-item"),
                                 drc.ModalDialog(
                                     id="impress",
                                     button_text="Impressum",
-                                    dialog_header="Impressum und Haftung",
                                     dialog_content=impress_text,
                                     className="link-item")
                             ]
