@@ -71,6 +71,8 @@ sensor_mapping = {"pressure": {"description": "Luftdruck",
                                  "id": (WindSensorData.WIND, WindSensorData.WIND_CHILL)}
                   }
 
+default_selected_sensor_ids = ["pressure", "rain_cumulated", "OUT1_temp", "OUT1_humid"]
+
 figure_layout = {
     "plot_bgcolor": background_color,
     "paper_bgcolor": background_color,
@@ -267,7 +269,7 @@ app.layout = html.Div(
                             id="sensor-dropdown",
                             placeholder="Auswählen ...",
                             options=available_sensors,
-                            value=available_sensors[0]["value"],
+                            value=default_selected_sensor_ids,
                             multi=True
                         ),
 
