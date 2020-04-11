@@ -30,6 +30,12 @@ body {
     align-items: stretch;
 }
 
+@media only screen and (max-width: 600px) {
+    #content {
+        flex-direction: column;
+    }
+}
+
 /* Banner
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
@@ -181,6 +187,16 @@ body {
     background-color: #ff4444;
     color: white;
     padding: 6px;
+}
+
+@media only screen and (max-width: 600px) {
+    #configuration .station-info-tabs {
+        display: none;
+    }
+
+    #configuration .named-tab .label {
+        display: none;
+    }
 }
 
 /* Date picker
