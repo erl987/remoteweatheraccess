@@ -146,7 +146,6 @@ body {
 
 #diagram {
     flex: auto;
-    border: 3px solid red;
 }
 
 #weather-data-graph {
