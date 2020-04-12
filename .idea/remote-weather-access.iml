@@ -6,7 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/remote_weather_access_v2/frontend/gui" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/remote_weather_access_v2/frontend" isTestSource="false" />
     </content>
-    <content url="file://$MODULE_DIR$/remote_weather_access_v2/server" />
+    <content url="file://$MODULE_DIR$/remote_weather_access_v2/restapi_backend" />
     <orderEntry type="jdk" jdkName="Python 3.7" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
