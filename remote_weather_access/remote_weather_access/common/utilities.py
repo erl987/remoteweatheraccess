@@ -19,7 +19,7 @@ import random
 import string
 from datetime import datetime, timedelta
 
-from remote_weather_access.server.exceptions import NoContentError
+from ..server.exceptions import NoContentError
 
 
 def is_float(string):

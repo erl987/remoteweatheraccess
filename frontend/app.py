@@ -10,17 +10,18 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
-import utils.dash_reusable_components as drc
+import frontend.utils.dash_reusable_components as drc
 import dash_core_components as dcc
 import dash_html_components as html
 import dateutil.parser
 
-from remote_weather_access.common.datastructures import BaseStationSensorData, RainSensorData, WindSensorData
-from remote_weather_access.server.sqldatabase import SQLWeatherDB
-from utils import plot_config
+from remote_weather_access.remote_weather_access.common.datastructures import BaseStationSensorData, RainSensorData, \
+    WindSensorData
+from remote_weather_access.remote_weather_access.server.sqldatabase import SQLWeatherDB
+from frontend.utils import plot_config
 
 
-db_file_name = os.environ.get("DBFILE", r"../test-data/weather.db")
+db_file_name = os.environ.get("DBFILE", r"frontend/test_data/weather.db")
 data_protection_policy_file_path = r"assets/data-protection-policy.md"
 impress_file_path = r"assets/impress.md"
 initial_time_period = timedelta(days=7)

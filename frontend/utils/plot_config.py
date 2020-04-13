@@ -1,5 +1,6 @@
-from remote_weather_access.common import utilities
-from remote_weather_access.common.datastructures import CombiSensorData, RainSensorData, BaseStationSensorData
+from remote_weather_access.remote_weather_access.common import utilities
+from remote_weather_access.remote_weather_access.common.datastructures import CombiSensorData, RainSensorData, \
+    BaseStationSensorData
 
 
 def get_scalings(min_max_sensors):
