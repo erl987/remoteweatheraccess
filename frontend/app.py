@@ -418,12 +418,16 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
             max_data = float("-inf")
             for station_index, station_id in enumerate(chosen_stations):
                 data = weather_db.get_data_in_time_range(station_id, start_time, end_time)
-                sensor_data = [float(line.get_sensor_value(sensor_tuple)) for line in data]
-                min_data = min(min_data, min(sensor_data))
-                max_data = max(max_data, max(sensor_data))
-            min_max_sensors[sensor_tuple] = {"min": min_data, "max": max_data}
+                if len(data) > 0:
+                    sensor_data = [float(line.get_sensor_value(sensor_tuple)) for line in data]
+                    min_data = min(min_data, min(sensor_data))
+                    max_data = max(max_data, max(sensor_data))
+            if min_data != float("inf") and max_data != float("-inf"):
+                min_max_sensors[sensor_tuple] = {"min": min_data, "max": max_data}
 
-        num_ticks, min_max_limits = plot_config.get_scalings(min_max_sensors)
+        if len(min_max_sensors) > 0:
+            num_ticks, min_max_limits = plot_config.get_scalings(min_max_sensors)
+
 
     plot_data = []
     color_index = -1
