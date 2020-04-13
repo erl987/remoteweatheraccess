@@ -116,3 +116,4 @@ gen
 testWorkspace
 httpRequests/*.json
 deployment.xml
+/test_data

@@ -20,7 +20,7 @@ from remote_weather_access.server.sqldatabase import SQLWeatherDB
 from utils import plot_config
 
 
-db_file_name = os.environ.get("DBFILE", "weather.db")
+db_file_name = os.environ.get("DBFILE", r"../test-data/weather.db")
 data_protection_policy_file_path = r"assets/data-protection-policy.md"
 impress_file_path = r"assets/impress.md"
 initial_time_period = timedelta(days=7)
