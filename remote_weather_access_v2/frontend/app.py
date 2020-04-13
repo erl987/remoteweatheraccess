@@ -1,3 +1,7 @@
+"""
+Run in production with: `gunicorn3 -b 0.0.0.0:8000 app:server`
+"""
+import os
 from datetime import timedelta, datetime
 from math import ceil
 
@@ -9,19 +13,22 @@ import dash_bootstrap_components as dbc
 import utils.dash_reusable_components as drc
 import dash_core_components as dcc
 import dash_html_components as html
-import dateutil
+import dateutil.parser
 
 from remote_weather_access.common.datastructures import BaseStationSensorData, RainSensorData, WindSensorData
 from remote_weather_access.server.sqldatabase import SQLWeatherDB
 from utils import plot_config
 
 
-db_file_name = r"./weather.db"
-data_protection_policy_filename = r"assets/data-protection-policy.md"
-impress_filename = r"assets/impress.md"
+db_file_name = os.environ.get("DBFILE", "weather.db")
+data_protection_policy_file_path = r"assets/data-protection-policy.md"
+impress_file_path = r"assets/impress.md"
 initial_time_period = timedelta(days=7)
 
-app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+db_file_parent_path = os.environ.get("BASEDIR", os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+server = app.server
 app.title = "Wetterdaten"
 
 config_plots = {"locale": "de"}
@@ -47,10 +54,10 @@ dash_list = ["solid", "dash", "dot", "dashdot"]
 
 SECONDARY_AXIS_OFFSET = 0.07
 
-with open(data_protection_policy_filename, "r", encoding="utf8") as data_protection_policy_file:
+with open(data_protection_policy_file_path, "r", encoding="utf8") as data_protection_policy_file:
     data_protection_policy_text = data_protection_policy_file.read()
 
-with open(impress_filename, "r", encoding="utf8") as impress_file:
+with open(impress_file_path, "r", encoding="utf8") as impress_file:
     impress_text = impress_file.read()
 
 sensor_mapping = {"pressure": {"description": "Luftdruck",
@@ -103,7 +110,8 @@ figure_layout = {
     }
 }
 
-weather_db = SQLWeatherDB(db_file_name)
+db_file_path = db_file_parent_path + os.path.sep + db_file_name
+weather_db = SQLWeatherDB(db_file_path)
 last_time = datetime.min
 for station_id in weather_db.get_stations():
     last_time = max(last_time, weather_db.get_most_recent_time_with_data(station_id))
@@ -355,6 +363,9 @@ def update_station_info_tabs(chosen_stations):
 @app.callback(dash.dependencies.Output("station-dropdown", "value"),
               [dash.dependencies.Input("url", "pathname")])
 def display_page(pathname):
+    if pathname is None:
+        raise PreventUpdate
+
     provided_station_id = pathname.replace("/", "").upper()
 
     if provided_station_id in weather_db.get_stations():

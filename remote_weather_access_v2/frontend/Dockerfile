@@ -1,5 +1,9 @@
-FROM ralf/nginx-rpi:1.15.9-alpine3.9.2
+FROM python:3.8.2-alpine3.11
 
-COPY index.html /usr/share/nginx/html
+COPY . /
 
-EXPOSE 80
+RUN  apk add --no-cache libc-dev python3-dev gcc openssl-dev libffi-dev && pip install -r requirements.txt
+
+EXPOSE 8000
+
+ENTRYPOINT ["/usr/local/bin/gunicorn", "--config", "/config/gunicorn.py", "--log-config", "/config/logging.conf", "-b", ":8000", "app:server"]
