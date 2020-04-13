@@ -117,3 +117,4 @@ testWorkspace
 httpRequests/*.json
 deployment.xml
 /test_data
+/frontend/test_data/weather.db
