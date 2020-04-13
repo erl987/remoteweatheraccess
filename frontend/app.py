@@ -1,5 +1,7 @@
 """
-Run in production with: `gunicorn3 -b 0.0.0.0:8000 app:server`
+Run in production with:
+`PYTHONPATH=weatherstation` (or whatever the content root path of the project is)
+`gunicorn3 -b 0.0.0.0:8000 app:server`
 """
 import os
 from datetime import timedelta, datetime
@@ -21,12 +23,12 @@ from remote_weather_access.remote_weather_access.server.sqldatabase import SQLWe
 from frontend.utils import plot_config
 
 
-db_file_name = os.environ.get("DBFILE", r"frontend/test_data/weather.db")
+db_file_name = os.environ.get("DBFILE", "weather.db")
 data_protection_policy_file_path = r"assets/data-protection-policy.md"
 impress_file_path = r"assets/impress.md"
 initial_time_period = timedelta(days=7)
 
-db_file_parent_path = os.environ.get("BASEDIR", os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+db_file_parent_path = os.environ.get("DBBASEDIR", os.path.abspath(os.path.dirname(__file__)) + os.sep + "test_data")
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
