@@ -270,6 +270,7 @@ class SQLWeatherDB(object):
         if first_time > last_time:
             raise ValueError("The first time {} is after the last time {}".format(first_time, last_time))
 
+        self._sql.commit()  # refreshing for the latest data
         with self._sql:
             times_in_range, base_data_in_range = \
                 self._base_station_data_table.get_data(station_id, first_time, last_time)
