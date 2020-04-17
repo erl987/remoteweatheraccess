@@ -63,6 +63,15 @@ with open(data_protection_policy_file_path, "r", encoding="utf8") as data_protec
 with open(impress_file_path, "r", encoding="utf8") as impress_file:
     impress_text = impress_file.read()
 
+
+def get_last_time():
+    last_time = datetime.min
+    for station_id in weather_db.get_stations():
+        last_time = max(last_time, weather_db.get_most_recent_time_with_data(station_id))
+
+    return last_time
+
+
 sensor_mapping = {"pressure": {"description": "Luftdruck",
                                "id": (BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE)},
                   "uv": {"description": "UV",
@@ -115,9 +124,7 @@ figure_layout = {
 
 db_file_path = db_file_parent_path + os.path.sep + db_file_name
 weather_db = SQLWeatherDB(db_file_path)
-last_time = datetime.min
-for station_id in weather_db.get_stations():
-    last_time = max(last_time, weather_db.get_most_recent_time_with_data(station_id))
+last_time = get_last_time()
 combi_sensor_ids, combi_sensor_descriptions = weather_db.get_combi_sensors()
 for id in combi_sensor_ids:
     if id == "IN":
@@ -213,7 +220,7 @@ app.layout = html.Div(
     id="app-container",
 
     children=[
-        dcc.Location(id='url', refresh=False),
+        dcc.Location(id='url', refresh=True),
 
         html.Div(
             id="banner",
@@ -327,6 +334,15 @@ app.layout = html.Div(
 )
 
 
+@app.callback([Output('time-period-picker', 'max_date_allowed'),
+               Output('time-period-picker', 'end_date'),
+               Output('time-period-picker', 'start_date')],
+              [Input('url', 'pathname')])
+def display_page(pathname):
+    last_time = get_last_time()
+    return last_time, last_time, last_time - initial_time_period
+
+
 @app.callback(
     Output("data-protection-policy-dialog", "is_open"),
     [Input("open-data-protection-policy", "n_clicks"), Input("close-data-protection-policy", "n_clicks")],
@@ -430,7 +446,6 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
 
         if len(min_max_sensors) > 0:
             num_ticks, min_max_limits = plot_config.get_scalings(min_max_sensors)
-
 
     plot_data = []
     color_index = -1
