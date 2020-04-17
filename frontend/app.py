@@ -403,6 +403,10 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
     if "type" in figure_layout["xaxis"]:
         del figure_layout["xaxis"]["type"]
 
+    data = {}
+    for station_id in chosen_stations:
+        data[station_id] = weather_db.get_data_in_time_range(station_id, start_time, end_time)
+
     if len(chosen_stations) > 0 and len(sensors) > 0:
         num_axis_on_left = ceil(len(sensors) / 2)
         num_axis_on_right = ceil((len(sensors) - 1) / 2)
@@ -417,9 +421,8 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
             min_data = float("inf")
             max_data = float("-inf")
             for station_index, station_id in enumerate(chosen_stations):
-                data = weather_db.get_data_in_time_range(station_id, start_time, end_time)
-                if len(data) > 0:
-                    sensor_data = [float(line.get_sensor_value(sensor_tuple)) for line in data]
+                if len(data[station_id]) > 0:
+                    sensor_data = [float(line.get_sensor_value(sensor_tuple)) for line in data[station_id]]
                     min_data = min(min_data, min(sensor_data))
                     max_data = max(max_data, max(sensor_data))
             if min_data != float("inf") and max_data != float("-inf"):
@@ -444,11 +447,10 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
             if dash_index >= len(dash_list):
                 dash_index = 0
 
-            data = weather_db.get_data_in_time_range(station_id, start_time, end_time)
-            time = [line.get_time() for line in data]
-            sensor_data = [float(line.get_sensor_value(sensor_tuple)) for line in data]
-            if len(data) > 0:
-                sensor_unit = data[0].get_sensor_unit(sensor_tuple)
+            time = [line.get_time() for line in data[station_id]]
+            sensor_data = [float(line.get_sensor_value(sensor_tuple)) for line in data[station_id]]
+            if len(data[station_id]) > 0:
+                sensor_unit = data[station_id][0].get_sensor_unit(sensor_tuple)
                 plot_data.append({"x": time,
                                   "y": sensor_data,
                                   "name": "{} - {}".format(station_id, sensor_description),
