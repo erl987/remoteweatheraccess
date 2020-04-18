@@ -398,8 +398,10 @@ def display_page(pathname):
      Input(component_id="sensor-dropdown", component_property="value")]
 )
 def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
-    start_time = dateutil.parser.parse(start_time_str)
-    end_time = dateutil.parser.parse(end_time_str)
+    actual_start_time = dateutil.parser.parse(start_time_str)
+    start_time = datetime(actual_start_time.year, actual_start_time.month, actual_start_time.day)
+    actual_end_time = dateutil.parser.parse(end_time_str)
+    end_time = datetime(actual_end_time.year, actual_end_time.month, actual_end_time.day) + timedelta(days=1)
 
     if end_time < start_time:
         raise PreventUpdate
