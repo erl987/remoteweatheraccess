@@ -16,6 +16,8 @@
 
 import sqlite3
 
+from dateutil.parser import parse
+
 from ..common import utilities
 from ..common.datastructures import WeatherStationMetadata, WindSensorData, RainSensorData, CombiSensorData, \
     BaseStationSensorData
@@ -745,55 +747,37 @@ class _WeatherDataTable(object):
 
         return times, base_data
 
-    def get_most_early_time_with_data(self, station_id):
+    def get_most_early_time_with_data(self):
         """
-        Obtains the first timepoint in the database with data for the specified station.
+        Obtains the first timepoint in the database with data.
 
-        :param station_id:              id of the requested station
-        :type station_id:               str
-        :return:                        most early time with data for the station
+        :return:                        most early time with data
         :rtype:                         datetime.datetime
-        :raise NotExistingError:        if no data is available for the station
+        :raise NotExistingError:        if no data is available
         """
-        most_early_time_from_db = self._sql.execute(" \
-            SELECT time \
-            FROM WeatherData \
-            WHERE time=(SELECT MIN(time) \
-                        FROM WeatherData \
-                        WHERE stationID=(?) \
-                        )",
-                                                     (station_id, )).fetchone()  # type: dict
+        most_early_time_from_db = self._sql.execute("SELECT MIN(time) FROM WeatherData").fetchone()  # type: dict
 
-        if most_early_time_from_db:
-            most_early_time = most_early_time_from_db["time"]
+        if most_early_time_from_db["MIN(time)"]:
+            most_early_time = parse(most_early_time_from_db["MIN(time)"])
         else:
-            raise NotExistingError("No data available in the database for the station '{}'".format(station_id))
+            raise NotExistingError("No data available in the database")
 
         return most_early_time
 
-    def get_most_recent_time_with_data(self, station_id):
+    def get_most_recent_time_with_data(self):
         """
-        Obtains the latest timepoint in the database with data for the specified station.
+        Obtains the latest timepoint in the database with data.
 
-        :param station_id:              id of the requested station
-        :type station_id:               str
-        :return:                        most recent time with data for the station
+        :return:                        most recent time with data
         :rtype:                         datetime.datetime
-        :raise NotExistingError:        if no data is available for the station
+        :raise NotExistingError:        if no data is available
         """
-        most_recent_time_from_db = self._sql.execute(" \
-            SELECT time \
-            FROM WeatherData \
-            WHERE time=(SELECT MAX(time) \
-                        FROM WeatherData \
-                        WHERE stationID=(?) \
-                        )",
-                                                     (station_id, )).fetchone()  # type: dict
+        most_recent_time_from_db = self._sql.execute("SELECT MAX(time) FROM WeatherData").fetchone()  # type: dict
 
-        if most_recent_time_from_db:
-            most_recent_time = most_recent_time_from_db["time"]
+        if most_recent_time_from_db["MAX(time)"]:
+            most_recent_time = parse(most_recent_time_from_db["MAX(time)"])
         else:
-            raise NotExistingError("No data available in the database for the station '{}'".format(station_id))
+            raise NotExistingError("No data available in the database")
 
         return most_recent_time
 

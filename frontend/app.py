@@ -64,22 +64,6 @@ with open(impress_file_path, "r", encoding="utf8") as impress_file:
     impress_text = impress_file.read()
 
 
-def get_first_time():
-    first_time = datetime.max
-    for station_id in weather_db.get_stations():
-        first_time = min(first_time, weather_db.get_most_early_time_with_data(station_id))
-
-    return first_time
-
-
-def get_last_time():
-    last_time = datetime.min
-    for station_id in weather_db.get_stations():
-        last_time = max(last_time, weather_db.get_most_recent_time_with_data(station_id))
-
-    return last_time
-
-
 sensor_mapping = {"pressure": {"description": "Luftdruck",
                                "id": (BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE)},
                   "uv": {"description": "UV",
@@ -132,8 +116,8 @@ figure_layout = {
 
 db_file_path = db_file_parent_path + os.path.sep + db_file_name
 weather_db = SQLWeatherDB(db_file_path)
-first_time = get_first_time()
-last_time = get_last_time()
+first_time = weather_db.get_most_early_time_with_data()
+last_time = weather_db.get_most_recent_time_with_data()
 combi_sensor_ids, combi_sensor_descriptions = weather_db.get_combi_sensors()
 for id in combi_sensor_ids:
     if id == "IN":
@@ -349,8 +333,8 @@ app.layout = html.Div(
                Output('time-period-picker', 'start_date')],
               [Input('url', 'pathname')])
 def display_page(pathname):
-    first_time = get_first_time()
-    last_time = get_last_time()
+    first_time = weather_db.get_most_early_time_with_data()
+    last_time = weather_db.get_most_recent_time_with_data()
     return first_time, last_time, last_time, last_time - initial_time_period
 
 
