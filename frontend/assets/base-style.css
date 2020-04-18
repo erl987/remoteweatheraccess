@@ -30,7 +30,7 @@ body {
     align-items: stretch;
 }
 
-@media only screen and (max-width: 800px) {
+@media screen and (orientation:portrait) {
     #content {
         flex-direction: column;
     }
@@ -188,7 +188,7 @@ body {
     padding: 6px;
 }
 
-@media only screen and (max-width: 800px) {
+@media screen and (orientation:portrait) {
     #configuration .station-info-tabs {
         display: none;
     }
