@@ -20,7 +20,7 @@ PC-Wetterstation.
 """
 import sys
 
-from remote_weather_access.client import te923ToCSVreader
+from ..client import te923ToCSVreader
 
 data_folder = '/opt/weatherstation/configData/'
 station_data_file_name = 'stationData.dat'

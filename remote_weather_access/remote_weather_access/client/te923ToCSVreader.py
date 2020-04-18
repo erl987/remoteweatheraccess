@@ -32,7 +32,7 @@ from collections import OrderedDict
 import logging
 import sys
 
-from remote_weather_access.client import constants, stationdata, lastdata, te923station, pcwetterstation, server
+from ..client import constants, stationdata, lastdata, te923station, pcwetterstation, server
 
 log_file_name = 'te923.log' # only relevant for Windows
 station_type = 'TE923/924 (Mebus,Irox,Honeywell,Cresta)'

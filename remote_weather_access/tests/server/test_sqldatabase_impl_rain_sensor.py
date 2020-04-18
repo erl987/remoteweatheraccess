@@ -20,10 +20,10 @@ import sqlite3
 import unittest
 from datetime import timedelta
 
-from tests.builder_acessors import *
-from remote_weather_access.common.datastructures import WeatherStationDataset, RainSensorData
-from remote_weather_access.server._sqldatabase_impl import _RainSensorTable
-from remote_weather_access.server.exceptions import NotExistingError, AlreadyExistingError
+from ..builder_acessors import *
+from ...remote_weather_access.common.datastructures import WeatherStationDataset, RainSensorData
+from ...remote_weather_access.server._sqldatabase_impl import _RainSensorTable
+from ...remote_weather_access.server.exceptions import NotExistingError, AlreadyExistingError
 
 
 def some_time():

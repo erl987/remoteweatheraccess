@@ -25,11 +25,11 @@ from scipy.misc import imread
 from skimage import color
 from skimage.measure import compare_ssim
 
-from remote_weather_access.common.datastructures import CombiSensorData, BaseStationSensorData, RainSensorData, \
+from ...remote_weather_access.common.datastructures import CombiSensorData, BaseStationSensorData, RainSensorData, \
     WeatherStationMetadata
-from remote_weather_access.common.fileformats import PCWetterstationFormatFile
-from remote_weather_access.server import graphs
-from remote_weather_access.server.sqldatabase import SQLWeatherDB
+from ...remote_weather_access.common.fileformats import PCWetterstationFormatFile
+from ...remote_weather_access.server import graphs
+from ...remote_weather_access.server.sqldatabase import SQLWeatherDB
 
 
 def sensors_to_plot():

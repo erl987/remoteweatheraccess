@@ -20,12 +20,12 @@ import shutil
 import time
 from zipfile import ZipFile
 
-from remote_weather_access.common import utilities
-from remote_weather_access.server.exceptions import NotExistingError
-from remote_weather_access.common.fileformats import PCWetterstationFormatFile
-from remote_weather_access.common.datastructures import WeatherStationDataset, BaseStationSensorData, WindSensorData, \
+from ...remote_weather_access.common import utilities
+from ...remote_weather_access.server.exceptions import NotExistingError
+from ...remote_weather_access.common.fileformats import PCWetterstationFormatFile
+from ...remote_weather_access.common.datastructures import WeatherStationDataset, BaseStationSensorData, WindSensorData, \
     CombiSensorData, RainSensorData
-from remote_weather_access.server.sqldatabase import SQLWeatherDB
+from ...remote_weather_access.server.sqldatabase import SQLWeatherDB
 
 station_ids = ["NBG", "ERL", "ECK"]
 receiver_base_dirpath = "/var/lib/remote-weather-access/receiver"

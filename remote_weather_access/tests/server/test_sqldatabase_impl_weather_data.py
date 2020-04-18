@@ -19,10 +19,11 @@ import os
 import sqlite3
 import unittest
 
-from tests.builder_acessors import *
-from remote_weather_access.common.datastructures import WeatherStationMetadata, WeatherStationDataset, BaseStationSensorData
-from remote_weather_access.server._sqldatabase_impl import _WeatherStationTable, _WeatherDataTable
-from remote_weather_access.server.exceptions import NotExistingError
+from ..builder_acessors import *
+from ...remote_weather_access.common.datastructures import WeatherStationMetadata, WeatherStationDataset, \
+    BaseStationSensorData
+from ...remote_weather_access.server._sqldatabase_impl import _WeatherStationTable, _WeatherDataTable
+from ...remote_weather_access.server.exceptions import NotExistingError
 
 
 def some_time():

@@ -18,8 +18,8 @@ import os
 import shutil
 import unittest
 
-from remote_weather_access.common.datastructures import BaseStationSensorData, RainSensorData
-from remote_weather_access.server.config import *
+from ...remote_weather_access.common.datastructures import BaseStationSensorData, RainSensorData
+from ...remote_weather_access.server.config import *
 
 
 def db_file_name():

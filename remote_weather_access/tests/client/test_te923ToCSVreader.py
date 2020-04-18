@@ -44,10 +44,10 @@ from datetime import timedelta
 import os
 import shutil
 
-from remote_weather_access.client import te923ToCSVreader
-from remote_weather_access.client import stationdata
-from remote_weather_access.client import lastdata
-from remote_weather_access.client import te923station
+from ...remote_weather_access.client import te923ToCSVreader
+from ...remote_weather_access.client import stationdata
+from ...remote_weather_access.client import lastdata
+from ...remote_weather_access.client import te923station
 
 data_folder = './test_data/'
 station_data_file_name = 'stationData.dat'

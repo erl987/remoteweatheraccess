@@ -17,8 +17,8 @@
 import unittest
 from datetime import datetime
 
-from remote_weather_access.common import utilities
-from remote_weather_access.server.exceptions import NoContentError
+from ...remote_weather_access.common import utilities
+from ...remote_weather_access.server.exceptions import NoContentError
 
 
 def a_number():
