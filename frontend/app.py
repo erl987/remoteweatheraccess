@@ -64,6 +64,14 @@ with open(impress_file_path, "r", encoding="utf8") as impress_file:
     impress_text = impress_file.read()
 
 
+def get_first_time():
+    first_time = datetime.max
+    for station_id in weather_db.get_stations():
+        first_time = min(first_time, weather_db.get_most_early_time_with_data(station_id))
+
+    return first_time
+
+
 def get_last_time():
     last_time = datetime.min
     for station_id in weather_db.get_stations():
@@ -124,6 +132,7 @@ figure_layout = {
 
 db_file_path = db_file_parent_path + os.path.sep + db_file_name
 weather_db = SQLWeatherDB(db_file_path)
+first_time = get_first_time()
 last_time = get_last_time()
 combi_sensor_ids, combi_sensor_descriptions = weather_db.get_combi_sensors()
 for id in combi_sensor_ids:
@@ -271,7 +280,7 @@ app.layout = html.Div(
                         drc.NamedDatePickerRange(
                             name="Zeitraum",
                             id="time-period-picker",
-                            min_date_allowed=datetime(2000, 1, 1),
+                            min_date_allowed=first_time,
                             max_date_allowed=last_time,
                             start_date=last_time - initial_time_period,
                             end_date=last_time,
@@ -334,13 +343,15 @@ app.layout = html.Div(
 )
 
 
-@app.callback([Output('time-period-picker', 'max_date_allowed'),
+@app.callback([Output('time-period-picker', 'min_date_allowed'),
+               Output('time-period-picker', 'max_date_allowed'),
                Output('time-period-picker', 'end_date'),
                Output('time-period-picker', 'start_date')],
               [Input('url', 'pathname')])
 def display_page(pathname):
+    first_time = get_first_time()
     last_time = get_last_time()
-    return last_time, last_time, last_time - initial_time_period
+    return first_time, last_time, last_time, last_time - initial_time_period
 
 
 @app.callback(
