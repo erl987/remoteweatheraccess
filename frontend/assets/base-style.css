@@ -152,6 +152,12 @@ body {
     height: 70vh;
 }
 
+@media screen and (orientation:portrait) {
+    #weather-data-graph {
+        height: 35vh;
+    }
+}
+
 /* Inputs
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 .input {
