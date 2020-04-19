@@ -2,10 +2,12 @@ FROM python:3.7.2-alpine3.9
 
 WORKDIR /app/restapi_backend
 
-COPY . /app
+COPY restapi_backend/requirements.txt requirements.txt
 
-RUN  apk add --no-cache libc-dev python3-dev gcc openssl-dev libffi-dev && pip install -r requirements.txt
+RUN apk add --no-cache libc-dev python3-dev gcc openssl-dev libffi-dev && pip install -r requirements.txt
 
 EXPOSE 8000
+
+COPY . /app
 
 ENTRYPOINT ["/usr/local/bin/gunicorn", "--config", "config/gunicorn.conf", "--log-config", "config/logging.conf", "-b", ":8000", "wsgi:app"]
