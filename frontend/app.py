@@ -1,6 +1,6 @@
 """
 Run in production with:
-`PYTHONPATH=weatherstation` (or whatever the content root path of the project is)
+`export PYTHONPATH=weatherstation` (or whatever the content root path of the project is)
 `gunicorn3 -b 0.0.0.0:8000 app:server`
 """
 import os
@@ -281,6 +281,7 @@ app.layout = html.Div(
                             placeholder="Auswählen ...",
                             options=available_sensors,
                             value=default_selected_sensor_ids,
+                            searchable=False,
                             multi=True
                         ),
 
@@ -290,6 +291,7 @@ app.layout = html.Div(
                             placeholder="Auswählen ...",
                             options=available_stations,
                             value=available_stations[-1]["value"],
+                            searchable=False,
                             multi=True
                         ),
 
