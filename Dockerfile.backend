@@ -4,7 +4,7 @@ WORKDIR /app/restapi_backend
 
 COPY restapi_backend/requirements.txt requirements.txt
 
-RUN apk add --no-cache libc-dev python3-dev gcc openssl-dev libffi-dev && pip install -r requirements.txt
+RUN apk add --no-cache libc-dev python3-dev g++ openssl-dev libffi-dev && pip install -r requirements.txt
 
 EXPOSE 8000
 
