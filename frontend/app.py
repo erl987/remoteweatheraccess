@@ -54,7 +54,7 @@ diagram_font_size = 14
 # default plot.ly styles
 dash_list = ["solid", "dash", "dot", "dashdot"]
 
-SECONDARY_AXIS_OFFSET = 0.07
+SECONDARY_AXIS_OFFSET = 0.1
 
 with open(data_protection_policy_file_path, "r", encoding="utf8") as data_protection_policy_file:
     data_protection_policy_text = data_protection_policy_file.read()
@@ -83,8 +83,6 @@ sensor_mapping = {"pressure": {"description": "Luftdruck",
 default_selected_sensor_ids = ["pressure", "rain_cumulated", "OUT1_temp", "OUT1_humid"]
 
 figure_layout = {
-    "plot_bgcolor": background_color,
-    "paper_bgcolor": background_color,
     "xaxis": {
         "color": graph_front_color,
         "linewidth": 2,
