@@ -280,7 +280,7 @@ app.layout = html.Div(
                             ),
 
                             dbc.Col(
-                                dcc.Graph(id="weather-data-graph", config=config_plots),
+                                dbc.Spinner(dcc.Graph(id="weather-data-graph", config=config_plots)),
                                 xl=8
                             )
                         ]
