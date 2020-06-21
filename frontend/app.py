@@ -346,8 +346,23 @@ def display_page(pathname):
 
 
 @app.callback(
-    [Output("weather-data-graph", "figure"),
-     Output("station-data-tab", "active_tab")],
+    Output("station-data-tab", "active_tab"),
+    [Input(component_id="station-dropdown", component_property="value")]
+)
+def select_station_info_tab(chosen_stations):
+    if isinstance(chosen_stations, str):
+        chosen_stations = [chosen_stations]
+
+    if len(chosen_stations) > 0:
+        open_tab_id = chosen_stations[0]
+    else:
+        open_tab_id = ""
+
+    return open_tab_id
+
+
+@app.callback(
+    Output("weather-data-graph", "figure"),
     [Input(component_id="time-period-picker", component_property="start_date"),
      Input(component_id="time-period-picker", component_property="end_date"),
      Input(component_id="station-dropdown", component_property="value"),
@@ -489,12 +504,7 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
         "layout": figure_layout
     }
 
-    if len(chosen_stations) > 0:
-        open_tab_id = chosen_stations[0]
-    else:
-        open_tab_id = ""
-
-    return figure_config, open_tab_id
+    return figure_config
 
 
 if __name__ == "__main__":
