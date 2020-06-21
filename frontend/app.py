@@ -154,7 +154,7 @@ for station_id in weather_db.get_stations():
 
     station_info_tabs.append(
         dbc.Tab(
-            dbc.Card([
+            dbc.Col([
                 dbc.FormGroup([
                     dbc.Label("Standort", html_for="location_info_{}".format(station_id)),
                     dbc.Input(id="location_info_{}".format(station_id), placeholder=location,
@@ -175,7 +175,7 @@ for station_id in weather_db.get_stations():
                     dbc.Label("Wettertation", html_for="device_info_{}".format(station_id)),
                     dbc.Input(id="device_info_{}".format(station_id), placeholder=device, disabled=True)
                 ])
-            ], body=True),
+            ]),
             label=station_town,
             tab_id=station_id
         )
