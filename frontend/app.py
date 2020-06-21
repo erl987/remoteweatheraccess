@@ -176,7 +176,7 @@ for station_id in weather_db.get_stations():
                     dbc.Input(id="device_info_{}".format(station_id), placeholder=device, disabled=True)
                 ])
             ], body=True),
-            label=station_town,
+            label=station_town
         )
     )
 
@@ -212,10 +212,11 @@ app.layout = dbc.Container(
             [
                 dbc.Col(
                     html.Div(
+                        id="configuration",
                         children=[
                             dbc.Card(
                                 [
-                                    html.H1("Zeitraum"),
+                                    html.H2("Zeitraum"),
                                     html.Div(
                                         dcc.DatePickerRange(
                                             id="time-period-picker",
@@ -228,15 +229,14 @@ app.layout = dbc.Container(
                                             start_date_placeholder_text="Startdatum",
                                             end_date_placeholder_text="Enddatum",
                                             first_day_of_week=1
-                                        ),
-                                        className="dash-bootstrap"
+                                        )
                                     )
                                 ], body=True
                             ),
 
                             dbc.Card(
                                 [
-                                    html.H1("Sensoren"),
+                                    html.H2("Sensoren"),
                                     html.Div(
                                         dcc.Dropdown(
                                             id="sensor-dropdown",
@@ -245,15 +245,14 @@ app.layout = dbc.Container(
                                             value=default_selected_sensor_ids,
                                             searchable=False,
                                             multi=True
-                                        ),
-                                        className="dash-bootstrap"
+                                        )
                                     )
                                 ], body=True
                             ),
 
                             dbc.Card(
                                 [
-                                    html.H1("Stationen"),
+                                    html.H2("Stationen"),
                                     html.Div(
                                         dcc.Dropdown(
                                             id="station-dropdown",
@@ -262,16 +261,17 @@ app.layout = dbc.Container(
                                             value=available_stations[-1]["value"],
                                             searchable=False,
                                             multi=True
-                                        ),
-                                        className="dash-bootstrap"
+                                        )
                                     )
 
                                 ], body=True
                             ),
 
                             dbc.Card([
-                                html.H1("Stationsdaten"),
-                                dbc.Tabs(station_info_tabs)
+                                html.H2("Stationsdaten"),
+                                dbc.Tabs(
+                                    station_info_tabs
+                                )
                             ], body=True)
                         ]
                     ),
