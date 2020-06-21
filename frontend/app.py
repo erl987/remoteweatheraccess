@@ -181,8 +181,9 @@ for station_id in weather_db.get_stations():
         )
     )
 
-app.layout = html.Div(
-    [
+app.layout = dbc.Container(
+    fluid=True,
+    children=[
         dcc.Location(id='url', refresh=True),
 
         dbc.Card(
@@ -227,17 +228,20 @@ app.layout = html.Div(
                                         dbc.Card(
                                             [
                                                 html.H3("Zeitraum"),
-                                                dcc.DatePickerRange(
-                                                    id="time-period-picker",
-                                                    min_date_allowed=first_time,
-                                                    max_date_allowed=last_time,
-                                                    start_date=last_time - initial_time_period,
-                                                    end_date=last_time,
-                                                    display_format="DD.MM.YYYY",
-                                                    stay_open_on_select=True,
-                                                    start_date_placeholder_text="Startdatum",
-                                                    end_date_placeholder_text="Enddatum",
-                                                    first_day_of_week=1
+                                                html.Div(
+                                                    dcc.DatePickerRange(
+                                                        id="time-period-picker",
+                                                        min_date_allowed=first_time,
+                                                        max_date_allowed=last_time,
+                                                        start_date=last_time - initial_time_period,
+                                                        end_date=last_time,
+                                                        display_format="DD.MM.YYYY",
+                                                        stay_open_on_select=True,
+                                                        start_date_placeholder_text="Startdatum",
+                                                        end_date_placeholder_text="Enddatum",
+                                                        first_day_of_week=1
+                                                    ),
+                                                    className="dash-bootstrap"
                                                 )
                                             ], body=True
                                         ),
@@ -245,13 +249,16 @@ app.layout = html.Div(
                                         dbc.Card(
                                             [
                                                 html.H3("Sensoren"),
-                                                dcc.Dropdown(
-                                                    id="sensor-dropdown",
-                                                    placeholder="Auswählen ...",
-                                                    options=available_sensors,
-                                                    value=default_selected_sensor_ids,
-                                                    searchable=False,
-                                                    multi=True
+                                                html.Div(
+                                                    dcc.Dropdown(
+                                                        id="sensor-dropdown",
+                                                        placeholder="Auswählen ...",
+                                                        options=available_sensors,
+                                                        value=default_selected_sensor_ids,
+                                                        searchable=False,
+                                                        multi=True
+                                                    ),
+                                                    className="dash-bootstrap"
                                                 )
                                             ], body=True
                                         ),
@@ -259,14 +266,18 @@ app.layout = html.Div(
                                         dbc.Card(
                                             [
                                                 html.H3("Stationen"),
-                                                dcc.Dropdown(
-                                                    id="station-dropdown",
-                                                    placeholder="Auswählen ...",
-                                                    options=available_stations,
-                                                    value=available_stations[-1]["value"],
-                                                    searchable=False,
-                                                    multi=True
+                                                html.Div(
+                                                    dcc.Dropdown(
+                                                        id="station-dropdown",
+                                                        placeholder="Auswählen ...",
+                                                        options=available_stations,
+                                                        value=available_stations[-1]["value"],
+                                                        searchable=False,
+                                                        multi=True
+                                                    ),
+                                                    className="dash-bootstrap"
                                                 )
+
                                             ], body=True
                                         ),
 
