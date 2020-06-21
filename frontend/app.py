@@ -176,7 +176,8 @@ for station_id in weather_db.get_stations():
                     dbc.Input(id="device_info_{}".format(station_id), placeholder=device, disabled=True)
                 ])
             ], body=True),
-            label=station_town
+            label=station_town,
+            tab_id=station_id
         )
     )
 
@@ -187,12 +188,12 @@ app.layout = dbc.Container(
 
         dbc.NavbarSimple(
             children=[
-                dbc.NavItem(dbc.NavLink("Home", href="#")),
+                dbc.NavItem(dbc.NavLink("Home", href="")),
                 dbc.NavItem(dbc.NavLink("Datenschutz", href="#", id="open-data-protection-policy")),
                 dbc.NavItem(dbc.NavLink("Impressum", href="#", id="open-impress"))
             ],
             brand="Rettigs Wetternetzwerk",
-            brand_href="#",
+            brand_href="",
             color="primary",
             dark=True,
             fluid=True
@@ -270,7 +271,8 @@ app.layout = dbc.Container(
                             dbc.Card([
                                 html.H2("Stationsdaten"),
                                 dbc.Tabs(
-                                    station_info_tabs
+                                    station_info_tabs,
+                                    id="station-data-tab"
                                 )
                             ], body=True)
                         ]
@@ -344,7 +346,8 @@ def display_page(pathname):
 
 
 @app.callback(
-    Output("weather-data-graph", "figure"),
+    [Output("weather-data-graph", "figure"),
+     Output("station-data-tab", "active_tab")],
     [Input(component_id="time-period-picker", component_property="start_date"),
      Input(component_id="time-period-picker", component_property="end_date"),
      Input(component_id="station-dropdown", component_property="value"),
@@ -486,7 +489,12 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
         "layout": figure_layout
     }
 
-    return figure_config
+    if len(chosen_stations) > 0:
+        open_tab_id = chosen_stations[0]
+    else:
+        open_tab_id = ""
+
+    return figure_config, open_tab_id
 
 
 if __name__ == "__main__":
