@@ -29,8 +29,7 @@ initial_time_period = timedelta(days=7)
 
 db_file_parent_path = os.environ.get("DBBASEDIR", os.path.abspath(os.path.dirname(__file__)) + os.sep + "test_data")
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-server = app.server
+app = dash.Dash(external_stylesheets=[dbc.themes.UNITED])
 app.title = "Wetterdaten"
 
 config_plots = {"locale": "de"}
@@ -186,122 +185,110 @@ app.layout = dbc.Container(
     children=[
         dcc.Location(id='url', refresh=True),
 
-        dbc.Card(
+        dbc.NavbarSimple(
+            children=[
+                dbc.NavItem(dbc.NavLink("Home", href="#")),
+                dbc.NavItem(dbc.NavLink("Datenschutz", href="#", id="open-data-protection-policy")),
+                dbc.NavItem(dbc.NavLink("Impressum", href="#", id="open-impress"))
+            ],
+            brand="Rettigs Wetternetzwerk",
+            brand_href="#",
+            color="primary",
+            dark=True,
+            fluid=True
+        ),
+
+        drc.ModalDialog(
+            id="data-protection-policy",
+            dialog_content=data_protection_policy_text
+        ),
+
+        drc.ModalDialog(
+            id="impress",
+            dialog_content=impress_text
+        ),
+
+        dbc.Row(
             [
-                dbc.CardHeader(
-                    [
-                        dbc.Row(
-                            [
-                                dbc.Col(
-                                    [
-                                        html.H1("Wetterdaten"),
-                                        html.H2("Rettigs Wetternetzwerk")
-                                    ], width=8
-                                ),
-                                dbc.Col(
-                                    dbc.ButtonGroup(
-                                        [
-                                            drc.ModalDialog(
-                                                id="data-protection-policy",
-                                                button_text="Datenschutz",
-                                                dialog_content=data_protection_policy_text,
-                                                className="link-item"),
-                                            drc.ModalDialog(
-                                                id="impress",
-                                                button_text="Impressum",
-                                                dialog_content=impress_text,
-                                                className="link-item")
-                                        ]
-                                    ), width="auto"
-                                )
-                            ],
-                            align="end",
-                            justify="between")
-                    ]
-                ),
-                dbc.CardBody(
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                html.Div(
-                                    children=[
-                                        dbc.Card(
-                                            [
-                                                html.H3("Zeitraum"),
-                                                html.Div(
-                                                    dcc.DatePickerRange(
-                                                        id="time-period-picker",
-                                                        min_date_allowed=first_time,
-                                                        max_date_allowed=last_time,
-                                                        start_date=last_time - initial_time_period,
-                                                        end_date=last_time,
-                                                        display_format="DD.MM.YYYY",
-                                                        stay_open_on_select=True,
-                                                        start_date_placeholder_text="Startdatum",
-                                                        end_date_placeholder_text="Enddatum",
-                                                        first_day_of_week=1
-                                                    ),
-                                                    className="dash-bootstrap"
-                                                )
-                                            ], body=True
+                dbc.Col(
+                    html.Div(
+                        children=[
+                            dbc.Card(
+                                [
+                                    html.H1("Zeitraum"),
+                                    html.Div(
+                                        dcc.DatePickerRange(
+                                            id="time-period-picker",
+                                            min_date_allowed=first_time,
+                                            max_date_allowed=last_time,
+                                            start_date=last_time - initial_time_period,
+                                            end_date=last_time,
+                                            display_format="DD.MM.YYYY",
+                                            stay_open_on_select=True,
+                                            start_date_placeholder_text="Startdatum",
+                                            end_date_placeholder_text="Enddatum",
+                                            first_day_of_week=1
                                         ),
-
-                                        dbc.Card(
-                                            [
-                                                html.H3("Sensoren"),
-                                                html.Div(
-                                                    dcc.Dropdown(
-                                                        id="sensor-dropdown",
-                                                        placeholder="Auswählen ...",
-                                                        options=available_sensors,
-                                                        value=default_selected_sensor_ids,
-                                                        searchable=False,
-                                                        multi=True
-                                                    ),
-                                                    className="dash-bootstrap"
-                                                )
-                                            ], body=True
-                                        ),
-
-                                        dbc.Card(
-                                            [
-                                                html.H3("Stationen"),
-                                                html.Div(
-                                                    dcc.Dropdown(
-                                                        id="station-dropdown",
-                                                        placeholder="Auswählen ...",
-                                                        options=available_stations,
-                                                        value=available_stations[-1]["value"],
-                                                        searchable=False,
-                                                        multi=True
-                                                    ),
-                                                    className="dash-bootstrap"
-                                                )
-
-                                            ], body=True
-                                        ),
-
-                                        dbc.Card([
-                                            html.H3("Stationsdaten"),
-                                            dbc.Tabs(station_info_tabs)
-                                        ], body=True)
-                                    ]
-                                ),
-                                xl=4
+                                        className="dash-bootstrap"
+                                    )
+                                ], body=True
                             ),
 
-                            dbc.Col(
-                                dbc.Spinner(dcc.Graph(id="weather-data-graph", config=config_plots)),
-                                xl=8
-                            )
+                            dbc.Card(
+                                [
+                                    html.H1("Sensoren"),
+                                    html.Div(
+                                        dcc.Dropdown(
+                                            id="sensor-dropdown",
+                                            placeholder="Auswählen ...",
+                                            options=available_sensors,
+                                            value=default_selected_sensor_ids,
+                                            searchable=False,
+                                            multi=True
+                                        ),
+                                        className="dash-bootstrap"
+                                    )
+                                ], body=True
+                            ),
+
+                            dbc.Card(
+                                [
+                                    html.H1("Stationen"),
+                                    html.Div(
+                                        dcc.Dropdown(
+                                            id="station-dropdown",
+                                            placeholder="Auswählen ...",
+                                            options=available_stations,
+                                            value=available_stations[-1]["value"],
+                                            searchable=False,
+                                            multi=True
+                                        ),
+                                        className="dash-bootstrap"
+                                    )
+
+                                ], body=True
+                            ),
+
+                            dbc.Card([
+                                html.H1("Stationsdaten"),
+                                dbc.Tabs(station_info_tabs)
+                            ], body=True)
                         ]
                     ),
+                    xl=4
                 ),
 
-                dbc.CardFooter(
-                    html.P(children="Copyright (C) 2020 Ralf Rettig")
+                dbc.Col(
+                    dbc.Spinner(dcc.Graph(id="weather-data-graph", config=config_plots)),
+                    xl=8
                 )
             ]
+        ),
+
+        dbc.Row(
+            [dbc.Col(
+                html.P(children="Copyright (C) 2020 Ralf Rettig"), width=12
+            )]
         )
     ]
 )
