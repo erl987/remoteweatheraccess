@@ -110,6 +110,8 @@ figure_layout = {
         "y": 1.2,
         "x": 0.5
     },
+    "height": 550,  # in px
+    "margin": dict(l=20, r=20, t=20, b=100)  # in px
 }
 
 db_file_path = db_file_parent_path + os.path.sep + db_file_name
@@ -172,7 +174,7 @@ for station_id in weather_db.get_stations():
                               placeholder="{} / {}".format(latitude_str, longitude_str), disabled=True)
                 ]),
                 dbc.FormGroup([
-                    dbc.Label("Wettertation", html_for="device_info_{}".format(station_id)),
+                    dbc.Label("Wetterstation", html_for="device_info_{}".format(station_id)),
                     dbc.Input(id="device_info_{}".format(station_id), placeholder=device, disabled=True)
                 ])
             ]),
@@ -185,19 +187,6 @@ app.layout = dbc.Container(
     fluid=True,
     children=[
         dcc.Location(id='url', refresh=True),
-
-        dbc.NavbarSimple(
-            children=[
-                dbc.NavItem(dbc.NavLink("Home", href="")),
-                dbc.NavItem(dbc.NavLink("Datenschutz", href="#", id="open-data-protection-policy")),
-                dbc.NavItem(dbc.NavLink("Impressum", href="#", id="open-impress"))
-            ],
-            brand="Rettigs Wetternetzwerk",
-            brand_href="",
-            color="primary",
-            dark=True,
-            fluid=True
-        ),
 
         drc.ModalDialog(
             id="data-protection-policy",
@@ -212,77 +201,98 @@ app.layout = dbc.Container(
         dbc.Row(
             [
                 dbc.Col(
-                    html.Div(
-                        id="configuration",
+                    dbc.NavbarSimple(
                         children=[
-                            dbc.Card(
-                                [
-                                    html.H2("Zeitraum"),
-                                    html.Div(
-                                        dcc.DatePickerRange(
-                                            id="time-period-picker",
-                                            min_date_allowed=first_time,
-                                            max_date_allowed=last_time,
-                                            start_date=last_time - initial_time_period,
-                                            end_date=last_time,
-                                            display_format="DD.MM.YYYY",
-                                            stay_open_on_select=True,
-                                            start_date_placeholder_text="Startdatum",
-                                            end_date_placeholder_text="Enddatum",
-                                            first_day_of_week=1
-                                        )
-                                    )
-                                ], body=True
-                            ),
-
-                            dbc.Card(
-                                [
-                                    html.H2("Sensoren"),
-                                    html.Div(
-                                        dcc.Dropdown(
-                                            id="sensor-dropdown",
-                                            placeholder="Auswählen ...",
-                                            options=available_sensors,
-                                            value=default_selected_sensor_ids,
-                                            searchable=False,
-                                            multi=True
-                                        )
-                                    )
-                                ], body=True
-                            ),
-
-                            dbc.Card(
-                                [
-                                    html.H2("Stationen"),
-                                    html.Div(
-                                        dcc.Dropdown(
-                                            id="station-dropdown",
-                                            placeholder="Auswählen ...",
-                                            options=available_stations,
-                                            value=available_stations[-1]["value"],
-                                            searchable=False,
-                                            multi=True
-                                        )
-                                    )
-
-                                ], body=True
-                            ),
-
-                            dbc.Card([
-                                html.H2("Stationsdaten"),
-                                dbc.Tabs(
-                                    station_info_tabs,
-                                    id="station-data-tab"
-                                )
-                            ], body=True)
-                        ]
+                            dbc.NavItem(dbc.NavLink("Home", href="")),
+                            dbc.NavItem(dbc.NavLink("Datenschutz", href="#", id="open-data-protection-policy")),
+                            dbc.NavItem(dbc.NavLink("Impressum", href="#", id="open-impress"))
+                        ],
+                        brand="Rettigs Wetternetzwerk",
+                        brand_href="",
+                        color="primary",
+                        dark=True,
+                        fluid=True,
+                        expand="lg"
                     ),
-                    xl=4
+                    width=12
+                )
+            ]
+        ),
+
+        dbc.Row(
+            [
+                dbc.Col(
+                    id="configuration",
+                    children=[
+                        dbc.Card(
+                            [
+                                html.H2("Zeitraum"),
+                                html.Div(
+                                    dcc.DatePickerRange(
+                                        id="time-period-picker",
+                                        min_date_allowed=first_time,
+                                        max_date_allowed=last_time,
+                                        start_date=last_time - initial_time_period,
+                                        end_date=last_time,
+                                        display_format="DD.MM.YYYY",
+                                        stay_open_on_select=True,
+                                        start_date_placeholder_text="Startdatum",
+                                        end_date_placeholder_text="Enddatum",
+                                        first_day_of_week=1
+                                    )
+                                )
+                            ], body=True
+                        ),
+
+                        dbc.Card(
+                            [
+                                html.H2("Sensoren"),
+                                html.Div(
+                                    dcc.Dropdown(
+                                        id="sensor-dropdown",
+                                        placeholder="Auswählen ...",
+                                        options=available_sensors,
+                                        value=default_selected_sensor_ids,
+                                        searchable=False,
+                                        multi=True
+                                    )
+                                )
+                            ], body=True
+                        ),
+
+                        dbc.Card(
+                            [
+                                html.H2("Stationen"),
+                                html.Div(
+                                    dcc.Dropdown(
+                                        id="station-dropdown",
+                                        placeholder="Auswählen ...",
+                                        options=available_stations,
+                                        value=available_stations[-1]["value"],
+                                        searchable=False,
+                                        multi=True
+                                    )
+                                )
+
+                            ], body=True
+                        ),
+
+                        dbc.Card([
+                            html.H2("Stationsdaten"),
+                            dbc.Tabs(
+                                station_info_tabs,
+                                id="station-data-tab"
+                            )
+                        ], body=True)
+                    ],
+                    width=12,
+                    lg=4
                 ),
 
                 dbc.Col(
                     dbc.Spinner(dcc.Graph(id="weather-data-graph", config=config_plots)),
-                    xl=8
+                    width=12,
+                    lg=8
                 )
             ]
         ),
