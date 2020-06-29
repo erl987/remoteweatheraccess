@@ -110,7 +110,6 @@ figure_layout = {
         "y": 1.2,
         "x": 0.5
     },
-    "height": 550,  # in px
     "margin": dict(l=20, r=20, t=20, b=100)  # in px
 }
 
@@ -186,6 +185,8 @@ for station_id in weather_db.get_stations():
 app.layout = dbc.Container(
     fluid=True,
     children=[
+        html.Meta(name="viewport", content="width=device-width, initial-scale=1, shrink-to-fit=no"),
+
         dcc.Location(id='url', refresh=True),
 
         drc.ModalDialog(
