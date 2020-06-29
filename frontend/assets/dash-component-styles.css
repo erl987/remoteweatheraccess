@@ -174,3 +174,11 @@
         padding-left: 0;
     }
 }
+
+
+/** Diagram
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.diagram {
+    height: 800px;
+    max-height: 100vh;
+}
