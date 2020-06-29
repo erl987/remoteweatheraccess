@@ -299,8 +299,9 @@ app.layout = dbc.Container(
 
                 dbc.Col(
                     dbc.Spinner(dcc.Graph(id="weather-data-graph", config=config_plots)),
-                    width=12,
-                    lg=8
+                    width="auto",
+                    lg=8,
+                    style={"minWidth": "800px"}
                 )
             ]
         ),
