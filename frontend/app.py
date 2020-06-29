@@ -29,7 +29,10 @@ initial_time_period = timedelta(days=7)
 
 db_file_parent_path = os.environ.get("DBBASEDIR", os.path.abspath(os.path.dirname(__file__)) + os.sep + "test_data")
 
-app = dash.Dash(external_stylesheets=[dbc.themes.UNITED])
+app = dash.Dash(external_stylesheets=[dbc.themes.UNITED],
+                meta_tags=[
+                    {"name": "viewport", "content": "width=device-width, initial-scale=1"}
+                ])
 app.title = "Wetterdaten"
 
 config_plots = {"locale": "de"}
@@ -191,8 +194,6 @@ for station_id in weather_db.get_stations():
 app.layout = dbc.Container(
     fluid=True,
     children=[
-        html.Meta(name="viewport", content="width=device-width, initial-scale=1, shrink-to-fit=no"),
-
         dcc.Location(id='url', refresh=True),
 
         drc.ModalDialog(
