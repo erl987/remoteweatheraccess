@@ -34,21 +34,24 @@ app.title = "Wetterdaten"
 
 config_plots = {"locale": "de"}
 
+# color scheme of the Bootstrap theme United
 color_list = [
-    "#1f77b4",  # muted blue
-    "#2ca02c",  # cooked asparagus green
-    "#d62728",  # brick red
-    "#7f7f7f",  # middle gray
-    "#9467bd",  # muted purple
-    "#ff7f0e",  # safety orange
-    "#8c564b",  # chestnut brown
-    "#e377c2",  # raspberry yogurt pink
-    "#bcbd22",  # curry yellow-green
-    "#17becf"]  # blue-teal
+    "#007bff",
+    "#38B44A",
+    "#DF382C",
+    "#868e96",
+    "#772953",
+    "#E95420",
+    "#772953",
+    "#e83e8c",
+    "#20c997",
+    "#17a2b8"]
 
-background_color = "#161a28"
-graph_front_color = "#a5b1cd"
-diagram_font_size = 14
+graph_front_color = "black"
+grid_color = "#a5b1cd"
+diagram_font_size = 18
+diagram_font_family = "Helvetica Neue, Helvetica, Arial, sans-serif"  # default for Bootstrap
+diagram_line_width = 2
 
 # default plot.ly styles
 dash_list = ["solid", "dash", "dot", "dashdot"]
@@ -84,8 +87,8 @@ default_selected_sensor_ids = ["pressure", "rain_cumulated", "OUT1_temp", "OUT1_
 figure_layout = {
     "xaxis": {
         "color": graph_front_color,
-        "linewidth": 2,
-        "gridcolor": graph_front_color,
+        "linewidth": diagram_line_width,
+        "gridcolor": grid_color,
         "tickformatstops": [{
             "dtickrange": [None, 36000000],
             "value": "%d.%m.\n%H:%M"
@@ -94,14 +97,17 @@ figure_layout = {
             "value": "%a\n%d.%m.%Y"
         }],
         "titlefont": {
+            "family": diagram_font_family,
             "size": diagram_font_size
         },
         "tickfont": {
+            "family": diagram_font_family,
             "size": diagram_font_size
         },
     },
     "legend": {
         "font": {
+            "family": diagram_font_family,
             "color": graph_front_color,
             "size": diagram_font_size
         },
@@ -450,12 +456,16 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
                                   "name": "{} - {}".format(station_id, sensor_description),
                                   "line": {
                                       "color": color_list[color_index],
-                                      "width": 2,
+                                      "width": diagram_line_width,
                                       "dash": dash_list[dash_index]
                                   },
                                   "yaxis": "y{}".format(sensor_index + 1),
                                   "hoverlabel": {
-                                      "namelength": "-1"
+                                      "namelength": "-1",
+                                      "font": {
+                                          "family": diagram_font_family,
+                                          "size": diagram_font_size
+                                      }
                                   }
                                   })
 
@@ -466,21 +476,24 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
                 figure_layout[axis_name] = {
                     "title": "{} / {}".format(sensor_description, sensor_unit),
                     "titlefont": {
+                        "family": diagram_font_family,
                         "color": color_list[color_index],
                         "size": diagram_font_size
                     },
                     "tickfont": {
+                        "family": diagram_font_family,
                         "color": color_list[color_index],
                         "size": diagram_font_size
                     },
                     "linecolor": color_list[color_index],
+                    "linewidth": diagram_line_width,
                     "zeroline": False,
                     "nticks": num_ticks,
                     "range": [min_max_limits[sensor_tuple]["min"], min_max_limits[sensor_tuple]["max"]]
                 }
 
                 if sensor_index == 0:
-                    figure_layout[axis_name]["gridcolor"] = graph_front_color
+                    figure_layout[axis_name]["gridcolor"] = grid_color
 
                 if sensor_index > 0:
                     figure_layout[axis_name]["anchor"] = "free"
@@ -503,7 +516,7 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
             },
             "linecolor": graph_front_color,
             "zeroline": False,
-            "gridcolor": graph_front_color,
+            "gridcolor": grid_color,
             "range": [0, 100]
         }
 
