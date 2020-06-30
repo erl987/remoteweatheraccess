@@ -178,7 +178,9 @@
 
 /** Diagram
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
-.diagram {
-    height: 800px;
-    max-height: 100vh;
+/* Bootstrap breakpoint 'xl' and up */
+@media (min-width: 992px) {
+    .diagram {
+        height: 70vh;
+    }
 }
