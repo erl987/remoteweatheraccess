@@ -12,7 +12,7 @@ Deutschland
 Telefon: 0911 / 63 67 52  
 E-Mail: info@personalfme.de
 
-## Verantwortlich für den Inhalt nach $ 55 Abs. 2 RStV
+## Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV
 
 Ralf Rettig  
 Bechhofer Str. 7b  

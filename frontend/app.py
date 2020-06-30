@@ -119,7 +119,7 @@ figure_layout = {
         "y": 1.2,
         "x": 0.5
     },
-    "margin": dict(l=20, r=20, t=20, b=100)  # in px
+    "margin": dict(l=20, r=20, t=40, b=100)  # in px
 }
 
 db_file_path = db_file_parent_path + os.path.sep + db_file_name
