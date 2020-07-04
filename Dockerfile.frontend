@@ -6,9 +6,13 @@ ENV PYTHONPATH=/app
 
 COPY frontend/requirements.txt requirements.txt
 
-RUN apk add --no-cache \
+RUN apk add --no-cache --virtual .build-deps \
         g++ \
-    && pip install -r requirements.txt
+    && pip install --no-cache-dir -r requirements.txt \
+    && apk del .build-deps
+
+RUN apk add --no-cache \
+        libstdc++
 
 EXPOSE 8050
 
