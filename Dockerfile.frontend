@@ -1,4 +1,4 @@
-FROM python:3.8.2-alpine3.11
+FROM python:3.8.3-alpine3.12
 
 WORKDIR /app/frontend
 
@@ -6,10 +6,16 @@ ENV PYTHONPATH=/app
 
 COPY frontend/requirements.txt requirements.txt
 
-RUN apk add --no-cache libc-dev python3-dev g++ openssl-dev libffi-dev && pip install -r requirements.txt
+RUN apk add --no-cache \
+        libc-dev \
+        python3-dev \
+        g++ \
+        openssl-dev \
+        libffi-dev \
+    && pip install -r requirements.txt
 
-EXPOSE 8000
+EXPOSE 8050
 
 COPY . /app
 
-ENTRYPOINT ["/usr/local/bin/gunicorn", "--config", "config/gunicorn.py", "--log-config", "config/logging.conf", "-b", ":8000", "app:server"]
+ENTRYPOINT ["/usr/local/bin/gunicorn", "--config", "config/gunicorn.py", "--log-config", "config/logging.conf", "-b", ":8050", "app:server"]

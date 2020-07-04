@@ -1,7 +1,7 @@
 """
 Run in production with:
 `export PYTHONPATH=weatherstation` (or whatever the content root path of the project is)
-`gunicorn3 -b 0.0.0.0:8000 app:server`
+`gunicorn3 -b 0.0.0.0:8050 app:server`
 """
 import os
 from datetime import timedelta, datetime
@@ -27,12 +27,19 @@ data_protection_policy_file_path = r"assets/data-protection-policy.md"
 impress_file_path = r"assets/impress.md"
 initial_time_period = timedelta(days=7)
 
-db_file_parent_path = os.environ.get("DBBASEDIR", os.path.abspath(os.path.dirname(__file__)) + os.sep + "test_data")
 
-app = dash.Dash(external_stylesheets=[dbc.themes.UNITED],
+def relative_to_file_path(relative_path):
+    return os.path.abspath(os.path.dirname(__file__) + os.sep + relative_path)
+
+
+db_file_parent_path = os.environ.get("DBBASEDIR", relative_to_file_path("test_data"))
+
+app = dash.Dash(__name__,
+                external_stylesheets=[dbc.themes.UNITED],
                 meta_tags=[
                     {"name": "viewport", "content": "width=device-width, initial-scale=1"}
                 ])
+server = app.server
 app.title = "Wetterdaten"
 
 config_plots = {"locale": "de"}
@@ -61,10 +68,10 @@ dash_list = ["solid", "dash", "dot", "dashdot"]
 
 SECONDARY_AXIS_OFFSET = 0.1
 
-with open(data_protection_policy_file_path, "r", encoding="utf8") as data_protection_policy_file:
+with open(relative_to_file_path(data_protection_policy_file_path), "r", encoding="utf8") as data_protection_policy_file:
     data_protection_policy_text = data_protection_policy_file.read()
 
-with open(impress_file_path, "r", encoding="utf8") as impress_file:
+with open(relative_to_file_path(impress_file_path), "r", encoding="utf8") as impress_file:
     impress_text = impress_file.read()
 
 sensor_mapping = {"pressure": {"description": "Luftdruck",
