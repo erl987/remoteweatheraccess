@@ -1,4 +1,5 @@
 gunicorn==20.0.4
+gevent==20.6.2
 json-logging-py==0.2
 dash==1.13.4
 dash-bootstrap-components==0.10.3

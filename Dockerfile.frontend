@@ -8,6 +8,10 @@ COPY frontend/requirements.txt requirements.txt
 
 RUN apk add --no-cache --virtual .build-deps \
         g++ \
+        openssl-dev \
+        libffi-dev \
+        musl-dev \
+        make \
     && pip install --no-cache-dir -r requirements.txt \
     && apk del .build-deps
 
@@ -19,4 +23,4 @@ EXPOSE 8050
 COPY ./frontend /app/frontend
 COPY ./remote_weather_access /app/remote_weather_access
 
-ENTRYPOINT ["/usr/local/bin/gunicorn", "--config", "config/gunicorn.py", "--log-config", "config/logging.conf", "-b", ":8050", "app:server"]
+ENTRYPOINT ["/usr/local/bin/gunicorn", "--worker-class", "gevent", "--preload", "--config", "config/gunicorn.py", "--log-config", "config/logging.conf", "-b", ":8050", "app:server"]

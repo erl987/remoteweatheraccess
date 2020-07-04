@@ -1,7 +1,8 @@
 """
 Run in production with:
-`export PYTHONPATH=weatherstation` (or whatever the content root path of the project is)
-`gunicorn3 -b 0.0.0.0:8050 app:server`
+`cd ..` (you should be now in the root directory of the content root path of the project (i.e. `weatherstation`)
+`export PYTHONPATH=weatherstation`
+`gunicorn3 -b 0.0.0.0:8050 frontend.app:server`
 """
 import os
 from datetime import timedelta, datetime
