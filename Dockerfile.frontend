@@ -7,15 +7,12 @@ ENV PYTHONPATH=/app
 COPY frontend/requirements.txt requirements.txt
 
 RUN apk add --no-cache \
-        libc-dev \
-        python3-dev \
         g++ \
-        openssl-dev \
-        libffi-dev \
     && pip install -r requirements.txt
 
 EXPOSE 8050
 
-COPY . /app
+COPY ./frontend /app/frontend
+COPY ./remote_weather_access /app/remote_weather_access
 
 ENTRYPOINT ["/usr/local/bin/gunicorn", "--config", "config/gunicorn.py", "--log-config", "config/logging.conf", "-b", ":8050", "app:server"]
