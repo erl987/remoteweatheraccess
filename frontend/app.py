@@ -9,27 +9,26 @@ from datetime import timedelta, datetime
 from math import ceil
 
 import dash
-from dash.dependencies import Input, Output, State
-from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
-
-import frontend.utils.dash_reusable_components as drc
 import dash_core_components as dcc
 import dash_html_components as html
 import dateutil.parser
+from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
 
+import frontend.utils.dash_reusable_components as drc
+from frontend.utils import plot_config
 from remote_weather_access.remote_weather_access.common.datastructures import BaseStationSensorData, RainSensorData, \
     WindSensorData
 from remote_weather_access.remote_weather_access.server.sqldatabase import SQLWeatherDB
-from frontend.utils import plot_config
 
 db_file_name = os.environ.get("DBFILE", "weather.db")
-data_protection_policy_file_path = r"assets/data-protection-policy.md"
-impress_file_path = r"assets/impress.md"
+data_protection_policy_file_path = r"text_content/data-protection-policy.md"
+impress_file_path = r"text_content/impress.md"
 initial_time_period = timedelta(days=7)
 
+# this app uses the Bootstrap theme United
 app = dash.Dash(__name__,
-                external_stylesheets=[dbc.themes.UNITED],
                 meta_tags=[
                     {"name": "viewport", "content": "width=device-width, initial-scale=1"}
                 ])
