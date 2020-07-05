@@ -28,13 +28,6 @@ data_protection_policy_file_path = r"assets/data-protection-policy.md"
 impress_file_path = r"assets/impress.md"
 initial_time_period = timedelta(days=7)
 
-
-def relative_to_file_path(relative_path):
-    return os.path.abspath(os.path.dirname(__file__) + os.sep + relative_path)
-
-
-db_file_parent_path = os.environ.get("DBBASEDIR", relative_to_file_path("test_data"))
-
 app = dash.Dash(__name__,
                 external_stylesheets=[dbc.themes.UNITED],
                 meta_tags=[
@@ -45,7 +38,7 @@ app.title = "Wetterdaten"
 
 config_plots = {"locale": "de"}
 
-# color scheme of the Bootstrap theme United
+# color scheme based on that of the Bootstrap theme United
 color_list = [
     "#007bff",
     "#38B44A",
@@ -67,7 +60,12 @@ diagram_line_width = 2
 # default plot.ly styles
 dash_list = ["solid", "dash", "dot", "dashdot"]
 
-SECONDARY_AXIS_OFFSET = 0.1
+secondary_axis_offset = 0.1
+
+
+def relative_to_file_path(relative_path):
+    return os.path.abspath(os.path.dirname(__file__) + os.sep + relative_path)
+
 
 with open(relative_to_file_path(data_protection_policy_file_path), "r", encoding="utf8") as data_protection_policy_file:
     data_protection_policy_text = data_protection_policy_file.read()
@@ -130,6 +128,7 @@ figure_layout = {
     "margin": dict(l=20, r=20, t=40, b=100)  # in px
 }
 
+db_file_parent_path = os.environ.get("DBBASEDIR", relative_to_file_path("test_data"))
 db_file_path = db_file_parent_path + os.path.sep + db_file_name
 weather_db = SQLWeatherDB(db_file_path)
 first_time = weather_db.get_most_early_time_with_data()
@@ -187,17 +186,98 @@ for station_id in weather_db.get_stations():
                 dbc.FormGroup([
                     dbc.Label("Koordinaten", html_for="coordinates_info_{}".format(station_id)),
                     dbc.Input(id="coordinates_info_{}".format(station_id),
-                              placeholder="{} / {}".format(latitude_str, longitude_str), disabled=True)
+                              placeholder="{} / {}".format(latitude_str, longitude_str),
+                              disabled=True)
                 ]),
                 dbc.FormGroup([
                     dbc.Label("Wetterstation", html_for="device_info_{}".format(station_id)),
-                    dbc.Input(id="device_info_{}".format(station_id), placeholder=device, disabled=True)
+                    dbc.Input(id="device_info_{}".format(station_id), placeholder=device,
+                              disabled=True)
                 ])
             ]),
             label=station_town,
             tab_id=station_id
         )
     )
+
+navbar_component = dbc.NavbarSimple(
+    children=[
+        dbc.NavItem(dbc.NavLink("Home", href="")),
+        dbc.NavItem(dbc.NavLink("Datenschutz", href="#", id="open-data-protection-policy")),
+        dbc.NavItem(dbc.NavLink("Impressum", href="#", id="open-impress"))
+    ],
+    brand="Rettigs Wetternetzwerk",
+    brand_href="",
+    color="primary",
+    dark=True,
+    fluid=True,
+    expand="lg"
+)
+
+date_picker_card = \
+    dbc.Card(
+        [
+            html.H2("Zeitraum"),
+            html.Div(
+                dcc.DatePickerRange(
+                    id="time-period-picker",
+                    min_date_allowed=first_time,
+                    max_date_allowed=last_time,
+                    start_date=last_time - initial_time_period,
+                    end_date=last_time,
+                    display_format="DD.MM.YYYY",
+                    stay_open_on_select=True,
+                    start_date_placeholder_text="Startdatum",
+                    end_date_placeholder_text="Enddatum",
+                    first_day_of_week=1
+                )
+            )
+        ], body=True
+    )
+
+sensor_dropdown_card = \
+    dbc.Card(
+        [
+            html.H2("Sensoren"),
+            html.Div(
+                dcc.Dropdown(
+                    id="sensor-dropdown",
+                    placeholder="Auswählen ...",
+                    options=available_sensors,
+                    value=default_selected_sensor_ids,
+                    searchable=False,
+                    multi=True
+                )
+            )
+        ], body=True
+    )
+
+station_dropdown_card = \
+    dbc.Card(
+        [
+            html.H2("Stationen"),
+            html.Div(
+                dcc.Dropdown(
+                    id="station-dropdown",
+                    placeholder="Auswählen ...",
+                    options=available_stations,
+                    value=available_stations[-1]["value"],
+                    searchable=False,
+                    multi=True
+                )
+            )
+
+        ], body=True
+    )
+
+station_data_card = \
+    dbc.Card([
+        html.H2("Stationsdaten"),
+        dbc.Tabs(
+            station_info_tabs,
+            id="station-data-tab"
+        )
+    ], body=True)
 
 app.layout = dbc.Container(
     fluid=True,
@@ -217,19 +297,7 @@ app.layout = dbc.Container(
         dbc.Row(
             [
                 dbc.Col(
-                    dbc.NavbarSimple(
-                        children=[
-                            dbc.NavItem(dbc.NavLink("Home", href="")),
-                            dbc.NavItem(dbc.NavLink("Datenschutz", href="#", id="open-data-protection-policy")),
-                            dbc.NavItem(dbc.NavLink("Impressum", href="#", id="open-impress"))
-                        ],
-                        brand="Rettigs Wetternetzwerk",
-                        brand_href="",
-                        color="primary",
-                        dark=True,
-                        fluid=True,
-                        expand="lg"
-                    ),
+                    navbar_component,
                     width=12
                 )
             ]
@@ -240,66 +308,10 @@ app.layout = dbc.Container(
                 dbc.Col(
                     id="configuration",
                     children=[
-                        dbc.Card(
-                            [
-                                html.H2("Zeitraum"),
-                                html.Div(
-                                    dcc.DatePickerRange(
-                                        id="time-period-picker",
-                                        min_date_allowed=first_time,
-                                        max_date_allowed=last_time,
-                                        start_date=last_time - initial_time_period,
-                                        end_date=last_time,
-                                        display_format="DD.MM.YYYY",
-                                        stay_open_on_select=True,
-                                        start_date_placeholder_text="Startdatum",
-                                        end_date_placeholder_text="Enddatum",
-                                        first_day_of_week=1
-                                    )
-                                )
-                            ], body=True
-                        ),
-
-                        dbc.Card(
-                            [
-                                html.H2("Sensoren"),
-                                html.Div(
-                                    dcc.Dropdown(
-                                        id="sensor-dropdown",
-                                        placeholder="Auswählen ...",
-                                        options=available_sensors,
-                                        value=default_selected_sensor_ids,
-                                        searchable=False,
-                                        multi=True
-                                    )
-                                )
-                            ], body=True
-                        ),
-
-                        dbc.Card(
-                            [
-                                html.H2("Stationen"),
-                                html.Div(
-                                    dcc.Dropdown(
-                                        id="station-dropdown",
-                                        placeholder="Auswählen ...",
-                                        options=available_stations,
-                                        value=available_stations[-1]["value"],
-                                        searchable=False,
-                                        multi=True
-                                    )
-                                )
-
-                            ], body=True
-                        ),
-
-                        dbc.Card([
-                            html.H2("Stationsdaten"),
-                            dbc.Tabs(
-                                station_info_tabs,
-                                id="station-data-tab"
-                            )
-                        ], body=True)
+                        date_picker_card,
+                        sensor_dropdown_card,
+                        station_dropdown_card,
+                        station_data_card
                     ],
                     width=12,
                     lg=4
@@ -316,8 +328,9 @@ app.layout = dbc.Container(
 
         dbc.Row(
             [dbc.Col(
-                html.P(children="Copyright (C) 2020 Ralf Rettig"), width=12
-            )]
+                html.P(children="Copyright (C) 2020 Ralf Rettig"),
+                width=12)
+            ]
         )
     ]
 )
@@ -396,11 +409,7 @@ def select_station_info_tab(chosen_stations):
      Input(component_id="sensor-dropdown", component_property="value")]
 )
 def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
-    actual_start_time = dateutil.parser.parse(start_time_str)
-    start_time = datetime(actual_start_time.year, actual_start_time.month, actual_start_time.day)
-    actual_end_time = dateutil.parser.parse(end_time_str)
-    end_time = datetime(actual_end_time.year, actual_end_time.month, actual_end_time.day) + timedelta(days=1)
-
+    start_time, end_time = determine_start_and_end_times(end_time_str, start_time_str)
     if end_time < start_time:
         raise PreventUpdate
 
@@ -417,30 +426,8 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
     data = {}
     for station_id in chosen_stations:
         data[station_id] = weather_db.get_data_in_time_range(station_id, start_time, end_time)
-
-    if len(chosen_stations) > 0 and len(sensors) > 0:
-        num_axis_on_left = ceil(len(sensors) / 2)
-        num_axis_on_right = ceil((len(sensors) - 1) / 2)
-        left_main_axis_pos = num_axis_on_left * SECONDARY_AXIS_OFFSET
-        right_main_axis_pos = 1 - num_axis_on_right * SECONDARY_AXIS_OFFSET
-
-        figure_layout["xaxis"]["domain"] = [left_main_axis_pos, right_main_axis_pos]
-
-        min_max_sensors = {}
-        for internal_sensor_id in sensors:
-            sensor_tuple = sensor_mapping[internal_sensor_id]["id"]
-            min_data = float("inf")
-            max_data = float("-inf")
-            for station_index, station_id in enumerate(chosen_stations):
-                if len(data[station_id]) > 0:
-                    sensor_data = [float(line.get_sensor_value(sensor_tuple)) for line in data[station_id]]
-                    min_data = min(min_data, min(sensor_data))
-                    max_data = max(max_data, max(sensor_data))
-            if min_data != float("inf") and max_data != float("-inf"):
-                min_max_sensors[sensor_tuple] = {"min": min_data, "max": max_data}
-
-        if len(min_max_sensors) > 0:
-            num_ticks, min_max_limits = plot_config.get_scalings(min_max_sensors)
+    left_main_axis_pos, right_main_axis_pos, min_max_limits, num_ticks = determine_plot_axis_setup(chosen_stations,
+                                                                                                   data, sensors)
 
     plot_data = []
     color_index = -1
@@ -461,77 +448,19 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
             sensor_data = [float(line.get_sensor_value(sensor_tuple)) for line in data[station_id]]
             if len(data[station_id]) > 0:
                 sensor_unit = data[station_id][0].get_sensor_unit(sensor_tuple)
-                plot_data.append({"x": time,
-                                  "y": sensor_data,
-                                  "name": "{} - {}".format(station_id, sensor_description),
-                                  "line": {
-                                      "color": color_list[color_index],
-                                      "width": diagram_line_width,
-                                      "dash": dash_list[dash_index]
-                                  },
-                                  "yaxis": "y{}".format(sensor_index + 1),
-                                  "hoverlabel": {
-                                      "namelength": "-1",
-                                      "font": {
-                                          "family": diagram_font_family,
-                                          "size": diagram_font_size
-                                      }
-                                  }
-                                  })
+                plot_data.append(create_sensor_plot_data(color_index, dash_index, sensor_data, sensor_description,
+                                                         sensor_index, station_id, time))
 
                 if sensor_index == 0:
                     axis_name = "yaxis"
                 else:
                     axis_name = "yaxis{}".format(sensor_index + 1)
-                figure_layout[axis_name] = {
-                    "title": "{} / {}".format(sensor_description, sensor_unit),
-                    "titlefont": {
-                        "family": diagram_font_family,
-                        "color": color_list[color_index],
-                        "size": diagram_font_size
-                    },
-                    "tickfont": {
-                        "family": diagram_font_family,
-                        "color": color_list[color_index],
-                        "size": diagram_font_size
-                    },
-                    "linecolor": color_list[color_index],
-                    "linewidth": diagram_line_width,
-                    "zeroline": False,
-                    "nticks": num_ticks,
-                    "range": [min_max_limits[sensor_tuple]["min"], min_max_limits[sensor_tuple]["max"]]
-                }
+                figure_layout[axis_name] = create_plot_axis_layout(color_index, min_max_limits, num_ticks,
+                                                                   sensor_description, sensor_tuple, sensor_unit)
+                configure_plot_axis_layout(axis_name, left_main_axis_pos, right_main_axis_pos, sensor_index)
 
-                if sensor_index == 0:
-                    figure_layout[axis_name]["gridcolor"] = grid_color
-
-                if sensor_index > 0:
-                    figure_layout[axis_name]["anchor"] = "free"
-                    figure_layout[axis_name]["overlaying"] = "y"
-                    figure_layout[axis_name]["showgrid"] = False
-
-                if sensor_index % 2 == 0:
-                    figure_layout[axis_name]["side"] = "left"
-                    figure_layout[axis_name]["position"] = left_main_axis_pos - sensor_index / 2 * SECONDARY_AXIS_OFFSET
-                else:
-                    figure_layout[axis_name]["side"] = "right"
-                    figure_layout[axis_name]["position"] = right_main_axis_pos + \
-                                                           (sensor_index - 1) / 2 * SECONDARY_AXIS_OFFSET
     if len(plot_data) == 0:
-        figure_layout["yaxis"] = {
-            "title": "",
-            "tickfont": {
-                "color": graph_front_color,
-                "size": diagram_font_size
-            },
-            "linecolor": graph_front_color,
-            "zeroline": False,
-            "gridcolor": grid_color,
-            "range": [0, 100]
-        }
-
-        figure_layout["xaxis"]["range"] = [last_time - initial_time_period, last_time]
-        figure_layout["xaxis"]["type"] = "date"
+        create_empty_plot_axis_layout()
 
     figure_config = {
         "data": plot_data,
@@ -539,6 +468,120 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
     }
 
     return figure_config
+
+
+def determine_start_and_end_times(end_time_str, start_time_str):
+    actual_start_time = dateutil.parser.parse(start_time_str)
+    start_time = datetime(actual_start_time.year, actual_start_time.month, actual_start_time.day)
+    actual_end_time = dateutil.parser.parse(end_time_str)
+    end_time = datetime(actual_end_time.year, actual_end_time.month, actual_end_time.day) + timedelta(days=1)
+    return start_time, end_time
+
+
+def create_empty_plot_axis_layout():
+    figure_layout["yaxis"] = {
+        "title": "",
+        "tickfont": {
+            "color": graph_front_color,
+            "size": diagram_font_size
+        },
+        "linecolor": graph_front_color,
+        "zeroline": False,
+        "gridcolor": grid_color,
+        "range": [0, 100]
+    }
+    figure_layout["xaxis"]["range"] = [last_time - initial_time_period, last_time]
+    figure_layout["xaxis"]["type"] = "date"
+
+
+def create_sensor_plot_data(color_index, dash_index, sensor_data, sensor_description, sensor_index, station_id, time):
+    return {"x": time,
+            "y": sensor_data,
+            "name": "{} - {}".format(station_id, sensor_description),
+            "line": {
+                "color": color_list[color_index],
+                "width": diagram_line_width,
+                "dash": dash_list[dash_index]
+            },
+            "yaxis": "y{}".format(sensor_index + 1),
+            "hoverlabel": {
+                "namelength": "-1",
+                "font": {
+                    "family": diagram_font_family,
+                    "size": diagram_font_size
+                }
+            }
+            }
+
+
+def configure_plot_axis_layout(axis_name, left_main_axis_pos, right_main_axis_pos, sensor_index):
+    if sensor_index == 0:
+        figure_layout[axis_name]["gridcolor"] = grid_color
+    if sensor_index > 0:
+        figure_layout[axis_name]["anchor"] = "free"
+        figure_layout[axis_name]["overlaying"] = "y"
+        figure_layout[axis_name]["showgrid"] = False
+    if sensor_index % 2 == 0:
+        figure_layout[axis_name]["side"] = "left"
+        figure_layout[axis_name]["position"] = left_main_axis_pos - sensor_index / 2 * secondary_axis_offset
+    else:
+        figure_layout[axis_name]["side"] = "right"
+        figure_layout[axis_name]["position"] = right_main_axis_pos + \
+                                               (sensor_index - 1) / 2 * secondary_axis_offset
+
+
+def create_plot_axis_layout(color_index, min_max_limits, num_ticks, sensor_description, sensor_tuple, sensor_unit):
+    return {
+        "title": "{} / {}".format(sensor_description, sensor_unit),
+        "titlefont": {
+            "family": diagram_font_family,
+            "color": color_list[color_index],
+            "size": diagram_font_size
+        },
+        "tickfont": {
+            "family": diagram_font_family,
+            "color": color_list[color_index],
+            "size": diagram_font_size
+        },
+        "linecolor": color_list[color_index],
+        "linewidth": diagram_line_width,
+        "zeroline": False,
+        "nticks": num_ticks,
+        "range": [min_max_limits[sensor_tuple]["min"], min_max_limits[sensor_tuple]["max"]]
+    }
+
+
+def determine_plot_axis_setup(chosen_stations, data, sensors):
+    if len(chosen_stations) > 0 and len(sensors) > 0:
+        _num_axis_on_left = ceil(len(sensors) / 2)
+        _num_axis_on_right = ceil((len(sensors) - 1) / 2)
+        left_main_axis_pos = _num_axis_on_left * secondary_axis_offset
+        right_main_axis_pos = 1 - _num_axis_on_right * secondary_axis_offset
+
+        figure_layout["xaxis"]["domain"] = [left_main_axis_pos, right_main_axis_pos]
+
+        _min_max_sensors = {}
+        for internal_sensor_id in sensors:
+            _sensor_tuple = sensor_mapping[internal_sensor_id]["id"]
+            _min_data = float("inf")
+            _max_data = float("-inf")
+            for station_index, station_id in enumerate(chosen_stations):
+                if len(data[station_id]) > 0:
+                    sensor_data = [float(line.get_sensor_value(_sensor_tuple)) for line in data[station_id]]
+                    _min_data = min(_min_data, min(sensor_data))
+                    _max_data = max(_max_data, max(sensor_data))
+            if _min_data != float("inf") and _max_data != float("-inf"):
+                _min_max_sensors[_sensor_tuple] = {"min": _min_data, "max": _max_data}
+
+        if len(_min_max_sensors) > 0:
+            num_ticks, min_max_limits = plot_config.get_scalings(_min_max_sensors)
+        else:
+            num_ticks = 0
+            min_max_limits = None
+
+        return left_main_axis_pos, right_main_axis_pos, min_max_limits, num_ticks
+    else:
+        return float("inf"), float("inf"), None, 0
 
 
 if __name__ == "__main__":
