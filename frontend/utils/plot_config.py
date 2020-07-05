@@ -57,6 +57,12 @@ def get_scalings(min_max_sensors):
     if num_ticks > max_num_ticks:
         num_ticks = max_num_ticks
 
+    min_max_axis = _get_min_max_axis(delta_p, delta_rain, delta_temp, min_max_sensors, min_p, min_temp, num_ticks)
+
+    return num_ticks, min_max_axis
+
+
+def _get_min_max_axis(delta_p, delta_rain, delta_temp, min_max_sensors, min_p, min_temp, num_ticks):
     min_max_axis = dict()
     for key, sensor in min_max_sensors.items():
         if CombiSensorData.TEMPERATURE in key:
@@ -78,4 +84,4 @@ def get_scalings(min_max_sensors):
             # all other sensors are scaled by the min/max values
             min_max_axis[key] = {'min': sensor['min'], 'max': sensor['max']}
 
-    return num_ticks, min_max_axis
+    return min_max_axis
