@@ -1,4 +1,4 @@
-FROM python:3.8.3-alpine3.12
+FROM python:3.8.3-slim-buster
 
 WORKDIR /app/frontend
 
@@ -6,17 +6,7 @@ ENV PYTHONPATH=/app
 
 COPY frontend/requirements.txt requirements.txt
 
-RUN apk add --no-cache --virtual .build-deps \
-        g++ \
-        openssl-dev \
-        libffi-dev \
-        musl-dev \
-        make \
-    && pip install --no-cache-dir -r requirements.txt \
-    && apk del .build-deps
-
-RUN apk add --no-cache \
-        libstdc++
+RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8050
 
