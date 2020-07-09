@@ -22,6 +22,8 @@ def get_scalings(min_max_sensors):
 
     delta_rain = 0.0
     min_p = 0.0
+    min_temp = float('inf')
+    max_temp = float('-inf')
 
     all_num_ticks = []
     # determine number of ticks
@@ -29,10 +31,10 @@ def get_scalings(min_max_sensors):
         if CombiSensorData.TEMPERATURE in key:
             # temperatures should have an identical scaling
             curr_min_temp = utilities.floor_to_n(sensor['min'], delta_temp)
-            if 'min_temp' not in locals() or curr_min_temp < min_temp:
+            if curr_min_temp < min_temp:
                 min_temp = curr_min_temp
             curr_max_temp = utilities.ceil_to_n(sensor['max'], delta_temp)
-            if 'max_temp' not in locals() or curr_max_temp > max_temp:
+            if curr_max_temp > max_temp:
                 max_temp = curr_max_temp
             all_num_ticks.append(int((max_temp - min_temp) / delta_temp + 1))
         elif RainSensorData.RAIN in key:
