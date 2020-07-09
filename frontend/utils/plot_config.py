@@ -20,6 +20,9 @@ def get_scalings(min_max_sensors):
     delta_p = 5.0  # hPa by definition
     max_num_ticks = 15
 
+    delta_rain = 0.0
+    min_p = 0.0
+
     all_num_ticks = []
     # determine number of ticks
     for key, sensor in min_max_sensors.items():
