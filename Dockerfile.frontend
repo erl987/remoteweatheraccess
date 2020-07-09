@@ -1,16 +1,18 @@
-FROM python:3.8.3-slim-buster
+FROM arm32v7/python:3.8.3-buster
 
 WORKDIR /app/frontend
 
 ENV PYTHONPATH=/app
 
 COPY frontend/requirements.txt requirements.txt
-
 RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8050
 
 COPY ./frontend /app/frontend
 COPY ./remote_weather_access /app/remote_weather_access
+
+RUN useradd -m frontend
+USER frontend
 
 ENTRYPOINT ["/usr/local/bin/gunicorn", "--worker-class", "gevent", "--preload", "--config", "config/gunicorn.py", "--log-config", "config/logging.conf", "-b", ":8050", "app:server"]
