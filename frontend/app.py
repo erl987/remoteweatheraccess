@@ -221,9 +221,9 @@ date_picker_card = \
                 dcc.DatePickerRange(
                     id="time-period-picker",
                     min_date_allowed=first_time,
-                    max_date_allowed=last_time,
-                    start_date=last_time - initial_time_period,
-                    end_date=last_time,
+                    max_date_allowed=datetime.today().date(),
+                    start_date=datetime.today().date() - initial_time_period,
+                    end_date=datetime.today().date(),
                     display_format="DD.MM.YYYY",
                     stay_open_on_select=True,
                     start_date_placeholder_text="Startdatum",
@@ -333,17 +333,6 @@ app.layout = dbc.Container(
         )
     ]
 )
-
-
-@app.callback([Output('time-period-picker', 'min_date_allowed'),
-               Output('time-period-picker', 'max_date_allowed'),
-               Output('time-period-picker', 'end_date'),
-               Output('time-period-picker', 'start_date')],
-              [Input('url', 'pathname')])
-def display_page(pathname):
-    first_time = weather_db.get_most_early_time_with_data()
-    last_time = weather_db.get_most_recent_time_with_data()
-    return first_time, last_time, last_time, last_time - initial_time_period
 
 
 @app.callback(
