@@ -121,7 +121,7 @@ figure_layout = {
         },
         "orientation": "h",
         "xanchor": "center",
-        "y": 1.2,
+        "y": 1.3,
         "x": 0.5
     },
     "margin": dict(l=20, r=20, t=40, b=100)  # in px
