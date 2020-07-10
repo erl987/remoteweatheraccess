@@ -131,7 +131,6 @@ db_file_parent_path = os.environ.get("DBBASEDIR", relative_to_file_path("test_da
 db_file_path = db_file_parent_path + os.path.sep + db_file_name
 weather_db = SQLWeatherDB(db_file_path)
 first_time = weather_db.get_most_early_time_with_data()
-last_time = weather_db.get_most_recent_time_with_data()
 combi_sensor_ids, combi_sensor_descriptions = weather_db.get_combi_sensors()
 for id in combi_sensor_ids:
     if id == "IN":
@@ -221,9 +220,6 @@ date_picker_card = \
                 dcc.DatePickerRange(
                     id="time-period-picker",
                     min_date_allowed=first_time,
-                    max_date_allowed=datetime.today().date(),
-                    start_date=datetime.today().date() - initial_time_period,
-                    end_date=datetime.today().date(),
                     display_format="DD.MM.YYYY",
                     stay_open_on_select=True,
                     start_date_placeholder_text="Startdatum",
@@ -333,6 +329,15 @@ app.layout = dbc.Container(
         )
     ]
 )
+
+
+@app.callback([Output('time-period-picker', 'max_date_allowed'),
+               Output('time-period-picker', 'end_date'),
+               Output('time-period-picker', 'start_date')],
+              [Input('url', 'pathname')])
+def display_page(pathname):
+    last_time = datetime.today().date()
+    return last_time, last_time, last_time - initial_time_period
 
 
 @app.callback(
@@ -478,7 +483,7 @@ def create_empty_plot_axis_layout():
         "gridcolor": grid_color,
         "range": [0, 100]
     }
-    figure_layout["xaxis"]["range"] = [last_time - initial_time_period, last_time]
+    figure_layout["xaxis"]["range"] = [datetime.today().date() - initial_time_period, datetime.today().date()]
     figure_layout["xaxis"]["type"] = "date"
 
 
