@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from remote_weather_access.remote_weather_access.common import utilities
 from remote_weather_access.remote_weather_access.common.datastructures import CombiSensorData, RainSensorData, \
     BaseStationSensorData
@@ -90,3 +92,7 @@ def _get_min_max_axis(delta_p, delta_rain, delta_temp, min_max_sensors, min_p, m
             min_max_axis[key] = {'min': sensor['min'], 'max': sensor['max']}
 
     return min_max_axis
+
+
+def get_current_date(user_time_zone):
+    return datetime.now(user_time_zone).date()

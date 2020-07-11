@@ -6,7 +6,6 @@ Run in production with:
 """
 import os
 from datetime import timedelta, datetime
-from math import ceil
 
 import dash
 import dash_bootstrap_components as dbc
@@ -15,9 +14,12 @@ import dash_html_components as html
 import dateutil.parser
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
+from math import ceil
+import pytz
 
 import frontend.utils.dash_reusable_components as drc
 from frontend.utils import plot_config
+from frontend.utils.plot_config import get_current_date
 from remote_weather_access.remote_weather_access.common.datastructures import BaseStationSensorData, RainSensorData, \
     WindSensorData
 from remote_weather_access.remote_weather_access.server.sqldatabase import SQLWeatherDB
@@ -26,6 +28,7 @@ db_file_name = os.environ.get("DBFILE", "weather.db")
 data_protection_policy_file_path = r"text_content/data-protection-policy.md"
 impress_file_path = r"text_content/impress.md"
 initial_time_period = timedelta(days=7)
+user_time_zone = pytz.timezone("Europe/Berlin")
 
 # this app uses the Bootstrap theme United
 app = dash.Dash(__name__,
@@ -336,7 +339,7 @@ app.layout = dbc.Container(
                Output('time-period-picker', 'start_date')],
               [Input('url', 'pathname')])
 def display_page(pathname):
-    last_time = datetime.today().date()
+    last_time = get_current_date(user_time_zone)
     return last_time, last_time, last_time - initial_time_period
 
 
@@ -472,6 +475,8 @@ def determine_start_and_end_times(end_time_str, start_time_str):
 
 
 def create_empty_plot_axis_layout():
+    current_date = get_current_date(user_time_zone)
+
     figure_layout["yaxis"] = {
         "title": "",
         "tickfont": {
@@ -483,7 +488,7 @@ def create_empty_plot_axis_layout():
         "gridcolor": grid_color,
         "range": [0, 100]
     }
-    figure_layout["xaxis"]["range"] = [datetime.today().date() - initial_time_period, datetime.today().date()]
+    figure_layout["xaxis"]["range"] = [current_date - initial_time_period, current_date]
     figure_layout["xaxis"]["type"] = "date"
 
 
