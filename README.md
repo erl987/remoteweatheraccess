@@ -17,11 +17,11 @@ documentation purposes. A production environment should run behind HTTPS.
 
 1. Build the Docker container:
 
-    `docker build -f Dockerfile.frontend -t weather-dash-frontend .`
+    `docker build -f Dockerfile.frontend -t weather-dash-frontend:test .`
 
 
 2. Run the Docker container:
 
-    `docker run -e DBBASEDIR=/opt/dbdir -e GUNICORN_WORKERS=4 -e GUNICORN_ACCESSLOG=- -v /home/rarettig/weatherstation/frontend/test_data:/opt/dbdir -p 8050:8050 weather-dash-frontend`
+    `docker run -e DBBASEDIR=/opt/dbdir -e GUNICORN_WORKERS=4 -e GUNICORN_ACCESSLOG=- -v /home/rarettig/weatherstation/frontend/test_data:/opt/dbdir -p 8050:8050 weather-dash-frontend:test`
 
     You need to adapt the directory containing the database. The frontend is accessible via http://server:8050.
