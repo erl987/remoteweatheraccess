@@ -39,24 +39,9 @@ class CombiSensorData(db.Model):
 
 
 @dataclass
-class WeatherDataset(db.Model):
-    id: Optional[int] = db.Column(db.Integer, primary_key=True)
-    station_id: Optional[int] = db.Column(ForeignKey(WeatherStation.id))
-
-    timepoint: datetime = db.Column(db.DateTime, nullable=False)
-    pressure: float = db.Column(db.Float, nullable=False)
-    uv: float = db.Column(db.Float, nullable=False)
-
-    combi_sensor_data = db.relationship(CombiSensorData, cascade="all, delete-orphan")
-    rain_sensor_data = db.relationship("RainSensorData", uselist=False, cascade="all, delete-orphan")
-    wind_sensor_data = db.relationship("WindSensorData", uselist=False, cascade="all, delete-orphan")
-    weather_station = db.relationship(WeatherStation, backref=db.backref("data", uselist=False))
-
-
-@dataclass
 class WindSensorData(db.Model):
     id: Optional[int] = db.Column(db.Integer, primary_key=True)
-    dataset_id: Optional[int] = db.Column(ForeignKey(WeatherDataset.id))
+    dataset_id: Optional[int] = db.Column(ForeignKey("weather_dataset.id"))
 
     direction: float = db.Column(db.Float, nullable=False)
     speed: float = db.Column(db.Float, nullable=False)
@@ -67,9 +52,24 @@ class WindSensorData(db.Model):
 @dataclass
 class RainSensorData(db.Model):
     id: Optional[int] = db.Column(db.Integer, primary_key=True)
-    dataset_id: Optional[int] = db.Column(ForeignKey(WeatherDataset.id))
+    dataset_id: Optional[int] = db.Column(ForeignKey("weather_dataset.id"))
 
     rain_counter_in_mm: float = db.Column(db.Float, nullable=False)
+
+
+@dataclass
+class WeatherDataset(db.Model):
+    id: Optional[int] = db.Column(db.Integer, primary_key=True)
+    station_id: Optional[int] = db.Column(ForeignKey(WeatherStation.id))
+
+    timepoint: datetime = db.Column(db.DateTime, nullable=False)
+    pressure: float = db.Column(db.Float, nullable=False)
+    uv: float = db.Column(db.Float, nullable=False)
+
+    combi_sensor_data: CombiSensorData = db.relationship(CombiSensorData, cascade="all, delete-orphan")
+    rain_sensor_data: RainSensorData = db.relationship(RainSensorData, uselist=False, cascade="all, delete-orphan")
+    wind_sensor_data: WindSensorData = db.relationship(WindSensorData, uselist=False, cascade="all, delete-orphan")
+    weather_station = db.relationship(WeatherStation, backref=db.backref("data", uselist=False))
 
 
 @dataclass()
