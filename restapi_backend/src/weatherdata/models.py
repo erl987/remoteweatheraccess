@@ -62,7 +62,7 @@ class WindSensorData(db.Model):
     temperature: float = db.Column(db.Float, nullable=False)
     gusts: float = db.Column(db.Float, nullable=False)
 
-    root = db.relationship(BaseStationData, single_parent=True, backref="wind_sensor_data")
+    root = db.relationship(BaseStationData, backref=db.backref("wind_sensor_data", uselist=False))
 
 
 @dataclass
@@ -72,7 +72,7 @@ class RainSensorData(db.Model):
 
     rain_counter_in_mm: float = db.Column(db.Float, nullable=False)
 
-    root = db.relationship(BaseStationData, single_parent=True, backref="rain_sensor_data")
+    root = db.relationship(BaseStationData, backref=db.backref("rain_sensor_data", uselist=False))
 
 
 @dataclass()

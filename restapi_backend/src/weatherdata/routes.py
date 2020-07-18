@@ -48,8 +48,8 @@ def _create_weather_dataset():
         station_id=new_dataset.station,
         pressure=new_dataset.pressure,
         uv=new_dataset.uv,
-        rain_sensor_data=[rain_sensor_data],
-        wind_sensor_data=[wind_sensor_data],
+        rain_sensor_data=rain_sensor_data,
+        wind_sensor_data=wind_sensor_data,
         combi_sensor_data=all_combi_sensor_data
     )
 
@@ -91,12 +91,12 @@ def _create_raw_datasets(base_datasets):
             station=dataset.station_id,
             pressure=dataset.pressure,
             uv=dataset.uv,
-            rain_counter=dataset.rain_sensor_data[0].rain_counter_in_mm,
+            rain_counter=dataset.rain_sensor_data.rain_counter_in_mm,
             wind=WindSensorRawData(
-                direction=dataset.wind_sensor_data[0].direction,
-                speed=dataset.wind_sensor_data[0].speed,
-                temperature=dataset.wind_sensor_data[0].temperature,
-                gusts=dataset.wind_sensor_data[0].gusts
+                direction=dataset.wind_sensor_data.direction,
+                speed=dataset.wind_sensor_data.speed,
+                temperature=dataset.wind_sensor_data.temperature,
+                gusts=dataset.wind_sensor_data.gusts
             ),
             temperature_humidity=[]
         )
