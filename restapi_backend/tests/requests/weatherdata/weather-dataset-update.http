@@ -1,0 +1,29 @@
+PUT http://35.217.60.27:8050/api/v1/data/1
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTUxMDIzNjEsIm5iZiI6MTU5NTEwMjM2MSwianRpIjoiNmFjNGU2ODYtYzAxOC00YTIwLTg4OTgtNjA4ZTk1NzcyNDdiIiwiZXhwIjoxNTk1MTM4MzYxLCJpZGVudGl0eSI6ImFkbWluIiwiZnJlc2giOnRydWUsInR5cGUiOiJhY2Nlc3MiLCJ1c2VyX2NsYWltcyI6eyJyb2xlIjoiQURNSU4ifX0.uCEV7DL9pXUBOFL9BH8-dMSdwR4-MSOdiTsL4BYSyNo
+
+{
+  "timepoint": "2019-07-06T12:34:10+00:00",
+  "station": "SOL",
+  "pressure": 1050.3,
+  "uv": 8.3,
+  "rain_counter": 1230.5,
+  "temperature_humidity": [
+    {
+      "sensor_id": "OUT1",
+      "temperature": 20.5,
+      "humidity": 80.4
+    },
+    {
+      "sensor_id": "IN",
+      "temperature": 30.9,
+      "humidity": 41.4
+    }
+  ],
+  "wind": {
+    "speed": 89.5,
+    "gusts": 103.5,
+    "direction": 190.5,
+    "temperature": 16.5
+  }
+}
