@@ -29,7 +29,7 @@ class CombiSensor(db.Model):
 
 @dataclass
 class CombiSensorData(db.Model):
-    dataset_id: Optional[int] = db.Column(ForeignKey("base_station_data.dataset_id"), primary_key=True)
+    dataset_id: Optional[int] = db.Column(ForeignKey("weather_dataset.id"), primary_key=True)
     sensor_id: Optional[int] = db.Column(ForeignKey(CombiSensor.sensor_id), primary_key=True)
 
     temperature: float = db.Column(db.Float, nullable=False)
@@ -39,8 +39,8 @@ class CombiSensorData(db.Model):
 
 
 @dataclass
-class BaseStationData(db.Model):
-    dataset_id: Optional[int] = db.Column(db.Integer, primary_key=True)
+class WeatherDataset(db.Model):
+    id: Optional[int] = db.Column(db.Integer, primary_key=True)
     station_id: Optional[int] = db.Column(ForeignKey(WeatherStation.id))
 
     timepoint: datetime = db.Column(db.DateTime, nullable=False)
@@ -48,30 +48,28 @@ class BaseStationData(db.Model):
     uv: float = db.Column(db.Float, nullable=False)
 
     combi_sensor_data = db.relationship(CombiSensorData, cascade="all, delete-orphan")
-    root = db.relationship(WeatherStation, backref=db.backref("data", uselist=False))
+    rain_sensor_data = db.relationship("RainSensorData", uselist=False, cascade="all, delete-orphan")
+    wind_sensor_data = db.relationship("WindSensorData", uselist=False, cascade="all, delete-orphan")
+    weather_station = db.relationship(WeatherStation, backref=db.backref("data", uselist=False))
 
 
 @dataclass
 class WindSensorData(db.Model):
     id: Optional[int] = db.Column(db.Integer, primary_key=True)
-    dataset_id: Optional[int] = db.Column(ForeignKey(BaseStationData.dataset_id))
+    dataset_id: Optional[int] = db.Column(ForeignKey(WeatherDataset.id))
 
     direction: float = db.Column(db.Float, nullable=False)
     speed: float = db.Column(db.Float, nullable=False)
     temperature: float = db.Column(db.Float, nullable=False)
     gusts: float = db.Column(db.Float, nullable=False)
 
-    root = db.relationship(BaseStationData, backref=db.backref("wind_sensor_data", uselist=False))
-
 
 @dataclass
 class RainSensorData(db.Model):
     id: Optional[int] = db.Column(db.Integer, primary_key=True)
-    dataset_id: Optional[int] = db.Column(ForeignKey(BaseStationData.dataset_id))
+    dataset_id: Optional[int] = db.Column(ForeignKey(WeatherDataset.id))
 
     rain_counter_in_mm: float = db.Column(db.Float, nullable=False)
-
-    root = db.relationship(BaseStationData, backref=db.backref("rain_sensor_data", uselist=False))
 
 
 @dataclass()

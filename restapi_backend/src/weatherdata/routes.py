@@ -5,7 +5,7 @@ from flask import request, jsonify, current_app, Blueprint
 from ..extensions import db
 from ..exceptions import APIError
 from ..utils import Role, with_rollback_and_raise_exception
-from .models import BaseStationData, TimeRange, WeatherRawDataset, WindSensorData, CombiSensorData, \
+from .models import WeatherDataset, TimeRange, WeatherRawDataset, WindSensorData, CombiSensorData, \
     RainSensorData, WindSensorRawData, CombiSensorRawData
 from ..utils import access_level_required, json_with_rollback_and_raise_exception, to_utc
 
@@ -18,7 +18,7 @@ weatherdata_blueprint = Blueprint('data', __name__, url_prefix='/api/v1/data')
 def add_weather_dataset():
     new_dataset = _create_weather_dataset()
 
-    existing_dataset = BaseStationData.query.filter_by(timepoint=new_dataset.timepoint).first()
+    existing_dataset = WeatherDataset.query.filter_by(timepoint=new_dataset.timepoint).first()
     if not existing_dataset:
         db.session.add(new_dataset)
         db.session.commit()
@@ -28,9 +28,9 @@ def add_weather_dataset():
         response.status_code = HTTPStatus.CREATED
     else:
         raise APIError('Dataset for time \'{}\' already in the database'.format(new_dataset.timepoint),
-                       status_code=HTTPStatus.CONFLICT, location='/api/v1/data/{}'.format(existing_dataset.dataset_id))
+                       status_code=HTTPStatus.CONFLICT, location='/api/v1/data/{}'.format(existing_dataset.id))
 
-    response.headers['location'] = '/api/v1/data/{}'.format(new_dataset.dataset_id)
+    response.headers['location'] = '/api/v1/data/{}'.format(new_dataset.id)
 
     return response
 
@@ -43,7 +43,7 @@ def _create_weather_dataset():
         all_combi_sensor_data.append(CombiSensorData(**combi_sensor_data.to_dict()))
     wind_sensor_data = WindSensorData(**new_dataset.wind.to_dict())
     rain_sensor_data = RainSensorData(rain_counter_in_mm=new_dataset.rain_counter)
-    weather_dataset = BaseStationData(
+    weather_dataset = WeatherDataset(
         timepoint=new_dataset.timepoint,
         station_id=new_dataset.station,
         pressure=new_dataset.pressure,
@@ -66,10 +66,10 @@ def get_weather_datasets():
         raise APIError('Last time \'{}\' is later than first time \'{}\''.format(last, first),
                        status_code=HTTPStatus.BAD_REQUEST)
 
-    base_datasets = (BaseStationData.query
-                     .filter(BaseStationData.timepoint >= first)
-                     .filter(BaseStationData.timepoint <= last)
-                     .order_by(BaseStationData.timepoint)
+    base_datasets = (WeatherDataset.query
+                     .filter(WeatherDataset.timepoint >= first)
+                     .filter(WeatherDataset.timepoint <= last)
+                     .order_by(WeatherDataset.timepoint)
                      .all())
 
     if not base_datasets:
@@ -121,8 +121,8 @@ def update_weather_dataset(id):
     if not json:
         raise APIError('Required Content-Type is `application/json`', status_code=HTTPStatus.BAD_REQUEST)
 
-    new_dataset = BaseStationData(**json)
-    existing_dataset = BaseStationData.query.get(id)
+    new_dataset = WeatherDataset(**json)
+    existing_dataset = WeatherDataset.query.get(id)
     if not existing_dataset:
         raise APIError('No dataset with id \'{}\''.format(id), status_code=HTTPStatus.NOT_FOUND)
 
@@ -130,7 +130,7 @@ def update_weather_dataset(id):
         raise APIError('The time \'{}\' stored for id \'{}\' does not match the time \'{}\' of the submitted '
                        'dataset'.format(existing_dataset.timepoint, id, new_dataset.timepoint),
                        status_code=HTTPStatus.CONFLICT,
-                       location='/api/v1/data/{}'.format(existing_dataset.dataset_id))
+                       location='/api/v1/data/{}'.format(existing_dataset.id))
 
     existing_dataset.temp = new_dataset.temp
     existing_dataset.humidity = new_dataset.humidity
@@ -139,7 +139,7 @@ def update_weather_dataset(id):
 
     response = jsonify(existing_dataset)
     response.status_code = HTTPStatus.OK
-    response.headers['location'] = '/api/v1/data/{}'.format(existing_dataset.dataset_id)
+    response.headers['location'] = '/api/v1/data/{}'.format(existing_dataset.id)
 
     return response
 
@@ -148,7 +148,7 @@ def update_weather_dataset(id):
 @access_level_required(Role.PUSH_USER)
 @with_rollback_and_raise_exception
 def delete_weather_dataset(id):
-    existing_dataset = BaseStationData.query.get(id)
+    existing_dataset = WeatherDataset.query.get(id)
     if not existing_dataset:
         current_app.logger.info('Nothing to delete for dataset with id \'{}\' '.format(id))
         return '', HTTPStatus.NO_CONTENT
@@ -166,7 +166,7 @@ def delete_weather_dataset(id):
 @weatherdata_blueprint.route('/<id>', methods=['GET'])
 @with_rollback_and_raise_exception
 def get_one_weather_dataset(id):
-    dataset = BaseStationData.query.get(id)
+    dataset = WeatherDataset.query.get(id)
     if not dataset:
         raise APIError('No dataset with id \'{}\''.format(id), status_code=HTTPStatus.BAD_REQUEST)
 
@@ -181,8 +181,8 @@ def get_one_weather_dataset(id):
 @with_rollback_and_raise_exception
 def get_available_time_period():
     time_range = TimeRange(
-        first_timepoint=db.session.query(BaseStationData.timepoint, db.func.min(BaseStationData.timepoint)).scalar(),
-        last_timepoint=db.session.query(BaseStationData.timepoint, db.func.max(BaseStationData.timepoint)).scalar()
+        first_timepoint=db.session.query(WeatherDataset.timepoint, db.func.min(WeatherDataset.timepoint)).scalar(),
+        last_timepoint=db.session.query(WeatherDataset.timepoint, db.func.max(WeatherDataset.timepoint)).scalar()
     )
 
     if not time_range.first_timepoint or not time_range.last_timepoint:

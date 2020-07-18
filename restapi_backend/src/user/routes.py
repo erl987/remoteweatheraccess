@@ -41,7 +41,7 @@ def add_user():
         response.status_code = HTTPStatus.CREATED
     else:
         raise APIError('User \'{}\' already in the database'.format(new_user.name),
-                       status_code=HTTPStatus.CONFLICT, location='/api/v1/user/{}'.format(existing_user.dataset_id))
+                       status_code=HTTPStatus.CONFLICT, location='/api/v1/user/{}'.format(existing_user.id))
 
     response.headers['location'] = '/api/v1/user/{}'.format(new_user.id)
 
@@ -54,7 +54,7 @@ def add_user():
 def get_all_users():
     all_users = []
     for user in FullUser.query.all():
-        all_users.append({"id": user.dataset_id, "name": user.name})
+        all_users.append({"id": user.id, "name": user.name})
 
     response = jsonify(all_users)
     response.status_code = HTTPStatus.OK
@@ -84,7 +84,7 @@ def update_user(id):
         raise APIError('The user name \'{}\' stored for id \'{}\' does not match the name \'{}\' of the submitted '
                        'user'.format(existing_user.name, id, new_user.name),
                        status_code=HTTPStatus.CONFLICT,
-                       location='/api/v1/user/{}'.format(existing_user.dataset_id))
+                       location='/api/v1/user/{}'.format(existing_user.id))
 
     existing_user.password = new_user.password
     existing_user.role = new_user.role
@@ -95,9 +95,9 @@ def update_user(id):
     current_app.logger.info('Updated user \'{}\' in the database (role: \'{}\')'.format(existing_user.name,
                                                                                         existing_user.role))
 
-    response = jsonify({'id': existing_user.dataset_id, 'name': existing_user.name, 'role': existing_user.role})
+    response = jsonify({'id': existing_user.id, 'name': existing_user.name, 'role': existing_user.role})
     response.status_code = HTTPStatus.OK
-    response.headers['location'] = '/api/v1/user/{}'.format(existing_user.dataset_id)
+    response.headers['location'] = '/api/v1/user/{}'.format(existing_user.id)
 
     return response
 
@@ -115,7 +115,7 @@ def remove_user(id):
     db.session.commit()
     current_app.logger.info('Deleted user \'{}\' from the database'.format(existing_user.name))
 
-    response = jsonify({'id': existing_user.dataset_id, 'name': existing_user.name, 'role': existing_user.role})
+    response = jsonify({'id': existing_user.id, 'name': existing_user.name, 'role': existing_user.role})
     response.status_code = HTTPStatus.OK
 
     return response
@@ -129,7 +129,7 @@ def get_user_details(id):
     if not user:
         raise APIError('No user with id \'{}\''.format(id), status_code=HTTPStatus.BAD_REQUEST)
 
-    response = jsonify({'id': user.dataset_id, 'name': user.name, 'role': user.role})
+    response = jsonify({'id': user.id, 'name': user.name, 'role': user.role})
     response.status_code = HTTPStatus.OK
     current_app.logger.info('Provided details for user \'{}\''.format(user.name))
 
