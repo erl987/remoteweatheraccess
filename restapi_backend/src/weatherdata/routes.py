@@ -117,11 +117,7 @@ def _create_raw_datasets(base_datasets):
 @access_level_required(Role.PUSH_USER)
 @json_with_rollback_and_raise_exception
 def update_weather_dataset(id):
-    json = request.json
-    if not json:
-        raise APIError('Required Content-Type is `application/json`', status_code=HTTPStatus.BAD_REQUEST)
-
-    new_dataset = WeatherDataset(**json)
+    new_dataset = _create_weather_dataset()
     existing_dataset = WeatherDataset.query.get(id)
     if not existing_dataset:
         raise APIError('No dataset with id \'{}\''.format(id), status_code=HTTPStatus.NOT_FOUND)
@@ -132,8 +128,8 @@ def update_weather_dataset(id):
                        status_code=HTTPStatus.CONFLICT,
                        location='/api/v1/data/{}'.format(existing_dataset.id))
 
-    existing_dataset.temp = new_dataset.temp
-    existing_dataset.humidity = new_dataset.humidity
+    # TODO: needs to be completed for all relevant fields ...
+    existing_dataset.pressure = new_dataset.pressure
     db.session.commit()
     current_app.logger.info('Updated dataset for time \'{}\' to the database'.format(existing_dataset.timepoint))
 

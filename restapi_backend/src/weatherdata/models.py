@@ -30,7 +30,7 @@ class CombiSensor(db.Model):
 @dataclass
 class CombiSensorData(db.Model):
     dataset_id: Optional[int] = db.Column(ForeignKey("weather_dataset.id"), primary_key=True)
-    sensor_id: Optional[int] = db.Column(ForeignKey(CombiSensor.sensor_id), primary_key=True)
+    sensor_id: Optional[str] = db.Column(ForeignKey(CombiSensor.sensor_id), primary_key=True)
 
     temperature: float = db.Column(db.Float, nullable=False)
     humidity: float = db.Column(db.Float, nullable=False)
@@ -60,13 +60,13 @@ class RainSensorData(db.Model):
 @dataclass
 class WeatherDataset(db.Model):
     id: Optional[int] = db.Column(db.Integer, primary_key=True)
-    station_id: Optional[int] = db.Column(ForeignKey(WeatherStation.id))
+    station_id: Optional[str] = db.Column(ForeignKey(WeatherStation.id))
 
     timepoint: datetime = db.Column(db.DateTime, nullable=False)
     pressure: float = db.Column(db.Float, nullable=False)
     uv: float = db.Column(db.Float, nullable=False)
 
-    combi_sensor_data: CombiSensorData = db.relationship(CombiSensorData, cascade="all, delete-orphan")
+    combi_sensor_data: List[CombiSensorData] = db.relationship(CombiSensorData, cascade="all, delete-orphan")
     rain_sensor_data: RainSensorData = db.relationship(RainSensorData, uselist=False, cascade="all, delete-orphan")
     wind_sensor_data: WindSensorData = db.relationship(WindSensorData, uselist=False, cascade="all, delete-orphan")
     weather_station = db.relationship(WeatherStation, backref=db.backref("data", uselist=False))
