@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from dataclasses_jsonschema import JsonSchemaMixin
 from sqlalchemy import ForeignKey
@@ -10,7 +10,7 @@ from ..extensions import db
 
 @dataclass
 class WeatherStation(db.Model):
-    id: int = db.Column(db.Integer, primary_key=True)
+    id: Optional[int] = db.Column(db.Integer, primary_key=True)
 
     station_id: str = db.Column(db.String(10), nullable=False)
     device: str = db.Column(db.String(255), nullable=False)
@@ -28,34 +28,33 @@ class CombiSensor(db.Model):
 
 
 @dataclass
+class CombiSensorData(db.Model):
+    dataset_id: Optional[int] = db.Column(ForeignKey("base_station_data.dataset_id"), primary_key=True)
+    sensor_id: Optional[int] = db.Column(ForeignKey(CombiSensor.sensor_id), primary_key=True)
+
+    temperature: float = db.Column(db.Float, nullable=False)
+    humidity: float = db.Column(db.Float, nullable=False)
+
+    combi_sensor = db.relationship(CombiSensor)
+
+
+@dataclass
 class BaseStationData(db.Model):
-    dataset_id: int = db.Column(db.Integer, primary_key=True)
-    station_id: int = db.Column(ForeignKey(WeatherStation.id))
+    dataset_id: Optional[int] = db.Column(db.Integer, primary_key=True)
+    station_id: Optional[int] = db.Column(ForeignKey(WeatherStation.id))
 
     timepoint: datetime = db.Column(db.DateTime, nullable=False)
     pressure: float = db.Column(db.Float, nullable=False)
     uv: float = db.Column(db.Float, nullable=False)
 
-    root = db.relationship(WeatherStation, uselist=False, single_parent=True, backref="data")
-
-
-@dataclass
-class CombiSensorData(db.Model):
-    id: int = db.Column(db.Integer, primary_key=True)
-    dataset_id: int = db.Column(ForeignKey(BaseStationData.dataset_id))
-    sensor_id: int = db.Column(ForeignKey(CombiSensor.sensor_id))
-
-    temperature: float = db.Column(db.Float, nullable=False)
-    humidity: float = db.Column(db.Float, nullable=False)
-
-    data_root = db.relationship(BaseStationData, foreign_keys=[dataset_id], backref="combi_sensor_data")
-    sensor_root = db.relationship(CombiSensor, foreign_keys=[sensor_id], backref="combi_sensor_data")
+    combi_sensor_data = db.relationship(CombiSensorData, cascade="all, delete-orphan")
+    root = db.relationship(WeatherStation, backref=db.backref("data", uselist=False))
 
 
 @dataclass
 class WindSensorData(db.Model):
-    id: int = db.Column(db.Integer, primary_key=True)
-    dataset_id: int = db.Column(ForeignKey(BaseStationData.dataset_id))
+    id: Optional[int] = db.Column(db.Integer, primary_key=True)
+    dataset_id: Optional[int] = db.Column(ForeignKey(BaseStationData.dataset_id))
 
     direction: float = db.Column(db.Float, nullable=False)
     speed: float = db.Column(db.Float, nullable=False)
@@ -67,8 +66,8 @@ class WindSensorData(db.Model):
 
 @dataclass
 class RainSensorData(db.Model):
-    id: int = db.Column(db.Integer, primary_key=True)
-    dataset_id: int = db.Column(ForeignKey(BaseStationData.dataset_id))
+    id: Optional[int] = db.Column(db.Integer, primary_key=True)
+    dataset_id: Optional[int] = db.Column(ForeignKey(BaseStationData.dataset_id))
 
     rain_counter_in_mm: float = db.Column(db.Float, nullable=False)
 

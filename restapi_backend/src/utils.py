@@ -43,17 +43,30 @@ def json_with_rollback_and_raise_exception(func):
         if not json:
             raise APIError('Required Content-Type is `application/json`', status_code=HTTPStatus.BAD_REQUEST)
 
-        try:
-            return func(*args, **kwds)
-        except ValidationError as e:
-            raise APIError("Schema validation failed: {}".format(str(e).split("\n")[0]),
-                           status_code=HTTPStatus.BAD_REQUEST)
-        except Exception as e:
-            db.session.rollback()
-            raise raise_api_error(e, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
-        finally:
-            db.session.close()
+        return _perform_with_rollback_and_raise_exception(func, args, kwds)
+
     return wrapper
+
+
+def with_rollback_and_raise_exception(func):
+    @wraps(func)
+    def wrapper(*args, **kwds):
+        return _perform_with_rollback_and_raise_exception(func, args, kwds)
+
+    return wrapper
+
+
+def _perform_with_rollback_and_raise_exception(func, args, kwds):
+    try:
+        return func(*args, **kwds)
+    except ValidationError as e:
+        raise APIError("Schema validation failed: {}".format(str(e).split("\n")[0]),
+                       status_code=HTTPStatus.BAD_REQUEST)
+    except Exception as e:
+        db.session.rollback()
+        raise raise_api_error(e, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+    finally:
+        db.session.close()
 
 
 def access_level_required(required_role: Role):

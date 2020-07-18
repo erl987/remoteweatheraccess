@@ -4,7 +4,7 @@ from flask import request, jsonify, current_app, Blueprint
 
 from ..extensions import db
 from ..exceptions import APIError
-from ..utils import Role
+from ..utils import Role, with_rollback_and_raise_exception
 from .models import BaseStationData, TimeRange, WeatherRawDataset, WindSensorData, CombiSensorData, \
     RainSensorData, WindSensorRawData, CombiSensorRawData
 from ..utils import access_level_required, json_with_rollback_and_raise_exception, to_utc
@@ -146,7 +146,7 @@ def update_weather_dataset(id):
 
 @weatherdata_blueprint.route('/<id>', methods=['DELETE'])
 @access_level_required(Role.PUSH_USER)
-@json_with_rollback_and_raise_exception
+@with_rollback_and_raise_exception
 def delete_weather_dataset(id):
     existing_dataset = BaseStationData.query.get(id)
     if not existing_dataset:
@@ -164,7 +164,7 @@ def delete_weather_dataset(id):
 
 
 @weatherdata_blueprint.route('/<id>', methods=['GET'])
-#@json_with_rollback_and_raise_exception  # TODO: provide rollback and raise without JSON ...
+@with_rollback_and_raise_exception
 def get_one_weather_dataset(id):
     dataset = BaseStationData.query.get(id)
     if not dataset:
@@ -178,7 +178,7 @@ def get_one_weather_dataset(id):
 
 
 @weatherdata_blueprint.route('/limits', methods=['GET'])
-#@json_with_rollback_and_raise_exception  # TODO: fix this properly ...
+@with_rollback_and_raise_exception
 def get_available_time_period():
     time_range = TimeRange(
         first_timepoint=db.session.query(BaseStationData.timepoint, db.func.min(BaseStationData.timepoint)).scalar(),
