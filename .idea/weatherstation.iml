@@ -2,6 +2,7 @@
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/restapi_backend" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/frontend/test_data" />
     </content>
     <orderEntry type="jdk" jdkName="Remote Python 3.7.3 (Google Cloud)" jdkType="Python SDK" />
@@ -15,6 +16,6 @@
     <option name="myDocStringFormat" value="Plain" />
   </component>
   <component name="TestRunnerService">
-    <option name="PROJECT_TEST_RUNNER" value="Nosetests" />
+    <option name="PROJECT_TEST_RUNNER" value="pytest" />
   </component>
 </module>

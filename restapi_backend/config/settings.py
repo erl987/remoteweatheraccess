@@ -22,7 +22,7 @@ class DevConfig(Config):
     ENV = 'dev'
     DEBUG = True
     DB_NAME = 'weather-backend-dev.sqlite'
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(Config.DB_PATH, DB_NAME)
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(Config.DB_PATH, DB_NAME) + "?check_same_thread=False"
     JWT_SECRET_KEY = 'SECRET-KEY'
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=10)
 

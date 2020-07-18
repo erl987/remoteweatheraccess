@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from http import HTTPStatus
 
 from sqlalchemy.orm import validates
@@ -7,13 +8,12 @@ from ..extensions import db, flask_bcrypt
 from ..utils import ROLES, Role, generate_random_password, USER_NAME_REGEX
 
 
+@dataclass
 class FullUser(db.Model):
-    __tablename__ = 'users'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(120), nullable=False)
-    role = db.Column(db.String(10), nullable=False)
+    id: int = db.Column(db.Integer, primary_key=True)
+    name: str = db.Column(db.String(120), unique=True, nullable=False)
+    password: str = db.Column(db.String(120), nullable=False)
+    role: str = db.Column(db.String(10), nullable=False)
 
     @validates('role')
     def validate_role(self, key, value):
@@ -28,11 +28,13 @@ class FullUser(db.Model):
                            'digits and "-_.")'.format(id), status_code=HTTPStatus.BAD_REQUEST)
         return value
 
-    def save_to_db(self, do_add=True):
-        if len(self.password) < 3 or len(self.password) > 30:
+    def validate_password(self):
+        if not self.password or len(self.password) < 3 or len(self.password) > 30:
             raise APIError('Password does not fulfill constraints (3-30 characters)',
                            status_code=HTTPStatus.BAD_REQUEST)
 
+    def save_to_db(self, do_add=True):
+        self.validate_password()
         self.password = flask_bcrypt.generate_password_hash(self.password)
         self.role = self.role.upper()
         if do_add:
@@ -49,8 +51,7 @@ def generate_default_admin_user():
     return default_admin
 
 
+@dataclass
 class DefaultAdminCreationStatus(db.Model):
-    __tablename__ = 'defaultAdminCreationStatus'
-
-    id = db.Column(db.Integer, primary_key=True)
-    isDefaultAdminCreated = db.Column(db.Boolean, unique=True, nullable=False)
+    id: int = db.Column(db.Integer, primary_key=True)
+    isDefaultAdminCreated: bool = db.Column(db.Boolean, unique=True, nullable=False)

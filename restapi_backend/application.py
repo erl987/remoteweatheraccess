@@ -2,12 +2,12 @@ from logging.config import dictConfig
 
 from flask import Flask
 
-from src.user.models import DefaultAdminCreationStatus, generate_default_admin_user
+from restapi_backend.src.user.models import DefaultAdminCreationStatus, generate_default_admin_user
 from src.user.routes import user_blueprint
 from src.weatherdata.routes import weatherdata_blueprint
 from src.errorhandlers import handle_invalid_usage, unauthorized_response
 from src.exceptions import APIError
-from src.extensions import db, ma, flask_bcrypt, jwt
+from src.extensions import db, flask_bcrypt, jwt
 from config.settings import ProdConfig, DevConfig, Config, LOGGING_CONFIG
 
 
@@ -34,7 +34,6 @@ def register_before_first_request(app):
 
 def register_extensions(app):
     db.init_app(app)
-    ma.init_app(app)
     flask_bcrypt.init_app(app)
     jwt.init_app(app)
 
@@ -65,12 +64,13 @@ if __name__ == '__main__':
             default_admin_creation_status = DefaultAdminCreationStatus()
             default_admin_creation_status.isDefaultAdminCreated = True
             db.session.add(default_admin_creation_status)
+            db.session.commit()
 
             default_admin_user = generate_default_admin_user()
             admin_password = default_admin_user.password
             default_admin_user.save_to_db()
-            app.logger.warn('Added a new default ADMIN user \'{}\' with password \'{}\' to the database. '
-                            'Create an own admin user with another password and delete the default '
-                            'admin user immediately!'.format(default_admin_user.name, admin_password))
+            app.logger.warning('Added a new default ADMIN user \'{}\' with password \'{}\' to the database. '
+                               'Create an own admin user with another password and delete the default '
+                               'admin user immediately!'.format(default_admin_user.name, admin_password))
 
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', port=8050)

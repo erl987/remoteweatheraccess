@@ -115,6 +115,7 @@ out
 gen
 testWorkspace
 httpRequests/*.json
+.idea/httpRequests/*
 deployment.xml
 /test_data
 /frontend/test_data/weather.db

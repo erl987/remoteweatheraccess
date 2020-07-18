@@ -6,7 +6,8 @@ from functools import wraps
 from http import HTTPStatus
 
 import pytz
-from flask import current_app
+from dataclasses_jsonschema import ValidationError
+from flask import current_app, request
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_claims, get_jwt_identity
 
 from .extensions import db
@@ -35,11 +36,18 @@ def to_utc(dt):
     return timepoint
 
 
-def rollback_and_raise_exception(func):
+def json_with_rollback_and_raise_exception(func):
     @wraps(func)
     def wrapper(*args, **kwds):
+        json = request.json
+        if not json:
+            raise APIError('Required Content-Type is `application/json`', status_code=HTTPStatus.BAD_REQUEST)
+
         try:
             return func(*args, **kwds)
+        except ValidationError as e:
+            raise APIError("Schema validation failed: {}".format(str(e).split("\n")[0]),
+                           status_code=HTTPStatus.BAD_REQUEST)
         except Exception as e:
             db.session.rollback()
             raise raise_api_error(e, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
