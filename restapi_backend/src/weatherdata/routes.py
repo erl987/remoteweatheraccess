@@ -1,12 +1,13 @@
 from http import HTTPStatus
 
 from flask import request, jsonify, current_app, Blueprint
+import pandas as pd
 
 from ..extensions import db
 from ..exceptions import APIError
 from ..utils import Role, with_rollback_and_raise_exception
 from .models import WeatherDataset, TimeRange, WeatherRawDataset, WindSensorData, CombiSensorData, \
-    RainSensorData, WindSensorRawData, CombiSensorRawData
+    RainSensorData
 from ..utils import access_level_required, json_with_rollback_and_raise_exception, to_utc
 
 weatherdata_blueprint = Blueprint('data', __name__, url_prefix='/api/v1/data')
@@ -66,51 +67,30 @@ def get_weather_datasets():
         raise APIError('Last time \'{}\' is later than first time \'{}\''.format(last, first),
                        status_code=HTTPStatus.BAD_REQUEST)
 
-    base_datasets = (WeatherDataset.query
-                     .filter(WeatherDataset.timepoint >= first)
-                     .filter(WeatherDataset.timepoint <= last)
-                     .order_by(WeatherDataset.timepoint)
-                     .all())
+    found_datasets = pd.read_sql(WeatherDataset.query
+                                 .filter(WeatherDataset.timepoint >= first)
+                                 .filter(WeatherDataset.timepoint <= last)
+                                 .order_by(WeatherDataset.timepoint).statement,
+                                 db.session.bind)
 
-    if not base_datasets:
+    all_sensor_names = [name for name in found_datasets.columns if "id" not in name]
+
+    if found_datasets.empty:
         return jsonify({}), HTTPStatus.OK
 
-    matching_datasets = _create_raw_datasets(base_datasets)
-    response = jsonify(matching_datasets)
+    found_datasets["timepoint"] = pd.Series(found_datasets["timepoint"].dt.to_pydatetime(), dtype=object)
+
+    found_datasets_per_station = {}
+    station_ids = found_datasets['station_id'].unique()
+    for station_id in station_ids:
+        found_datasets_per_station[station_id] = \
+            found_datasets.loc[found_datasets['station_id'] == station_id, all_sensor_names].to_dict("list")
+
+    response = jsonify(found_datasets_per_station)
     response.status_code = HTTPStatus.OK
-    current_app.logger.info('Returned {} datasets from \'{}\'-\'{}\''.format(len(matching_datasets), first, last))
+    current_app.logger.info('Returned {} datasets from \'{}\'-\'{}\''.format(len(found_datasets), first, last))
 
     return response
-
-
-def _create_raw_datasets(base_datasets):
-    matching_datasets = []
-    for dataset in base_datasets:
-        raw_dataset = WeatherRawDataset(
-            timepoint=dataset.timepoint,
-            station=dataset.station_id,
-            pressure=dataset.pressure,
-            uv=dataset.uv,
-            rain_counter=dataset.rain_sensor_data.rain_counter_in_mm,
-            wind=WindSensorRawData(
-                direction=dataset.wind_sensor_data.direction,
-                speed=dataset.wind_sensor_data.speed,
-                temperature=dataset.wind_sensor_data.temperature,
-                gusts=dataset.wind_sensor_data.gusts
-            ),
-            temperature_humidity=[]
-        )
-
-        for temp_humidity_dataset in dataset.combi_sensor_data:
-            raw_dataset.temperature_humidity.append(CombiSensorRawData(
-                sensor_id=temp_humidity_dataset.sensor_id,
-                temperature=temp_humidity_dataset.temperature,
-                humidity=temp_humidity_dataset.humidity
-            ))
-
-        matching_datasets.append(raw_dataset)
-
-    return matching_datasets
 
 
 @weatherdata_blueprint.route('/<id>', methods=['PUT'])

@@ -1,6 +1,8 @@
+from datetime import datetime
 from logging.config import dictConfig
 
 from flask import Flask
+from flask.json import JSONEncoder
 
 from restapi_backend.src.user.models import DefaultAdminCreationStatus, generate_default_admin_user
 from src.user.routes import user_blueprint
@@ -11,8 +13,20 @@ from src.extensions import db, flask_bcrypt, jwt
 from config.settings import ProdConfig, DevConfig, Config, LOGGING_CONFIG
 
 
+class MyJSONEncoder(JSONEncoder):
+    def default(self, o):
+        if isinstance(o, datetime):
+            return o.isoformat()
+
+        return super().default(o)
+
+
+class IsoDateTimeFlask(Flask):
+    json_encoder = MyJSONEncoder
+
+
 def create_app(config_object: Config = ProdConfig()):
-    app = Flask(__name__)
+    app = IsoDateTimeFlask(__name__)
 
     dictConfig(LOGGING_CONFIG)
     app.config.from_object(config_object)

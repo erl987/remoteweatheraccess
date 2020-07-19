@@ -66,10 +66,14 @@ class WeatherDataset(db.Model):
     pressure: float = db.Column(db.Float, nullable=False)
     uv: float = db.Column(db.Float, nullable=False)
 
-    combi_sensor_data: List[CombiSensorData] = db.relationship(CombiSensorData, cascade="all, delete-orphan")
-    rain_sensor_data: RainSensorData = db.relationship(RainSensorData, uselist=False, cascade="all, delete-orphan")
-    wind_sensor_data: WindSensorData = db.relationship(WindSensorData, uselist=False, cascade="all, delete-orphan")
-    weather_station = db.relationship(WeatherStation, backref=db.backref("data", uselist=False))
+    combi_sensor_data: List[CombiSensorData] = db.relationship(CombiSensorData, lazy='joined', innerjoin=True,
+                                                               cascade="all, delete-orphan")
+    rain_sensor_data: RainSensorData = db.relationship(RainSensorData, lazy='joined', innerjoin=True, uselist=False,
+                                                       cascade="all, delete-orphan")
+    wind_sensor_data: WindSensorData = db.relationship(WindSensorData, lazy='joined', innerjoin=True, uselist=False,
+                                                       cascade="all, delete-orphan")
+    weather_station = db.relationship(WeatherStation, backref=db.backref("data", lazy='joined', innerjoin=True,
+                                                                         uselist=False))
 
 
 @dataclass()
