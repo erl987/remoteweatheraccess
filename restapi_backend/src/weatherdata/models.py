@@ -103,6 +103,7 @@ class WeatherRawDataset(JsonSchemaMixin):
 
 
 @dataclass
-class TimeRange(JsonSchemaMixin):
+class GetWeatherdataPayload(JsonSchemaMixin):
     first_timepoint: datetime
     last_timepoint: datetime
+    sensors: List[str]

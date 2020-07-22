@@ -6,7 +6,7 @@ import pandas as pd
 from ..extensions import db
 from ..exceptions import APIError
 from ..utils import Role, with_rollback_and_raise_exception
-from .models import WeatherDataset, TimeRange, WeatherRawDataset, WindSensorData, CombiSensorData, \
+from .models import WeatherDataset, GetWeatherdataPayload, WeatherRawDataset, WindSensorData, CombiSensorData, \
     RainSensorData
 from ..utils import access_level_required, json_with_rollback_and_raise_exception, to_utc
 
@@ -60,9 +60,14 @@ def _create_weather_dataset():
 @weatherdata_blueprint.route('', methods=['GET'])
 @json_with_rollback_and_raise_exception
 def get_weather_datasets():
-    time_period = TimeRange.from_dict(request.json)
+    time_period = GetWeatherdataPayload.from_dict(request.json)
     first = time_period.first_timepoint
     last = time_period.last_timepoint
+    requested_sensors = time_period.sensors  # TODO: validation using marshmallow-enum ...
+
+    requested_base_station_sensors, requested_entities, requested_temp_humidity_sensors, requested_wind_sensors = \
+        _create_query_configuration(requested_sensors)
+
     if last < first:
         raise APIError('Last time \'{}\' is later than first time \'{}\''.format(last, first),
                        status_code=HTTPStatus.BAD_REQUEST)
@@ -75,16 +80,8 @@ def get_weather_datasets():
                                  .join(WeatherDataset.combi_sensor_data)
                                  .order_by(WeatherDataset.timepoint).with_entities(WeatherDataset.timepoint,
                                                                                    WeatherDataset.station_id,
-                                                                                   WeatherDataset.pressure,
-                                                                                   WeatherDataset.uv,
-                                                                                   RainSensorData.rain_counter_in_mm,
-                                                                                   WindSensorData.speed,
-                                                                                   WindSensorData.gusts,
-                                                                                   WindSensorData.direction,
-                                                                                   WindSensorData.wind_temperature,
                                                                                    CombiSensorData.sensor_id,
-                                                                                   CombiSensorData.temperature,
-                                                                                   CombiSensorData.humidity)
+                                                                                   *requested_entities)
                                  .statement,
                                  db.session.bind)
 
@@ -100,14 +97,14 @@ def get_weather_datasets():
                                               (found_datasets.sensor_id == "IN")]
 
         found_datasets_per_station[station_id] =\
-            station_datasets.loc[:, ["timepoint", "pressure", "uv", "rain_counter_in_mm"]].to_dict("list")
+            station_datasets.loc[:, requested_base_station_sensors].to_dict("list")
         found_datasets_per_station[station_id]["wind"] = \
-            station_datasets.loc[:, ["gusts", "direction", "wind_temperature", "speed"]].to_dict("list")
+            station_datasets.loc[:, requested_wind_sensors].to_dict("list")
         found_datasets_per_station[station_id]["temperature_humidity"] = {}
         for combi_sensor_id in combi_sensor_ids:
             found_datasets_per_station[station_id]["temperature_humidity"][combi_sensor_id] =\
                 found_datasets.loc[(found_datasets.station_id == station_id) &
-                                   (found_datasets.sensor_id == combi_sensor_id), ["temperature", "humidity"]]\
+                                   (found_datasets.sensor_id == combi_sensor_id), requested_temp_humidity_sensors]\
                 .to_dict("list")
 
     response = jsonify(found_datasets_per_station)
@@ -115,6 +112,74 @@ def get_weather_datasets():
     current_app.logger.info('Returned {} datasets from \'{}\'-\'{}\''.format(len(found_datasets), first, last))
 
     return response
+
+
+def _create_query_configuration(requested_sensors):
+    do_configure_all = (len(requested_sensors) == 0)
+    requested_base_station_sensors, requested_entities = _create_base_station_query_configuration(requested_sensors,
+                                                                                                  do_configure_all)
+    requested_wind_sensors = _create_wind_sensor_query_configuration(requested_entities, requested_sensors,
+                                                                     do_configure_all)
+    requested_temp_humidity_sensors = _create_temp_humidity_sensor_query_configuration(requested_entities,
+                                                                                       requested_sensors,
+                                                                                       do_configure_all)
+
+    return requested_base_station_sensors, requested_entities, requested_temp_humidity_sensors, requested_wind_sensors
+
+
+def _create_temp_humidity_sensor_query_configuration(requested_entities, requested_sensors, do_configure_all):
+    requested_entities.extend([CombiSensorData.temperature, CombiSensorData.humidity])
+    requested_temp_humidity_sensors = ["temperature", "humidity"]
+
+    if not do_configure_all:
+        if "temperature" not in requested_sensors:
+            requested_temp_humidity_sensors.remove("temperature")
+            requested_entities.remove(CombiSensorData.temperature)
+        if "humidity" not in requested_sensors:
+            requested_temp_humidity_sensors.remove("humidity")
+            requested_entities.remove(CombiSensorData.humidity)
+
+    return requested_temp_humidity_sensors
+
+
+def _create_wind_sensor_query_configuration(requested_entities, requested_sensors, do_configure_all):
+    requested_entities.extend(
+        [WindSensorData.gusts, WindSensorData.direction, WindSensorData.wind_temperature, WindSensorData.speed])
+    requested_wind_sensors = ["gusts", "direction", "wind_temperature", "speed"]
+
+    if not do_configure_all:
+        if "gusts" not in requested_sensors:
+            requested_wind_sensors.remove("gusts")
+            requested_entities.remove(WindSensorData.gusts)
+        if "direction" not in requested_sensors:
+            requested_wind_sensors.remove("direction")
+            requested_entities.remove(WindSensorData.direction)
+        if "wind_temperature" not in requested_sensors:
+            requested_wind_sensors.remove("wind_temperature")
+            requested_entities.remove(WindSensorData.wind_temperature)
+        if "speed" not in requested_sensors:
+            requested_wind_sensors.remove("speed")
+            requested_entities.remove(WindSensorData.speed)
+
+    return requested_wind_sensors
+
+
+def _create_base_station_query_configuration(requested_sensors, do_configure_all):
+    requested_entities = [WeatherDataset.pressure, WeatherDataset.uv, RainSensorData.rain_counter_in_mm]
+    requested_base_station_sensors = ["pressure", "uv", "rain_counter_in_mm"]
+
+    if not do_configure_all:
+        if "pressure" not in requested_sensors:
+            requested_base_station_sensors.remove("pressure")
+            requested_entities.remove(WeatherDataset.pressure)
+        if "uv" not in requested_sensors:
+            requested_base_station_sensors.remove("uv")
+            requested_entities.remove(WeatherDataset.uv)
+        if "rain_counter_in_mm" not in requested_sensors:
+            requested_base_station_sensors.remove("rain_counter_in_mm")
+            requested_entities.remove(RainSensorData.rain_counter_in_mm)
+
+    return requested_base_station_sensors, requested_entities
 
 
 @weatherdata_blueprint.route('/<id>', methods=['PUT'])
@@ -180,7 +245,7 @@ def get_one_weather_dataset(id):
 @weatherdata_blueprint.route('/limits', methods=['GET'])
 @with_rollback_and_raise_exception
 def get_available_time_period():
-    time_range = TimeRange(
+    time_range = GetWeatherdataPayload(
         first_timepoint=db.session.query(WeatherDataset.timepoint, db.func.min(WeatherDataset.timepoint)).scalar(),
         last_timepoint=db.session.query(WeatherDataset.timepoint, db.func.max(WeatherDataset.timepoint)).scalar()
     )

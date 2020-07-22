@@ -24,6 +24,6 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTUwODYwN
     "speed": 89.5,
     "gusts": 103.5,
     "direction": 190.5,
-    "temperature": 16.5
+    "wind_temperature": 16.5
   }
 }

@@ -4,5 +4,6 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTQ5MTkzN
 
 {
   "first_timepoint": "2019-07-06T12:35:00+02:00",
-  "last_timepoint": "2019-07-30T00:00:00+02:00"
+  "last_timepoint": "2019-07-30T00:00:00+02:00",
+  "sensors": []
 }
