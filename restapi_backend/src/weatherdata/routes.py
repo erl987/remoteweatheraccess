@@ -88,6 +88,18 @@ def get_weather_datasets():
     if found_datasets.empty:
         return jsonify({}), HTTPStatus.OK
 
+    found_datasets_per_station = _create_get_response_payload(found_datasets, requested_base_station_sensors,
+                                                              requested_temp_humidity_sensors, requested_wind_sensors)
+
+    response = jsonify(found_datasets_per_station)
+    response.status_code = HTTPStatus.OK
+    current_app.logger.info('Returned {} datasets from \'{}\'-\'{}\''.format(len(found_datasets), first, last))
+
+    return response
+
+
+def _create_get_response_payload(found_datasets, requested_base_station_sensors, requested_temp_humidity_sensors,
+                                 requested_wind_sensors):
     combi_sensor_ids = found_datasets.sensor_id.unique()
 
     found_datasets_per_station = {}
@@ -96,22 +108,17 @@ def get_weather_datasets():
         station_datasets = found_datasets.loc[(found_datasets.station_id == station_id) &
                                               (found_datasets.sensor_id == "IN")]
 
-        found_datasets_per_station[station_id] =\
+        found_datasets_per_station[station_id] = \
             station_datasets.loc[:, requested_base_station_sensors].to_dict("list")
         found_datasets_per_station[station_id]["wind"] = \
             station_datasets.loc[:, requested_wind_sensors].to_dict("list")
         found_datasets_per_station[station_id]["temperature_humidity"] = {}
         for combi_sensor_id in combi_sensor_ids:
-            found_datasets_per_station[station_id]["temperature_humidity"][combi_sensor_id] =\
+            found_datasets_per_station[station_id]["temperature_humidity"][combi_sensor_id] = \
                 found_datasets.loc[(found_datasets.station_id == station_id) &
-                                   (found_datasets.sensor_id == combi_sensor_id), requested_temp_humidity_sensors]\
-                .to_dict("list")
-
-    response = jsonify(found_datasets_per_station)
-    response.status_code = HTTPStatus.OK
-    current_app.logger.info('Returned {} datasets from \'{}\'-\'{}\''.format(len(found_datasets), first, last))
-
-    return response
+                                   (found_datasets.sensor_id == combi_sensor_id), requested_temp_humidity_sensors] \
+                    .to_dict("list")
+    return found_datasets_per_station
 
 
 def _create_query_configuration(requested_sensors):
