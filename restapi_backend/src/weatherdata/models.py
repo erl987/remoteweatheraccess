@@ -45,7 +45,7 @@ class WindSensorData(db.Model):
 
     direction: float = db.Column(db.Float, nullable=False)
     speed: float = db.Column(db.Float, nullable=False)
-    temperature: float = db.Column(db.Float, nullable=False)
+    wind_temperature: float = db.Column(db.Float, nullable=False)
     gusts: float = db.Column(db.Float, nullable=False)
 
 
@@ -87,7 +87,7 @@ class CombiSensorRawData(JsonSchemaMixin):
 class WindSensorRawData(JsonSchemaMixin):
     direction: float
     speed: float
-    temperature: float
+    wind_temperature: float
     gusts: float
 
 

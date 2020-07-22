@@ -67,24 +67,48 @@ def get_weather_datasets():
         raise APIError('Last time \'{}\' is later than first time \'{}\''.format(last, first),
                        status_code=HTTPStatus.BAD_REQUEST)
 
-    found_datasets = pd.read_sql(WeatherDataset.query
+    found_datasets = pd.read_sql(db.session.query(WeatherDataset)
                                  .filter(WeatherDataset.timepoint >= first)
                                  .filter(WeatherDataset.timepoint <= last)
-                                 .order_by(WeatherDataset.timepoint).statement,
+                                 .join(WeatherDataset.rain_sensor_data)
+                                 .join(WeatherDataset.wind_sensor_data)
+                                 .join(WeatherDataset.combi_sensor_data)
+                                 .order_by(WeatherDataset.timepoint).with_entities(WeatherDataset.timepoint,
+                                                                                   WeatherDataset.station_id,
+                                                                                   WeatherDataset.pressure,
+                                                                                   WeatherDataset.uv,
+                                                                                   RainSensorData.rain_counter_in_mm,
+                                                                                   WindSensorData.speed,
+                                                                                   WindSensorData.gusts,
+                                                                                   WindSensorData.direction,
+                                                                                   WindSensorData.wind_temperature,
+                                                                                   CombiSensorData.sensor_id,
+                                                                                   CombiSensorData.temperature,
+                                                                                   CombiSensorData.humidity)
+                                 .statement,
                                  db.session.bind)
-
-    all_sensor_names = [name for name in found_datasets.columns if "id" not in name]
 
     if found_datasets.empty:
         return jsonify({}), HTTPStatus.OK
 
-    found_datasets["timepoint"] = pd.Series(found_datasets["timepoint"].dt.to_pydatetime(), dtype=object)
+    combi_sensor_ids = found_datasets.sensor_id.unique()
 
     found_datasets_per_station = {}
     station_ids = found_datasets['station_id'].unique()
     for station_id in station_ids:
-        found_datasets_per_station[station_id] = \
-            found_datasets.loc[found_datasets['station_id'] == station_id, all_sensor_names].to_dict("list")
+        station_datasets = found_datasets.loc[(found_datasets.station_id == station_id) &
+                                              (found_datasets.sensor_id == "IN")]
+
+        found_datasets_per_station[station_id] =\
+            station_datasets.loc[:, ["timepoint", "pressure", "uv", "rain_counter_in_mm"]].to_dict("list")
+        found_datasets_per_station[station_id]["wind"] = \
+            station_datasets.loc[:, ["gusts", "direction", "wind_temperature", "speed"]].to_dict("list")
+        found_datasets_per_station[station_id]["temperature_humidity"] = {}
+        for combi_sensor_id in combi_sensor_ids:
+            found_datasets_per_station[station_id]["temperature_humidity"][combi_sensor_id] =\
+                found_datasets.loc[(found_datasets.station_id == station_id) &
+                                   (found_datasets.sensor_id == combi_sensor_id), ["temperature", "humidity"]]\
+                .to_dict("list")
 
     response = jsonify(found_datasets_per_station)
     response.status_code = HTTPStatus.OK
