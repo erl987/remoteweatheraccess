@@ -9,4 +9,3 @@ marshmallow-sqlalchemy==0.23.1
 marshmallow==3.7.1
 pandas==1.0.5
 json-logging-py==0.2
-pytz==2020.1

@@ -7,7 +7,7 @@ from ..extensions import db
 from ..exceptions import APIError
 from ..utils import Role, with_rollback_and_raise_exception
 from .models import WeatherDataset, WindSensorData, TempHumiditySensorData
-from .schemas import get_weatherdata_payload_schema, weather_dataset_schema
+from .schemas import time_period_with_sensors_schema, weather_dataset_schema, time_period_with_stations_schema
 from ..utils import access_level_required, json_with_rollback_and_raise_exception
 
 weatherdata_blueprint = Blueprint('data', __name__, url_prefix='/api/v1/data')
@@ -17,7 +17,8 @@ weatherdata_blueprint = Blueprint('data', __name__, url_prefix='/api/v1/data')
 @access_level_required(Role.PUSH_USER)
 @json_with_rollback_and_raise_exception
 def add_or_update_weather_datasets():
-    new_datasets = weather_dataset_schema.load(request.json)
+    new_datasets = weather_dataset_schema.load(request.json,
+                                               session=db.session)  # TODO: does not work with updating ...
 
     num_datasets_before_commit = WeatherDataset.query.count()
     db.session.add_all(new_datasets)
@@ -40,10 +41,10 @@ def add_or_update_weather_datasets():
 @weatherdata_blueprint.route('', methods=['GET'])
 @json_with_rollback_and_raise_exception
 def get_weather_datasets():
-    time_period = get_weatherdata_payload_schema.load(request.json)
-    first = time_period["first_timepoint"]
-    last = time_period["last_timepoint"]
-    requested_sensors = time_period["sensors"]  # TODO: validation using marshmallow-enum ...
+    time_period_with_sensors = time_period_with_sensors_schema.load(request.json)
+    first = time_period_with_sensors["first_timepoint"]
+    last = time_period_with_sensors["last_timepoint"]
+    requested_sensors = time_period_with_sensors["sensors"]  # TODO: validation using marshmallow-enum ...
 
     requested_base_station_sensors, requested_entities, requested_temp_humidity_sensors, requested_wind_sensors = \
         _create_query_configuration(requested_sensors)
@@ -70,9 +71,15 @@ def get_weather_datasets():
     found_datasets_per_station = _create_get_response_payload(found_datasets, requested_base_station_sensors,
                                                               requested_temp_humidity_sensors, requested_wind_sensors)
 
+    num_datasets_per_station = []
+    for station_id, dataset in found_datasets_per_station.items():
+        num_datasets_per_station.append("{}: {}".format(station_id, len(dataset["timepoint"])))
+    num_datasets_log_str = ", ".join(num_datasets_per_station)
+
     response = jsonify(found_datasets_per_station)
     response.status_code = HTTPStatus.OK
-    current_app.logger.info('Returned {} datasets from \'{}\'-\'{}\''.format(len(found_datasets), first, last))
+    current_app.logger.info('Returned datasets from time period \'{}\'-\'{}\' ({})'.format(first, last,
+                                                                                           num_datasets_log_str))
 
     return response
 
@@ -93,10 +100,10 @@ def _create_get_response_payload(found_datasets, requested_base_station_sensors,
             station_datasets.loc[:, requested_wind_sensors].to_dict("list")
         found_datasets_per_station[station_id]["temperature_humidity"] = {}
         for combi_sensor_id in combi_sensor_ids:
-            found_datasets_per_station[station_id]["temperature_humidity"][combi_sensor_id] = \
+            found_datasets_per_station[station_id]["temperature_humidity"][combi_sensor_id] = (
                 found_datasets.loc[(found_datasets.station_id == station_id) &
-                                   (found_datasets.sensor_id == combi_sensor_id), requested_temp_humidity_sensors]\
-                    .to_dict("list")
+                                   (found_datasets.sensor_id == combi_sensor_id), requested_temp_humidity_sensors]
+                    .to_dict("list"))
     return found_datasets_per_station
 
 
@@ -168,37 +175,40 @@ def _create_base_station_query_configuration(requested_sensors, do_configure_all
     return requested_base_station_sensors, requested_entities
 
 
-@weatherdata_blueprint.route('/<id>', methods=['DELETE'])
+@weatherdata_blueprint.route('', methods=['DELETE'])
 @access_level_required(Role.PUSH_USER)
-@with_rollback_and_raise_exception
-def delete_weather_dataset(id):
-    existing_dataset = WeatherDataset.query.get(id)
-    if not existing_dataset:
-        current_app.logger.info('Nothing to delete for dataset with id \'{}\' '.format(id))
-        return '', HTTPStatus.NO_CONTENT
+@json_with_rollback_and_raise_exception
+def delete_weather_dataset():
+    time_period_with_stations = time_period_with_stations_schema.load(request.json)
+    first = time_period_with_stations["first_timepoint"]
+    last = time_period_with_stations["last_timepoint"]
+    stations = time_period_with_stations["stations"]  # TODO: validation using marshmallow-enum ...
 
-    db.session.delete(existing_dataset)
+    # cascade deletion of multiple tables is not supported by the SQLite backend of SQLAlchemy
+    _delete_datasets_from_table(WeatherDataset, first, last, stations)
+    _delete_datasets_from_table(TempHumiditySensorData, first, last, stations)
+    _delete_datasets_from_table(WindSensorData, first, last, stations)
+
     db.session.commit()
-    current_app.logger.info('Deleted dataset for time \'{}\' from the database'.format(existing_dataset.timepoint))
 
-    response = jsonify(existing_dataset)
-    response.status_code = HTTPStatus.OK
+    if len(stations) == 0:
+        station_log_str = "all stations"
+    else:
+        station_log_str = "the stations [" + ", ".join(stations) + "]"
 
-    return response
+    current_app.logger.info('Deleted dataset within time period \'{}\'-\'{}\' for {} from the database'
+                            .format(first, last, station_log_str))
+    return '', HTTPStatus.NO_CONTENT
 
 
-@weatherdata_blueprint.route('/<id>', methods=['GET'])
-@with_rollback_and_raise_exception
-def get_one_weather_dataset(id):
-    dataset = WeatherDataset.query.get(id)
-    if not dataset:
-        raise APIError('No dataset with id \'{}\''.format(id), status_code=HTTPStatus.BAD_REQUEST)
+def _delete_datasets_from_table(Table, first_timepoint, last_timepoint, stations):
+    query = (db.session.query(Table)
+             .filter(Table.timepoint >= first_timepoint)
+             .filter(Table.timepoint < last_timepoint))
 
-    response = jsonify(dataset)
-    response.status_code = HTTPStatus.OK
-    current_app.logger.info('Returned dataset for id \'{}\''.format(id))
-
-    return response
+    if len(stations) > 0:
+        query = query.filter(Table.station_id.in_(stations))
+    query.delete(synchronize_session=False)
 
 
 @weatherdata_blueprint.route('/limits', methods=['GET'])

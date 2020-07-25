@@ -1,17 +1,16 @@
 import random
-import string
 import re
+import string
 from enum import Enum
 from functools import wraps
 from http import HTTPStatus
 
-import pytz
-from dataclasses_jsonschema import ValidationError
 from flask import current_app, request
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_claims, get_jwt_identity
+from marshmallow import ValidationError
 
-from .extensions import db
 from .exceptions import raise_api_error, APIError
+from .extensions import db
 
 
 class Role(Enum):
