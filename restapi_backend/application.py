@@ -9,7 +9,7 @@ from src.user.routes import user_blueprint
 from src.weatherdata.routes import weatherdata_blueprint
 from src.errorhandlers import handle_invalid_usage, unauthorized_response
 from src.exceptions import APIError
-from src.extensions import db, flask_bcrypt, jwt
+from src.extensions import db, ma, flask_bcrypt, jwt
 from config.settings import ProdConfig, DevConfig, Config, LOGGING_CONFIG
 
 
@@ -48,6 +48,7 @@ def register_before_first_request(app):
 
 def register_extensions(app):
     db.init_app(app)
+    ma.init_app(app)
     flask_bcrypt.init_app(app)
     jwt.init_app(app)
 

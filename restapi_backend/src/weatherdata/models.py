@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional
 
-from dataclasses_jsonschema import JsonSchemaMixin
 from sqlalchemy import ForeignKey
 
 from ..extensions import db
@@ -28,9 +27,9 @@ class CombiSensor(db.Model):
 
 
 @dataclass
-class CombiSensorData(db.Model):
+class TempHumiditySensorData(db.Model):
     dataset_id: Optional[int] = db.Column(ForeignKey("weather_dataset.id"), primary_key=True)
-    sensor_id: Optional[str] = db.Column(ForeignKey(CombiSensor.sensor_id), primary_key=True)
+    sensor_id: str = db.Column(ForeignKey(CombiSensor.sensor_id), primary_key=True)
 
     temperature: float = db.Column(db.Float, nullable=False)
     humidity: float = db.Column(db.Float, nullable=False)
@@ -50,60 +49,18 @@ class WindSensorData(db.Model):
 
 
 @dataclass
-class RainSensorData(db.Model):
-    id: Optional[int] = db.Column(db.Integer, primary_key=True)
-    dataset_id: Optional[int] = db.Column(ForeignKey("weather_dataset.id"))
-
-    rain_counter_in_mm: float = db.Column(db.Float, nullable=False)
-
-
-@dataclass
 class WeatherDataset(db.Model):
     id: Optional[int] = db.Column(db.Integer, primary_key=True)
-    station_id: Optional[str] = db.Column(ForeignKey(WeatherStation.id))
+    station_id: str = db.Column(ForeignKey(WeatherStation.station_id))
 
     timepoint: datetime = db.Column(db.DateTime, nullable=False)
     pressure: float = db.Column(db.Float, nullable=False)
     uv: float = db.Column(db.Float, nullable=False)
+    rain_counter: float = db.Column(db.Float, nullable=False)
 
-    combi_sensor_data: List[CombiSensorData] = db.relationship(CombiSensorData, lazy='joined', innerjoin=True,
-                                                               cascade="all, delete-orphan")
-    rain_sensor_data: RainSensorData = db.relationship(RainSensorData, lazy='joined', innerjoin=True, uselist=False,
-                                                       cascade="all, delete-orphan")
-    wind_sensor_data: WindSensorData = db.relationship(WindSensorData, lazy='joined', innerjoin=True, uselist=False,
-                                                       cascade="all, delete-orphan")
+    temperature_humidity: List[TempHumiditySensorData] = db.relationship(TempHumiditySensorData, lazy='joined',
+                                                                         innerjoin=True, cascade="all, delete-orphan")
+    wind: WindSensorData = db.relationship(WindSensorData, lazy='joined', innerjoin=True, uselist=False,
+                                           cascade="all, delete-orphan")
     weather_station = db.relationship(WeatherStation, backref=db.backref("data", lazy='joined', innerjoin=True,
                                                                          uselist=False))
-
-
-@dataclass()
-class CombiSensorRawData(JsonSchemaMixin):
-    sensor_id: str
-    temperature: float
-    humidity: float
-
-
-@dataclass
-class WindSensorRawData(JsonSchemaMixin):
-    direction: float
-    speed: float
-    wind_temperature: float
-    gusts: float
-
-
-@dataclass
-class WeatherRawDataset(JsonSchemaMixin):
-    timepoint: datetime
-    station: str
-    pressure: float
-    uv: float
-    rain_counter: float
-    temperature_humidity: List[CombiSensorRawData]
-    wind: WindSensorRawData
-
-
-@dataclass
-class GetWeatherdataPayload(JsonSchemaMixin):
-    first_timepoint: datetime
-    last_timepoint: datetime
-    sensors: List[str]

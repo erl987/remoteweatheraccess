@@ -6,64 +6,44 @@ import pandas as pd
 from ..extensions import db
 from ..exceptions import APIError
 from ..utils import Role, with_rollback_and_raise_exception
-from .models import WeatherDataset, GetWeatherdataPayload, WeatherRawDataset, WindSensorData, CombiSensorData, \
-    RainSensorData
-from ..utils import access_level_required, json_with_rollback_and_raise_exception, to_utc
+from .models import WeatherDataset, WindSensorData, TempHumiditySensorData
+from .schemas import get_weatherdata_payload_schema, weather_dataset_schema
+from ..utils import access_level_required, json_with_rollback_and_raise_exception
 
 weatherdata_blueprint = Blueprint('data', __name__, url_prefix='/api/v1/data')
 
 
-@weatherdata_blueprint.route('', methods=['POST'])
+@weatherdata_blueprint.route('', methods=['PUT'])
 @access_level_required(Role.PUSH_USER)
 @json_with_rollback_and_raise_exception
-def add_weather_dataset():
-    new_dataset = _create_weather_dataset()
+def add_or_update_weather_datasets():
+    new_datasets = weather_dataset_schema.load(request.json)
 
-    existing_dataset = WeatherDataset.query.filter_by(timepoint=new_dataset.timepoint).first()
-    if not existing_dataset:
-        db.session.add(new_dataset)
-        db.session.commit()
+    num_datasets_before_commit = WeatherDataset.query.count()
+    db.session.add_all(new_datasets)
+    db.session.commit()
+    num_datasets_after_commit = WeatherDataset.query.count()
+    num_new_datasets = num_datasets_after_commit - num_datasets_before_commit
 
-        response = jsonify(new_dataset)
-        current_app.logger.info('Added new dataset for time \'{}\' to the database'.format(new_dataset.timepoint))
+    response = jsonify(new_datasets)
+    current_app.logger.info('Committed {} datasets to the database, this are {} new entries'
+                            .format(len(new_datasets), num_new_datasets))
+
+    if num_new_datasets > 0:
         response.status_code = HTTPStatus.CREATED
     else:
-        raise APIError('Dataset for time \'{}\' already in the database'.format(new_dataset.timepoint),
-                       status_code=HTTPStatus.CONFLICT, location='/api/v1/data/{}'.format(existing_dataset.id))
-
-    response.headers['location'] = '/api/v1/data/{}'.format(new_dataset.id)
+        response.status_code = HTTPStatus.OK
 
     return response
-
-
-def _create_weather_dataset():
-    new_dataset = WeatherRawDataset.from_dict(request.json)
-
-    all_combi_sensor_data = []
-    for combi_sensor_data in new_dataset.temperature_humidity:
-        all_combi_sensor_data.append(CombiSensorData(**combi_sensor_data.to_dict()))
-    wind_sensor_data = WindSensorData(**new_dataset.wind.to_dict())
-    rain_sensor_data = RainSensorData(rain_counter_in_mm=new_dataset.rain_counter)
-    weather_dataset = WeatherDataset(
-        timepoint=new_dataset.timepoint,
-        station_id=new_dataset.station,
-        pressure=new_dataset.pressure,
-        uv=new_dataset.uv,
-        rain_sensor_data=rain_sensor_data,
-        wind_sensor_data=wind_sensor_data,
-        combi_sensor_data=all_combi_sensor_data
-    )
-
-    return weather_dataset
 
 
 @weatherdata_blueprint.route('', methods=['GET'])
 @json_with_rollback_and_raise_exception
 def get_weather_datasets():
-    time_period = GetWeatherdataPayload.from_dict(request.json)
-    first = time_period.first_timepoint
-    last = time_period.last_timepoint
-    requested_sensors = time_period.sensors  # TODO: validation using marshmallow-enum ...
+    time_period = get_weatherdata_payload_schema.load(request.json)
+    first = time_period["first_timepoint"]
+    last = time_period["last_timepoint"]
+    requested_sensors = time_period["sensors"]  # TODO: validation using marshmallow-enum ...
 
     requested_base_station_sensors, requested_entities, requested_temp_humidity_sensors, requested_wind_sensors = \
         _create_query_configuration(requested_sensors)
@@ -75,12 +55,11 @@ def get_weather_datasets():
     found_datasets = pd.read_sql(db.session.query(WeatherDataset)
                                  .filter(WeatherDataset.timepoint >= first)
                                  .filter(WeatherDataset.timepoint <= last)
-                                 .join(WeatherDataset.rain_sensor_data)
-                                 .join(WeatherDataset.wind_sensor_data)
-                                 .join(WeatherDataset.combi_sensor_data)
+                                 .join(WeatherDataset.wind)
+                                 .join(WeatherDataset.temperature_humidity)
                                  .order_by(WeatherDataset.timepoint).with_entities(WeatherDataset.timepoint,
                                                                                    WeatherDataset.station_id,
-                                                                                   CombiSensorData.sensor_id,
+                                                                                   TempHumiditySensorData.sensor_id,
                                                                                    *requested_entities)
                                  .statement,
                                  db.session.bind)
@@ -116,7 +95,7 @@ def _create_get_response_payload(found_datasets, requested_base_station_sensors,
         for combi_sensor_id in combi_sensor_ids:
             found_datasets_per_station[station_id]["temperature_humidity"][combi_sensor_id] = \
                 found_datasets.loc[(found_datasets.station_id == station_id) &
-                                   (found_datasets.sensor_id == combi_sensor_id), requested_temp_humidity_sensors] \
+                                   (found_datasets.sensor_id == combi_sensor_id), requested_temp_humidity_sensors]\
                     .to_dict("list")
     return found_datasets_per_station
 
@@ -135,16 +114,16 @@ def _create_query_configuration(requested_sensors):
 
 
 def _create_temp_humidity_sensor_query_configuration(requested_entities, requested_sensors, do_configure_all):
-    requested_entities.extend([CombiSensorData.temperature, CombiSensorData.humidity])
+    requested_entities.extend([TempHumiditySensorData.temperature, TempHumiditySensorData.humidity])
     requested_temp_humidity_sensors = ["temperature", "humidity"]
 
     if not do_configure_all:
         if "temperature" not in requested_sensors:
             requested_temp_humidity_sensors.remove("temperature")
-            requested_entities.remove(CombiSensorData.temperature)
+            requested_entities.remove(TempHumiditySensorData.temperature)
         if "humidity" not in requested_sensors:
             requested_temp_humidity_sensors.remove("humidity")
-            requested_entities.remove(CombiSensorData.humidity)
+            requested_entities.remove(TempHumiditySensorData.humidity)
 
     return requested_temp_humidity_sensors
 
@@ -172,8 +151,8 @@ def _create_wind_sensor_query_configuration(requested_entities, requested_sensor
 
 
 def _create_base_station_query_configuration(requested_sensors, do_configure_all):
-    requested_entities = [WeatherDataset.pressure, WeatherDataset.uv, RainSensorData.rain_counter_in_mm]
-    requested_base_station_sensors = ["pressure", "uv", "rain_counter_in_mm"]
+    requested_entities = [WeatherDataset.pressure, WeatherDataset.uv, WeatherDataset.rain_counter]
+    requested_base_station_sensors = ["timepoint", "pressure", "uv", "rain_counter"]
 
     if not do_configure_all:
         if "pressure" not in requested_sensors:
@@ -182,38 +161,11 @@ def _create_base_station_query_configuration(requested_sensors, do_configure_all
         if "uv" not in requested_sensors:
             requested_base_station_sensors.remove("uv")
             requested_entities.remove(WeatherDataset.uv)
-        if "rain_counter_in_mm" not in requested_sensors:
-            requested_base_station_sensors.remove("rain_counter_in_mm")
-            requested_entities.remove(RainSensorData.rain_counter_in_mm)
+        if "rain_counter" not in requested_sensors:
+            requested_base_station_sensors.remove("rain_counter")
+            requested_entities.remove(WeatherDataset.rain_counter)
 
     return requested_base_station_sensors, requested_entities
-
-
-@weatherdata_blueprint.route('/<id>', methods=['PUT'])
-@access_level_required(Role.PUSH_USER)
-@json_with_rollback_and_raise_exception
-def update_weather_dataset(id):
-    new_dataset = _create_weather_dataset()
-    existing_dataset = WeatherDataset.query.get(id)
-    if not existing_dataset:
-        raise APIError('No dataset with id \'{}\''.format(id), status_code=HTTPStatus.NOT_FOUND)
-
-    if to_utc(new_dataset.timepoint) != to_utc(existing_dataset.timepoint):
-        raise APIError('The time \'{}\' stored for id \'{}\' does not match the time \'{}\' of the submitted '
-                       'dataset'.format(existing_dataset.timepoint, id, new_dataset.timepoint),
-                       status_code=HTTPStatus.CONFLICT,
-                       location='/api/v1/data/{}'.format(existing_dataset.id))
-
-    # TODO: needs to be completed for all relevant fields ...
-    existing_dataset.pressure = new_dataset.pressure
-    db.session.commit()
-    current_app.logger.info('Updated dataset for time \'{}\' to the database'.format(existing_dataset.timepoint))
-
-    response = jsonify(existing_dataset)
-    response.status_code = HTTPStatus.OK
-    response.headers['location'] = '/api/v1/data/{}'.format(existing_dataset.id)
-
-    return response
 
 
 @weatherdata_blueprint.route('/<id>', methods=['DELETE'])
@@ -252,17 +204,22 @@ def get_one_weather_dataset(id):
 @weatherdata_blueprint.route('/limits', methods=['GET'])
 @with_rollback_and_raise_exception
 def get_available_time_period():
-    time_range = GetWeatherdataPayload(
-        first_timepoint=db.session.query(WeatherDataset.timepoint, db.func.min(WeatherDataset.timepoint)).scalar(),
-        last_timepoint=db.session.query(WeatherDataset.timepoint, db.func.max(WeatherDataset.timepoint)).scalar()
-    )
+    min_max_query_result = db.session.query(db.func.min(WeatherDataset.timepoint).label("min_time"),
+                                            db.func.max(WeatherDataset.timepoint).label("max_time")).one()
+    first_timepoint = min_max_query_result.min_time
+    last_timepoint = min_max_query_result.max_time
 
-    if not time_range.first_timepoint or not time_range.last_timepoint:
+    if not first_timepoint or not last_timepoint:
         raise APIError('No data in the database', status_code=HTTPStatus.NOT_FOUND)
+
+    time_range = {
+        "first_timepoint": first_timepoint,
+        "last_timepoint": last_timepoint
+    }
 
     response = jsonify(time_range)
     response.status_code = HTTPStatus.OK
-    current_app.logger.info('Returned available time period: \'{}\'-\'{}\''.format(time_range.first_timepoint,
-                                                                                   time_range.last_timepoint))
+    current_app.logger.info('Returned available time period: \'{}\'-\'{}\''.format(time_range["first_timepoint"],
+                                                                                   time_range["last_timepoint"]))
 
     return response

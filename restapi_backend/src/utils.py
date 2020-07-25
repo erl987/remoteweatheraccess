@@ -26,16 +26,6 @@ ROLES = set(item.name for item in Role)
 USER_NAME_REGEX = re.compile(r'^(?![-._])(?!.*[_.-]{2})[\w.-]{3,30}(?<![-._])$')
 
 
-def to_utc(dt):
-    if dt.tzinfo:
-        timepoint = dt.astimezone(pytz.utc)
-    else:
-        timepoint = dt
-    timepoint = timepoint.replace(tzinfo=None)
-
-    return timepoint
-
-
 def json_with_rollback_and_raise_exception(func):
     @wraps(func)
     def wrapper(*args, **kwds):
