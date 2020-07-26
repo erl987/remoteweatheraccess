@@ -96,14 +96,16 @@ def _create_get_response_payload(found_datasets, requested_base_station_sensors,
 
         found_datasets_per_station[station_id] = \
             station_datasets.loc[:, requested_base_station_sensors].to_dict('list')
-        found_datasets_per_station[station_id]['wind'] = \
-            station_datasets.loc[:, requested_wind_sensors].to_dict('list')
-        found_datasets_per_station[station_id]['temperature_humidity'] = {}
-        for combi_sensor_id in combi_sensor_ids:
-            found_datasets_per_station[station_id]['temperature_humidity'][combi_sensor_id] = (
-                found_datasets.loc[(found_datasets.station_id == station_id) &
-                                   (found_datasets.sensor_id == combi_sensor_id), requested_temp_humidity_sensors]
-                    .to_dict('list'))
+        if len(requested_wind_sensors) > 0:
+            found_datasets_per_station[station_id]['wind'] = \
+                station_datasets.loc[:, requested_wind_sensors].to_dict('list')
+        if len(requested_temp_humidity_sensors) > 0:
+            found_datasets_per_station[station_id]['temperature_humidity'] = {}
+            for combi_sensor_id in combi_sensor_ids:
+                found_datasets_per_station[station_id]['temperature_humidity'][combi_sensor_id] = (
+                    found_datasets.loc[(found_datasets.station_id == station_id) &
+                                       (found_datasets.sensor_id == combi_sensor_id), requested_temp_humidity_sensors]
+                        .to_dict('list'))
     return found_datasets_per_station
 
 
