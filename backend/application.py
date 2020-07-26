@@ -4,7 +4,7 @@ from logging.config import dictConfig
 from flask import Flask
 from flask.json import JSONEncoder
 
-from restapi_backend.src.user.models import DefaultAdminCreationStatus, generate_default_admin_user
+from src.user.models import DefaultAdminCreationStatus, generate_default_admin_user
 from src.user.routes import user_blueprint
 from src.weatherdata.routes import weatherdata_blueprint
 from src.errorhandlers import handle_invalid_usage, unauthorized_response
