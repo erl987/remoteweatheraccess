@@ -17,8 +17,8 @@ weatherdata_blueprint = Blueprint('data', __name__, url_prefix='/api/v1/data')
 @access_level_required(Role.PUSH_USER)
 @json_with_rollback_and_raise_exception
 def add_or_update_weather_datasets():
-    new_datasets = weather_dataset_schema.load(request.json,
-                                               session=db.session)  # TODO: does not work with updating ...
+    # TODO: this is not working with updating, maybe an option is to use this (works only with Postgres): https://stackoverflow.com/questions/25955200/sqlalchemy-performing-a-bulk-upsert-if-exists-update-else-insert-in-postgr
+    new_datasets = weather_dataset_schema.load(request.json, session=db.session)
 
     num_datasets_before_commit = WeatherDataset.query.count()
     db.session.add_all(new_datasets)
@@ -185,7 +185,7 @@ def delete_weather_dataset():
     stations = time_period_with_stations["stations"]  # TODO: validation using marshmallow-enum ...
 
     # cascade deletion of multiple tables is not supported by the SQLite backend of SQLAlchemy
-    _delete_datasets_from_table(WeatherDataset, first, last, stations)
+    num_deleted_datasets = _delete_datasets_from_table(WeatherDataset, first, last, stations)
     _delete_datasets_from_table(TempHumiditySensorData, first, last, stations)
     _delete_datasets_from_table(WindSensorData, first, last, stations)
 
@@ -196,8 +196,8 @@ def delete_weather_dataset():
     else:
         station_log_str = "the stations [" + ", ".join(stations) + "]"
 
-    current_app.logger.info('Deleted dataset within time period \'{}\'-\'{}\' for {} from the database'
-                            .format(first, last, station_log_str))
+    current_app.logger.info('Deleted {} dataset(s) within time period \'{}\'-\'{}\' for {} from the database'
+                            .format(num_deleted_datasets, first, last, station_log_str))
     return '', HTTPStatus.NO_CONTENT
 
 
@@ -208,7 +208,7 @@ def _delete_datasets_from_table(Table, first_timepoint, last_timepoint, stations
 
     if len(stations) > 0:
         query = query.filter(Table.station_id.in_(stations))
-    query.delete(synchronize_session=False)
+    return query.delete(synchronize_session=False)
 
 
 @weatherdata_blueprint.route('/limits', methods=['GET'])

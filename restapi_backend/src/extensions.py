@@ -5,6 +5,6 @@ from flask_sqlalchemy import SQLAlchemy
 
 
 db = SQLAlchemy()
-flask_bcrypt = Bcrypt()
 ma = Marshmallow()
+flask_bcrypt = Bcrypt()
 jwt = JWTManager()
