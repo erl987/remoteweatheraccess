@@ -4,10 +4,14 @@ import string
 from enum import Enum
 from functools import wraps
 from http import HTTPStatus
+from sqlite3 import Connection as SQLite3Connection
 
 from flask import current_app, request
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_claims, get_jwt_identity
 from marshmallow import ValidationError
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
+from sqlalchemy.exc import IntegrityError
 
 from .exceptions import raise_api_error, APIError
 from .extensions import db
@@ -51,10 +55,16 @@ def _perform_with_rollback_and_raise_exception(func, args, kwds):
     except ValidationError as e:
         raise APIError("Schema validation failed: {}".format(str(e).split("\n")[0]),
                        status_code=HTTPStatus.BAD_REQUEST)
+    except IntegrityError as e:
+        if "FOREIGN KEY constraint failed" in str(e):
+            raise APIError("One of the keys contained in the submitted request (like temp_humidity_sensor or station id) does not "
+                           "exist on the server", status_code=HTTPStatus.BAD_REQUEST)
+        else:
+            raise_api_error(e, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
     except Exception as e:
-        db.session.rollback()
         raise raise_api_error(e, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
     finally:
+        db.session.rollback()
         db.session.close()
 
 
@@ -80,4 +90,12 @@ def access_level_required(required_role: Role):
 
 def generate_random_password(string_length=8):
     password_characters = string.ascii_letters + string.digits
-    return ''.join(random.choice(password_characters) for i in range(string_length))
+    return ''.join(random.choice(password_characters) for _ in range(string_length))
+
+
+@event.listens_for(Engine, "connect")
+def _set_sqlite_pragma(dbapi_connection, __):
+    if isinstance(dbapi_connection, SQLite3Connection):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON;")
+        cursor.close()

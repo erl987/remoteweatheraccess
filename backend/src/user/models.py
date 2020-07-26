@@ -8,6 +8,9 @@ from ..extensions import db, flask_bcrypt
 from ..utils import ROLES, Role, generate_random_password, USER_NAME_REGEX
 
 
+DEFAULT_ADMIN_USER_NAME = 'default_admin'
+
+
 @dataclass
 class FullUser(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
@@ -45,15 +48,8 @@ class FullUser(db.Model):
 
 def generate_default_admin_user():
     default_admin = FullUser()
-    default_admin.name = 'admin'
+    default_admin.name = DEFAULT_ADMIN_USER_NAME
     default_admin.password = generate_random_password()
     default_admin.role = Role.ADMIN.name
 
     return default_admin
-
-
-@dataclass
-class DefaultAdminCreationStatus(db.Model):
-    id: int = db.Column(db.Integer, primary_key=True)
-
-    isDefaultAdminCreated: bool = db.Column(db.Boolean, unique=True, nullable=False)

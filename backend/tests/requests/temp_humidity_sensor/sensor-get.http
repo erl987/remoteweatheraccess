@@ -1,0 +1,1 @@
+GET http://35.217.60.27:8050/api/v1/temp-humidity-sensor/OUT1

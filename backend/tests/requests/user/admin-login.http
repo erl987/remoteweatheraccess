@@ -2,8 +2,8 @@ POST http://35.217.60.27:8050/api/v1/login
 Content-Type: application/json
 
 {
-  "name": "admin",
-  "password": "WtpKM7hE",
+  "name": "default_admin",
+  "password": "qRRtuynn",
   "role": "ADMIN"
 }
 

@@ -1,6 +1,5 @@
 GET http://35.217.60.27:8050/api/v1/data
 Content-Type: application/json
-Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTU2OTIzODEsIm5iZiI6MTU5NTY5MjM4MSwianRpIjoiMzlhN2EyYWEtNmZjYy00YmFjLTgwN2QtNWZiOWQyNzM3NGYxIiwiZXhwIjoxNTk1NzI4MzgxLCJpZGVudGl0eSI6ImFkbWluIiwiZnJlc2giOnRydWUsInR5cGUiOiJhY2Nlc3MiLCJ1c2VyX2NsYWltcyI6eyJyb2xlIjoiQURNSU4ifX0.k1qkPc76Td7ZKL8YUGqew7nyKNb9iDKpc4bNvscdepo
 
 {
   "first_timepoint": "2019-07-01T12:35:00+02:00",

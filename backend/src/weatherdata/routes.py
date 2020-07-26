@@ -187,9 +187,9 @@ def delete_weather_dataset():
     stations = time_period_with_stations['stations']  # TODO: validation using marshmallow-enum ...
 
     # cascade deletion of multiple tables is not supported by the SQLite backend of SQLAlchemy
-    num_deleted_datasets = _delete_datasets_from_table(WeatherDataset, first, last, stations)
     _delete_datasets_from_table(TempHumiditySensorData, first, last, stations)
     _delete_datasets_from_table(WindSensorData, first, last, stations)
+    num_deleted_datasets = _delete_datasets_from_table(WeatherDataset, first, last, stations)
 
     db.session.commit()
 
