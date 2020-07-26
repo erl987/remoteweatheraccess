@@ -13,7 +13,7 @@ def test_create_user(client_with_admin_permissions, a_user):
     returned_json = result.get_json()
     a_user_with_same_id = dict(a_user)
     del a_user_with_same_id['password']
-    a_user_with_same_id['id'] = returned_json['id']
+    a_user_with_same_id['id'] = 1
     assert returned_json == a_user_with_same_id
 
     location_result = client_with_admin_permissions.get(result.headers['Location'])
@@ -157,6 +157,7 @@ def test_get_all_users(client_with_admin_permissions, a_user, another_user):
     search_result_ids = set(item['id'] for item in search_result.get_json())
     create_result_ids = set(item['id'] for item in list([a_user_create_result.get_json(),
                                                          another_user_create_result.get_json()]))
+    assert "password" not in search_result.get_json()[0]
     assert search_result_ids == create_result_ids
     assert search_result.status_code == HTTPStatus.OK
 
@@ -187,16 +188,16 @@ def test_update_user(client_with_admin_permissions, a_user, an_updated_user):
     create_result = client_with_admin_permissions.post('/api/v1/user', json=a_user)
     assert create_result.status_code == HTTPStatus.CREATED
     id = create_result.get_json()['id']
+
     update_result = client_with_admin_permissions.put('/api/v1/user/{}'.format(id), json=an_updated_user)
-    assert update_result.status_code == HTTPStatus.OK
-    an_updated_user_with_same_id = dict(an_updated_user)
-    an_updated_user_with_same_id['id'] = id
-    del an_updated_user_with_same_id['password']
-    assert update_result.get_json() == an_updated_user_with_same_id
+    assert update_result.status_code == HTTPStatus.NO_CONTENT
 
     location_result = client_with_admin_permissions.get(update_result.headers['Location'])
     assert location_result.status_code == HTTPStatus.OK
-    assert location_result.get_json() == update_result.get_json()
+    an_updated_user_with_same_id = dict(an_updated_user)
+    an_updated_user_with_same_id['id'] = id
+    del an_updated_user_with_same_id['password']
+    assert location_result.get_json() == an_updated_user_with_same_id
 
 
 @pytest.mark.usefixtures('client_with_admin_permissions', 'an_updated_user')
@@ -293,8 +294,7 @@ def test_delete_user(client_with_admin_permissions, a_user, another_user):
     assert other_create_result.status_code == HTTPStatus.CREATED
     user_id = create_result.get_json()['id']
     delete_result = client_with_admin_permissions.delete('/api/v1/user/{}'.format(user_id))
-    assert delete_result.status_code == HTTPStatus.OK
-    assert delete_result.get_json() == create_result.get_json()
+    assert delete_result.status_code == HTTPStatus.NO_CONTENT
 
 
 @pytest.mark.usefixtures('client_with_admin_permissions')

@@ -11,6 +11,7 @@ from ..utils import ROLES, Role, generate_random_password, USER_NAME_REGEX
 @dataclass
 class FullUser(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
+
     name: str = db.Column(db.String(120), unique=True, nullable=False)
     password: str = db.Column(db.String(120), nullable=False)
     role: str = db.Column(db.String(10), nullable=False)
@@ -54,4 +55,5 @@ def generate_default_admin_user():
 @dataclass
 class DefaultAdminCreationStatus(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
+
     isDefaultAdminCreated: bool = db.Column(db.Boolean, unique=True, nullable=False)
