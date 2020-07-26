@@ -4,6 +4,8 @@ from logging.config import dictConfig
 from flask import Flask
 from flask.json import JSONEncoder
 
+from src.sensor.models import generate_sensors, Sensor
+from src.sensor.routes import sensor_blueprint
 from src.temp_humidity_sensor.routes import temp_humidity_sensor_blueprint
 from src.user.models import generate_default_admin_user, FullUser, DEFAULT_ADMIN_USER_NAME
 from src.user.routes import user_blueprint
@@ -59,6 +61,7 @@ def register_extensions(app):
 def register_blueprints(app):
     app.register_blueprint(user_blueprint)
     app.register_blueprint(weatherdata_blueprint)
+    app.register_blueprint(sensor_blueprint)
     app.register_blueprint(temp_humidity_sensor_blueprint)
 
 
@@ -88,6 +91,12 @@ def _create_default_weather_stations():
     db.session.commit()
 
 
+def _create_sensors():
+    sensors = generate_sensors()
+    db.session.add_all(sensors)
+    db.session.commit()
+
+
 # will only be executed if running directly with Python
 if __name__ == '__main__':
     app = create_app(DevConfig())
@@ -105,5 +114,9 @@ if __name__ == '__main__':
         num_stations = db.session.query(WeatherStation).count()
         if num_stations == 0:
             _create_default_weather_stations()
+
+        num_sensors = db.session.query(Sensor).count()
+        if num_sensors == 0:
+            _create_sensors()
 
     app.run(host='0.0.0.0', port=8050)
