@@ -1,0 +1,141 @@
+### Login as admin
+POST http://{{url}}:{{port}}/api/v1/login
+Content-Type: application/json
+
+{
+  "name": "{{admin_user}}",
+  "password": "{{admin_password}}"
+}
+
+> {% client.global.set("auth_token", response.body.token); %}
+
+### Create a station
+POST http://{{url}}:{{port}}/api/v1/station
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "station_id": "{{station_id}}",
+  "device": "TE923",
+  "location": "Solna/AB/SE",
+  "latitude": 59.35238,
+  "longitude": 18.00524,
+  "height": 30,
+  "rain_calib_factor": 1.0
+}
+
+### Create a push user
+POST http://{{url}}:{{port}}/api/v1/user
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "name": "{{push_user}}",
+  "password": "{{push_user_password}}",
+  "role": "PUSH_USER",
+  "station_id": "{{station_id}}"
+}
+
+### Login as push user
+POST http://{{url}}:{{port}}/api/v1/login
+Content-Type: application/json
+
+{
+  "name": "{{push_user}}",
+  "password": "{{push_user_password}}"
+}
+
+> {% client.global.set("auth_token", response.body.token); %}
+
+### Create weather dataset
+PUT http://{{url}}:{{port}}/api/v1/data
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+[
+  {
+    "timepoint": "2019-07-06T12:34:20+02:00",
+    "station_id": "{{station_id}}",
+    "pressure": 1013.5,
+    "uv": 8.3,
+    "rain_counter": 1230.5,
+    "temperature_humidity": [
+      {
+        "sensor_id": "OUT1",
+        "temperature": 18.3,
+        "humidity": 78.9
+      },
+      {
+        "sensor_id": "IN",
+        "temperature": 23.5,
+        "humidity": 63.5
+      }
+    ],
+    "wind": {
+      "speed": 89.5,
+      "gusts": 103.5,
+      "direction": 190.5,
+      "wind_temperature": 16.5
+    }
+  },
+  {
+    "timepoint": "2019-07-06T12:44:20+02:00",
+    "station_id": "{{station_id}}",
+    "pressure": 1013.5,
+    "uv": 8.3,
+    "rain_counter": 1230.5,
+    "temperature_humidity": [
+      {
+        "sensor_id": "OUT1",
+        "temperature": 18.3,
+        "humidity": 78.9
+      },
+      {
+        "sensor_id": "IN",
+        "temperature": 23.5,
+        "humidity": 63.5
+      }
+    ],
+    "wind": {
+      "speed": 89.5,
+      "gusts": 103.5,
+      "direction": 190.5,
+      "wind_temperature": 16.5
+    }
+  },
+  {
+    "timepoint": "2019-07-06T12:54:20+02:00",
+    "station_id": "{{station_id}}",
+    "pressure": 1013.5,
+    "uv": 8.3,
+    "rain_counter": 1230.5,
+    "temperature_humidity": [
+      {
+        "sensor_id": "OUT1",
+        "temperature": 18.3,
+        "humidity": 78.9
+      },
+      {
+        "sensor_id": "IN",
+        "temperature": 23.5,
+        "humidity": 63.5
+      }
+    ],
+    "wind": {
+      "speed": 89.5,
+      "gusts": 103.5,
+      "direction": 190.5,
+      "wind_temperature": 16.5
+    }
+  }
+]
+
+### Get datasets
+GET http://{{url}}:{{port}}/api/v1/data
+Content-Type: application/json
+
+{
+  "first_timepoint": "2019-07-01T12:35:00+02:00",
+  "last_timepoint": "2019-07-30T00:00:00+02:00",
+  "sensors": []
+}

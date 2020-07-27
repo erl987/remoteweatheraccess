@@ -1,0 +1,32 @@
+### Login as admin
+POST http://{{url}}:{{port}}/api/v1/login
+Content-Type: application/json
+
+{
+  "name": "{{admin_user}}",
+  "password": "{{admin_password}}"
+}
+
+> {% client.global.set("auth_token", response.body.token); %}
+
+### Delete station
+DELETE http://{{url}}:{{port}}/api/v1/station/1
+Authorization: Bearer {{auth_token}}
+
+### Delete push user
+DELETE http://{{url}}:{{port}}/api/v1/user/2
+Authorization: Bearer {{auth_token}}
+
+### Get stations
+GET http://{{url}}:{{port}}/api/v1/station
+Authorization: Bearer {{auth_token}}
+
+### Get datasets
+GET http://{{url}}:{{port}}/api/v1/data
+Content-Type: application/json
+
+{
+  "first_timepoint": "2019-07-01T12:35:00+02:00",
+  "last_timepoint": "2019-07-30T00:00:00+02:00",
+  "sensors": []
+}

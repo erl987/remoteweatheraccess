@@ -114,11 +114,9 @@ tasks.xml
 out
 gen
 testWorkspace
-httpRequests/*.json
-.idea/httpRequests/*
+httpRequests/*
 deployment.xml
 /test_data
 /frontend/test_data/weather.db
 /.idea/dataSources/
-/.idea/httpRequests/
 /.idea/dataSources.local.xml
