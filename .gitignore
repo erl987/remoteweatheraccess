@@ -119,3 +119,5 @@ httpRequests/*.json
 deployment.xml
 /test_data
 /frontend/test_data/weather.db
+/.idea/dataSources/
+/.idea/dataSources.local.xml
