@@ -20,7 +20,7 @@ def generate_sensors():
         "humidity": {"description": "Luftfeuchte", "unit": "%"},
         "wind_speed": {"description": "Windgeschwindigkeit", "unit": "km/h"},
         "wind_gusts": {"description": "Windböen", "unit": "km/h"},
-        "wind_direction": {"description": "Windrichtung", "unit": "\{DEGREE SIGN}"},
+        "wind_direction": {"description": "Windrichtung", "unit": "\N{DEGREE SIGN}"},
         "wind_temperature": {"description": "Windchilltemperatur", "unit": "\N{DEGREE SIGN}C"}
     }
 
