@@ -6,11 +6,11 @@ from flask.json import JSONEncoder
 
 from src.sensor.models import generate_sensors, Sensor
 from src.sensor.routes import sensor_blueprint
+from src.station.routes import station_blueprint
 from src.temp_humidity_sensor.routes import temp_humidity_sensor_blueprint
 from src.user.models import generate_default_admin_user, FullUser, DEFAULT_ADMIN_USER_NAME
 from src.user.routes import user_blueprint
-from src.weatherdata.models import generate_temp_humidity_sensors, TempHumiditySensor, WeatherStation, \
-    generate_default_weather_stations
+from src.weatherdata.models import generate_temp_humidity_sensors, TempHumiditySensor
 from src.weatherdata.routes import weatherdata_blueprint
 from src.errorhandlers import handle_invalid_usage, unauthorized_response
 from src.exceptions import APIError
@@ -63,6 +63,7 @@ def register_blueprints(app):
     app.register_blueprint(weatherdata_blueprint)
     app.register_blueprint(sensor_blueprint)
     app.register_blueprint(temp_humidity_sensor_blueprint)
+    app.register_blueprint(station_blueprint)
 
 
 def register_errorhandlers(app):
@@ -85,12 +86,6 @@ def _create_temp_humidity_sensors():
     db.session.commit()
 
 
-def _create_default_weather_stations():
-    weather_stations = generate_default_weather_stations()
-    db.session.add_all(weather_stations)
-    db.session.commit()
-
-
 def _create_sensors():
     sensors = generate_sensors()
     db.session.add_all(sensors)
@@ -110,10 +105,6 @@ if __name__ == '__main__':
         num_temp_humidity_sensors = db.session.query(TempHumiditySensor).count()
         if num_temp_humidity_sensors == 0:
             _create_temp_humidity_sensors()
-
-        num_stations = db.session.query(WeatherStation).count()
-        if num_stations == 0:
-            _create_default_weather_stations()
 
         num_sensors = db.session.query(Sensor).count()
         if num_sensors == 0:

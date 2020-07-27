@@ -92,11 +92,7 @@ def remove_user(user_id):
     db.session.commit()
     current_app.logger.info('Deleted user \'{}\' from the database'.format(existing_user.name))
 
-    response = Response('')
-    response.status_code = HTTPStatus.NO_CONTENT
-    response.headers['location'] = '/api/v1/user/{}'.format(existing_user.id)
-
-    return response
+    return '', HTTPStatus.NO_CONTENT
 
 
 @user_blueprint.route('/user/<user_id>', methods=['GET'])

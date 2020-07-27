@@ -8,29 +8,6 @@ from ..extensions import db
 
 
 @dataclass
-class TempHumiditySensor(db.Model):
-    sensor_id: str = db.Column(db.String(10), primary_key=True)
-
-    description: str = db.Column(db.String(255), nullable=False)
-
-    sensor_data = db.relationship("TempHumiditySensorData")
-
-
-def generate_temp_humidity_sensors():
-    in_sensor = TempHumiditySensor()
-    in_sensor.sensor_id = 'IN'
-    in_sensor.description = 'Innensensor'
-
-    out_sensor_1 = TempHumiditySensor()
-    out_sensor_1.sensor_id = 'OUT1'
-    out_sensor_1.description = 'Außensensor'
-
-    sensors = [in_sensor, out_sensor_1]
-
-    return sensors
-
-
-@dataclass
 class WeatherStation(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
 
@@ -43,27 +20,14 @@ class WeatherStation(db.Model):
     rain_calib_factor: float = db.Column(db.Float, nullable=False)
 
 
-def generate_default_weather_stations():
-    station_1 = WeatherStation()
-    station_1.station_id = "SOL"
-    station_1.device = "TE923"
-    station_1.location = "Solna/AB/SE"
-    station_1.latitude = 59.35238
-    station_1.longitude = 18.00524
-    station_1.height = 30
-    station_1.rain_calib_factor = 1.0
+@dataclass
+class TempHumiditySensor(db.Model):
+    sensor_id: str = db.Column(db.String(10), primary_key=True)
 
-    station_2 = WeatherStation()
-    station_2.station_id = "ECK"
-    station_2.device = "TE923"
-    station_2.location = "Eckenhaid/BY/DE"
-    station_2.latitude = 49.57162
-    station_2.longitude = 11.21835
-    station_2.height = 355
-    station_2.rain_calib_factor = 1.0
+    description: str = db.Column(db.String(255), nullable=False)
 
-    stations = [station_1, station_2]
-    return stations
+    sensor_data = db.relationship("TempHumiditySensorData")
+
 
 @dataclass
 class TempHumiditySensorData(db.Model):
@@ -114,4 +78,18 @@ class WeatherDataset(db.Model):
         cascade='all, delete-orphan')
     weather_station = db.relationship(WeatherStation, backref=db.backref(
         'data',
-        uselist=False))
+        cascade='all, delete-orphan'))
+
+
+def generate_temp_humidity_sensors():
+    in_sensor = TempHumiditySensor()
+    in_sensor.sensor_id = 'IN'
+    in_sensor.description = 'innen'
+
+    out_sensor_1 = TempHumiditySensor()
+    out_sensor_1.sensor_id = 'OUT1'
+    out_sensor_1.description = 'außen'
+
+    sensors = [in_sensor, out_sensor_1]
+
+    return sensors

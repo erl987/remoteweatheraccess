@@ -57,8 +57,8 @@ def _perform_with_rollback_and_raise_exception(func, args, kwds):
                        status_code=HTTPStatus.BAD_REQUEST)
     except IntegrityError as e:
         if "FOREIGN KEY constraint failed" in str(e):
-            raise APIError("One of the keys contained in the submitted request (like temp_humidity_sensor or station id) does not "
-                           "exist on the server", status_code=HTTPStatus.BAD_REQUEST)
+            raise APIError("One of the keys contained in the submitted request (like temp_humidity_sensor or station "
+                           "id) does not exist on the server", status_code=HTTPStatus.BAD_REQUEST)
         else:
             raise_api_error(e, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
     except Exception as e:

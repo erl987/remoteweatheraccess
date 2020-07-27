@@ -1,0 +1,13 @@
+POST http://35.217.60.27:8050/api/v1/station
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTU4NDA0MTksIm5iZiI6MTU5NTg0MDQxOSwianRpIjoiNWI0ODgwNTAtNDMyNS00NDc0LWI4NGYtMjY0MDQ5OWQ4ZDQ3IiwiZXhwIjoxNTk1ODc2NDE5LCJpZGVudGl0eSI6ImRlZmF1bHRfYWRtaW4iLCJmcmVzaCI6dHJ1ZSwidHlwZSI6ImFjY2VzcyIsInVzZXJfY2xhaW1zIjp7InJvbGUiOiJBRE1JTiJ9fQ.77kHlz3l4xozj_olSZKyXdEn-EQgYYwX21r_1PJxheY
+
+{
+  "station_id": "ECK",
+  "device": "TE923",
+  "location": "Solna/AB/SE",
+  "latitude": 59.35238,
+  "longitude": 18.00524,
+  "height": 30,
+  "rain_calib_factor": 1.0
+}
