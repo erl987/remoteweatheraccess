@@ -24,7 +24,7 @@ class DevConfig(Config):
     DB_NAME = 'weather-backend-dev.sqlite'
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(Config.DB_PATH, DB_NAME) + "?check_same_thread=False"
     JWT_SECRET_KEY = 'SECRET-KEY'
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=10)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
 
 
 class TestConfig(Config):
@@ -36,7 +36,7 @@ class TestConfig(Config):
     BCRYPT_LOG_ROUNDS = 4  # for faster tests; needs at least 4 to avoid "ValueError: Invalid rounds"
     JWT_HEADER_TYPE = 'Bearer'
     JWT_BLACKLIST_ENABLED = False
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=10)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=1)
 
 
 LOGGING_CONFIG = {

@@ -1,10 +1,16 @@
 from dataclasses import dataclass
 from datetime import datetime
+from http import HTTPStatus
 from typing import List
 
 from sqlalchemy import ForeignKey
+from sqlalchemy.orm import validates
 
-from ..extensions import db
+from src.exceptions import APIError
+from src.extensions import db, flask_bcrypt
+from src.utils import generate_random_password, Role, ROLES, USER_NAME_REGEX
+
+DEFAULT_ADMIN_USER_NAME = 'default_admin'
 
 
 @dataclass
@@ -81,6 +87,44 @@ class WeatherDataset(db.Model):
         cascade='all, delete-orphan'))
 
 
+@dataclass
+class FullUser(db.Model):
+    id: int = db.Column(db.Integer, primary_key=True)
+
+    name: str = db.Column(db.String(120), unique=True, nullable=False)
+    password: str = db.Column(db.String(120), nullable=False)
+    role: str = db.Column(db.String(10), nullable=False)
+    station_id: str = db.Column(db.String(10), ForeignKey(WeatherStation.station_id), nullable=True)
+
+    weather_station = db.relationship(WeatherStation, backref=db.backref('user'))
+
+    @validates('role')
+    def validate_role(self, key, value):
+        if value.upper() not in ROLES:
+            raise APIError('Role not existing', status_code=HTTPStatus.BAD_REQUEST)
+        return value
+
+    @validates('name')
+    def validate_name(self, key, value):
+        if USER_NAME_REGEX.match(value) is None:
+            raise APIError('User name does not fulfill the constraints (3-30 characters, only letters, '
+                           'digits and "-_.")'.format(id), status_code=HTTPStatus.BAD_REQUEST)
+        return value
+
+    def validate_password(self):
+        if not self.password or len(self.password) < 3 or len(self.password) > 30:
+            raise APIError('Password does not fulfill constraints (3-30 characters)',
+                           status_code=HTTPStatus.BAD_REQUEST)
+
+    def save_to_db(self, do_add=True):
+        self.validate_password()
+        self.password = flask_bcrypt.generate_password_hash(self.password)
+        self.role = self.role.upper()
+        if do_add:
+            db.session.add(self)
+        db.session.commit()
+
+
 def generate_temp_humidity_sensors():
     in_sensor = TempHumiditySensor()
     in_sensor.sensor_id = 'IN'
@@ -93,3 +137,13 @@ def generate_temp_humidity_sensors():
     sensors = [in_sensor, out_sensor_1]
 
     return sensors
+
+
+def generate_default_admin_user():
+    default_admin = FullUser()
+    default_admin.name = DEFAULT_ADMIN_USER_NAME
+    default_admin.password = generate_random_password()
+    default_admin.role = Role.ADMIN.name
+    default_admin.station_id = None  # irrelevant for admin role
+
+    return default_admin

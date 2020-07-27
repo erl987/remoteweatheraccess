@@ -1,5 +1,5 @@
 from ..extensions import ma
-from ..weatherdata.models import WeatherStation
+from ..models import WeatherStation
 
 
 class WeatherStationSchema(ma.SQLAlchemyAutoSchema):

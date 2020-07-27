@@ -5,9 +5,9 @@ from flask import jsonify, request, current_app, Blueprint, Response
 from .schemas import weather_station_schema, many_weather_stations_schema
 from ..exceptions import APIError
 from ..extensions import db
+from ..models import WeatherStation
 from ..utils import json_with_rollback_and_raise_exception, access_level_required, Role, \
     with_rollback_and_raise_exception
-from ..weatherdata.models import WeatherStation
 
 station_blueprint = Blueprint('station', __name__, url_prefix='/api/v1/station')
 
@@ -85,7 +85,7 @@ def update_station(numeric_station_id):
     existing_station.rain_calib_factor = updated_station.rain_calib_factor
     db.session.add(existing_station)
     db.session.commit()
-    current_app.logger.info('Updated station \'{}\' in the database' .format(existing_station.station_id))
+    current_app.logger.info('Updated station \'{}\' in the database'.format(existing_station.station_id))
 
     response = Response('')
     response.status_code = HTTPStatus.NO_CONTENT

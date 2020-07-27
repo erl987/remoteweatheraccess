@@ -4,7 +4,7 @@ from marshmallow.schema import Schema
 from marshmallow_sqlalchemy import fields, field_for
 
 from ..extensions import ma
-from ..weatherdata.models import WindSensorData, TempHumiditySensorData, WeatherDataset
+from ..models import WindSensorData, TempHumiditySensorData, WeatherDataset
 
 
 class WindSensorSchema(ma.SQLAlchemyAutoSchema):

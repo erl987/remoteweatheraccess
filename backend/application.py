@@ -8,9 +8,9 @@ from src.sensor.models import generate_sensors, Sensor
 from src.sensor.routes import sensor_blueprint
 from src.station.routes import station_blueprint
 from src.temp_humidity_sensor.routes import temp_humidity_sensor_blueprint
-from src.user.models import generate_default_admin_user, FullUser, DEFAULT_ADMIN_USER_NAME
 from src.user.routes import user_blueprint
-from src.weatherdata.models import generate_temp_humidity_sensors, TempHumiditySensor
+from src.models import generate_temp_humidity_sensors, TempHumiditySensor, generate_default_admin_user, \
+    DEFAULT_ADMIN_USER_NAME, FullUser
 from src.weatherdata.routes import weatherdata_blueprint
 from src.errorhandlers import handle_invalid_usage, unauthorized_response
 from src.exceptions import APIError

@@ -77,55 +77,5 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTU3NjM0N
       "direction": 190.5,
       "wind_temperature": 16.5
     }
-  },
-  {
-    "timepoint": "2019-07-06T11:34:20+02:00",
-    "station_id": "ECK",
-    "pressure": 1013.5,
-    "uv": 8.3,
-    "rain_counter": 1230.5,
-    "temperature_humidity": [
-      {
-        "sensor_id": "OUT1",
-        "temperature": 18.3,
-        "humidity": 78.9
-      },
-      {
-        "sensor_id": "IN",
-        "temperature": 23.5,
-        "humidity": 63.5
-      }
-    ],
-    "wind": {
-      "speed": 89.5,
-      "gusts": 103.5,
-      "direction": 190.5,
-      "wind_temperature": 16.5
-    }
-  },
-  {
-    "timepoint": "2019-07-06T11:44:20+02:00",
-    "station_id": "ECK",
-    "pressure": 1013.5,
-    "uv": 8.3,
-    "rain_counter": 1230.5,
-    "temperature_humidity": [
-      {
-        "sensor_id": "OUT1",
-        "temperature": 18.3,
-        "humidity": 78.9
-      },
-      {
-        "sensor_id": "IN",
-        "temperature": 23.5,
-        "humidity": 63.5
-      }
-    ],
-    "wind": {
-      "speed": 89.5,
-      "gusts": 103.5,
-      "direction": 190.5,
-      "wind_temperature": 16.5
-    }
   }
 ]

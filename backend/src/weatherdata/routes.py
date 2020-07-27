@@ -3,11 +3,11 @@ from http import HTTPStatus
 import pandas as pd
 from flask import request, jsonify, current_app, Blueprint
 
-from .models import WeatherDataset, WindSensorData, TempHumiditySensorData
 from .schemas import time_period_with_sensors_schema, weather_dataset_schema, time_period_with_stations_schema
 from ..exceptions import APIError
 from ..extensions import db
-from ..utils import Role, with_rollback_and_raise_exception
+from ..models import WeatherDataset, WindSensorData, TempHumiditySensorData
+from ..utils import Role, with_rollback_and_raise_exception, approve_committed_station_ids
 from ..utils import access_level_required, json_with_rollback_and_raise_exception
 
 weatherdata_blueprint = Blueprint('data', __name__, url_prefix='/api/v1/data')
@@ -22,6 +22,8 @@ def add_or_update_weather_datasets():
 
     num_datasets_before_commit = WeatherDataset.query.count()
     db.session.add_all(new_datasets)
+    station_ids_in_commit = [val[0] for val in db.session.query(WeatherDataset.station_id).distinct().all()]
+    approve_committed_station_ids(station_ids_in_commit)
     db.session.commit()
     num_datasets_after_commit = WeatherDataset.query.count()
     num_new_datasets = num_datasets_after_commit - num_datasets_before_commit
@@ -39,6 +41,7 @@ def add_or_update_weather_datasets():
 
 
 @weatherdata_blueprint.route('', methods=['GET'])
+@access_level_required(Role.GUEST)
 @json_with_rollback_and_raise_exception
 def get_weather_datasets():
     time_period_with_sensors = time_period_with_sensors_schema.load(request.json)
@@ -178,7 +181,7 @@ def _create_base_station_query_configuration(requested_sensors, do_configure_all
 
 
 @weatherdata_blueprint.route('', methods=['DELETE'])
-@access_level_required(Role.PUSH_USER)
+@access_level_required(Role.ADMIN)
 @json_with_rollback_and_raise_exception
 def delete_weather_dataset():
     time_period_with_stations = time_period_with_stations_schema.load(request.json)
@@ -186,6 +189,7 @@ def delete_weather_dataset():
     last = time_period_with_stations['last_timepoint']
     stations = time_period_with_stations['stations']  # TODO: validation using marshmallow-enum ...
 
+    # TODO: this is unnecessary with Postgres
     # cascade deletion of multiple tables is not supported by the SQLite backend of SQLAlchemy
     _delete_datasets_from_table(TempHumiditySensorData, first, last, stations)
     _delete_datasets_from_table(WindSensorData, first, last, stations)
@@ -214,6 +218,7 @@ def _delete_datasets_from_table(table, first_timepoint, last_timepoint, stations
 
 
 @weatherdata_blueprint.route('/limits', methods=['GET'])
+@access_level_required(Role.GUEST)
 @with_rollback_and_raise_exception
 def get_available_time_period():
     min_max_query_result = db.session.query(db.func.min(WeatherDataset.timepoint).label('min_time'),

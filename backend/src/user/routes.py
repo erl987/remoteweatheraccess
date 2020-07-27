@@ -4,12 +4,13 @@ import flask_bcrypt
 from flask import jsonify, request, current_app, Blueprint, Response
 from flask_jwt_extended import create_access_token
 
-from .models import FullUser
+from .schemas import full_user_claims_dump_schema, full_user_login_schema
 from .schemas import full_user_load_schema, full_user_dump_schema, full_many_users_schema
 from ..exceptions import APIError
 from ..extensions import db, jwt
-from ..utils import json_with_rollback_and_raise_exception, access_level_required, Role, \
-    with_rollback_and_raise_exception
+from ..models import FullUser
+from ..utils import json_with_rollback_and_raise_exception, access_level_required, Role
+from ..utils import with_rollback_and_raise_exception
 
 INVALID_PASSWORD_SALT = flask_bcrypt.generate_password_hash('invalid')
 
@@ -68,6 +69,7 @@ def update_user(user_id):
 
     existing_user.password = updated_user.password
     existing_user.role = updated_user.role
+    existing_user.station_id = updated_user.station_id
     existing_user.save_to_db(do_add=False)
     current_app.logger.info('Updated user \'{}\' in the database (new role: \'{}\', new password)'
                             .format(existing_user.name, updated_user.role))
@@ -123,14 +125,15 @@ def user_identity_lookup(user):
 @user_blueprint.route('/login', methods=['POST'])
 @json_with_rollback_and_raise_exception
 def login():
-    submitted_user = full_user_load_schema.load(request.json)
+    submitted_user = full_user_login_schema.load(request.json)
     submitted_user.validate_password()
     user_from_db = FullUser.query.filter_by(name=submitted_user.name).first()
 
     access_token = None
     if user_from_db:
         if flask_bcrypt.check_password_hash(user_from_db.password, submitted_user.password):
-            access_token = create_access_token(identity={'name': user_from_db.name, 'role': user_from_db.role},
+            access_token = create_access_token(identity={'name': user_from_db.name},
+                                               user_claims=full_user_claims_dump_schema.dump(user_from_db),
                                                fresh=True)
     else:
         flask_bcrypt.check_password_hash(INVALID_PASSWORD_SALT, 'something')  # to give always the same runtime

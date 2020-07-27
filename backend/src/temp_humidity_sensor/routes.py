@@ -4,8 +4,8 @@ from flask import Blueprint, jsonify
 
 from ..exceptions import APIError
 from ..extensions import db
+from ..models import TempHumiditySensor
 from ..utils import with_rollback_and_raise_exception
-from ..weatherdata.models import TempHumiditySensor
 
 temp_humidity_sensor_blueprint = Blueprint('temp_humidity_sensor', __name__, url_prefix='/api/v1/temp-humidity-sensor')
 

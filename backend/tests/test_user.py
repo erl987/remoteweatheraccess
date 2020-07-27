@@ -2,8 +2,10 @@ from http import HTTPStatus
 
 import pytest
 
+# noinspection PyUnresolvedReferences
 from .utils import client_with_admin_permissions, client_with_push_user_permissions, client_without_permissions, \
-    a_user, another_user, an_updated_user, drop_permissions  # required as a fixture
+    a_user, another_user, an_updated_user  # required as a fixture
+from. utils import drop_permissions, drop_registration_details_for_user
 
 
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
@@ -330,6 +332,7 @@ def test_login(client_with_admin_permissions, a_user):
     create_result = client_with_admin_permissions.post('/api/v1/user', json=a_user)
     assert create_result.status_code == HTTPStatus.CREATED
     client = drop_permissions(client_with_admin_permissions)
+    drop_registration_details_for_user(a_user)
     login_result = client.post('/api/v1/login', json=a_user)
     assert login_result.status_code == HTTPStatus.OK
     assert login_result.get_json()['user'] == a_user['name']
@@ -357,6 +360,7 @@ def test_login_with_wrong_user(client_with_admin_permissions, a_user, another_us
     create_result = client_with_admin_permissions.post('/api/v1/user', json=a_user)
     create_result.status_code = HTTPStatus.CREATED
     client = drop_permissions(client_with_admin_permissions)
+    drop_registration_details_for_user(another_user)
     login_result = client.post('/api/v1/login', json=another_user)
     assert login_result.status_code == HTTPStatus.UNAUTHORIZED
     assert 'error' in login_result.get_json()
@@ -369,6 +373,7 @@ def test_login_with_wrong_password(client_with_admin_permissions, a_user):
     client = drop_permissions(client_with_admin_permissions)
     user_with_invalid_password = dict(a_user)
     user_with_invalid_password['password'] = 'something'
+    drop_registration_details_for_user(user_with_invalid_password)
     login_result = client.post('/api/v1/login', json=user_with_invalid_password)
     assert login_result.status_code == HTTPStatus.UNAUTHORIZED
     assert 'error' in login_result.get_json()
