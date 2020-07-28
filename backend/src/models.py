@@ -118,7 +118,7 @@ class FullUser(db.Model):
 
     def save_to_db(self, do_add=True):
         self.validate_password()
-        self.password = flask_bcrypt.generate_password_hash(self.password)
+        self.password = flask_bcrypt.generate_password_hash(self.password).decode('utf-8')
         self.role = self.role.upper()
         if do_add:
             db.session.add(self)

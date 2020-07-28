@@ -7,6 +7,7 @@ from .schemas import time_period_with_sensors_schema, weather_dataset_schema, ti
 from ..exceptions import APIError
 from ..extensions import db
 from ..models import WeatherDataset, WindSensorData, TempHumiditySensorData
+from ..sensor.models import Sensor
 from ..utils import Role, with_rollback_and_raise_exception, approve_committed_station_ids
 from ..utils import access_level_required, json_with_rollback_and_raise_exception
 
@@ -17,7 +18,11 @@ weatherdata_blueprint = Blueprint('data', __name__, url_prefix='/api/v1/data')
 @access_level_required(Role.PUSH_USER)
 @json_with_rollback_and_raise_exception
 def add_or_update_weather_datasets():
-    # TODO: this is not working with updating, maybe an option is to use this (works only with Postgres): https://stackoverflow.com/questions/25955200/sqlalchemy-performing-a-bulk-upsert-if-exists-update-else-insert-in-postgr
+    # TODO: this is not working with updating, generally solutions are only possible with Postgres or MySQL:
+    # TODO: * variant 1 (manipulating the statement): https://stackoverflow.com/questions/25955200/sqlalchemy-performing-a-bulk-upsert-if-exists-update-else-insert-in-postgr
+    # TODO: * variant 2 (using SQLAlchemy core): https://stackoverflow.com/questions/7165998/how-to-do-an-upsert-with-sqlalchemy
+    # TODO:             https://gist.github.com/nirizr/9145aa27dd953bd73d11251d386fdbf1
+    # TODO: variant 3: use this method only for POST which will reject any update, have a PUT method that takes dict of lists which are fast to read in pandas that can provide the required dicts for each table separately
     new_datasets = weather_dataset_schema.load(request.json, session=db.session)
 
     num_datasets_before_commit = WeatherDataset.query.count()
@@ -49,8 +54,8 @@ def get_weather_datasets():
     last = time_period_with_sensors['last_timepoint']
     requested_sensors = time_period_with_sensors['sensors']  # TODO: validation using marshmallow-enum ...
 
-    requested_base_station_sensors, requested_entities, requested_temp_humidity_sensors, requested_wind_sensors = \
-        _create_query_configuration(requested_sensors)
+    if len(requested_sensors) == 0:
+        requested_sensors = [sensor[0] for sensor in db.session.query(Sensor).with_entities(Sensor.sensor_id).all()]
 
     if last < first:
         raise APIError('Last time \'{}\' is later than first time \'{}\''.format(last, first),
@@ -64,21 +69,15 @@ def get_weather_datasets():
                                  .order_by(WeatherDataset.timepoint).with_entities(WeatherDataset.timepoint,
                                                                                    WeatherDataset.station_id,
                                                                                    TempHumiditySensorData.sensor_id,
-                                                                                   *requested_entities)
-                                 .statement,
+                                                                                   *requested_sensors).statement,
                                  db.session.bind)
 
     if found_datasets.empty:
         return jsonify({}), HTTPStatus.OK
 
-    found_datasets_per_station = _create_get_response_payload(found_datasets, requested_base_station_sensors,
-                                                              requested_temp_humidity_sensors, requested_wind_sensors)
+    found_datasets_per_station, num_datasets_per_station = _reshape_datasets_to_dict(found_datasets, requested_sensors)
 
-    num_datasets_per_station = []
-    for station_id, dataset in found_datasets_per_station.items():
-        num_datasets_per_station.append('{}: {}'.format(station_id, len(dataset['timepoint'])))
     num_datasets_log_str = ', '.join(num_datasets_per_station)
-
     response = jsonify(found_datasets_per_station)
     response.status_code = HTTPStatus.OK
     current_app.logger.info('Returned datasets from time period \'{}\'-\'{}\' ({})'.format(first, last,
@@ -87,97 +86,49 @@ def get_weather_datasets():
     return response
 
 
-def _create_get_response_payload(found_datasets, requested_base_station_sensors, requested_temp_humidity_sensors,
-                                 requested_wind_sensors):
-    combi_sensor_ids = found_datasets.sensor_id.unique()
-
+def _reshape_datasets_to_dict(found_datasets, requested_sensors):
     found_datasets_per_station = {}
-    station_ids = found_datasets['station_id'].unique()
-    for station_id in station_ids:
-        station_datasets = found_datasets.loc[(found_datasets.station_id == station_id) &
-                                              (found_datasets.sensor_id == 'IN')]
+    temp_humidity_sensor_ids = found_datasets.sensor_id.unique()
+    grouped_datasets = found_datasets.groupby(['station_id', 'sensor_id'])
 
-        found_datasets_per_station[station_id] = \
-            station_datasets.loc[:, requested_base_station_sensors].to_dict('list')
-        if len(requested_wind_sensors) > 0:
-            found_datasets_per_station[station_id]['wind'] = \
-                station_datasets.loc[:, requested_wind_sensors].to_dict('list')
-        if len(requested_temp_humidity_sensors) > 0:
-            found_datasets_per_station[station_id]['temperature_humidity'] = {}
-            for combi_sensor_id in combi_sensor_ids:
-                found_datasets_per_station[station_id]['temperature_humidity'][combi_sensor_id] = (
-                    found_datasets.loc[(found_datasets.station_id == station_id) &
-                                       (found_datasets.sensor_id == combi_sensor_id), requested_temp_humidity_sensors]
-                        .to_dict('list'))
-    return found_datasets_per_station
+    for sensor_id in list(found_datasets.columns):
+        if sensor_id not in ['station_id', 'sensor_id']:
+            for dataset in grouped_datasets[sensor_id]:
+                station_id = dataset[0][0]
+                temp_humidity_sensor = dataset[0][1]
+                data = dataset[1].to_list()
 
+                if station_id not in found_datasets_per_station:
+                    found_datasets_per_station[station_id] = _create_station_dict(requested_sensors,
+                                                                                  temp_humidity_sensor_ids)
 
-def _create_query_configuration(requested_sensors):
-    do_configure_all = (len(requested_sensors) == 0)
-    requested_base_station_sensors, requested_entities = _create_base_station_query_configuration(requested_sensors,
-                                                                                                  do_configure_all)
-    requested_wind_sensors = _create_wind_sensor_query_configuration(requested_entities, requested_sensors,
-                                                                     do_configure_all)
-    requested_temp_humidity_sensors = _create_temp_humidity_sensor_query_configuration(requested_entities,
-                                                                                       requested_sensors,
-                                                                                       do_configure_all)
+                if sensor_id in ['temperature', 'humidity']:
+                    found_datasets_per_station[station_id]['temperature_humidity'][temp_humidity_sensor][
+                        sensor_id] = data
+                elif sensor_id in ['direction', 'gusts', 'speed', 'wind_temperature']:
+                    found_datasets_per_station[station_id]['wind'][sensor_id] = data
+                else:
+                    found_datasets_per_station[station_id][sensor_id] = data
 
-    return requested_base_station_sensors, requested_entities, requested_temp_humidity_sensors, requested_wind_sensors
+    num_datasets_per_station = []
+    for station_id, dataset in found_datasets_per_station.items():
+        num_datasets_per_station.append('{}: {}'.format(station_id, len(dataset['timepoint'])))
+
+    return found_datasets_per_station, num_datasets_per_station
 
 
-def _create_temp_humidity_sensor_query_configuration(requested_entities, requested_sensors, do_configure_all):
-    requested_entities.extend([TempHumiditySensorData.temperature, TempHumiditySensorData.humidity])
-    requested_temp_humidity_sensors = ['temperature', 'humidity']
+def _create_station_dict(requested_sensors, temp_humidity_sensor_ids):
+    station_dict = {}
 
-    if not do_configure_all:
-        if 'temperature' not in requested_sensors:
-            requested_temp_humidity_sensors.remove('temperature')
-            requested_entities.remove(TempHumiditySensorData.temperature)
-        if 'humidity' not in requested_sensors:
-            requested_temp_humidity_sensors.remove('humidity')
-            requested_entities.remove(TempHumiditySensorData.humidity)
+    if 'temperature' or 'humidity' in requested_sensors:
+        station_dict['temperature_humidity'] = {}
+        for temp_humidity_sensor_id in temp_humidity_sensor_ids:
+            station_dict['temperature_humidity'][temp_humidity_sensor_id] = {}
 
-    return requested_temp_humidity_sensors
+    if 'direction' or 'gusts' or 'speed' or 'wind_temperature' in requested_sensors:
+        station_dict['wind'] = {}
 
-
-def _create_wind_sensor_query_configuration(requested_entities, requested_sensors, do_configure_all):
-    requested_entities.extend(
-        [WindSensorData.gusts, WindSensorData.direction, WindSensorData.wind_temperature, WindSensorData.speed])
-    requested_wind_sensors = ['gusts', 'direction', 'wind_temperature', 'speed']
-
-    if not do_configure_all:
-        if 'gusts' not in requested_sensors:
-            requested_wind_sensors.remove('gusts')
-            requested_entities.remove(WindSensorData.gusts)
-        if 'direction' not in requested_sensors:
-            requested_wind_sensors.remove('direction')
-            requested_entities.remove(WindSensorData.direction)
-        if 'wind_temperature' not in requested_sensors:
-            requested_wind_sensors.remove('wind_temperature')
-            requested_entities.remove(WindSensorData.wind_temperature)
-        if 'speed' not in requested_sensors:
-            requested_wind_sensors.remove('speed')
-            requested_entities.remove(WindSensorData.speed)
-
-    return requested_wind_sensors
-
-
-def _create_base_station_query_configuration(requested_sensors, do_configure_all):
-    requested_entities = [WeatherDataset.pressure, WeatherDataset.uv, WeatherDataset.rain_counter]
-    requested_base_station_sensors = ['timepoint', 'pressure', 'uv', 'rain_counter']
-
-    if not do_configure_all:
-        if 'pressure' not in requested_sensors:
-            requested_base_station_sensors.remove('pressure')
-            requested_entities.remove(WeatherDataset.pressure)
-        if 'uv' not in requested_sensors:
-            requested_base_station_sensors.remove('uv')
-            requested_entities.remove(WeatherDataset.uv)
-        if 'rain_counter' not in requested_sensors:
-            requested_base_station_sensors.remove('rain_counter')
-            requested_entities.remove(WeatherDataset.rain_counter)
-
-    return requested_base_station_sensors, requested_entities
+    return station_dict
 
 
 @weatherdata_blueprint.route('', methods=['DELETE'])

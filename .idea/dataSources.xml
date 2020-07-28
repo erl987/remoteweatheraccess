@@ -7,5 +7,11 @@
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/backend/instance/weather-backend-dev.sqlite</jdbc-url>
     </data-source>
+    <data-source source="LOCAL" name="Google Cloud" uuid="37355b38-7dd2-4613-9ea2-1badc4cfb7f2">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://35.217.60.27:5432/postgres</jdbc-url>
+    </data-source>
   </component>
 </project>
