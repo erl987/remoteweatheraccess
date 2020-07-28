@@ -6,9 +6,9 @@ from flask import request, jsonify, current_app, Blueprint
 from .schemas import time_period_with_sensors_schema, weather_dataset_schema, time_period_with_stations_schema
 from ..exceptions import APIError
 from ..extensions import db
-from ..models import WeatherDataset, WindSensorData, TempHumiditySensorData
+from ..models import WeatherDataset, WindSensorData, TempHumiditySensorData, WeatherStation
 from ..sensor.models import Sensor
-from ..utils import Role, with_rollback_and_raise_exception, approve_committed_station_ids
+from ..utils import Role, with_rollback_and_raise_exception, approve_committed_station_ids, validate_items
 from ..utils import access_level_required, json_with_rollback_and_raise_exception
 
 weatherdata_blueprint = Blueprint('data', __name__, url_prefix='/api/v1/data')
@@ -52,10 +52,13 @@ def get_weather_datasets():
     time_period_with_sensors = time_period_with_sensors_schema.load(request.json)
     first = time_period_with_sensors['first_timepoint']
     last = time_period_with_sensors['last_timepoint']
-    requested_sensors = time_period_with_sensors['sensors']  # TODO: validation using marshmallow-enum ...
+    requested_sensors = time_period_with_sensors['sensors']
+
+    all_sensors = [sensor[0] for sensor in db.session.query(Sensor).with_entities(Sensor.sensor_id).all()]
+    validate_items(requested_sensors, all_sensors, "sensor")
 
     if len(requested_sensors) == 0:
-        requested_sensors = [sensor[0] for sensor in db.session.query(Sensor).with_entities(Sensor.sensor_id).all()]
+        requested_sensors = all_sensors
 
     if last < first:
         raise APIError('Last time \'{}\' is later than first time \'{}\''.format(last, first),
@@ -138,7 +141,11 @@ def delete_weather_dataset():
     time_period_with_stations = time_period_with_stations_schema.load(request.json)
     first = time_period_with_stations['first_timepoint']
     last = time_period_with_stations['last_timepoint']
-    stations = time_period_with_stations['stations']  # TODO: validation using marshmallow-enum ...
+    stations = time_period_with_stations['stations']
+
+    all_stations = [sensor[0] for sensor in
+                    db.session.query(WeatherStation).with_entities(WeatherStation.station_id).all()]
+    validate_items(stations, all_stations, "station")
 
     _delete_datasets_from_table(TempHumiditySensorData, first, last, stations)
     _delete_datasets_from_table(WindSensorData, first, last, stations)

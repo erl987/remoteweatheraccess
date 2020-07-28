@@ -122,7 +122,6 @@ def _verify_and_read_jwt():
     return user_name, user_role_id, approved_station_id
 
 
-
 def approve_committed_station_ids(station_ids_in_commit):
     __, user_role_id, approved_station_id = _verify_and_read_jwt()
 
@@ -149,3 +148,9 @@ def _set_sqlite_pragma(dbapi_connection, __):
         cursor = dbapi_connection.cursor()
         cursor.execute('PRAGMA foreign_keys=ON;')
         cursor.close()
+
+
+def validate_items(requested_items, all_items, item_type):
+    for sensor in requested_items:
+        if sensor not in all_items:
+            raise APIError("A provided {} is not existing".format(item_type), status_code=HTTPStatus.BAD_REQUEST)
