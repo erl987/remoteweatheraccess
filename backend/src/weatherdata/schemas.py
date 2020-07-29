@@ -58,4 +58,5 @@ class TimePeriodWithStationSchema(Schema):
 # initialize the schemas
 time_period_with_sensors_schema = TimePeriodWithSensorsSchema()
 time_period_with_stations_schema = TimePeriodWithStationSchema()
-weather_dataset_schema = WeatherDatasetSchema(many=True)
+single_weather_dataset_schema = WeatherDatasetSchema()
+many_weather_datasets_schema = WeatherDatasetSchema(many=True)

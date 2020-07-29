@@ -48,7 +48,7 @@ Content-Type: application/json
 > {% client.global.set("auth_token", response.body.token); %}
 
 ### Create weather dataset
-PUT http://{{url}}:{{port}}/api/v1/data
+POST http://{{url}}:{{port}}/api/v1/data
 Content-Type: application/json
 Authorization: Bearer {{auth_token}}
 

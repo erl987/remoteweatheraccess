@@ -1,11 +1,11 @@
-PUT http://35.217.60.27:8050/api/v1/data
+POST http://35.217.60.27:8050/api/v1/data
 Content-Type: application/json
-Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTU3NjM0NzUsIm5iZiI6MTU5NTc2MzQ3NSwianRpIjoiNmZmYWI4NTMtYzkzNy00YTNhLThlNGUtN2UxYjc1YjljNjQ3IiwiZXhwIjoxNTk1Nzk5NDc1LCJpZGVudGl0eSI6ImFkbWluIiwiZnJlc2giOnRydWUsInR5cGUiOiJhY2Nlc3MiLCJ1c2VyX2NsYWltcyI6eyJyb2xlIjoiQURNSU4ifX0.C7uOxnjCmUhustTXUHgSbocTCfTAREcYfqiRjhpUqdY
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTYwMTU0MTksIm5iZiI6MTU5NjAxNTQxOSwianRpIjoiNDY5NjY0YTktOWE0My00ZWQ1LThjYWEtNDlmN2QyYzU5NTE5IiwiZXhwIjoxNTk2MDE5MDE5LCJpZGVudGl0eSI6InVzZXIxIiwiZnJlc2giOnRydWUsInR5cGUiOiJhY2Nlc3MiLCJ1c2VyX2NsYWltcyI6eyJyb2xlIjoiUFVTSF9VU0VSIiwic3RhdGlvbl9pZCI6IlRFUyJ9fQ.hTK5Zei-w-Oi_JdHNftAQa5BMo8IMnlf49zkwtl4ny0
 
 [
   {
     "timepoint": "2019-07-06T12:34:20+02:00",
-    "station_id": "SOL",
+    "station_id": "TES",
     "pressure": 1013.5,
     "uv": 8.3,
     "rain_counter": 1230.5,
@@ -30,7 +30,7 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTU3NjM0N
   },
   {
     "timepoint": "2019-07-06T12:44:20+02:00",
-    "station_id": "SOL",
+    "station_id": "TES",
     "pressure": 1013.5,
     "uv": 8.3,
     "rain_counter": 1230.5,
@@ -55,7 +55,7 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTU3NjM0N
   },
   {
     "timepoint": "2019-07-06T12:54:20+02:00",
-    "station_id": "SOL",
+    "station_id": "TES",
     "pressure": 1013.5,
     "uv": 8.3,
     "rain_counter": 1230.5,

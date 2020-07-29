@@ -3,7 +3,8 @@ from http import HTTPStatus
 import pandas as pd
 from flask import request, jsonify, current_app, Blueprint
 
-from .schemas import time_period_with_sensors_schema, weather_dataset_schema, time_period_with_stations_schema
+from .schemas import time_period_with_sensors_schema, many_weather_datasets_schema, time_period_with_stations_schema
+from .schemas import single_weather_dataset_schema
 from ..exceptions import APIError
 from ..extensions import db
 from ..models import WeatherDataset, WindSensorData, TempHumiditySensorData, WeatherStation
@@ -14,35 +15,73 @@ from ..utils import access_level_required, json_with_rollback_and_raise_exceptio
 weatherdata_blueprint = Blueprint('data', __name__, url_prefix='/api/v1/data')
 
 
-@weatherdata_blueprint.route('', methods=['PUT'])
+@weatherdata_blueprint.route('', methods=['POST'])
 @access_level_required(Role.PUSH_USER)
 @json_with_rollback_and_raise_exception
-def add_or_update_weather_datasets():
-    # TODO: this is not working with updating, generally solutions are only possible with Postgres or MySQL:
-    # TODO: * variant 1 (manipulating the statement): https://stackoverflow.com/questions/25955200/sqlalchemy-performing-a-bulk-upsert-if-exists-update-else-insert-in-postgr
-    # TODO: * variant 2 (using SQLAlchemy core): https://stackoverflow.com/questions/7165998/how-to-do-an-upsert-with-sqlalchemy
-    # TODO:             https://gist.github.com/nirizr/9145aa27dd953bd73d11251d386fdbf1
-    # TODO: variant 3: use this method only for POST which will reject any update, have a PUT method that takes dict of lists which are fast to read in pandas that can provide the required dicts for each table separately
-    new_datasets = weather_dataset_schema.load(request.json, session=db.session)
+def add_weather_datasets():
+    new_datasets = many_weather_datasets_schema.load(request.json, session=db.session)
 
-    num_datasets_before_commit = WeatherDataset.query.count()
     db.session.add_all(new_datasets)
     station_ids_in_commit = [val[0] for val in db.session.query(WeatherDataset.station_id).distinct().all()]
     approve_committed_station_ids(station_ids_in_commit)
     db.session.commit()
-    num_datasets_after_commit = WeatherDataset.query.count()
-    num_new_datasets = num_datasets_after_commit - num_datasets_before_commit
 
     response = jsonify(new_datasets)
-    current_app.logger.info('Committed {} datasets to the database, this are {} new entries'
-                            .format(len(new_datasets), num_new_datasets))
+    current_app.logger.info('Added {} datasets to the database'.format(len(new_datasets)))
 
-    if num_new_datasets > 0:
-        response.status_code = HTTPStatus.CREATED
-    else:
-        response.status_code = HTTPStatus.OK
-
+    response.status_code = HTTPStatus.CREATED
     return response
+
+
+@weatherdata_blueprint.route('', methods=['PUT'])
+@access_level_required(Role.PUSH_USER)
+@json_with_rollback_and_raise_exception
+def update_weather_dataset():
+    new_dataset = single_weather_dataset_schema.load(request.json, session=db.session)
+
+    approve_committed_station_ids([new_dataset.station_id])
+
+    existing_dataset = WeatherDataset.query.filter(
+        WeatherDataset.timepoint == new_dataset.timepoint and
+        WeatherDataset.station_id == new_dataset.station_id
+    ).one_or_none()
+
+    if not existing_dataset:
+        raise APIError('No dataset for station \'{}\' at timepoint \'{}\''.format(
+            new_dataset.station_id,
+            new_dataset.timepoint
+        ), status_code=HTTPStatus.NOT_FOUND)
+
+    existing_dataset.pressure = new_dataset.pressure
+    existing_dataset.uv = new_dataset.uv
+    existing_dataset.rain_count = new_dataset.rain_counter
+
+    for index, existing_sensor_data in enumerate(existing_dataset.temperature_humidity):
+        existing_sensor_id = existing_sensor_data.sensor_id
+
+        sensors_matched = False
+        for new_sensor_data in new_dataset.temperature_humidity:
+            if new_sensor_data.sensor_id == existing_sensor_id:
+                existing_sensor_data.temperature = new_sensor_data.temperature
+                existing_sensor_data.humidity = new_sensor_data.humidity
+                sensors_matched = True
+                break
+
+        if not sensors_matched:
+            raise APIError("No matching temperature humidity sensor found for sensor id \'{}\'"
+                           .format(existing_sensor_id))
+
+    existing_dataset.wind.direction = new_dataset.wind.direction
+    existing_dataset.wind.speed = new_dataset.wind.speed
+    existing_dataset.wind.wind_temperature = new_dataset.wind.wind_temperature
+    existing_dataset.wind.gusts = new_dataset.wind.gusts
+
+    db.session.commit()
+
+    current_app.logger.info('Updated data for station \'{}\' at timepoint \'{}\''
+                            .format(existing_dataset.station_id, existing_dataset.timepoint))
+
+    return '', HTTPStatus.NO_CONTENT
 
 
 @weatherdata_blueprint.route('', methods=['GET'])

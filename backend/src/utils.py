@@ -53,14 +53,11 @@ def _perform_with_rollback_and_raise_exception(func, args, kwargs):
     try:
         return func(*args, **kwargs)
     except ValidationError as e:
-        raise APIError('Schema validation failed: {}'.format(str(e).split("\n")[0]),
+        raise APIError('Schema validation failed: {}'.format(str(e).split('\n')[0]),
                        status_code=HTTPStatus.BAD_REQUEST)
     except IntegrityError as e:
-        if 'FOREIGN KEY constraint failed' in str(e):
-            raise APIError('One of the keys contained in the submitted request (like temp_humidity_sensor or station '
-                           'id) does not exist on the server', status_code=HTTPStatus.BAD_REQUEST)
-        else:
-            raise_api_error(e, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+        # this is specific for psycopg2
+        raise APIError(e.orig.diag.message_detail, status_code=HTTPStatus.BAD_REQUEST)
     except Exception as e:
         raise raise_api_error(e, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
     finally:
@@ -153,4 +150,4 @@ def _set_sqlite_pragma(dbapi_connection, __):
 def validate_items(requested_items, all_items, item_type):
     for sensor in requested_items:
         if sensor not in all_items:
-            raise APIError("A provided {} is not existing".format(item_type), status_code=HTTPStatus.BAD_REQUEST)
+            raise APIError('A provided {} is not existing'.format(item_type), status_code=HTTPStatus.BAD_REQUEST)
