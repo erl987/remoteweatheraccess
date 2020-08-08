@@ -21,12 +21,10 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTYwMTU0M
         "humidity": 63.5
       }
     ],
-    "wind": {
-      "speed": 89.5,
-      "gusts": 103.5,
-      "direction": 190.5,
-      "wind_temperature": 16.5
-    }
+    "speed": 89.5,
+    "gusts": 103.5,
+    "direction": 190.5,
+    "wind_temperature": 16.5
   },
   {
     "timepoint": "2019-07-06T12:44:20+02:00",
@@ -46,12 +44,10 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTYwMTU0M
         "humidity": 63.5
       }
     ],
-    "wind": {
-      "speed": 89.5,
-      "gusts": 103.5,
-      "direction": 190.5,
-      "wind_temperature": 16.5
-    }
+    "speed": 89.5,
+    "gusts": 103.5,
+    "direction": 190.5,
+    "wind_temperature": 16.5
   },
   {
     "timepoint": "2019-07-06T12:54:20+02:00",
@@ -71,11 +67,9 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTYwMTU0M
         "humidity": 63.5
       }
     ],
-    "wind": {
-      "speed": 89.5,
-      "gusts": 103.5,
-      "direction": 190.5,
-      "wind_temperature": 16.5
-    }
+    "speed": 89.5,
+    "gusts": 103.5,
+    "direction": 190.5,
+    "wind_temperature": 16.5
   }
 ]

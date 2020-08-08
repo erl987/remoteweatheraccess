@@ -1,13 +1,15 @@
+import gzip
+import json
 from http import HTTPStatus
 
 import pandas as pd
 from flask import request, jsonify, current_app, Blueprint
 
-from .schemas import time_period_with_sensors_schema, many_weather_datasets_schema, time_period_with_stations_schema
-from .schemas import single_weather_dataset_schema
+from .schemas import single_weather_dataset_schema, time_period_with_sensors_schema, many_weather_datasets_schema
+from .schemas import time_period_with_stations_schema
 from ..exceptions import APIError
 from ..extensions import db
-from ..models import WeatherDataset, WindSensorData, TempHumiditySensorData, WeatherStation
+from ..models import WeatherDataset, TempHumiditySensorData, WeatherStation
 from ..sensor.models import Sensor
 from ..utils import Role, with_rollback_and_raise_exception, approve_committed_station_ids, validate_items
 from ..utils import access_level_required, json_with_rollback_and_raise_exception
@@ -19,18 +21,20 @@ weatherdata_blueprint = Blueprint('data', __name__, url_prefix='/api/v1/data')
 @access_level_required(Role.PUSH_USER)
 @json_with_rollback_and_raise_exception
 def add_weather_datasets():
-    new_datasets = many_weather_datasets_schema.load(request.json, session=db.session)
+    if request.content_encoding == 'gzip':
+        uncompressed_data = gzip.decompress(request.data)
+    else:
+        uncompressed_data = request.data
+    json_data = json.loads(uncompressed_data)
+    new_datasets = many_weather_datasets_schema.load(json_data, session=db.session)
 
     db.session.add_all(new_datasets)
     station_ids_in_commit = [val[0] for val in db.session.query(WeatherDataset.station_id).distinct().all()]
     approve_committed_station_ids(station_ids_in_commit)
     db.session.commit()
 
-    response = jsonify(new_datasets)
     current_app.logger.info('Added {} datasets to the database'.format(len(new_datasets)))
-
-    response.status_code = HTTPStatus.CREATED
-    return response
+    return '', HTTPStatus.NO_CONTENT
 
 
 @weatherdata_blueprint.route('', methods=['PUT'])
@@ -71,10 +75,10 @@ def update_weather_dataset():
             raise APIError("No matching temperature humidity sensor found for sensor id \'{}\'"
                            .format(existing_sensor_id))
 
-    existing_dataset.wind.direction = new_dataset.wind.direction
-    existing_dataset.wind.speed = new_dataset.wind.speed
-    existing_dataset.wind.wind_temperature = new_dataset.wind.wind_temperature
-    existing_dataset.wind.gusts = new_dataset.wind.gusts
+    existing_dataset.direction = new_dataset.direction
+    existing_dataset.speed = new_dataset.speed
+    existing_dataset.wind_temperature = new_dataset.wind_temperature
+    existing_dataset.gusts = new_dataset.gusts
 
     db.session.commit()
 
@@ -106,7 +110,6 @@ def get_weather_datasets():
     found_datasets = pd.read_sql(db.session.query(WeatherDataset)
                                  .filter(WeatherDataset.timepoint >= first)
                                  .filter(WeatherDataset.timepoint <= last)
-                                 .join(WeatherDataset.wind)
                                  .join(WeatherDataset.temperature_humidity)
                                  .order_by(WeatherDataset.timepoint).with_entities(WeatherDataset.timepoint,
                                                                                    WeatherDataset.station_id,
@@ -187,7 +190,6 @@ def delete_weather_dataset():
     validate_items(stations, all_stations, "station")
 
     _delete_datasets_from_table(TempHumiditySensorData, first, last, stations)
-    _delete_datasets_from_table(WindSensorData, first, last, stations)
     num_deleted_datasets = _delete_datasets_from_table(WeatherDataset, first, last, stations)
 
     db.session.commit()

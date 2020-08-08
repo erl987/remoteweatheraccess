@@ -13,8 +13,13 @@ class Config(object):
 class ProdConfig(Config):
     ENV = 'prod'
     DEBUG = False
-    DB_NAME = 'weather-backend.sqlite'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///' + os.path.join(Config.DB_PATH, DB_NAME))
+    DB_URL = 'localhost'
+    DB_PORT = 5432
+    DB_USER = 'postgres'
+    DB_PASSWORD = os.environ.get('DB_PASSWORD')
+    DB_DATABASE = 'postgres'
+    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, DB_PASSWORD, DB_URL, DB_PORT,
+                                                                            DB_DATABASE)
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=1)
 
 
@@ -24,7 +29,7 @@ class DevConfig(Config):
     DB_URL = 'localhost'
     DB_PORT = 5432
     DB_USER = 'postgres'
-    DB_PASSWORD = 'passwd'  # TODO: provide this as an environment variable
+    DB_PASSWORD = os.environ.get('DB_PASSWORD', 'passwd')
     DB_DATABASE = 'postgres'
     SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, DB_PASSWORD, DB_URL, DB_PORT,
                                                                             DB_DATABASE)

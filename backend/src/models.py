@@ -51,22 +51,6 @@ class TempHumiditySensorData(db.Model):
 
 
 @dataclass
-class WindSensorData(db.Model):
-    timepoint: int = db.Column(db.DateTime, primary_key=True)
-    station_id: str = db.Column(db.String(10), primary_key=True)
-
-    direction: float = db.Column(db.Float, nullable=False)
-    speed: float = db.Column(db.Float, nullable=False)
-    wind_temperature: float = db.Column(db.Float, nullable=False)
-    gusts: float = db.Column(db.Float, nullable=False)
-
-    __table_args__ = (db.ForeignKeyConstraint(
-        [timepoint, station_id],
-        ['weather_dataset.timepoint', 'weather_dataset.station_id']),
-    )
-
-
-@dataclass
 class WeatherDataset(db.Model):
     timepoint: datetime = db.Column(db.DateTime, primary_key=True)
     station_id: str = db.Column(db.String(10), ForeignKey(WeatherStation.station_id), primary_key=True)
@@ -75,12 +59,13 @@ class WeatherDataset(db.Model):
     uv: float = db.Column(db.Float, nullable=False)
     rain_counter: float = db.Column(db.Float, nullable=False)
 
+    direction: float = db.Column(db.Float, nullable=False)
+    speed: float = db.Column(db.Float, nullable=False)
+    wind_temperature: float = db.Column(db.Float, nullable=False)
+    gusts: float = db.Column(db.Float, nullable=False)
+
     temperature_humidity: List[TempHumiditySensorData] = db.relationship(
         TempHumiditySensorData,
-        cascade='all, delete-orphan')
-    wind: WindSensorData = db.relationship(
-        WindSensorData,
-        uselist=False,
         cascade='all, delete-orphan')
     weather_station = db.relationship(WeatherStation, backref=db.backref(
         'data',

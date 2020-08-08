@@ -20,10 +20,8 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTYwNTM3M
       "humidity": 63.5
     }
   ],
-  "wind": {
-    "speed": 89.5,
-    "gusts": 103.5,
-    "direction": 190.5,
-    "wind_temperature": 16.5
-  }
+  "speed": 89.5,
+  "gusts": 103.5,
+  "direction": 190.5,
+  "wind_temperature": 16.5
 }

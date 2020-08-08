@@ -1,5 +1,6 @@
 GET http://35.217.60.27:8050/api/v1/data
 Content-Type: application/json
+Accept-Encoding: gzip, deflate
 
 {
   "first_timepoint": "2019-07-01T12:35:00+02:00",

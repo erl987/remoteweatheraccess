@@ -32,8 +32,7 @@ USER_NAME_REGEX = re.compile(r'^(?![-._])(?!.*[_.-]{2})[\w.-]{3,30}(?<![-._])$')
 def json_with_rollback_and_raise_exception(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        json = request.json
-        if not json:
+        if not request.is_json:
             raise APIError('Required Content-Type is `application/json`', status_code=HTTPStatus.BAD_REQUEST)
 
         return _perform_with_rollback_and_raise_exception(func, args, kwargs)

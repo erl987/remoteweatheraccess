@@ -4,19 +4,7 @@ from marshmallow.schema import Schema
 from marshmallow_sqlalchemy import fields, field_for
 
 from ..extensions import ma
-from ..models import WindSensorData, TempHumiditySensorData, WeatherDataset
-
-
-class WindSensorSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = WindSensorData
-        exclude = ('timepoint', 'station_id')
-        include_fk = True
-        load_instance = True
-        transient = True
-
-        timepoint = field_for(WindSensorData, 'timepoint', dump_only=True)
-        station_id = field_for(WindSensorData, 'station_id', dump_only=True)
+from ..models import TempHumiditySensorData, WeatherDataset
 
 
 class TempHumiditySensorSchema(ma.SQLAlchemyAutoSchema):
@@ -39,7 +27,6 @@ class WeatherDatasetSchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
         transient = True
 
-    wind = marshmallow_sqlalchemy.fields.Nested(WindSensorSchema)
     temperature_humidity = marshmallow_sqlalchemy.fields.Nested(TempHumiditySensorSchema, many=True)
 
 
