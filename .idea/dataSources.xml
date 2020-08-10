@@ -11,7 +11,7 @@
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://35.217.60.27:5432/postgres</jdbc-url>
+      <jdbc-url>jdbc:postgresql://35.217.32.244:5432/postgres</jdbc-url>
     </data-source>
   </component>
 </project>

@@ -7,7 +7,7 @@ import json
 
 import requests
 
-url = '35.217.60.27'
+url = '35.217.32.244'
 port = 80
 jwt_token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTY5MTI1MzksIm5iZiI6MTU5NjkxMjUzOSwianRpIjoiODcyZTI3MDItZGY2Yi00OWY0LTk1ZjktOWI5NDU5MjUwMTQ2IiwiZXhwIjoxNTk2OTEyNTk5LCJpZGVudGl0eSI6ImRlZmF1bHRfYWRtaW4iLCJmcmVzaCI6dHJ1ZSwidHlwZSI6ImFjY2VzcyIsInVzZXJfY2xhaW1zIjp7InN0YXRpb25faWQiOm51bGwsInJvbGUiOiJBRE1JTiJ9fQ.3umoOjCuZZp_phFmsu4BhxJiAmzNarJqeO1Cs8-gPfg'
 

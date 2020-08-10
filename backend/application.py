@@ -1,6 +1,9 @@
 from datetime import datetime
 from logging.config import dictConfig
 
+from psycogreen.gevent import patch_psycopg
+patch_psycopg()  # needs to be imported as early as possible
+
 from flask import Flask
 from flask.json import JSONEncoder
 

@@ -1,1 +1,1 @@
-GET http://35.217.60.27:8050/api/v1/temp-humidity-sensor
+GET http://35.217.32.244:8050/api/v1/temp-humidity-sensor

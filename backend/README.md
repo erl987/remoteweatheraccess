@@ -19,7 +19,7 @@ docker run -d --rm -p 80:80 --network host -v /home/rarettig/weatherstation/conf
 ```
 export JWT_SECRET_KEY=SECRET-KEY
 export DB_PASSWORD=passwd
-gunicorn -b 0.0.0.0:8050 --config config/gunicorn.conf --log-config config/logging.conf wsgi:app
+gunicorn -b 0.0.0.0:8050 --config config/gunicorn.conf --log-config config/logging.conf -w=8 -k=gevent wsgi:app
 ```
 
 ### As docker container

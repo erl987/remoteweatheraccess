@@ -1,4 +1,4 @@
-GET http://35.217.60.27:8050/api/v1/data
+GET http://35.217.32.244:8050/api/v1/data
 Content-Type: application/json
 Accept-Encoding: gzip, deflate
 
