@@ -1,4 +1,4 @@
-POST http://35.217.32.244:8050/api/v1/login
+POST http://{{url}}:{{port}}/api/v1/login
 Content-Type: application/json
 
 {

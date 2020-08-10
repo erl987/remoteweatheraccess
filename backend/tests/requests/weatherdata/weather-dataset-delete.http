@@ -1,4 +1,4 @@
-DELETE http://35.217.32.244:8050/api/v1/data
+DELETE http://{{url}}:{{port}}/api/v1/data
 Content-Type: application/json
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTU3NjI5NTIsIm5iZiI6MTU5NTc2Mjk1MiwianRpIjoiNGRhZDUyOWItM2RmOC00ODcxLTlkNTctYzcyYTkyOWY3ZDEwIiwiZXhwIjoxNTk1Nzk4OTUyLCJpZGVudGl0eSI6ImFkbWluIiwiZnJlc2giOnRydWUsInR5cGUiOiJhY2Nlc3MiLCJ1c2VyX2NsYWltcyI6eyJyb2xlIjoiQURNSU4ifX0.n68-vOYJsyz7F6pcDLhSYcXMYkCgEVLSweIsK0c6RLY
 
