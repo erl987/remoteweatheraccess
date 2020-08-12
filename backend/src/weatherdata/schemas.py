@@ -30,10 +30,11 @@ class WeatherDatasetSchema(ma.SQLAlchemyAutoSchema):
     temperature_humidity = marshmallow_sqlalchemy.fields.Nested(TempHumiditySensorSchema, many=True)
 
 
-class TimePeriodWithSensorsSchema(Schema):
+class TimePeriodWithSensorsAndStationsSchema(Schema):
     first_timepoint = marshmallow.fields.DateTime(required=True)
     last_timepoint = marshmallow.fields.DateTime(required=True)
     sensors = marshmallow.fields.List(marshmallow.fields.String, required=True)
+    stations = marshmallow.fields.List(marshmallow.fields.String, required=True)
 
 
 class TimePeriodWithStationSchema(Schema):
@@ -43,7 +44,7 @@ class TimePeriodWithStationSchema(Schema):
 
 
 # initialize the schemas
-time_period_with_sensors_schema = TimePeriodWithSensorsSchema()
+time_period_with_sensors_and_stations_schema = TimePeriodWithSensorsAndStationsSchema()
 time_period_with_stations_schema = TimePeriodWithStationSchema()
 single_weather_dataset_schema = WeatherDatasetSchema()
 many_weather_datasets_schema = WeatherDatasetSchema(many=True)

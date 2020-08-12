@@ -5,7 +5,8 @@ from http import HTTPStatus
 import pandas as pd
 from flask import request, jsonify, current_app, Blueprint
 
-from .schemas import single_weather_dataset_schema, time_period_with_sensors_schema, many_weather_datasets_schema
+from .schemas import single_weather_dataset_schema, time_period_with_sensors_and_stations_schema, \
+    many_weather_datasets_schema
 from .schemas import time_period_with_stations_schema
 from ..exceptions import APIError
 from ..extensions import db
@@ -92,16 +93,39 @@ def update_weather_dataset():
 @access_level_required(Role.GUEST)
 @json_with_rollback_and_raise_exception
 def get_weather_datasets():
-    time_period_with_sensors = time_period_with_sensors_schema.load(request.json)
+    time_period_with_sensors = time_period_with_sensors_and_stations_schema.load(request.json)
     first = time_period_with_sensors['first_timepoint']
     last = time_period_with_sensors['last_timepoint']
     requested_sensors = time_period_with_sensors['sensors']
+    requested_stations = time_period_with_sensors['stations']
 
     all_sensors = [sensor[0] for sensor in db.session.query(Sensor).with_entities(Sensor.sensor_id).all()]
     validate_items(requested_sensors, all_sensors, "sensor")
 
     if len(requested_sensors) == 0:
         requested_sensors = all_sensors
+
+    queried_sensors = list(requested_sensors)
+    rain_sensor_is_queried = False
+    if "rain" in queried_sensors:
+        queried_sensors.remove("rain")
+        rain_sensor_is_queried = True
+
+    if "rain_rate" in queried_sensors:
+        queried_sensors.remove("rain_rate")
+        rain_sensor_is_queried = True
+
+    if rain_sensor_is_queried:
+        queried_sensors.append("rain_counter")
+
+    all_stations_data = db.session.query(WeatherStation).with_entities(WeatherStation.station_id,
+                                                                       WeatherStation.rain_calib_factor).all()
+    all_stations = [station_data[0] for station_data in all_stations_data]
+    rain_calib_factors = {station_data[0]: station_data[1] for station_data in all_stations_data}
+    validate_items(requested_stations, all_stations, "station")
+
+    if len(requested_stations) == 0:
+        requested_stations = all_stations
 
     if last < first:
         raise APIError('Last time \'{}\' is later than first time \'{}\''.format(last, first),
@@ -110,17 +134,19 @@ def get_weather_datasets():
     found_datasets = pd.read_sql(db.session.query(WeatherDataset)
                                  .filter(WeatherDataset.timepoint >= first)
                                  .filter(WeatherDataset.timepoint <= last)
+                                 .filter(WeatherDataset.station_id.in_(requested_stations))
                                  .join(WeatherDataset.temperature_humidity)
                                  .order_by(WeatherDataset.timepoint).with_entities(WeatherDataset.timepoint,
                                                                                    WeatherDataset.station_id,
                                                                                    TempHumiditySensorData.sensor_id,
-                                                                                   *requested_sensors).statement,
+                                                                                   *queried_sensors).statement,
                                  db.session.bind)
 
     if found_datasets.empty:
         return jsonify({}), HTTPStatus.OK
 
-    found_datasets_per_station, num_datasets_per_station = _reshape_datasets_to_dict(found_datasets, requested_sensors)
+    found_datasets_per_station, num_datasets_per_station = _reshape_datasets_to_dict(found_datasets, requested_sensors,
+                                                                                     rain_calib_factors)
 
     num_datasets_log_str = ', '.join(num_datasets_per_station)
     response = jsonify(found_datasets_per_station)
@@ -131,11 +157,12 @@ def get_weather_datasets():
     return response
 
 
-def _reshape_datasets_to_dict(found_datasets, requested_sensors):
+def _reshape_datasets_to_dict(found_datasets, requested_sensors, rain_calib_factors):
     found_datasets_per_station = {}
     temp_humidity_sensor_ids = found_datasets.sensor_id.unique()
     grouped_datasets = found_datasets.groupby(['station_id', 'sensor_id'])
 
+    is_rain_calculated = False
     for sensor_id in list(found_datasets.columns):
         if sensor_id not in ['station_id', 'sensor_id']:
             for dataset in grouped_datasets[sensor_id]:
@@ -150,8 +177,17 @@ def _reshape_datasets_to_dict(found_datasets, requested_sensors):
                 if sensor_id in ['temperature', 'humidity']:
                     found_datasets_per_station[station_id]['temperature_humidity'][temp_humidity_sensor][
                         sensor_id] = data
-                elif sensor_id in ['direction', 'gusts', 'speed', 'wind_temperature']:
-                    found_datasets_per_station[station_id]['wind'][sensor_id] = data
+                elif sensor_id in ["rain_counter"]:
+                    if is_rain_calculated:
+                        continue
+                    is_rain_calculated = True
+
+                    rain_rate = dataset[1].diff() * rain_calib_factors[station_id]
+                    rain_rate.iloc[0] = 0
+                    if "rain_rate" in requested_sensors:
+                        found_datasets_per_station[station_id]["rain_rate"] = rain_rate.to_list()
+                    if "rain" in requested_sensors:
+                        found_datasets_per_station[station_id]["rain"] = rain_rate.cumsum().to_list()
                 else:
                     found_datasets_per_station[station_id][sensor_id] = data
 

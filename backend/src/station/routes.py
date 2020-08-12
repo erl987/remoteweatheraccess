@@ -35,7 +35,7 @@ def add_station():
 
 
 @station_blueprint.route('', methods=['GET'])
-@access_level_required(Role.ADMIN)
+@access_level_required(Role.GUEST)
 @with_rollback_and_raise_exception
 def get_all_stations():
     all_stations = WeatherStation.query.all()
@@ -47,7 +47,7 @@ def get_all_stations():
 
 
 @station_blueprint.route('/<numeric_station_id>', methods=['GET'])
-@access_level_required(Role.ADMIN)
+@access_level_required(Role.GUEST)
 @with_rollback_and_raise_exception
 def get_station_details(numeric_station_id):
     station = WeatherStation.query.get(numeric_station_id)

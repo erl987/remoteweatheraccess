@@ -15,7 +15,8 @@ def generate_sensors():
     sensors_info = {
         'pressure': {'description': 'Druck', 'unit': 'Pa'},
         'uv': {'description': 'UV', 'unit': 'UV-X'},
-        'rain_counter': {'description': 'Regenzähler', 'unit': 'mm'},
+        'rain': {'description': 'Regen', 'unit': 'mm'},
+        'rain_rate': {'description': 'Regenrate', 'unit': 'mm'},
         'temperature': {'description': 'Temperatur', 'unit': '\N{DEGREE SIGN}C'},
         'humidity': {'description': 'Luftfeuchte', 'unit': '%'},
         'speed': {'description': 'Windgeschwindigkeit', 'unit': 'km/h'},

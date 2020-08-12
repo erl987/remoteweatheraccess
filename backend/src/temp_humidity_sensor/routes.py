@@ -13,10 +13,8 @@ temp_humidity_sensor_blueprint = Blueprint('temp_humidity_sensor', __name__, url
 @temp_humidity_sensor_blueprint.route('', methods=['GET'])
 @with_rollback_and_raise_exception
 def get_all_temp_humidity_sensors():
-    sensor_ids = TempHumiditySensor.query.with_entities(TempHumiditySensor.sensor_id).all()
-    sensor_ids = [sensor_id for sensor_id, in sensor_ids]
-
-    response = jsonify(sensor_ids)
+    sensor_data = db.session.query(TempHumiditySensor).all()
+    response = jsonify(sensor_data)
     response.status_code = HTTPStatus.OK
     return response
 

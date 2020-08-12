@@ -5,5 +5,6 @@ Accept-Encoding: gzip, deflate
 {
   "first_timepoint": "2019-07-01T12:35:00+02:00",
   "last_timepoint": "2019-07-30T00:00:00+02:00",
-  "sensors": []
+  "sensors": [],
+  "stations": []
 }

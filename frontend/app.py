@@ -6,25 +6,27 @@ Run in production with:
 """
 import os
 from datetime import timedelta, datetime
+from math import ceil
 
 import dash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import dateutil.parser
+import pytz
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-from math import ceil
-import pytz
 
 import frontend.utils.dash_reusable_components as drc
 from frontend.utils import plot_config
 from frontend.utils.plot_config import get_current_date
-from remote_weather_access.remote_weather_access.common.datastructures import BaseStationSensorData, RainSensorData, \
-    WindSensorData
-from remote_weather_access.remote_weather_access.server.sqldatabase import SQLWeatherDB
+from frontend.utils.backend_interface import get_all_stations, get_available_time_limits, get_all_available_sensors
+from frontend.utils.backend_interface import get_weather_data_in_time_range
+from frontend.utils.helpers import get_sensor_data
 
-db_file_name = os.environ.get("DBFILE", "weather.db")
+BACKEND_URL = "localhost"
+BACKEND_PORT = 8000
+
 data_protection_policy_file_path = r"text_content/data-protection-policy.md"
 impress_file_path = r"text_content/impress.md"
 initial_time_period = timedelta(days=7)
@@ -75,25 +77,7 @@ with open(relative_to_file_path(data_protection_policy_file_path), "r", encoding
 with open(relative_to_file_path(impress_file_path), "r", encoding="utf8") as impress_file:
     impress_text = impress_file.read()
 
-sensor_mapping = {"pressure": {"description": "Luftdruck",
-                               "id": (BaseStationSensorData.BASE_STATION, BaseStationSensorData.PRESSURE)},
-                  "uv": {"description": "UV",
-                         "id": (BaseStationSensorData.BASE_STATION, BaseStationSensorData.UV)},
-                  "rain_cumulated": {"description": "Regen",
-                                     "id": (RainSensorData.RAIN, RainSensorData.CUMULATED)},
-                  "rain_period": {"description": "Regenrate",
-                                  "id": (RainSensorData.RAIN, RainSensorData.PERIOD)},
-                  "wind_average": {"description": "Mittelwind",
-                                   "id": (WindSensorData.WIND, WindSensorData.AVERAGE)},
-                  "wind_gusts": {"description": "Windböen",
-                                 "id": (WindSensorData.WIND, WindSensorData.GUSTS)},
-                  "wind_direction": {"description": "Windrichtung",
-                                     "id": (WindSensorData.WIND, WindSensorData.DIRECTION)},
-                  "wind_chill": {"description": "Windchilltemperatur",
-                                 "id": (WindSensorData.WIND, WindSensorData.WIND_CHILL)}
-                  }
-
-default_selected_sensor_ids = ["pressure", "rain_cumulated", "OUT1_temp", "OUT1_humid"]
+default_selected_sensor_ids = ["pressure", "rain", "OUT1_temp", "OUT1_humid"]
 
 figure_layout = {
     "xaxis": {
@@ -130,57 +114,45 @@ figure_layout = {
     "margin": dict(l=20, r=20, t=40, b=100)  # in px
 }
 
-db_file_parent_path = os.environ.get("DBBASEDIR", relative_to_file_path("test_data"))
-db_file_path = db_file_parent_path + os.path.sep + db_file_name
-weather_db = SQLWeatherDB(db_file_path)
-first_time = weather_db.get_most_early_time_with_data()
-combi_sensor_ids, combi_sensor_descriptions = weather_db.get_combi_sensors()
-for id in combi_sensor_ids:
-    if id == "IN":
-        description = "innen"
-    elif id.startswith("OUT"):
-        description = "außen"
-    else:
-        description = "unknown"
-    sensor_mapping["{}_temp".format(id)] = {"description": "Temperatur {}".format(description),
-                                            "id": (id, "temperature")}
-    sensor_mapping["{}_humid".format(id)] = {"description": "Luftfeuchte {}".format(description),
-                                             "id": (id, "humidity")}
+first_time = get_available_time_limits(BACKEND_URL, BACKEND_PORT)["first_timepoint"]
 
+all_sensors_data = get_all_available_sensors(BACKEND_URL, BACKEND_PORT)
 available_sensors = []
-for internal_sensor_id, sensor_info in sensor_mapping.items():
-    available_sensors.append({"label": sensor_info["description"], "value": internal_sensor_id})
+for sensor_id, sensor_data in all_sensors_data.items():
+    available_sensors.append({"label": sensor_data["description"], "value": sensor_id})
 
 available_stations = []
+available_station_ids = []
 station_info_tabs = []
-for station_id in weather_db.get_stations():
-    station_metadata = weather_db.get_station_metadata(station_id)
-    device = station_metadata.get_device_info()
-    location = station_metadata.get_location_info()
-    latitude, longitude, height = station_metadata.get_geo_info()
-    splitted_location_info = location.split("/")
+
+for station in get_all_stations(BACKEND_URL, BACKEND_PORT):
+    station_id = station["station_id"]
+    splitted_location_info = station["location"].split("/")
     station_town = splitted_location_info[0]
     available_stations.append({"label": station_town, "value": station_id})
-    if latitude > 0:
-        latitude_str = "{}\N{DEGREE SIGN} N".format(latitude)
+    available_station_ids.append(station_id)
+    if station["latitude"] > 0:
+        latitude_str = "{}\N{DEGREE SIGN} N".format(station["latitude"])
     else:
-        latitude_str = "{}\N{DEGREE SIGN} S".format(latitude)
-    if longitude > 0:
-        longitude_str = "{}\N{DEGREE SIGN} O".format(longitude)
+        latitude_str = "{}\N{DEGREE SIGN} S".format(station["latitude"])
+    if station["longitude"] > 0:
+        longitude_str = "{}\N{DEGREE SIGN} O".format(station["longitude"])
     else:
-        longitude_str = "{}\N{DEGREE SIGN} W".format(longitude)
+        longitude_str = "{}\N{DEGREE SIGN} W".format(station["longitude"])
 
     station_info_tabs.append(
         dbc.Tab(
             dbc.Col([
                 dbc.FormGroup([
                     dbc.Label("Standort", html_for="location_info_{}".format(station_id)),
-                    dbc.Input(id="location_info_{}".format(station_id), placeholder=location,
+                    dbc.Input(id="location_info_{}".format(station_id),
+                              placeholder=station["location"],
                               disabled=True)
                 ]),
                 dbc.FormGroup([
                     dbc.Label("Höhe", html_for="height_info_{}".format(station_id)),
-                    dbc.Input(id="height_info_{}".format(station_id), placeholder="{} m".format(height),
+                    dbc.Input(id="height_info_{}".format(station_id),
+                              placeholder="{} m".format(station["height"]),
                               disabled=True)
 
                 ]),
@@ -192,7 +164,8 @@ for station_id in weather_db.get_stations():
                 ]),
                 dbc.FormGroup([
                     dbc.Label("Wetterstation", html_for="device_info_{}".format(station_id)),
-                    dbc.Input(id="device_info_{}".format(station_id), placeholder=device,
+                    dbc.Input(id="device_info_{}".format(station_id),
+                              placeholder=station["device"],
                               disabled=True)
                 ])
             ]),
@@ -373,7 +346,7 @@ def display_page(pathname):
 
     provided_station_id = pathname.replace("/", "").upper()
 
-    if provided_station_id in weather_db.get_stations():
+    if provided_station_id in available_station_ids:
         return provided_station_id
     elif len(provided_station_id) == 0:
         return available_stations[-1]["value"]
@@ -404,56 +377,54 @@ def select_station_info_tab(chosen_stations):
      Input(component_id="station-dropdown", component_property="value"),
      Input(component_id="sensor-dropdown", component_property="value")]
 )
-def update_weather_plot(start_time_str, end_time_str, chosen_stations, sensors):
+def update_weather_plot(start_time_str, end_time_str, chosen_stations, chosen_sensors):
     start_time, end_time = determine_start_and_end_times(end_time_str, start_time_str)
     if end_time < start_time:
         raise PreventUpdate
 
     if isinstance(chosen_stations, str):
         chosen_stations = [chosen_stations]
-    if isinstance(sensors, str):
-        sensors = [sensors]
+    if isinstance(chosen_sensors, str):
+        chosen_sensors = [chosen_sensors]
 
     if "range" in figure_layout["xaxis"]:
         del figure_layout["xaxis"]["range"]
     if "type" in figure_layout["xaxis"]:
         del figure_layout["xaxis"]["type"]
-
-    data = {}
-    for station_id in chosen_stations:
-        data[station_id] = weather_db.get_data_in_time_range(station_id, start_time, end_time)
+    data = get_weather_data_in_time_range(chosen_stations, chosen_sensors, start_time, end_time,
+                                          BACKEND_URL, BACKEND_PORT)
     left_main_axis_pos, right_main_axis_pos, min_max_limits, num_ticks = determine_plot_axis_setup(chosen_stations,
-                                                                                                   data, sensors)
+                                                                                                   data, chosen_sensors)
 
     plot_data = []
     color_index = -1
-    for sensor_index, internal_sensor_id in enumerate(sensors):
+    for sensor_index, sensor_id in enumerate(chosen_sensors):
         color_index += 1
         if color_index >= len(color_list):
             color_index = 0
 
-        sensor_tuple = sensor_mapping[internal_sensor_id]["id"]
-        sensor_description = sensor_mapping[internal_sensor_id]["description"]
+        sensor_description = all_sensors_data[sensor_id]["description"]
+        sensor_unit = all_sensors_data[sensor_id]["unit"]
         dash_index = -1
         for station_index, station_id in enumerate(chosen_stations):
             dash_index += 1
             if dash_index >= len(dash_list):
                 dash_index = 0
 
-            time = [line.get_time() for line in data[station_id]]
-            sensor_data = [float(line.get_sensor_value(sensor_tuple)) for line in data[station_id]]
-            if len(data[station_id]) > 0:
-                sensor_unit = data[station_id][0].get_sensor_unit(sensor_tuple)
-                plot_data.append(create_sensor_plot_data(color_index, dash_index, sensor_data, sensor_description,
-                                                         sensor_index, station_id, time))
+            if station_id in data:
+                time = data[station_id]["timepoint"]
+                sensor_data = get_sensor_data(data, station_id, sensor_id)
+                if len(sensor_data) > 0:
+                    plot_data.append(create_sensor_plot_data(color_index, dash_index, sensor_data, sensor_description,
+                                                             sensor_index, station_id, time))
 
-                if sensor_index == 0:
-                    axis_name = "yaxis"
-                else:
-                    axis_name = "yaxis{}".format(sensor_index + 1)
-                figure_layout[axis_name] = create_plot_axis_layout(color_index, min_max_limits, num_ticks,
-                                                                   sensor_description, sensor_tuple, sensor_unit)
-                configure_plot_axis_layout(axis_name, left_main_axis_pos, right_main_axis_pos, sensor_index)
+                    if sensor_index == 0:
+                        axis_name = "yaxis"
+                    else:
+                        axis_name = "yaxis{}".format(sensor_index + 1)
+                    figure_layout[axis_name] = create_plot_axis_layout(color_index, min_max_limits, num_ticks,
+                                                                       sensor_description, sensor_id, sensor_unit)
+                    configure_plot_axis_layout(axis_name, left_main_axis_pos, right_main_axis_pos, sensor_index)
 
     if len(plot_data) == 0:
         create_empty_plot_axis_layout()
@@ -528,7 +499,7 @@ def configure_plot_axis_layout(axis_name, left_main_axis_pos, right_main_axis_po
                                                (sensor_index - 1) / 2 * secondary_axis_offset
 
 
-def create_plot_axis_layout(color_index, min_max_limits, num_ticks, sensor_description, sensor_tuple, sensor_unit):
+def create_plot_axis_layout(color_index, min_max_limits, num_ticks, sensor_description, sensor_id, sensor_unit):
     return {
         "title": "{} / {}".format(sensor_description, sensor_unit),
         "titlefont": {
@@ -545,12 +516,12 @@ def create_plot_axis_layout(color_index, min_max_limits, num_ticks, sensor_descr
         "linewidth": diagram_line_width,
         "zeroline": False,
         "nticks": num_ticks,
-        "range": [min_max_limits[sensor_tuple]["min"], min_max_limits[sensor_tuple]["max"]]
+        "range": [min_max_limits[sensor_id]["min"], min_max_limits[sensor_id]["max"]]
     }
 
 
 def determine_plot_axis_setup(chosen_stations, data, sensors):
-    if len(chosen_stations) > 0 and len(sensors) > 0:
+    if len(data) > 0 and len(chosen_stations) > 0 and len(sensors) > 0:
         _num_axis_on_left = ceil(len(sensors) / 2)
         _num_axis_on_right = ceil((len(sensors) - 1) / 2)
         left_main_axis_pos = _num_axis_on_left * secondary_axis_offset
@@ -559,17 +530,16 @@ def determine_plot_axis_setup(chosen_stations, data, sensors):
         figure_layout["xaxis"]["domain"] = [left_main_axis_pos, right_main_axis_pos]
 
         _min_max_sensors = {}
-        for internal_sensor_id in sensors:
-            _sensor_tuple = sensor_mapping[internal_sensor_id]["id"]
+        for sensor_id in sensors:
             _min_data = float("inf")
             _max_data = float("-inf")
             for station_index, station_id in enumerate(chosen_stations):
                 if len(data[station_id]) > 0:
-                    sensor_data = [float(line.get_sensor_value(_sensor_tuple)) for line in data[station_id]]
+                    sensor_data = get_sensor_data(data, station_id, sensor_id)
                     _min_data = min(_min_data, min(sensor_data))
                     _max_data = max(_max_data, max(sensor_data))
             if _min_data != float("inf") and _max_data != float("-inf"):
-                _min_max_sensors[_sensor_tuple] = {"min": _min_data, "max": _max_data}
+                _min_max_sensors[sensor_id] = {"min": _min_data, "max": _max_data}
 
         if len(_min_max_sensors) > 0:
             num_ticks, min_max_limits = plot_config.get_scalings(_min_max_sensors)
@@ -583,4 +553,4 @@ def determine_plot_axis_setup(chosen_stations, data, sensors):
 
 
 if __name__ == "__main__":
-    app.run_server(host="0.0.0.0", debug=True)
+    app.run_server(host="0.0.0.0", port=8050, debug=True)

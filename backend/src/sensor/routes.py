@@ -12,18 +12,16 @@ sensor_blueprint = Blueprint('sensor', __name__, url_prefix='/api/v1/sensor')
 
 @sensor_blueprint.route('', methods=['GET'])
 @with_rollback_and_raise_exception
-def get_all_temp_humidity_sensors():
-    sensor_ids = Sensor.query.with_entities(Sensor.sensor_id).all()
-    sensor_ids = [sensor_id for sensor_id, in sensor_ids]
-
-    response = jsonify(sensor_ids)
+def get_all_sensors():
+    sensor_data = db.session.query(Sensor).all()
+    response = jsonify(sensor_data)
     response.status_code = HTTPStatus.OK
     return response
 
 
 @sensor_blueprint.route('/<sensor_id>', methods=['GET'])
 @with_rollback_and_raise_exception
-def get_a_temp_humidity_sensor(sensor_id):
+def get_a_sensor(sensor_id):
     sensor_id = sensor_id.lower()
     sensor_data = (db.session
                    .query(Sensor)
