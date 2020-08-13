@@ -20,9 +20,8 @@ from dash.exceptions import PreventUpdate
 import frontend.utils.dash_reusable_components as drc
 from frontend.utils import plot_config
 from frontend.utils.plot_config import get_current_date
-from frontend.utils.backend_interface import get_all_stations, get_available_time_limits, get_all_available_sensors
-from frontend.utils.backend_interface import get_weather_data_in_time_range
 from frontend.utils.helpers import get_sensor_data
+from frontend.utils.backend_interface import Backend
 
 BACKEND_URL = "localhost"
 BACKEND_PORT = 8000
@@ -114,9 +113,10 @@ figure_layout = {
     "margin": dict(l=20, r=20, t=40, b=100)  # in px
 }
 
-first_time = get_available_time_limits(BACKEND_URL, BACKEND_PORT)["first_timepoint"]
+backend = Backend(BACKEND_URL,BACKEND_PORT)
+first_time = backend.get_available_time_limits()["first_timepoint"]
 
-all_sensors_data = get_all_available_sensors(BACKEND_URL, BACKEND_PORT)
+all_sensors_data = backend.get_all_available_sensors()
 available_sensors = []
 for sensor_id, sensor_data in all_sensors_data.items():
     available_sensors.append({"label": sensor_data["description"], "value": sensor_id})
@@ -125,7 +125,7 @@ available_stations = []
 available_station_ids = []
 station_info_tabs = []
 
-for station in get_all_stations(BACKEND_URL, BACKEND_PORT):
+for station in backend.get_all_stations():
     station_id = station["station_id"]
     splitted_location_info = station["location"].split("/")
     station_town = splitted_location_info[0]
@@ -391,8 +391,7 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, chosen_se
         del figure_layout["xaxis"]["range"]
     if "type" in figure_layout["xaxis"]:
         del figure_layout["xaxis"]["type"]
-    data = get_weather_data_in_time_range(chosen_stations, chosen_sensors, start_time, end_time,
-                                          BACKEND_URL, BACKEND_PORT)
+    data = backend.get_weather_data_in_time_range(chosen_stations, chosen_sensors, start_time, end_time)
     left_main_axis_pos, right_main_axis_pos, min_max_limits, num_ticks = determine_plot_axis_setup(chosen_stations,
                                                                                                    data, chosen_sensors)
 
