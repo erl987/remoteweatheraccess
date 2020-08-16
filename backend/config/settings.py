@@ -5,19 +5,17 @@ from datetime import timedelta
 class Config(object):
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    PROJECT_ROOT = os.environ.get('BASEDIR', os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
-    DB_PATH = os.path.join(PROJECT_ROOT, 'instance')
     BCRYPT_LOG_ROUNDS = 13
 
 
 class ProdConfig(Config):
     ENV = 'prod'
     DEBUG = False
-    DB_URL = 'localhost'
-    DB_PORT = 5432
-    DB_USER = 'postgres'
+    DB_URL = os.environ.get('DB_URL')
+    DB_PORT = os.environ.get('DB_PORT', 5432)
+    DB_USER = os.environ.get('DB_USER')
     DB_PASSWORD = os.environ.get('DB_PASSWORD')
-    DB_DATABASE = 'postgres'
+    DB_DATABASE = os.environ.get('DB_DATABASE')
     SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, DB_PASSWORD, DB_URL, DB_PORT,
                                                                             DB_DATABASE)
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=1)
@@ -43,7 +41,7 @@ class TestConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
     JWT_SECRET_KEY = 'SECRET-KEY'
-    BCRYPT_LOG_ROUNDS = 4  # for faster tests; needs at least 4 to avoid "ValueError: Invalid rounds"
+    BCRYPT_LOG_ROUNDS = 4  # for faster tests; needs at least 4 to avoid 'ValueError: Invalid rounds'
     JWT_HEADER_TYPE = 'Bearer'
     JWT_BLACKLIST_ENABLED = False
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=1)

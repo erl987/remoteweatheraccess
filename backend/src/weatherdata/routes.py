@@ -259,9 +259,6 @@ def get_available_time_period():
     first_timepoint = min_max_query_result.min_time
     last_timepoint = min_max_query_result.max_time
 
-    if not first_timepoint or not last_timepoint:
-        raise APIError('No data in the database', status_code=HTTPStatus.NOT_FOUND)
-
     time_range = {
         'first_timepoint': first_timepoint,
         'last_timepoint': last_timepoint

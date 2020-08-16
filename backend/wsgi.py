@@ -1,13 +1,16 @@
 """
 Gunicorn application object
 
-Run with: `gunicorn3 -b 0.0.0.0:8080 wsgi:app`
+Run in the most simple way with:
+```
+cd backend
+export JWT_SECRET_KEY=SECRET-KEY
+export DB_PASSWORD=passwd
+gunicorn -b :8000 wsgi:app
+```
 """
-import os
-
-from application import create_app
-from config.settings import ProdConfig
-
-os.makedirs(ProdConfig().DB_PATH, exist_ok=True)
+from backend_app import create_app
+from src.models import prepare_database
 
 app = create_app()
+prepare_database(app)

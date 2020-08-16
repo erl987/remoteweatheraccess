@@ -6,20 +6,49 @@ services:
   reverse-proxy:
     image: nginx:1.19.1
     ports:
-      - "80:80"
+      - 80:80
     volumes:
       - ./config/nginx:/etc/nginx/conf.d
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
     depends_on:
-      - weather-frontend
+      - frontend
 
-  weather-frontend:
+  frontend:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+    expose:
+      - 8050
     environment:
-      - DBBASEDIR=/opt/dbdir
-      - GUNICORN_WORKERS=4
+      - BACKEND_URL=backend
+      - BACKEND_PORT=8000
+      - GUNICORN_WORKERS=2
       - GUNICORN_ACCESSLOG=-
-    volumes:
-       - ./frontend/test_data:/opt/dbdir
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    expose:
+      - 8000
+    environment:
+      - JWT_SECRET_KEY=SECRET-KEY
+      - DB_URL=database
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=passwd
+      - DB_DATABASE=postgres
+      - GUNICORN_WORKERS=1
+      - GUNICORN_ACCESSLOG=-
+    depends_on:
+      - database
+
+  database:
+    image: postgres:12.3-alpine
+    ports:
+      - 5432:5432  # this is for external access to the database, DO NOT USE THIS FOR PRODUCTION
+    environment:
+      - POSTGRES_PASSWORD=passwd
+

@@ -1,16 +1,11 @@
-import random
 import re
-import string
 from enum import Enum
 from functools import wraps
 from http import HTTPStatus
-from sqlite3 import Connection as SQLite3Connection
 
 from flask import current_app, request
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_claims, get_jwt_identity
 from marshmallow import ValidationError
-from sqlalchemy import event
-from sqlalchemy.engine import Engine
 from sqlalchemy.exc import IntegrityError
 
 from .exceptions import raise_api_error, APIError
@@ -98,11 +93,6 @@ def access_level_required(required_role: Role):
     return decorator
 
 
-def generate_random_password(string_length=8):
-    password_characters = string.ascii_letters + string.digits
-    return ''.join(random.choice(password_characters) for _ in range(string_length))
-
-
 def _verify_and_read_jwt():
     try:
         verify_jwt_in_request()
@@ -136,14 +126,6 @@ def approve_committed_station_ids(station_ids_in_commit):
         if not is_approved:
             raise APIError('The commit contains data for stations that the user has no approval for',
                            status_code=HTTPStatus.FORBIDDEN)
-
-
-@event.listens_for(Engine, 'connect')
-def _set_sqlite_pragma(dbapi_connection, __):
-    if isinstance(dbapi_connection, SQLite3Connection):
-        cursor = dbapi_connection.cursor()
-        cursor.execute('PRAGMA foreign_keys=ON;')
-        cursor.close()
 
 
 def validate_items(requested_items, all_items, item_type):

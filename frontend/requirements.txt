@@ -1,9 +1,10 @@
 gunicorn==20.0.4
 gevent==20.6.2
 json-logging-py==0.2
-dash==1.13.4
+dash==1.14.0
 dash-bootstrap-components==0.10.3
+flask-caching==1.9.0
 python-dateutil==2.8.1
-tblib==1.6.0
+tblib==1.7.0
 pytz==2020.1
 requests==2.24.0

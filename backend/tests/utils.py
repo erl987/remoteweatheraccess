@@ -5,7 +5,7 @@ from flask_jwt_extended import create_access_token
 from src.extensions import db
 from src.models import WeatherStation
 from ..config.settings import TestConfig
-from ..application import create_app
+from ..backend_app import create_app
 from ..src.utils import Role
 
 

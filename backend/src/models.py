@@ -1,3 +1,5 @@
+import random
+import string
 from dataclasses import dataclass
 from datetime import datetime
 from http import HTTPStatus
@@ -8,7 +10,8 @@ from sqlalchemy.orm import validates
 
 from src.exceptions import APIError
 from src.extensions import db, flask_bcrypt
-from src.utils import generate_random_password, Role, ROLES, USER_NAME_REGEX
+from src.sensor.models import generate_sensors, Sensor
+from src.utils import Role, ROLES, USER_NAME_REGEX
 
 DEFAULT_ADMIN_USER_NAME = 'default_admin'
 
@@ -32,7 +35,7 @@ class TempHumiditySensor(db.Model):
 
     description: str = db.Column(db.String(255), nullable=False)
 
-    sensor_data = db.relationship("TempHumiditySensorData")
+    sensor_data = db.relationship('TempHumiditySensorData')
 
 
 @dataclass
@@ -84,13 +87,13 @@ class FullUser(db.Model):
     weather_station = db.relationship(WeatherStation, backref=db.backref('user'))
 
     @validates('role')
-    def validate_role(self, key, value):
+    def validate_role(self, _, value):
         if value.upper() not in ROLES:
             raise APIError('Role not existing', status_code=HTTPStatus.BAD_REQUEST)
         return value
 
     @validates('name')
-    def validate_name(self, key, value):
+    def validate_name(self, _, value):
         if USER_NAME_REGEX.match(value) is None:
             raise APIError('User name does not fulfill the constraints (3-30 characters, only letters, '
                            'digits and "-_.")'.format(id), status_code=HTTPStatus.BAD_REQUEST)
@@ -124,6 +127,11 @@ def generate_temp_humidity_sensors():
     return sensors
 
 
+def generate_random_password(string_length=8):
+    password_characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(password_characters) for _ in range(string_length))
+
+
 def generate_default_admin_user():
     default_admin = FullUser()
     default_admin.name = DEFAULT_ADMIN_USER_NAME
@@ -132,3 +140,41 @@ def generate_default_admin_user():
     default_admin.station_id = None  # irrelevant for admin role
 
     return default_admin
+
+
+def create_default_admin_user(app):
+    admin_user = generate_default_admin_user()
+    admin_password = admin_user.password
+    admin_user.save_to_db()
+    app.logger.warning('Added a new default ADMIN user \'{}\' with password \'{}\' to the database. '
+                       'Create an own admin user with another password and delete the default '
+                       'admin user immediately!'.format(admin_user.name, admin_password))
+
+
+def create_temp_humidity_sensors():
+    sensors = generate_temp_humidity_sensors()
+    db.session.add_all(sensors)
+    db.session.commit()
+
+
+def create_sensors():
+    sensors = generate_sensors()
+    db.session.add_all(sensors)
+    db.session.commit()
+
+
+def prepare_database(app):
+    with app.app_context():
+        db.create_all()
+
+        default_admin_user = db.session.query(FullUser).filter(FullUser.name == DEFAULT_ADMIN_USER_NAME).one_or_none()
+        if not default_admin_user:
+            create_default_admin_user(app)
+
+        num_temp_humidity_sensors = db.session.query(TempHumiditySensor).count()
+        if num_temp_humidity_sensors == 0:
+            create_temp_humidity_sensors()
+
+        num_sensors = db.session.query(Sensor).count()
+        if num_sensors == 0:
+            create_sensors()

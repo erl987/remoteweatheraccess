@@ -8,8 +8,8 @@ import json
 import requests
 
 url = '35.217.32.244'
-port = 8000
-jwt_token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTcyNTM5MTUsIm5iZiI6MTU5NzI1MzkxNSwianRpIjoiOTRkZTFhZmItMzgwNS00YWU2LTlkNDctOWFmMGZkY2Y5ODg2IiwiZXhwIjoxNTk3MjU3NTE1LCJpZGVudGl0eSI6ImRlZmF1bHRfYWRtaW4iLCJmcmVzaCI6dHJ1ZSwidHlwZSI6ImFjY2VzcyIsInVzZXJfY2xhaW1zIjp7InN0YXRpb25faWQiOm51bGwsInJvbGUiOiJBRE1JTiJ9fQ.TywIgJvOOr9dJJ1MKglAMOvrnL4XpDYsmGi4tFnx8GQ'
+port = 80
+jwt_token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTc1Nzg4NzksIm5iZiI6MTU5NzU3ODg3OSwianRpIjoiYmEyOGUyY2YtMDNkMi00ZTg5LWIyM2UtMDdmYTlhZDg2NDNlIiwiZXhwIjoxNTk3NTgyNDc5LCJpZGVudGl0eSI6ImRlZmF1bHRfYWRtaW4iLCJmcmVzaCI6dHJ1ZSwidHlwZSI6ImFjY2VzcyIsInVzZXJfY2xhaW1zIjp7InJvbGUiOiJBRE1JTiIsInN0YXRpb25faWQiOm51bGx9fQ.bLhAti040BZYr1Y7nX6PVPmJRQgJSsu9XgKnearQw_k'
 
 start_timepoint = datetime(year=2020, month=8, day=1, hour=0, minute=0, second=0)
 end_timepoint = datetime(year=2020, month=9, day=1, hour=0, minute=0, second=0)

@@ -1,13 +1,15 @@
-FROM python:3.7.2-alpine3.9
+FROM python:3.8.5-slim-buster
 
-WORKDIR /app/backend
+WORKDIR /app
 
-COPY backend requirements.txt
-
-RUN apk add --no-cache libc-dev python3-dev g++ openssl-dev libffi-dev && pip install -r requirements.txt
+COPY backend/requirements.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8000
 
-COPY . /app
+COPY ./backend/ /app
 
-ENTRYPOINT ["/usr/local/bin/gunicorn", "--config", "config/gunicorn.conf", "--log-config", "config/logging.conf", "-b", ":8000", "wsgi:app"]
+RUN useradd -m backend
+USER backend
+
+ENTRYPOINT ["/usr/local/bin/gunicorn", "--worker-class", "gevent", "--preload", "--config", "config/gunicorn.py", "--log-config", "config/logging.conf", "--bind", ":8000", "wsgi:app"]

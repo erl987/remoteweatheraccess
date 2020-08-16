@@ -8,9 +8,9 @@ class WebsiteUser(HttpUser):
     @task
     def get(self):
         payload = {
-            "first_timepoint": "2017-03-11T00:00:00+02:00",
-            "last_timepoint": "2019-03-18T00:00:00+02:00",
-            "sensors": []
+            'first_timepoint': '2017-03-11T00:00:00+02:00',
+            'last_timepoint': '2019-03-18T00:00:00+02:00',
+            'sensors': []
         }
         headers = {
             'content-type': 'application/json',
