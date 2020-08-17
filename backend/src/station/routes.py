@@ -18,7 +18,7 @@ station_blueprint = Blueprint('station', __name__, url_prefix='/api/v1/station')
 def add_station():
     new_station = weather_station_schema.load(request.json)
 
-    existing_station = WeatherStation.query.filter_by(station_id=new_station.station_id).first()
+    existing_station = WeatherStation.query.filter_by(station_id=new_station.station_id).one_or_none()
     if not existing_station:
         db.session.add(new_station)
         db.session.commit()

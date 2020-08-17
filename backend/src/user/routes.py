@@ -8,7 +8,7 @@ from .schemas import full_user_claims_dump_schema, full_user_login_schema
 from .schemas import full_user_load_schema, full_user_dump_schema, full_many_users_schema
 from ..exceptions import APIError
 from ..extensions import db, jwt
-from ..models import FullUser
+from ..models import FullUser, WeatherStation
 from ..utils import json_with_rollback_and_raise_exception, access_level_required, Role
 from ..utils import with_rollback_and_raise_exception
 
@@ -23,13 +23,18 @@ user_blueprint = Blueprint('user', __name__, url_prefix='/api/v1')
 def add_user():
     new_user = full_user_load_schema.load(request.json)
 
-    existing_user = FullUser.query.filter_by(name=new_user.name).first()
+    existing_user = FullUser.query.filter_by(name=new_user.name).one_or_none()
     if not existing_user:
-        new_user.save_to_db()
-        response = jsonify(full_user_dump_schema.dump(new_user))
-        current_app.logger.info('Added new user \'{}\' to the database (role: \'{}\')'.format(new_user.name,
-                                                                                              new_user.role))
-        response.status_code = HTTPStatus.CREATED
+        weather_station = WeatherStation.query.filter_by(station_id=new_user.station_id).one_or_none()
+        if weather_station:
+            new_user.save_to_db()
+            response = jsonify(full_user_dump_schema.dump(new_user))
+            current_app.logger.info('Added new user \'{}\' to the database (role: \'{}\')'.format(new_user.name,
+                                                                                                  new_user.role))
+            response.status_code = HTTPStatus.CREATED
+        else:
+            raise APIError('Provided station id \'{}\' is not existing'.format(new_user.station_id),
+                           status_code=HTTPStatus.BAD_REQUEST)
     else:
         raise APIError('User \'{}\' already in the database'.format(new_user.name),
                        status_code=HTTPStatus.CONFLICT, location='/api/v1/user/{}'.format(existing_user.id))
@@ -66,6 +71,11 @@ def update_user(user_id):
                        'user'.format(existing_user.name, user_id, updated_user.name),
                        status_code=HTTPStatus.CONFLICT,
                        location='/api/v1/user/{}'.format(existing_user.id))
+
+    weather_station = WeatherStation.query.filter_by(station_id=updated_user.station_id).one_or_none()
+    if not weather_station:
+        raise APIError('Provided station id \'{}\' is not existing'.format(updated_user.station_id),
+                       status_code=HTTPStatus.BAD_REQUEST)
 
     existing_user.password = updated_user.password
     existing_user.role = updated_user.role
@@ -127,7 +137,7 @@ def user_identity_lookup(user):
 def login():
     submitted_user = full_user_login_schema.load(request.json)
     submitted_user.validate_password()
-    user_from_db = FullUser.query.filter_by(name=submitted_user.name).first()
+    user_from_db = FullUser.query.filter_by(name=submitted_user.name).one_or_none()
 
     access_token = None
     if user_from_db:

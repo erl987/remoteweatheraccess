@@ -37,16 +37,20 @@ services:
       - JWT_SECRET_KEY=SECRET-KEY
       - DB_URL=database
       - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=passwd
-      - DB_DATABASE=postgres
-      - GUNICORN_WORKERS=1
+      - DB_USER_DB_USER=userdb
+      - DB_USER_DB_PASSWORD=passwd1
+      - DB_WEATHER_DB_USER=weatherdatadb
+      - DB_WEATHER_DB_PASSWORD=passwd2
+      - DB_USER_DATABASE=users
+      - DB_WEATHER_DATABASE=weatherdata
+      - GUNICORN_WORKERS=2
       - GUNICORN_ACCESSLOG=-
     depends_on:
       - database
 
   database:
-    image: postgres:12.3-alpine
+    build:
+      context: ./postgres
     ports:
       - 5432:5432  # this is for external access to the database, DO NOT USE THIS FOR PRODUCTION
     environment:

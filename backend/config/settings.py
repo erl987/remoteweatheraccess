@@ -13,11 +13,18 @@ class ProdConfig(Config):
     DEBUG = False
     DB_URL = os.environ.get('DB_URL')
     DB_PORT = os.environ.get('DB_PORT', 5432)
-    DB_USER = os.environ.get('DB_USER')
-    DB_PASSWORD = os.environ.get('DB_PASSWORD')
-    DB_DATABASE = os.environ.get('DB_DATABASE')
-    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, DB_PASSWORD, DB_URL, DB_PORT,
-                                                                            DB_DATABASE)
+    DB_USER_DB_USER = os.environ.get('DB_USER_DB_USER')
+    DB_USER_DB_PASSWORD = os.environ.get('DB_USER_DB_PASSWORD')
+    DB_USER_DATABASE = os.environ.get('DB_USER_DATABASE')
+    DB_WEATHER_DB_USER = os.environ.get('DB_WEATHER_DB_USER')
+    DB_WEATHER_DB_PASSWORD = os.environ.get('DB_WEATHER_DB_PASSWORD')
+    DB_WEATHER_DATABASE = os.environ.get('DB_WEATHER_DATABASE')
+    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER_DB_USER, DB_USER_DB_PASSWORD,
+                                                                            DB_URL, DB_PORT, DB_USER_DATABASE)
+    SQLALCHEMY_BINDS = {
+        'weather-data': 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_WEATHER_DB_USER, DB_WEATHER_DB_PASSWORD,
+                                                                      DB_URL, DB_PORT, DB_WEATHER_DATABASE)
+    }
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=1)
 
 
@@ -31,6 +38,10 @@ class DevConfig(Config):
     DB_DATABASE = 'postgres'
     SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, DB_PASSWORD, DB_URL, DB_PORT,
                                                                             DB_DATABASE)
+    SQLALCHEMY_BINDS = {
+        'weather-data': 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, DB_PASSWORD, DB_URL, DB_PORT,
+                                                                      DB_DATABASE)
+    }
     JWT_SECRET_KEY = 'SECRET-KEY'
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
 

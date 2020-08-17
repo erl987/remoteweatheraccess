@@ -18,6 +18,8 @@ DEFAULT_ADMIN_USER_NAME = 'default_admin'
 
 @dataclass
 class WeatherStation(db.Model):
+    __bind_key__ = 'weather-data'
+
     id: int = db.Column(db.Integer, primary_key=True)
 
     station_id: str = db.Column(db.String(10), unique=True, nullable=False)
@@ -31,6 +33,8 @@ class WeatherStation(db.Model):
 
 @dataclass
 class TempHumiditySensor(db.Model):
+    __bind_key__ = 'weather-data'
+
     sensor_id: str = db.Column(db.String(10), primary_key=True)
 
     description: str = db.Column(db.String(255), nullable=False)
@@ -40,6 +44,8 @@ class TempHumiditySensor(db.Model):
 
 @dataclass
 class TempHumiditySensorData(db.Model):
+    __bind_key__ = 'weather-data'
+
     timepoint: int = db.Column(db.DateTime, primary_key=True)
     station_id: str = db.Column(db.String(10), primary_key=True)
     sensor_id: str = db.Column(db.String(10), ForeignKey(TempHumiditySensor.sensor_id), primary_key=True)
@@ -55,6 +61,8 @@ class TempHumiditySensorData(db.Model):
 
 @dataclass
 class WeatherDataset(db.Model):
+    __bind_key__ = 'weather-data'
+
     timepoint: datetime = db.Column(db.DateTime, primary_key=True)
     station_id: str = db.Column(db.String(10), ForeignKey(WeatherStation.station_id), primary_key=True)
 
@@ -82,9 +90,7 @@ class FullUser(db.Model):
     name: str = db.Column(db.String(120), unique=True, nullable=False)
     password: str = db.Column(db.String(120), nullable=False)
     role: str = db.Column(db.String(10), nullable=False)
-    station_id: str = db.Column(db.String(10), ForeignKey(WeatherStation.station_id), nullable=True)
-
-    weather_station = db.relationship(WeatherStation, backref=db.backref('user'))
+    station_id: str = db.Column(db.String(10), nullable=True)
 
     @validates('role')
     def validate_role(self, _, value):
@@ -100,8 +106,8 @@ class FullUser(db.Model):
         return value
 
     def validate_password(self):
-        if not self.password or len(self.password) < 3 or len(self.password) > 30:
-            raise APIError('Password does not fulfill constraints (3-30 characters)',
+        if not self.password or len(self.password) < 3:
+            raise APIError('Password does not fulfill constraints (>= 3 characters)',
                            status_code=HTTPStatus.BAD_REQUEST)
 
     def save_to_db(self, do_add=True):

@@ -140,7 +140,7 @@ def get_weather_datasets():
                                                                                    WeatherDataset.station_id,
                                                                                    TempHumiditySensorData.sensor_id,
                                                                                    *queried_sensors).statement,
-                                 db.session.bind)
+                                 db.get_engine(current_app, 'weather-data'))
 
     if found_datasets.empty:
         return jsonify({}), HTTPStatus.OK
@@ -205,9 +205,6 @@ def _create_station_dict(requested_sensors, temp_humidity_sensor_ids):
         station_dict['temperature_humidity'] = {}
         for temp_humidity_sensor_id in temp_humidity_sensor_ids:
             station_dict['temperature_humidity'][temp_humidity_sensor_id] = {}
-
-    if 'direction' or 'gusts' or 'speed' or 'wind_temperature' in requested_sensors:
-        station_dict['wind'] = {}
 
     return station_dict
 

@@ -5,6 +5,8 @@ from ..extensions import db
 
 @dataclass
 class Sensor(db.Model):
+    __bind_key__ = 'weather-data'
+
     sensor_id: str = db.Column(db.String(30), primary_key=True)
 
     description: str = db.Column(db.String(255), nullable=False)
