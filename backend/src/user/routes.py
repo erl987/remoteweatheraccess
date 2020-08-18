@@ -9,7 +9,7 @@ from .schemas import full_user_load_schema, full_user_dump_schema, full_many_use
 from ..exceptions import APIError
 from ..extensions import db, jwt
 from ..models import FullUser, WeatherStation
-from ..utils import json_with_rollback_and_raise_exception, access_level_required, Role
+from ..utils import json_with_rollback_and_raise_exception, access_level_required, Role, convert_to_int
 from ..utils import with_rollback_and_raise_exception
 
 INVALID_PASSWORD_SALT = flask_bcrypt.generate_password_hash('invalid')
@@ -62,7 +62,7 @@ def get_all_users():
 def update_user(user_id):
     updated_user = full_user_load_schema.load(request.json)
 
-    existing_user = FullUser.query.get(user_id)
+    existing_user = FullUser.query.get(convert_to_int(user_id))
     if not existing_user:
         raise APIError('No user with id \'{}\''.format(user_id), status_code=HTTPStatus.NOT_FOUND)
 
@@ -95,7 +95,7 @@ def update_user(user_id):
 @access_level_required(Role.ADMIN)
 @with_rollback_and_raise_exception
 def remove_user(user_id):
-    existing_user = FullUser.query.get(user_id)
+    existing_user = FullUser.query.get(convert_to_int(user_id, HTTPStatus.NO_CONTENT))
     if not existing_user:
         current_app.logger.info('No user with id \'{}\' '.format(user_id))
         return '', HTTPStatus.NO_CONTENT
@@ -111,7 +111,7 @@ def remove_user(user_id):
 @access_level_required(Role.ADMIN)
 @with_rollback_and_raise_exception
 def get_user_details(user_id):
-    user = FullUser.query.get(user_id)
+    user = FullUser.query.get(convert_to_int(user_id))
     if not user:
         raise APIError('No user with id \'{}\''.format(user_id), status_code=HTTPStatus.BAD_REQUEST)
 

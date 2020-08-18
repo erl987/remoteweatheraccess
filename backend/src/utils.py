@@ -132,3 +132,11 @@ def validate_items(requested_items, all_items, item_type):
     for sensor in requested_items:
         if sensor not in all_items:
             raise APIError('A provided {} is not existing'.format(item_type), status_code=HTTPStatus.BAD_REQUEST)
+
+
+def convert_to_int(user_id, error_status=HTTPStatus.BAD_REQUEST):
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        raise APIError('Invalid user id', error_status)
+    return user_id

@@ -44,7 +44,7 @@ def test_create_user_with_invalid_name(client_with_admin_permissions, a_user):
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
 def test_create_user_with_too_long_name(client_with_admin_permissions, a_user):
     invalid_user = dict(a_user)
-    invalid_user['name'] = ''.join(['a' for i in range(0, 31)])
+    invalid_user['name'] = ''.join(['a' for _ in range(0, 31)])
     result = client_with_admin_permissions.post('/api/v1/user', json=invalid_user)
     assert result.status_code == HTTPStatus.BAD_REQUEST
     assert 'error' in result.get_json()
@@ -54,15 +54,6 @@ def test_create_user_with_too_long_name(client_with_admin_permissions, a_user):
 def test_create_user_with_invalid_role(client_with_admin_permissions, a_user):
     invalid_user = dict(a_user)
     invalid_user['role'] = 'ADMIN;'
-    result = client_with_admin_permissions.post('/api/v1/user', json=invalid_user)
-    assert result.status_code == HTTPStatus.BAD_REQUEST
-    assert 'error' in result.get_json()
-
-
-@pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
-def test_create_user_with_too_long_password(client_with_admin_permissions, a_user):
-    invalid_user = dict(a_user)
-    invalid_user['password'] = ''.join(['a' for i in range(0, 31)])
     result = client_with_admin_permissions.post('/api/v1/user', json=invalid_user)
     assert result.status_code == HTTPStatus.BAD_REQUEST
     assert 'error' in result.get_json()
@@ -241,7 +232,7 @@ def test_update_user_with_invalid_name(client_with_admin_permissions, a_user):
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
 def test_update_user_with_too_long_name(client_with_admin_permissions, a_user):
     invalid_user = dict(a_user)
-    invalid_user['name'] = ''.join(['a' for i in range(0, 31)])
+    invalid_user['name'] = ''.join(['a' for _ in range(0, 31)])
     result = client_with_admin_permissions.put('/api/v1/user/1', json=invalid_user)
     assert result.status_code == HTTPStatus.BAD_REQUEST
     assert 'error' in result.get_json()
@@ -252,17 +243,6 @@ def test_update_user_with_invalid_role(client_with_admin_permissions, a_user):
     invalid_user = dict(a_user)
     invalid_user['role'] = 'ADMIN;'
     result = client_with_admin_permissions.put('/api/v1/user/1', json=invalid_user)
-    assert result.status_code == HTTPStatus.BAD_REQUEST
-    assert 'error' in result.get_json()
-
-
-@pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
-def test_update_user_with_too_long_password(client_with_admin_permissions, a_user):
-    create_result = client_with_admin_permissions.post('/api/v1/user', json=a_user)
-    id = create_result.get_json()['id']
-    user_with_too_long_new_password = dict(a_user)
-    user_with_too_long_new_password['password'] = ''.join(['a' for i in range(0, 31)])
-    result = client_with_admin_permissions.put('/api/v1/user/{}'.format(id), json=user_with_too_long_new_password)
     assert result.status_code == HTTPStatus.BAD_REQUEST
     assert 'error' in result.get_json()
 
@@ -391,7 +371,7 @@ def test_login_with_invalid_name(client_without_permissions, a_user):
 @pytest.mark.usefixtures('client_without_permissions', 'a_user')
 def test_login_with_too_long_name(client_without_permissions, a_user):
     invalid_user = dict(a_user)
-    invalid_user['name'] = ''.join(['a' for i in range(0, 31)])
+    invalid_user['name'] = ''.join(['a' for _ in range(0, 31)])
     result = client_without_permissions.post('/api/v1/login', json=invalid_user)
     assert result.status_code == HTTPStatus.BAD_REQUEST
     assert 'error' in result.get_json()
@@ -400,7 +380,7 @@ def test_login_with_too_long_name(client_without_permissions, a_user):
 @pytest.mark.usefixtures('client_without_permissions', 'a_user')
 def test_login_with_too_long_password(client_without_permissions, a_user):
     invalid_user = dict(a_user)
-    invalid_user['password'] = ''.join(['a' for i in range(0, 31)])
+    invalid_user['password'] = ''.join(['a' for _ in range(0, 31)])
     result = client_without_permissions.post('/api/v1/login', json=invalid_user)
     assert result.status_code == HTTPStatus.BAD_REQUEST
     assert 'error' in result.get_json()

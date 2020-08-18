@@ -4,9 +4,9 @@ from flask_jwt_extended import create_access_token
 
 from src.extensions import db
 from src.models import WeatherStation
-from ..config.settings import TestConfig
-from ..backend_app import create_app
-from ..src.utils import Role
+from config.settings import TestConfig
+from backend_app import create_app
+from src.utils import Role
 
 
 @pytest.fixture
@@ -48,7 +48,7 @@ def an_updated_user() -> dict:
         name='test_user',
         password='updated_pw',
         role='ADMIN',
-        station_id=None)
+        station_id='TES')
 
 
 @pytest.fixture
@@ -64,7 +64,7 @@ def another_user() -> dict:
 def client_without_permissions():
     app = create_app(TestConfig())
     client = app.test_client()
-    logging.getLogger("wsgi").parent.handlers = []
+    logging.getLogger('wsgi').parent.handlers = []
 
     yield client
 
@@ -73,7 +73,7 @@ def client_without_permissions():
 def client_with_admin_permissions():
     app = create_app(TestConfig())
     client = app.test_client()
-    logging.getLogger("wsgi").parent.handlers = []
+    logging.getLogger('wsgi').parent.handlers = []
 
     with app.test_request_context():
         _create_mock_weather_station()
@@ -83,14 +83,18 @@ def client_with_admin_permissions():
                                                  fresh=True)
     client.environ_base['HTTP_AUTHORIZATION'] = 'Bearer {}'.format(admin_access_token)
 
-    yield client
+    try:
+        yield client
+    finally:
+        with app.test_request_context():
+            db.drop_all()
 
 
 @pytest.fixture
 def client_with_push_user_permissions():
     app = create_app(TestConfig())
     client = app.test_client()
-    logging.getLogger("wsgi").parent.handlers = []
+    logging.getLogger('wsgi').parent.handlers = []
 
     with app.test_request_context():
         _create_mock_weather_station()
@@ -100,7 +104,11 @@ def client_with_push_user_permissions():
                                                  fresh=True)
     client.environ_base['HTTP_AUTHORIZATION'] = 'Bearer {}'.format(admin_access_token)
 
-    yield client
+    try:
+        yield client
+    finally:
+        with app.test_request_context():
+            db.drop_all()
 
 
 def _create_mock_weather_station():
@@ -123,5 +131,5 @@ def drop_permissions(client):
 
 
 def drop_registration_details_for_user(user):
-    del user["station_id"]
-    del user["role"]
+    del user['station_id']
+    del user['role']

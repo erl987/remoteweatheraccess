@@ -4,6 +4,7 @@ from datetime import timedelta
 
 class Config(object):
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
+    DB_PORT = os.environ.get('DB_PORT', 5432)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     BCRYPT_LOG_ROUNDS = 13
 
@@ -12,7 +13,6 @@ class ProdConfig(Config):
     ENV = 'prod'
     DEBUG = False
     DB_URL = os.environ.get('DB_URL')
-    DB_PORT = os.environ.get('DB_PORT', 5432)
     DB_USER_DB_USER = os.environ.get('DB_USER_DB_USER')
     DB_USER_DB_PASSWORD = os.environ.get('DB_USER_DB_PASSWORD')
     DB_USER_DATABASE = os.environ.get('DB_USER_DATABASE')
@@ -20,10 +20,10 @@ class ProdConfig(Config):
     DB_WEATHER_DB_PASSWORD = os.environ.get('DB_WEATHER_DB_PASSWORD')
     DB_WEATHER_DATABASE = os.environ.get('DB_WEATHER_DATABASE')
     SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER_DB_USER, DB_USER_DB_PASSWORD,
-                                                                            DB_URL, DB_PORT, DB_USER_DATABASE)
+                                                                            DB_URL, Config.DB_PORT, DB_USER_DATABASE)
     SQLALCHEMY_BINDS = {
         'weather-data': 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_WEATHER_DB_USER, DB_WEATHER_DB_PASSWORD,
-                                                                      DB_URL, DB_PORT, DB_WEATHER_DATABASE)
+                                                                      DB_URL, Config.DB_PORT, DB_WEATHER_DATABASE)
     }
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=1)
 
@@ -32,15 +32,14 @@ class DevConfig(Config):
     ENV = 'dev'
     DEBUG = True
     DB_URL = 'localhost'
-    DB_PORT = 5432
     DB_USER = 'postgres'
     DB_PASSWORD = os.environ.get('DB_PASSWORD', 'passwd')
     DB_DATABASE = 'postgres'
-    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, DB_PASSWORD, DB_URL, DB_PORT,
-                                                                            DB_DATABASE)
+    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, DB_PASSWORD, DB_URL,
+                                                                            Config.DB_PORT, DB_DATABASE)
     SQLALCHEMY_BINDS = {
-        'weather-data': 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, DB_PASSWORD, DB_URL, DB_PORT,
-                                                                      DB_DATABASE)
+        'weather-data': 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, DB_PASSWORD, DB_URL,
+                                                                      Config.DB_PORT, DB_DATABASE)
     }
     JWT_SECRET_KEY = 'SECRET-KEY'
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
@@ -50,7 +49,16 @@ class TestConfig(Config):
     ENV = 'test'
     TESTING = True
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite://'
+    DB_URL = 'localhost'
+    DB_USER = 'postgres'
+    DB_PASSWORD = os.environ.get('DB_PASSWORD', 'passwd')
+    DB_DATABASE = 'postgres'
+    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, DB_PASSWORD, DB_URL,
+                                                                            Config.DB_PORT, DB_DATABASE)
+    SQLALCHEMY_BINDS = {
+        'weather-data': 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, DB_PASSWORD, DB_URL,
+                                                                      Config.DB_PORT, DB_DATABASE)
+    }
     JWT_SECRET_KEY = 'SECRET-KEY'
     BCRYPT_LOG_ROUNDS = 4  # for faster tests; needs at least 4 to avoid 'ValueError: Invalid rounds'
     JWT_HEADER_TYPE = 'Bearer'
