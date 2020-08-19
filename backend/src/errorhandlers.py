@@ -15,7 +15,7 @@ def handle_invalid_usage(error):
     return response
 
 
-def unauthorized_response(callback):
+def unauthorized_response(_):
     error = APIError('Missing Authorization header', status_code=HTTPStatus.UNAUTHORIZED)
     response = jsonify(error.to_dict(hide_details=False))
     response.status_code = error.status_code

@@ -1,36 +1,73 @@
 import logging
+
 import pytest
 from flask_jwt_extended import create_access_token
 
-from src.extensions import db
-from src.models import WeatherStation
-from config.settings import TestConfig
 from backend_app import create_app
+from config.settings import TestConfig
+from src.extensions import db
+from src.models import WeatherStation, create_temp_humidity_sensors, create_sensors
 from src.utils import Role
 
 
 @pytest.fixture
 def a_dataset() -> dict:
-    yield dict(
-        timepoint='2016-02-05T15:40:36.078357+00:00',
-        temp=-19.5,
-        humidity=10)
+    yield [{
+        'timepoint': '2016-02-05T15:40:36.078357+00:00',
+        'station_id': 'TES',
+        'pressure': 1020.5,
+        'uv': 9.6,
+        'rain_counter': 980.5,
+        'direction': 190.5,
+        'speed': 95.2,
+        'wind_temperature': 9.8,
+        'gusts': 120.5,
+        'temperature_humidity': [{
+            'sensor_id': 'IN',
+            'temperature': 10.5,
+            'humidity': 90.5
+        }]
+    }]
 
 
 @pytest.fixture
 def an_updated_dataset() -> dict:
-    yield dict(
-        timepoint='2016-02-05T15:40:36.078357+00:00',
-        temp=12.5,
-        humidity=24)
+    yield {
+        'timepoint': '2016-02-05T15:40:36.078357+00:00',
+        'station_id': 'TES',
+        'pressure': 1035.2,
+        'uv': 7.2,
+        'rain_counter': 920.6,
+        'direction': 310.5,
+        'speed': 85.3,
+        'wind_temperature': 9.8,
+        'gusts': 80.3,
+        'temperature_humidity': [{
+            'sensor_id': 'IN',
+            'temperature': 30.9,
+            'humidity': 90.5
+        }]
+    }
 
 
 @pytest.fixture
 def another_dataset() -> dict:
-    yield dict(
-        timepoint='2016-02-06T15:40:36.2Z',
-        temp=23.5,
-        humidity=53)
+    yield [{
+        'timepoint': '2016-02-06T15:40:36.2Z',
+        'station_id': 'TES',
+        'pressure': 1019.2,
+        'uv': 2.4,
+        'rain_counter': 980.5,
+        'direction': 350.2,
+        'speed': 95.2,
+        'wind_temperature': 9.8,
+        'gusts': 120.5,
+        'temperature_humidity': [{
+            'sensor_id': 'IN',
+            'temperature': 23.5,
+            'humidity': 53.0
+        }]
+    }]
 
 
 @pytest.fixture
@@ -77,6 +114,7 @@ def client_with_admin_permissions():
 
     with app.test_request_context():
         _create_mock_weather_station()
+        _create_sensors()
         admin_access_token = create_access_token(identity={'name': 'pytest_admin'},
                                                  user_claims={'role': Role.ADMIN.name, 'station_id': None},
                                                  expires_delta=False,
@@ -98,8 +136,31 @@ def client_with_push_user_permissions():
 
     with app.test_request_context():
         _create_mock_weather_station()
+        _create_sensors()
         admin_access_token = create_access_token(identity={'name': 'pytest_user'},
                                                  user_claims={'role': Role.PUSH_USER.name, 'station_id': 'TES'},
+                                                 expires_delta=False,
+                                                 fresh=True)
+    client.environ_base['HTTP_AUTHORIZATION'] = 'Bearer {}'.format(admin_access_token)
+
+    try:
+        yield client
+    finally:
+        with app.test_request_context():
+            db.drop_all()
+
+
+@pytest.fixture
+def client_with_admin_permissions():
+    app = create_app(TestConfig())
+    client = app.test_client()
+    logging.getLogger('wsgi').parent.handlers = []
+
+    with app.test_request_context():
+        _create_mock_weather_station()
+        _create_sensors()
+        admin_access_token = create_access_token(identity={'name': 'pytest_admin'},
+                                                 user_claims={'role': Role.ADMIN.name, 'station_id': None},
                                                  expires_delta=False,
                                                  fresh=True)
     client.environ_base['HTTP_AUTHORIZATION'] = 'Bearer {}'.format(admin_access_token)
@@ -123,6 +184,11 @@ def _create_mock_weather_station():
     db.create_all()
     db.session.add(test_weather_station)
     db.session.commit()
+
+
+def _create_sensors():
+    create_temp_humidity_sensors()
+    create_sensors()
 
 
 def drop_permissions(client):

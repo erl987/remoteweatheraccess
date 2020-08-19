@@ -51,7 +51,7 @@ def _perform_with_rollback_and_raise_exception(func, args, kwargs):
                        status_code=HTTPStatus.BAD_REQUEST)
     except IntegrityError as e:
         # this is specific for psycopg2
-        raise APIError(e.orig.diag.message_detail, status_code=HTTPStatus.BAD_REQUEST)
+        raise APIError(e.orig.diag.message_detail, status_code=HTTPStatus.CONFLICT)
     except Exception as e:
         raise raise_api_error(e, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
     finally:
