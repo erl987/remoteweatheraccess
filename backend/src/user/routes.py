@@ -33,11 +33,10 @@ def add_user():
                                                                                                   new_user.role))
             response.status_code = HTTPStatus.CREATED
         else:
-            raise APIError('Provided station id \'{}\' is not existing'.format(new_user.station_id),
-                           status_code=HTTPStatus.BAD_REQUEST)
+            raise APIError('Provided station id is not existing', status_code=HTTPStatus.BAD_REQUEST)
     else:
-        raise APIError('User \'{}\' already in the database'.format(new_user.name),
-                       status_code=HTTPStatus.CONFLICT, location='/api/v1/user/{}'.format(existing_user.id))
+        raise APIError('User already in the database', status_code=HTTPStatus.CONFLICT,
+                       location='/api/v1/user/{}'.format(existing_user.id))
 
     response.headers['location'] = '/api/v1/user/{}'.format(new_user.id)
 
@@ -64,18 +63,16 @@ def update_user(user_id):
 
     existing_user = FullUser.query.get(convert_to_int(user_id))
     if not existing_user:
-        raise APIError('No user with id \'{}\''.format(user_id), status_code=HTTPStatus.NOT_FOUND)
+        raise APIError('No user with provided id', status_code=HTTPStatus.NOT_FOUND)
 
     if updated_user.name != existing_user.name:
-        raise APIError('The user name \'{}\' stored for id \'{}\' does not match the name \'{}\' of the submitted '
-                       'user'.format(existing_user.name, user_id, updated_user.name),
+        raise APIError('The user name stored for the provided id does not match the name of the submitted user',
                        status_code=HTTPStatus.CONFLICT,
                        location='/api/v1/user/{}'.format(existing_user.id))
 
     weather_station = WeatherStation.query.filter_by(station_id=updated_user.station_id).one_or_none()
     if not weather_station:
-        raise APIError('Provided station id \'{}\' is not existing'.format(updated_user.station_id),
-                       status_code=HTTPStatus.BAD_REQUEST)
+        raise APIError('Provided station id is not existing', status_code=HTTPStatus.BAD_REQUEST)
 
     existing_user.password = updated_user.password
     existing_user.role = updated_user.role
@@ -97,7 +94,7 @@ def update_user(user_id):
 def remove_user(user_id):
     existing_user = FullUser.query.get(convert_to_int(user_id, HTTPStatus.NO_CONTENT))
     if not existing_user:
-        current_app.logger.info('No user with id \'{}\' '.format(user_id))
+        current_app.logger.info('No user with provided id')
         return '', HTTPStatus.NO_CONTENT
 
     db.session.delete(existing_user)
@@ -113,7 +110,7 @@ def remove_user(user_id):
 def get_user_details(user_id):
     user = FullUser.query.get(convert_to_int(user_id))
     if not user:
-        raise APIError('No user with id \'{}\''.format(user_id), status_code=HTTPStatus.BAD_REQUEST)
+        raise APIError('No user with provided id', status_code=HTTPStatus.BAD_REQUEST)
 
     response = jsonify(full_user_dump_schema.dump(user))
     response.status_code = HTTPStatus.OK
@@ -152,5 +149,4 @@ def login():
         current_app.logger.info('User \'{}\' logged in successfully with the password'.format(user_from_db.name))
         return jsonify({'user': user_from_db.name, 'token': access_token}), HTTPStatus.OK
     else:
-        raise APIError('User \'{}\' not existing or password incorrect'.format(submitted_user.name),
-                       status_code=HTTPStatus.UNAUTHORIZED)
+        raise APIError('User not existing or password incorrect', status_code=HTTPStatus.UNAUTHORIZED)
