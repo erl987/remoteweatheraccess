@@ -1,11 +1,10 @@
-import gzip
 import time
 from datetime import datetime, timedelta
-from io import BytesIO
 from random import uniform
-import json
 
 import requests
+
+from tests.utils import zip_payload
 
 url = '35.217.32.244'
 port = 80
@@ -18,15 +17,6 @@ time_delta = timedelta(minutes=10)
 
 def truncate_digits(number, num_digits=3) -> str:
     return '{:.{}f}'.format(number, num_digits)
-
-
-def zip_payload(object_payload) -> bytes:
-    json_payload = json.dumps(object_payload)
-    byte_stream = BytesIO()
-    with gzip.GzipFile(fileobj=byte_stream, mode='w') as g:
-        g.write(bytes(json_payload, 'utf8'))
-
-    return byte_stream.getvalue()
 
 
 payload = []

@@ -74,7 +74,7 @@ def update_weather_dataset():
 
         if not sensors_matched:
             raise APIError('No matching temperature humidity sensor found for sensor id \'{}\''
-                           .format(existing_sensor_id))
+                           .format(existing_sensor_id), status_code=HTTPStatus.NOT_FOUND)
 
     existing_dataset.direction = new_dataset.direction
     existing_dataset.speed = new_dataset.speed
@@ -169,7 +169,6 @@ def _reshape_datasets_to_dict(found_datasets, requested_sensors, rain_calib_fact
     temp_humidity_sensor_ids = found_datasets.sensor_id.unique()
     grouped_datasets = found_datasets.groupby(['station_id', 'sensor_id'])
 
-    is_rain_calculated = False
     for sensor_id in list(found_datasets.columns):
         if sensor_id not in ['station_id', 'sensor_id']:
             for dataset in grouped_datasets[sensor_id]:
@@ -185,10 +184,6 @@ def _reshape_datasets_to_dict(found_datasets, requested_sensors, rain_calib_fact
                     found_datasets_per_station[station_id]['temperature_humidity'][temp_humidity_sensor][
                         sensor_id] = data
                 elif sensor_id in ['rain_counter']:
-                    if is_rain_calculated:
-                        continue
-                    is_rain_calculated = True
-
                     rain_rate = dataset[1].diff() * rain_calib_factors[station_id]
                     rain_rate.iloc[0] = 0
                     if 'rain_rate' in requested_sensors:

@@ -1,4 +1,7 @@
+import gzip
+import json
 import logging
+from io import BytesIO
 
 import pytest
 from flask_jwt_extended import create_access_token
@@ -13,7 +16,7 @@ from src.utils import Role
 @pytest.fixture
 def a_dataset() -> dict:
     yield [{
-        'timepoint': '2016-02-05T15:40:36.078357+00:00',
+        'timepoint': '2016-02-05T15:40:36.078357+01:00',
         'station_id': 'TES',
         'pressure': 1020.5,
         'uv': 9.6,
@@ -33,7 +36,7 @@ def a_dataset() -> dict:
 @pytest.fixture
 def an_updated_dataset() -> dict:
     yield {
-        'timepoint': '2016-02-05T15:40:36.078357+00:00',
+        'timepoint': '2016-02-05T15:40:36.078357+01:00',
         'station_id': 'TES',
         'pressure': 1035.2,
         'uv': 7.2,
@@ -199,3 +202,19 @@ def drop_permissions(client):
 def drop_registration_details_for_user(user):
     del user['station_id']
     del user['role']
+
+
+def verify_database_is_empty(client_with_admin_permissions):
+    client = drop_permissions(client_with_admin_permissions)
+    check_result = client.get('/api/v1/data/limits')
+    assert not check_result.get_json()['first_timepoint']
+    assert not check_result.get_json()['last_timepoint']
+
+
+def zip_payload(object_payload) -> bytes:
+    json_payload = json.dumps(object_payload)
+    byte_stream = BytesIO()
+    with gzip.GzipFile(fileobj=byte_stream, mode='w') as g:
+        g.write(bytes(json_payload, 'utf8'))
+
+    return byte_stream.getvalue()

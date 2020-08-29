@@ -6,12 +6,21 @@ from dateutil.parser import isoparse
 
 # noinspection PyUnresolvedReferences
 from .utils import client_without_permissions, client_with_push_user_permissions, client_with_admin_permissions, \
-    a_dataset, another_dataset, an_updated_dataset, drop_permissions  # required as a fixture
+    a_dataset, another_dataset, an_updated_dataset  # required as a fixture
+from .utils import drop_permissions, verify_database_is_empty, zip_payload
 
 
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset')
 def test_create_dataset(client_with_push_user_permissions, a_dataset):
     result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset)
+    assert result.status_code == HTTPStatus.NO_CONTENT
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset')
+def test_create_dataset_with_gzip(client_with_push_user_permissions, a_dataset):
+    client_with_push_user_permissions.environ_base['HTTP_CONTENT_ENCODING'] = 'gzip'
+    result = client_with_push_user_permissions.post('/api/v1/data', data=zip_payload(a_dataset),
+                                                    content_type='application/json')
     assert result.status_code == HTTPStatus.NO_CONTENT
 
 
@@ -68,8 +77,26 @@ def test_delete_dataset(client_with_admin_permissions, a_dataset, another_datase
         'last_timepoint': '2016-02-07T00:00',
         'stations': ['TES']
     }
+
     delete_result = client_with_admin_permissions.delete('/api/v1/data', json=delete_payload)
     assert delete_result.status_code == HTTPStatus.NO_CONTENT
+    verify_database_is_empty(client_with_admin_permissions)
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions', 'a_dataset', 'another_dataset')
+def test_delete_dataset_for_all_stations(client_with_admin_permissions, a_dataset, another_dataset):
+    create_result = client_with_admin_permissions.post('/api/v1/data', json=a_dataset)
+    assert create_result.status_code == HTTPStatus.NO_CONTENT
+    client_with_admin_permissions.post('/api/v1/data', json=another_dataset)
+    delete_payload = {
+        'first_timepoint': '2016-02-05T00:00',
+        'last_timepoint': '2016-02-07T00:00',
+        'stations': []
+    }
+
+    delete_result = client_with_admin_permissions.delete('/api/v1/data', json=delete_payload)
+    assert delete_result.status_code == HTTPStatus.NO_CONTENT
+    verify_database_is_empty(client_with_admin_permissions)
 
 
 @pytest.mark.usefixtures('client_with_admin_permissions')
@@ -107,8 +134,22 @@ def test_update_dataset(client_with_push_user_permissions, a_dataset, an_updated
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset')
 def test_update_dataset_with_time_point_mismatch(client_with_push_user_permissions, a_dataset, another_dataset):
     create_result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset)
+
     assert create_result.status_code == HTTPStatus.NO_CONTENT
     update_result = client_with_push_user_permissions.put('/api/v1/data', json=another_dataset[0])
+    assert 'error' in update_result.get_json()
+    assert update_result.status_code == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset')
+def test_update_dataset_with_temp_humidity_sensor_mismatch(client_with_push_user_permissions, a_dataset,
+                                                           another_dataset):
+    create_result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset)
+    assert create_result.status_code == HTTPStatus.NO_CONTENT
+
+    mismatching_dataset = dict(a_dataset[0])
+    mismatching_dataset['temperature_humidity'][0]['sensor_id'] = 'INV'
+    update_result = client_with_push_user_permissions.put('/api/v1/data', json=mismatching_dataset)
     assert 'error' in update_result.get_json()
     assert update_result.status_code == HTTPStatus.NOT_FOUND
 
@@ -147,9 +188,7 @@ def test_get_available_time_period(client_with_push_user_permissions, a_dataset,
     result = client.get('/api/v1/data/limits')
 
     obtained_first_timepoint = isoparse(result.get_json()['first_timepoint'])
-    obtained_first_timepoint = obtained_first_timepoint.replace(tzinfo=pytz.UTC)
     obtained_last_timepoint = isoparse(result.get_json()['last_timepoint'])
-    obtained_last_timepoint = obtained_last_timepoint.replace(tzinfo=pytz.UTC)
 
     assert obtained_first_timepoint == expected_first_timepoint
     assert obtained_last_timepoint == expected_last_timepoint
@@ -178,6 +217,7 @@ def test_get_weather_datasets_only_one(client_with_push_user_permissions, a_data
                                                      'sensors': []})
     assert search_result.status_code == HTTPStatus.OK
     assert len(search_result.get_json()[a_station_id]['pressure']) == 1
+    assert a_dataset[0]['timepoint'] == search_result.get_json()[a_station_id]['timepoint'][0]
     assert a_dataset[0]['pressure'] == search_result.get_json()[a_station_id]['pressure'][0]
 
 
@@ -195,6 +235,9 @@ def test_get_weather_datasets_all(client_with_push_user_permissions, a_dataset, 
                                                      'sensors': []})
     assert search_result.status_code == HTTPStatus.OK
     assert len(search_result.get_json()[a_station_id]['pressure']) == 2
+    assert a_dataset[0]['timepoint'] == search_result.get_json()[a_station_id]['timepoint'][0]
+    assert isoparse(another_dataset[0]['timepoint']).astimezone(pytz.timezone('Europe/Berlin')) == \
+           isoparse(search_result.get_json()[a_station_id]['timepoint'][1])
     assert a_dataset[0]['pressure'] == search_result.get_json()[a_station_id]['pressure'][0]
     assert another_dataset[0]['pressure'] == search_result.get_json()[a_station_id]['pressure'][1]
 
