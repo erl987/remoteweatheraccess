@@ -46,7 +46,7 @@ class TempHumiditySensor(db.Model):
 class TempHumiditySensorData(db.Model):
     __bind_key__ = 'weather-data'
 
-    timepoint: int = db.Column(db.DateTime, primary_key=True)
+    timepoint: int = db.Column(db.DateTime(timezone=True), primary_key=True)
     station_id: str = db.Column(db.String(10), primary_key=True)
     sensor_id: str = db.Column(db.String(10), ForeignKey(TempHumiditySensor.sensor_id), primary_key=True)
 
@@ -63,7 +63,7 @@ class TempHumiditySensorData(db.Model):
 class WeatherDataset(db.Model):
     __bind_key__ = 'weather-data'
 
-    timepoint: datetime = db.Column(db.DateTime, primary_key=True)
+    timepoint: datetime = db.Column(db.DateTime(timezone=True), primary_key=True)
     station_id: str = db.Column(db.String(10), ForeignKey(WeatherStation.station_id), primary_key=True)
 
     pressure: float = db.Column(db.Float, nullable=False)

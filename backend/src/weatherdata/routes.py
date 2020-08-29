@@ -73,7 +73,7 @@ def update_weather_dataset():
                 break
 
         if not sensors_matched:
-            raise APIError("No matching temperature humidity sensor found for sensor id \'{}\'"
+            raise APIError('No matching temperature humidity sensor found for sensor id \'{}\''
                            .format(existing_sensor_id))
 
     existing_dataset.direction = new_dataset.direction
@@ -100,29 +100,18 @@ def get_weather_datasets():
     requested_stations = time_period_with_sensors['stations']
 
     all_sensors = [sensor[0] for sensor in db.session.query(Sensor).with_entities(Sensor.sensor_id).all()]
-    validate_items(requested_sensors, all_sensors, "sensor")
+    validate_items(requested_sensors, all_sensors, 'sensor')
 
     if len(requested_sensors) == 0:
         requested_sensors = all_sensors
 
-    queried_sensors = list(requested_sensors)
-    rain_sensor_is_queried = False
-    if "rain" in queried_sensors:
-        queried_sensors.remove("rain")
-        rain_sensor_is_queried = True
-
-    if "rain_rate" in queried_sensors:
-        queried_sensors.remove("rain_rate")
-        rain_sensor_is_queried = True
-
-    if rain_sensor_is_queried:
-        queried_sensors.append("rain_counter")
+    queried_sensors = _get_queried_sensors(requested_sensors)
 
     all_stations_data = db.session.query(WeatherStation).with_entities(WeatherStation.station_id,
                                                                        WeatherStation.rain_calib_factor).all()
     all_stations = [station_data[0] for station_data in all_stations_data]
     rain_calib_factors = {station_data[0]: station_data[1] for station_data in all_stations_data}
-    validate_items(requested_stations, all_stations, "station")
+    validate_items(requested_stations, all_stations, 'station')
 
     if len(requested_stations) == 0:
         requested_stations = all_stations
@@ -157,7 +146,25 @@ def get_weather_datasets():
     return response
 
 
+def _get_queried_sensors(requested_sensors):
+    queried_sensors = list(requested_sensors)
+    rain_sensor_is_queried = False
+
+    if 'rain' in queried_sensors:
+        queried_sensors.remove('rain')
+        rain_sensor_is_queried = True
+    if 'rain_rate' in queried_sensors:
+        queried_sensors.remove('rain_rate')
+        rain_sensor_is_queried = True
+    if rain_sensor_is_queried:
+        queried_sensors.append('rain_counter')
+
+    return queried_sensors
+
+
 def _reshape_datasets_to_dict(found_datasets, requested_sensors, rain_calib_factors):
+    found_datasets['timepoint'] = found_datasets['timepoint'].dt.tz_convert(current_app.config['TIMEZONE'])
+
     found_datasets_per_station = {}
     temp_humidity_sensor_ids = found_datasets.sensor_id.unique()
     grouped_datasets = found_datasets.groupby(['station_id', 'sensor_id'])
@@ -177,17 +184,17 @@ def _reshape_datasets_to_dict(found_datasets, requested_sensors, rain_calib_fact
                 if sensor_id in ['temperature', 'humidity']:
                     found_datasets_per_station[station_id]['temperature_humidity'][temp_humidity_sensor][
                         sensor_id] = data
-                elif sensor_id in ["rain_counter"]:
+                elif sensor_id in ['rain_counter']:
                     if is_rain_calculated:
                         continue
                     is_rain_calculated = True
 
                     rain_rate = dataset[1].diff() * rain_calib_factors[station_id]
                     rain_rate.iloc[0] = 0
-                    if "rain_rate" in requested_sensors:
-                        found_datasets_per_station[station_id]["rain_rate"] = rain_rate.to_list()
-                    if "rain" in requested_sensors:
-                        found_datasets_per_station[station_id]["rain"] = rain_rate.cumsum().to_list()
+                    if 'rain_rate' in requested_sensors:
+                        found_datasets_per_station[station_id]['rain_rate'] = rain_rate.to_list()
+                    if 'rain' in requested_sensors:
+                        found_datasets_per_station[station_id]['rain'] = rain_rate.cumsum().to_list()
                 else:
                     found_datasets_per_station[station_id][sensor_id] = data
 
@@ -220,7 +227,7 @@ def delete_weather_dataset():
 
     all_stations = [sensor[0] for sensor in
                     db.session.query(WeatherStation).with_entities(WeatherStation.station_id).all()]
-    validate_items(stations, all_stations, "station")
+    validate_items(stations, all_stations, 'station')
 
     _delete_datasets_from_table(TempHumiditySensorData, first, last, stations)
     num_deleted_datasets = _delete_datasets_from_table(WeatherDataset, first, last, stations)
