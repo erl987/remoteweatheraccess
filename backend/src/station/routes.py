@@ -7,7 +7,7 @@ from ..exceptions import APIError
 from ..extensions import db
 from ..models import WeatherStation
 from ..utils import json_with_rollback_and_raise_exception, access_level_required, Role, \
-    with_rollback_and_raise_exception
+    with_rollback_and_raise_exception, convert_to_int
 
 station_blueprint = Blueprint('station', __name__, url_prefix='/api/v1/station')
 
@@ -50,7 +50,7 @@ def get_all_stations():
 @access_level_required(Role.GUEST)
 @with_rollback_and_raise_exception
 def get_station_details(numeric_station_id):
-    station = WeatherStation.query.get(numeric_station_id)
+    station = WeatherStation.query.get(convert_to_int(numeric_station_id))
     if not station:
         raise APIError('No station with id \'{}\''.format(numeric_station_id), status_code=HTTPStatus.BAD_REQUEST)
 
@@ -67,7 +67,7 @@ def get_station_details(numeric_station_id):
 def update_station(numeric_station_id):
     updated_station = weather_station_schema.load(request.json)
 
-    existing_station = WeatherStation.query.get(numeric_station_id)
+    existing_station = WeatherStation.query.get(convert_to_int(numeric_station_id))
     if not existing_station:
         raise APIError('No station with id \'{}\''.format(numeric_station_id), status_code=HTTPStatus.NOT_FOUND)
 
@@ -98,7 +98,7 @@ def update_station(numeric_station_id):
 @access_level_required(Role.ADMIN)
 @with_rollback_and_raise_exception
 def remove_station(numeric_station_id):
-    existing_station = WeatherStation.query.get(numeric_station_id)
+    existing_station = WeatherStation.query.get(convert_to_int(numeric_station_id))
     if not existing_station:
         current_app.logger.info('No station with id \'{}\' '.format(numeric_station_id))
         return '', HTTPStatus.NO_CONTENT

@@ -3,7 +3,7 @@ from http import HTTPStatus
 import pytest
 
 # noinspection PyUnresolvedReferences
-from ..utils import client_without_permissions # required as a fixture
+from ..utils import client_without_permissions  # required as a fixture
 
 
 @pytest.mark.usefixtures('client_without_permissions')

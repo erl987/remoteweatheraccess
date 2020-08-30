@@ -96,29 +96,71 @@ def a_dataset_for_another_station() -> dict:
 
 @pytest.fixture
 def a_user() -> dict:
-    yield dict(
-        name='test_user',
-        password='d5df93*!B',
-        role='PUSH_USER',
-        station_id='TES')
+    yield {
+        'name': 'test_user',
+        'password': 'd5df93*!B',
+        'role': 'PUSH_USER',
+        'station_id': 'TES'
+    }
 
 
 @pytest.fixture
 def an_updated_user() -> dict:
-    yield dict(
-        name='test_user',
-        password='updated_pw',
-        role='ADMIN',
-        station_id='TES')
+    yield {
+        'name': 'test_user',
+        'password': 'updated_pw',
+        'role': 'ADMIN',
+        'station_id': 'TES'
+    }
 
 
 @pytest.fixture
 def another_user() -> dict:
-    yield dict(
-        name='test_user_2',
-        password='bdfdfd53*!B',
-        role='PULL_USER',
-        station_id='TES')
+    yield {
+        'name': 'test_user_2',
+        'password': 'bdfdfd53*!B',
+        'role': 'PULL_USER',
+        'station_id': 'TES'
+    }
+
+
+@pytest.fixture()
+def a_station() -> dict:
+    yield {
+        'station_id': 'TES3',
+        'device': 'DEVICE3',
+        'latitude': -25.05,
+        'longitude': -2.5,
+        'location': 'The Location 3',
+        'height': -2.5,
+        'rain_calib_factor': 0.9
+    }
+
+
+@pytest.fixture()
+def an_updated_station() -> dict:
+    yield {
+        'station_id': 'TES3',
+        'device': 'DEVICE3',
+        'latitude': 35.3,
+        'longitude': 39.5,
+        'location': 'The Location 3 Updated',
+        'height': 19.3,
+        'rain_calib_factor': 1.5
+    }
+
+
+@pytest.fixture()
+def another_station() -> dict:
+    yield {
+        'station_id': 'TES4',
+        'device': 'DEVICE4',
+        'latitude': -25.05,
+        'longitude': -2.5,
+        'location': 'The Location 4',
+        'height': -2.5,
+        'rain_calib_factor': 0.9
+    }
 
 
 @pytest.fixture
@@ -130,28 +172,6 @@ def client_without_permissions():
     with app.test_request_context():
         _create_mock_weather_stations()
         _create_sensors()
-
-    try:
-        yield client
-    finally:
-        with app.test_request_context():
-            db.drop_all()
-
-
-@pytest.fixture
-def client_with_admin_permissions():
-    app = create_app(TestConfig())
-    client = app.test_client()
-    logging.getLogger('wsgi').parent.handlers = []
-
-    with app.test_request_context():
-        _create_mock_weather_stations()
-        _create_sensors()
-        admin_access_token = create_access_token(identity={'name': 'pytest_admin'},
-                                                 user_claims={'role': Role.ADMIN.name, 'station_id': None},
-                                                 expires_delta=False,
-                                                 fresh=True)
-    client.environ_base['HTTP_AUTHORIZATION'] = 'Bearer {}'.format(admin_access_token)
 
     try:
         yield client

@@ -83,8 +83,8 @@ def access_level_required(required_role: Role):
                                             .format(user_name, required_role.name))
                     return fn(*args, **kwargs)
                 else:
-                    raise APIError('Denied authorization of user \'{}\' for access level \'{}\''
-                                   .format(user_name, required_role.name), status_code=HTTPStatus.FORBIDDEN)
+                    raise APIError('Denied authorization of user for access level \'{}\''.format(required_role.name),
+                                   status_code=HTTPStatus.FORBIDDEN)
             except Exception as e:
                 raise_api_error(e, HTTPStatus.FORBIDDEN)
 
@@ -138,5 +138,5 @@ def convert_to_int(user_id, error_status=HTTPStatus.BAD_REQUEST):
     try:
         user_id = int(user_id)
     except ValueError:
-        raise APIError('Invalid user id', error_status)
+        raise APIError('Invalid id', error_status)
     return user_id
