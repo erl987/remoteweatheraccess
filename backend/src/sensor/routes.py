@@ -33,7 +33,7 @@ def get_a_sensor(sensor_id):
                    .one_or_none())
 
     if not sensor_data:
-        raise APIError('No sensor with id \'{}\''.format(sensor_id), status_code=HTTPStatus.BAD_REQUEST)
+        raise APIError('No sensor with such id', status_code=HTTPStatus.BAD_REQUEST)
     else:
         current_app.logger.info('Provided details for sensor \'{}\''.format(sensor_id))
         response = jsonify(sensor_data)

@@ -127,7 +127,15 @@ def client_without_permissions():
     client = app.test_client()
     logging.getLogger('wsgi').parent.handlers = []
 
-    yield client
+    with app.test_request_context():
+        _create_mock_weather_stations()
+        _create_sensors()
+
+    try:
+        yield client
+    finally:
+        with app.test_request_context():
+            db.drop_all()
 
 
 @pytest.fixture
