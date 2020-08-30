@@ -129,8 +129,8 @@ def approve_committed_station_ids(station_ids_in_commit):
 
 
 def validate_items(requested_items, all_items, item_type):
-    for sensor in requested_items:
-        if sensor not in all_items:
+    for item in requested_items:
+        if item not in all_items:
             raise APIError('A provided {} is not existing'.format(item_type), status_code=HTTPStatus.BAD_REQUEST)
 
 

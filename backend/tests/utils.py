@@ -1,6 +1,7 @@
 import gzip
 import json
 import logging
+from http import HTTPStatus
 from io import BytesIO
 
 import pytest
@@ -74,6 +75,26 @@ def another_dataset() -> dict:
 
 
 @pytest.fixture
+def a_dataset_for_another_station() -> dict:
+    yield [{
+        'timepoint': '2016-02-06T15:40:36.2Z',
+        'station_id': 'TES2',
+        'pressure': 1019.2,
+        'uv': 2.4,
+        'rain_counter': 980.5,
+        'direction': 350.2,
+        'speed': 95.2,
+        'wind_temperature': 9.8,
+        'gusts': 120.5,
+        'temperature_humidity': [{
+            'sensor_id': 'IN',
+            'temperature': 23.5,
+            'humidity': 53.0
+        }]
+    }]
+
+
+@pytest.fixture
 def a_user() -> dict:
     yield dict(
         name='test_user',
@@ -116,7 +137,7 @@ def client_with_admin_permissions():
     logging.getLogger('wsgi').parent.handlers = []
 
     with app.test_request_context():
-        _create_mock_weather_station()
+        _create_mock_weather_stations()
         _create_sensors()
         admin_access_token = create_access_token(identity={'name': 'pytest_admin'},
                                                  user_claims={'role': Role.ADMIN.name, 'station_id': None},
@@ -138,7 +159,7 @@ def client_with_push_user_permissions():
     logging.getLogger('wsgi').parent.handlers = []
 
     with app.test_request_context():
-        _create_mock_weather_station()
+        _create_mock_weather_stations()
         _create_sensors()
         admin_access_token = create_access_token(identity={'name': 'pytest_user'},
                                                  user_claims={'role': Role.PUSH_USER.name, 'station_id': 'TES'},
@@ -160,7 +181,7 @@ def client_with_admin_permissions():
     logging.getLogger('wsgi').parent.handlers = []
 
     with app.test_request_context():
-        _create_mock_weather_station()
+        _create_mock_weather_stations()
         _create_sensors()
         admin_access_token = create_access_token(identity={'name': 'pytest_admin'},
                                                  user_claims={'role': Role.ADMIN.name, 'station_id': None},
@@ -175,7 +196,9 @@ def client_with_admin_permissions():
             db.drop_all()
 
 
-def _create_mock_weather_station():
+def _create_mock_weather_stations():
+    db.create_all()
+
     test_weather_station = WeatherStation()
     test_weather_station.station_id = 'TES'
     test_weather_station.device = 'DEVICE'
@@ -184,8 +207,18 @@ def _create_mock_weather_station():
     test_weather_station.location = 'The Location'
     test_weather_station.height = -2.5
     test_weather_station.rain_calib_factor = 0.9
-    db.create_all()
     db.session.add(test_weather_station)
+
+    test_weather_station = WeatherStation()
+    test_weather_station.station_id = 'TES2'
+    test_weather_station.device = 'DEVICE2'
+    test_weather_station.latitude = 93.5
+    test_weather_station.longitude = 20.3
+    test_weather_station.location = 'The Location 2'
+    test_weather_station.height = 203.5
+    test_weather_station.rain_calib_factor = 1.1
+    db.session.add(test_weather_station)
+
     db.session.commit()
 
 
@@ -218,3 +251,15 @@ def zip_payload(object_payload) -> bytes:
         g.write(bytes(json_payload, 'utf8'))
 
     return byte_stream.getvalue()
+
+
+def prepare_two_entry_database(a_dataset, another_dataset, client_with_push_user_permissions):
+    a_station_id = a_dataset[0]['station_id']
+    a_dataset_create_result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset)
+    assert a_dataset_create_result.status_code == HTTPStatus.NO_CONTENT
+
+    another_dataset_create_result = client_with_push_user_permissions.post('/api/v1/data', json=another_dataset)
+    assert another_dataset_create_result.status_code == HTTPStatus.NO_CONTENT
+    client = drop_permissions(client_with_push_user_permissions)
+
+    return a_station_id, client

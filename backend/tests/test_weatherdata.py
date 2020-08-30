@@ -6,13 +6,20 @@ from dateutil.parser import isoparse
 
 # noinspection PyUnresolvedReferences
 from .utils import client_without_permissions, client_with_push_user_permissions, client_with_admin_permissions, \
-    a_dataset, another_dataset, an_updated_dataset  # required as a fixture
+    a_dataset, another_dataset, an_updated_dataset, a_dataset_for_another_station, \
+    prepare_two_entry_database  # required as a fixture
 from .utils import drop_permissions, verify_database_is_empty, zip_payload
 
 
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset')
 def test_create_dataset(client_with_push_user_permissions, a_dataset):
     result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset)
+    assert result.status_code == HTTPStatus.NO_CONTENT
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions', 'a_dataset')
+def test_create_dataset_as_admin(client_with_admin_permissions, a_dataset):
+    result = client_with_admin_permissions.post('/api/v1/data', json=a_dataset)
     assert result.status_code == HTTPStatus.NO_CONTENT
 
 
@@ -67,6 +74,14 @@ def test_create_dataset_without_required_permissions(client_without_permissions,
     assert result.status_code == HTTPStatus.UNAUTHORIZED
 
 
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset_for_another_station')
+def test_create_dataset_without_required_permissions_for_station(client_with_push_user_permissions,
+                                                                 a_dataset_for_another_station):
+    create_result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset_for_another_station)
+    assert 'error' in create_result.get_json()
+    assert create_result.status_code == HTTPStatus.FORBIDDEN
+
+
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_dataset', 'another_dataset')
 def test_delete_dataset(client_with_admin_permissions, a_dataset, another_dataset):
     create_result = client_with_admin_permissions.post('/api/v1/data', json=a_dataset)
@@ -110,6 +125,17 @@ def test_delete_not_existing_dataset(client_with_admin_permissions):
     assert result.status_code == HTTPStatus.NO_CONTENT
 
 
+@pytest.mark.usefixtures('client_with_admin_permissions')
+def test_delete_dataset_for_not_existing_station(client_with_admin_permissions):
+    delete_payload = {
+        'first_timepoint': '2010-01-01T00:00',
+        'last_timepoint': '2010-01-31T00:00',
+        'stations': ['TES3']
+    }
+    result = client_with_admin_permissions.delete('/api/v1/data', json=delete_payload)
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
 @pytest.mark.usefixtures('client_without_permissions')
 def test_delete_dataset_without_required_permissions(client_without_permissions):
     delete_payload = {
@@ -122,12 +148,39 @@ def test_delete_dataset_without_required_permissions(client_without_permissions)
     assert result.status_code == HTTPStatus.UNAUTHORIZED
 
 
+@pytest.mark.usefixtures('client_with_admin_permissions')
+def test_delete_dataset_with_invalid_body(client_with_admin_permissions):
+    invalid_delete_payload = {
+        'first_timepoint': '2010-01-01T00:00',
+        'last_timepoint': '2010-01-31T00:00'
+    }
+    result = client_with_admin_permissions.delete('/api/v1/data', json=invalid_delete_payload)
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions')
+def test_delete_dataset_with_wrong_content_type(client_with_admin_permissions):
+    result = client_with_admin_permissions.delete('/api/v1/data', data={}, content_type='text/html')
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'an_updated_dataset')
 def test_update_dataset(client_with_push_user_permissions, a_dataset, an_updated_dataset):
     create_result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset)
     assert create_result.status_code == HTTPStatus.NO_CONTENT
 
     update_result = client_with_push_user_permissions.put('/api/v1/data', json=an_updated_dataset)
+    assert update_result.status_code == HTTPStatus.NO_CONTENT
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions', 'a_dataset', 'an_updated_dataset')
+def test_update_dataset_as_admin(client_with_admin_permissions, a_dataset, an_updated_dataset):
+    create_result = client_with_admin_permissions.post('/api/v1/data', json=a_dataset)
+    assert create_result.status_code == HTTPStatus.NO_CONTENT
+
+    update_result = client_with_admin_permissions.put('/api/v1/data', json=an_updated_dataset)
     assert update_result.status_code == HTTPStatus.NO_CONTENT
 
 
@@ -178,6 +231,17 @@ def test_update_dataset_without_required_permissions(client_without_permissions,
     assert result.status_code == HTTPStatus.UNAUTHORIZED
 
 
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'a_dataset_for_another_station')
+def test_update_dataset_without_required_permissions_for_station(client_with_push_user_permissions,
+                                                                 a_dataset, a_dataset_for_another_station):
+    create_result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset)
+    assert create_result.status_code == HTTPStatus.NO_CONTENT
+
+    update_result = client_with_push_user_permissions.put('/api/v1/data', json=a_dataset_for_another_station[0])
+    assert 'error' in update_result.get_json()
+    assert update_result.status_code == HTTPStatus.FORBIDDEN
+
+
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset')
 def test_get_available_time_period(client_with_push_user_permissions, a_dataset, another_dataset):
     client_with_push_user_permissions.post('/api/v1/data', json=a_dataset)
@@ -205,12 +269,7 @@ def test_get_available_time_period_when_empty_database(client_without_permission
 
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset')
 def test_get_weather_datasets_only_one(client_with_push_user_permissions, a_dataset, another_dataset):
-    a_station_id = a_dataset[0]['station_id']
-    a_dataset_create_result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset)
-    assert a_dataset_create_result.status_code == HTTPStatus.NO_CONTENT
-    another_dataset_create_result = client_with_push_user_permissions.post('/api/v1/data', json=another_dataset)
-    assert another_dataset_create_result.status_code == HTTPStatus.NO_CONTENT
-    client = drop_permissions(client_with_push_user_permissions)
+    a_station_id, client = prepare_two_entry_database(a_dataset, another_dataset, client_with_push_user_permissions)
     search_result = client.get('/api/v1/data', json={'first_timepoint': a_dataset[0]['timepoint'],
                                                      'last_timepoint': a_dataset[0]['timepoint'],
                                                      'stations': [],
@@ -223,12 +282,7 @@ def test_get_weather_datasets_only_one(client_with_push_user_permissions, a_data
 
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset')
 def test_get_weather_datasets_all(client_with_push_user_permissions, a_dataset, another_dataset):
-    a_station_id = a_dataset[0]['station_id']
-    a_dataset_create_result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset)
-    assert a_dataset_create_result.status_code == HTTPStatus.NO_CONTENT
-    another_dataset_create_result = client_with_push_user_permissions.post('/api/v1/data', json=another_dataset)
-    assert another_dataset_create_result.status_code == HTTPStatus.NO_CONTENT
-    client = drop_permissions(client_with_push_user_permissions)
+    a_station_id, client = prepare_two_entry_database(a_dataset, another_dataset, client_with_push_user_permissions)
     search_result = client.get('/api/v1/data', json={'first_timepoint': '1900-1-1T00:00',
                                                      'last_timepoint': '2100-1-1T00:00',
                                                      'stations': [],
@@ -244,11 +298,7 @@ def test_get_weather_datasets_all(client_with_push_user_permissions, a_dataset, 
 
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset')
 def test_get_weather_datasets_none(client_with_push_user_permissions, a_dataset, another_dataset):
-    a_dataset_create_result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset)
-    assert a_dataset_create_result.status_code == HTTPStatus.NO_CONTENT
-    another_dataset_create_result = client_with_push_user_permissions.post('/api/v1/data', json=another_dataset)
-    assert another_dataset_create_result.status_code == HTTPStatus.NO_CONTENT
-    client = drop_permissions(client_with_push_user_permissions)
+    _, client = prepare_two_entry_database(a_dataset, another_dataset, client_with_push_user_permissions)
     search_result = client.get('/api/v1/data', json={'first_timepoint': '2050-1-1T00:00',
                                                      'last_timepoint': '2100-1-1T00:00',
                                                      'stations': [],
@@ -265,6 +315,28 @@ def test_get_weather_datasets_with_empty_database(client_without_permissions):
                                                                          'sensors': []})
     assert search_result.status_code == HTTPStatus.OK
     assert len(search_result.get_json()) == 0
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset')
+def test_get_weather_datasets_for_not_existing_station(client_with_push_user_permissions, a_dataset, another_dataset):
+    a_station_id, client = prepare_two_entry_database(a_dataset, another_dataset, client_with_push_user_permissions)
+    search_result = client.get('/api/v1/data', json={'first_timepoint': a_dataset[0]['timepoint'],
+                                                     'last_timepoint': a_dataset[0]['timepoint'],
+                                                     'stations': ['TES3'],
+                                                     'sensors': []})
+    assert 'error' in search_result.get_json()
+    assert search_result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset')
+def test_get_weather_datasets_for_not_existing_sensor(client_with_push_user_permissions, a_dataset, another_dataset):
+    a_station_id, client = prepare_two_entry_database(a_dataset, another_dataset, client_with_push_user_permissions)
+    search_result = client.get('/api/v1/data', json={'first_timepoint': a_dataset[0]['timepoint'],
+                                                     'last_timepoint': a_dataset[0]['timepoint'],
+                                                     'stations': [],
+                                                     'sensors': ['NOT_EXISTING']})
+    assert 'error' in search_result.get_json()
+    assert search_result.status_code == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.usefixtures('client_without_permissions')
@@ -285,3 +357,10 @@ def test_get_weather_datasets_with_invalid_parameters(client_without_permissions
                                                                          'sensors': []})
     assert 'error' in search_result.get_json()
     assert search_result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions')
+def test_update_dataset_with_wrong_content_type(client_with_push_user_permissions):
+    result = client_with_push_user_permissions.get('/api/v1/data', data={}, content_type='text/html')
+    assert 'error' in result.get_json()
+    assert result.status_code == HTTPStatus.BAD_REQUEST
