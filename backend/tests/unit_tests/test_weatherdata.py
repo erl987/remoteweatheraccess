@@ -5,10 +5,10 @@ import pytz
 from dateutil.parser import isoparse
 
 # noinspection PyUnresolvedReferences
-from .utils import client_without_permissions, client_with_push_user_permissions, client_with_admin_permissions, \
+from ..utils import client_without_permissions, client_with_push_user_permissions, client_with_admin_permissions, \
     a_dataset, another_dataset, an_updated_dataset, a_dataset_for_another_station, \
     prepare_two_entry_database  # required as a fixture
-from .utils import drop_permissions, verify_database_is_empty, zip_payload
+from ..utils import drop_permissions, verify_database_is_empty, zip_payload
 
 
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset')

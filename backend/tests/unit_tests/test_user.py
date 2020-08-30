@@ -3,9 +3,9 @@ from http import HTTPStatus
 import pytest
 
 # noinspection PyUnresolvedReferences
-from .utils import client_with_admin_permissions, client_with_push_user_permissions, client_without_permissions, \
+from ..utils import client_with_admin_permissions, client_with_push_user_permissions, client_without_permissions, \
     a_user, another_user, an_updated_user  # required as a fixture
-from. utils import drop_permissions, drop_registration_details_for_user
+from ..utils import drop_permissions, drop_registration_details_for_user
 
 
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
@@ -30,6 +30,14 @@ def test_create_two_users(client_with_admin_permissions, a_user, another_user):
 
     result_2 = client_with_admin_permissions.post('/api/v1/user', json=another_user)
     assert result_2.status_code == HTTPStatus.CREATED
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
+def test_create_user_with_missing_authorization_header(client_with_admin_permissions, a_user):
+    del client_with_admin_permissions.environ_base['HTTP_AUTHORIZATION']
+    result = client_with_admin_permissions.post('/api/v1/user', json=a_user)
+    assert result.status_code == HTTPStatus.UNAUTHORIZED
+    assert 'error' in result.get_json()
 
 
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
@@ -63,6 +71,15 @@ def test_create_user_with_invalid_role(client_with_admin_permissions, a_user):
 def test_create_user_with_invalid_station_id(client_with_admin_permissions, a_user):
     invalid_user = dict(a_user)
     invalid_user['station_id'] = 'INV'
+    result = client_with_admin_permissions.post('/api/v1/user', json=invalid_user)
+    assert result.status_code == HTTPStatus.BAD_REQUEST
+    assert 'error' in result.get_json()
+
+
+@pytest.mark.usefixtures('client_with_admin_permissions', 'a_user')
+def test_create_user_with_invalid_password(client_with_admin_permissions, a_user):
+    invalid_user = dict(a_user)
+    invalid_user['password'] = ''
     result = client_with_admin_permissions.post('/api/v1/user', json=invalid_user)
     assert result.status_code == HTTPStatus.BAD_REQUEST
     assert 'error' in result.get_json()
