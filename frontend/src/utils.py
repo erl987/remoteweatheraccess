@@ -2,6 +2,7 @@ import json
 import math
 import os
 from datetime import datetime, timedelta
+from http import HTTPStatus
 from json.encoder import JSONEncoder
 from pathlib import Path
 
@@ -11,24 +12,27 @@ from requests.adapters import HTTPAdapter, Retry
 
 from frontend.src.cache import cache
 
-
-def is_temp_sensor(sensor_id):
-    return sensor_id.endswith('_temp')
-
-
-def is_humidity_sensor(sensor_id):
-    return sensor_id.endswith('_humid')
+HUMID_SENSOR_MARKER = '_humid'
+TEMP_SENSOR_MARKER = '_temp'
 
 
-def get_temp_humidity_sensor_id(sensor_id):
+def _is_temp_sensor(sensor_id):
+    return sensor_id.endswith(TEMP_SENSOR_MARKER)
+
+
+def _is_humidity_sensor(sensor_id):
+    return sensor_id.endswith(HUMID_SENSOR_MARKER)
+
+
+def _get_temp_humidity_sensor_id(sensor_id):
     return sensor_id.split('_')[0]
 
 
 def get_sensor_data(data, station_id, sensor_id):
-    if is_temp_sensor(sensor_id):
-        sensor_data = data[station_id]['temperature_humidity'][get_temp_humidity_sensor_id(sensor_id)]['temperature']
-    elif is_humidity_sensor(sensor_id):
-        sensor_data = data[station_id]['temperature_humidity'][get_temp_humidity_sensor_id(sensor_id)]['humidity']
+    if _is_temp_sensor(sensor_id):
+        sensor_data = data[station_id]['temperature_humidity'][_get_temp_humidity_sensor_id(sensor_id)]['temperature']
+    elif _is_humidity_sensor(sensor_id):
+        sensor_data = data[station_id]['temperature_humidity'][_get_temp_humidity_sensor_id(sensor_id)]['humidity']
     else:
         sensor_data = data[station_id][sensor_id]
     return sensor_data
@@ -118,7 +122,13 @@ class Backend(object):
         self._http = requests.Session()
         retry_strategy = Retry(
             total=5,
-            status_forcelist=[429, 500, 502, 503, 504],
+            status_forcelist=[
+                HTTPStatus.TOO_MANY_REQUESTS,
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+                HTTPStatus.BAD_GATEWAY,
+                HTTPStatus.SERVICE_UNAVAILABLE,
+                HTTPStatus.BAD_GATEWAY
+            ],
             backoff_factor=2
         )
         adapter = TimeoutHTTPAdapter(timeout=Backend.DEFAULT_TIMEOUT_IN_SEC, max_retries=retry_strategy)
@@ -155,27 +165,28 @@ class Backend(object):
                     'unit': sensor_info['unit']
                 }
 
-        sensor_infos = self._simple_get_request('temp-humidity-sensor')
-        for sensor_info in sensor_infos:
-            temp_sensor_id = sensor_info['sensor_id'] + '_temp'
-            humidity_sensor_id = sensor_info['sensor_id'] + '_humid'
-            available_sensors[temp_sensor_id] = {
-                'description': temperature_sensor_info['description'] + ' ' + sensor_info['description'],
-                'unit': temperature_sensor_info['unit']
-            }
-            available_sensors[humidity_sensor_id] = {
-                'description': humidity_sensor_info['description'] + ' ' + sensor_info['description'],
-                'unit': humidity_sensor_info['unit']
-            }
+        if temperature_sensor_info and humidity_sensor_info:
+            sensor_infos = self._simple_get_request('temp-humidity-sensor')
+            for sensor_info in sensor_infos:
+                temp_sensor_id = sensor_info['sensor_id'] + TEMP_SENSOR_MARKER
+                humidity_sensor_id = sensor_info['sensor_id'] + HUMID_SENSOR_MARKER
+                available_sensors[temp_sensor_id] = {
+                    'description': temperature_sensor_info['description'] + ' ' + sensor_info['description'],
+                    'unit': temperature_sensor_info['unit']
+                }
+                available_sensors[humidity_sensor_id] = {
+                    'description': humidity_sensor_info['description'] + ' ' + sensor_info['description'],
+                    'unit': humidity_sensor_info['unit']
+                }
 
         return available_sensors
 
     def get_weather_data_in_time_range(self, chosen_stations, chosen_sensors, start_time, end_time):
         provided_sensors = []
         for sensor in chosen_sensors:
-            if is_temp_sensor(sensor):
+            if _is_temp_sensor(sensor):
                 provided_sensors.append('temperature')
-            elif is_humidity_sensor(sensor):
+            elif _is_humidity_sensor(sensor):
                 provided_sensors.append('humidity')
             else:
                 provided_sensors.append(sensor)
