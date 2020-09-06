@@ -18,7 +18,7 @@ from dash.exceptions import PreventUpdate
 from frontend.src import plot_config
 from frontend.src.layout import get_layout
 from frontend.src.plot_config import get_current_date
-from frontend.src.utils import determine_start_and_end_times, get_sensor_data, CachedBackend, cache
+from frontend.src.utils import determine_start_and_end_dates, get_sensor_data, CachedBackend, cache
 
 BACKEND_URL = os.environ.get('BACKEND_URL', 'localhost')
 BACKEND_PORT = os.environ.get('BACKEND_PORT', 8000)
@@ -173,7 +173,7 @@ def select_station_info_tab(chosen_stations):
      Input(component_id='sensor-dropdown', component_property='value')]
 )
 def update_weather_plot(start_time_str, end_time_str, chosen_stations, chosen_sensors):
-    start_time, end_time = determine_start_and_end_times(end_time_str, start_time_str)
+    start_time, end_time = determine_start_and_end_dates(start_time_str, end_time_str)
     if start_time is None or end_time is None or end_time < start_time:
         raise PreventUpdate
 

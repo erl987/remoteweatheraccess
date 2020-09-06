@@ -63,7 +63,7 @@ class CachedBackend(object, metaclass=Singleton):
     @cache.memoize(timeout=5 * 60)  # caching period in seconds
     def time_limits(self):
         limits = self._backend.get_available_time_limits()
-        self._app.logger.info('Received from backend the current minimum and maximum time limits of the data')
+        self._app.logger.info('Received the current minimum and maximum time limits of the data from the backend')
         return limits['first_timepoint'], limits['last_timepoint']
 
     @cache.memoize(timeout=5 * 60)  # caching period in seconds
@@ -73,7 +73,7 @@ class CachedBackend(object, metaclass=Singleton):
         for curr_sensor_id, cur__sensor_data in available_sensors_data.items():
             available_sensors.append({'label': cur__sensor_data['description'], 'value': curr_sensor_id})
 
-        self._app.logger.info('Received from backend data for all available sensors')
+        self._app.logger.info('Received data for all available sensors from the backend')
         return available_sensors, available_sensors_data
 
     @cache.memoize(timeout=5 * 60)  # caching period in seconds
@@ -88,7 +88,7 @@ class CachedBackend(object, metaclass=Singleton):
             available_stations.append({'label': station_town, 'value': curr_station_id})
             available_station_ids.append(curr_station_id)
 
-        self._app.logger.info('Received from backend data for all available stations')
+        self._app.logger.info('Received data for all available stations from the backend')
         return available_stations, available_stations_data, available_station_ids
 
     @cache.memoize(timeout=5 * 60)  # caching period in seconds
@@ -96,7 +96,7 @@ class CachedBackend(object, metaclass=Singleton):
         data = self._backend.get_weather_data_in_time_range(chosen_stations, chosen_sensors, start_time, end_time)
 
         self._app.logger.info(
-            'Received data from backend for stations {}, sensors {} in time period \'{}\'-\'{}\''.format(
+            'Received data for stations {}, sensors {} in time period \'{}\'-\'{}\' from the backend'.format(
                 chosen_stations,
                 chosen_sensors,
                 start_time,
@@ -235,17 +235,17 @@ class IsoDatetimeJSONEncoder(JSONEncoder):
         return super().default(o)
 
 
-def determine_start_and_end_times(end_time_str, start_time_str):
+def determine_start_and_end_dates(start_time_str, end_time_str):
     if start_time_str is not None:
         actual_start_time = dateutil.parser.parse(start_time_str)
-        start_time = datetime(actual_start_time.year, actual_start_time.month, actual_start_time.day)
+        start_date = datetime(actual_start_time.year, actual_start_time.month, actual_start_time.day)
     else:
-        start_time = None
+        start_date = None
 
     if end_time_str is not None:
         actual_end_time = dateutil.parser.parse(end_time_str)
-        end_time = datetime(actual_end_time.year, actual_end_time.month, actual_end_time.day) + timedelta(days=1)
+        end_date = datetime(actual_end_time.year, actual_end_time.month, actual_end_time.day) + timedelta(days=1)
     else:
-        end_time = None
+        end_date = None
 
-    return start_time, end_time
+    return start_date, end_date
