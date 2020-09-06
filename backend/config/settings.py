@@ -7,7 +7,7 @@ class Config(object):
     DB_PORT = os.environ.get('DB_PORT', 5432)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     BCRYPT_LOG_ROUNDS = 13
-    TIMEZONE = 'Europe/Berlin'
+    TIMEZONE = os.environ.get('TIMEZONE', 'Europe/Berlin')
     SQLALCHEMY_ENGINE_OPTIONS = {
         'connect_args': {
             'options': '-c timezone={}'.format(TIMEZONE)
