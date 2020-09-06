@@ -1,18 +1,16 @@
 from datetime import datetime
+from typing import Dict, Tuple
 
 from frontend.src.utils import floor_to_n, ceil_to_n
 
 
-def get_scalings(min_max_sensors):
+def get_scalings(min_max_sensors: Dict[str, Dict[str, float]]) -> Tuple[int, Dict[str, Dict[str, float]]]:
     """
     Obtains the minimum and maximum scalings of the y-axis for the sensors.
 
     :param min_max_sensors:     containing the minimum and maximum values of the sensors in the graph
-    :type min_max_sensors:      dict(string, dict(string, float))
     :return:                    number of ticks of the y-axis.
-    :rtype:                     int
     :return:                    containing the minimum and maximum values for all sensors on the axis
-    :rtype:                     dict(string, dict(string, float))
     """
     delta_temp = 5.0  # degree C by definition
     delta_p = 5.0  # hPa by definition
