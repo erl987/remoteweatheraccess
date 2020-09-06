@@ -1,4 +1,4 @@
-from frontend.src.plot_config import get_scalings
+from frontend.src.plot import get_scalings
 
 SOME_MIN_MAX_VALUES_OF_SENSORS = {
     'pressure': {

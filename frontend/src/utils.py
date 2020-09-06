@@ -249,3 +249,24 @@ def determine_start_and_end_dates(start_time_str, end_time_str):
         end_date = None
 
     return start_date, end_date
+
+
+def update_bounded_index(index, index_list):
+    index += 1
+    if index >= len(index_list):
+        index = 0
+    return index
+
+
+def convert_input_into_lists(chosen_sensors, chosen_stations):
+    if isinstance(chosen_stations, str):
+        chosen_stations = [chosen_stations]
+
+    if isinstance(chosen_sensors, str):
+        chosen_sensors = [chosen_sensors]
+
+    return chosen_sensors, chosen_stations
+
+
+def get_current_date(time_zone):
+    return datetime.now(time_zone).date()
