@@ -12,10 +12,11 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from frontend.config.settings import *
+from frontend.src.backend_interface import CachedBackend
+from frontend.src.cache import cache
 from frontend.src.layout import get_layout
 from frontend.src.plot import create_figure_config
-from frontend.src.utils import convert_input_into_lists
-from frontend.src.utils import determine_start_and_end_dates, CachedBackend, cache
+from frontend.src.utils import convert_input_into_lists, determine_start_and_end_dates
 
 # this app uses the Bootstrap theme United
 app = dash.Dash(__name__,
@@ -115,7 +116,9 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, chosen_se
         start_time,
         end_time,
         chosen_stations,
-        chosen_sensors)
+        chosen_sensors,
+        server
+    )
 
     server.logger.info('Updated weather data plot for stations {}, sensors {} in time period \'{}\'-\'{}\''.format(
         chosen_stations,

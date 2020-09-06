@@ -2,10 +2,8 @@ from math import ceil
 from typing import Dict, Tuple
 
 from frontend.config.settings import *
-from frontend.src.utils import CachedBackend, update_bounded_index, get_sensor_data
-from frontend.src.utils import floor_to_n, ceil_to_n
-from frontend.src.utils import get_current_date
-from frontend_app import server
+from frontend.src.backend_interface import CachedBackend
+from frontend.src.utils import floor_to_n, ceil_to_n, get_current_date, update_bounded_index, get_sensor_data
 
 
 class FigureLayout(object):
@@ -209,7 +207,7 @@ def _get_min_max_axis(delta_p, delta_rain, delta_temp, min_max_sensors, min_p, m
     return min_max_axis
 
 
-def create_figure_config(start_time, end_time, chosen_stations, chosen_sensors):
+def create_figure_config(start_time, end_time, chosen_stations, chosen_sensors, server):
     data = CachedBackend(backend_url, backend_port, server).data(
         chosen_stations,
         chosen_sensors,

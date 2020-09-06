@@ -4,7 +4,7 @@ import dash_html_components as html
 from dateutil.parser import parse
 
 from frontend.src import dash_reusable_components as drc
-from frontend.src.utils import CachedBackend
+from frontend.src.backend_interface import CachedBackend
 
 
 def get_configuration_from_backend(backend_url, backend_port, app):

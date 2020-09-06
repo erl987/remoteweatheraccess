@@ -66,5 +66,5 @@ def test_get_scaling_with_only_regular_sensors():
     }
 
     num_ticks, min_max_values_for_axis = get_scalings(min_max_values_of_sensors)
-    assert num_ticks ==5
+    assert num_ticks == 5
     assert min_max_values_for_axis == min_max_values_of_sensors
