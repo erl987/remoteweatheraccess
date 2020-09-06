@@ -2,9 +2,8 @@ import json
 from datetime import datetime
 
 import pytest
+from flask import Flask
 
-from backend.backend_app import create_app
-from backend.config.settings import TestConfig
 from frontend.src.utils import Backend, CachedBackend, floor_to_n, ceil_to_n, get_sensor_data
 from frontend.src.utils import determine_start_and_end_dates
 from frontend.src.cache import cache
@@ -101,7 +100,7 @@ def _create_requests_mock(mocker, response_mock):
 
 @pytest.fixture
 def app():
-    app = create_app(TestConfig())
+    app = Flask(__name__)
     with app.test_request_context():
         cache.init_app(app)
         yield app
