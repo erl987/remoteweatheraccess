@@ -2,8 +2,8 @@ POST http://{{url}}:{{port}}/api/v1/login
 Content-Type: application/json
 
 {
-  "name": "default_admin",
-  "password": "dkYCJhnA"
+  "name": "{{admin_user}}",
+  "password": "{{admin_password}}"
 }
 
 <> 2020-07-12T071755.200.json
