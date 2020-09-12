@@ -8,7 +8,7 @@ services:
     ports:
       - 80:80
     volumes:
-      - ./config/nginx:/etc/nginx/conf.d
+      - ./demo_deployment/nginx:/etc/nginx/conf.d
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
     depends_on:
       - frontend
@@ -50,7 +50,7 @@ services:
 
   database:
     build:
-      context: ./postgres
+      context: demo_deployment/postgres
     ports:
       - 5432:5432  # this is for external access to the database, DO NOT USE THIS FOR PRODUCTION
     environment:
