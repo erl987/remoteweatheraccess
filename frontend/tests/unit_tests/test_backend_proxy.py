@@ -198,7 +198,7 @@ def test_backend_get_weather_data_in_time_range(mocker):
 
 @pytest.mark.usefixtures('mocker', 'app')
 def test_cached_backend_time_limits(mocker, app):
-    backend_mock = mocker.patch('frontend.src.backend_interface.Backend.get_available_time_limits',
+    backend_mock = mocker.patch('frontend.src.backend_proxy.BackendProxy.get_available_time_limits',
                                 return_value={
                                     'first_timepoint': A_FIRST_TIMPOINT,
                                     'last_timepoint': A_LAST_TIMEPOINT
@@ -213,7 +213,7 @@ def test_cached_backend_time_limits(mocker, app):
 
 @pytest.mark.usefixtures('mocker', 'app')
 def test_cached_backend_data(mocker, app):
-    backend_mock = mocker.patch('frontend.src.backend_interface.Backend.get_weather_data_in_time_range',
+    backend_mock = mocker.patch('frontend.src.backend_proxy.BackendProxy.get_weather_data_in_time_range',
                                 return_value=_get_some_sensor_data())
     backend = CachedBackendProxy(SOME_URL, SOME_PORT, app)
     got_data = backend.data([A_STATION_ID], [A_SENSOR_ID], A_FIRST_TIMPOINT, A_LAST_TIMEPOINT)
@@ -230,7 +230,7 @@ def test_cached_backend_available_sensors(mocker, app):
             'unit': A_UNIT
         }
     }
-    backend_mock = mocker.patch('frontend.src.backend_interface.Backend.get_all_available_sensors',
+    backend_mock = mocker.patch('frontend.src.backend_proxy.BackendProxy.get_all_available_sensors',
                                 return_value=expected_sensor_data)
     backend = CachedBackendProxy(SOME_URL, SOME_PORT, app)
     available_sensors, available_sensors_data = backend.available_sensors()
@@ -249,7 +249,7 @@ def test_cached_backend_available_stations(mocker, app):
         'station_id': A_STATION_ID,
         'location': 'Location/DE'
     }]
-    backend_mock = mocker.patch('frontend.src.backend_interface.Backend.get_all_stations',
+    backend_mock = mocker.patch('frontend.src.backend_proxy.BackendProxy.get_all_stations',
                                 return_value=expected_station_data)
 
     backend = CachedBackendProxy(SOME_URL, SOME_PORT, app)
