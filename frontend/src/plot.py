@@ -216,7 +216,7 @@ def create_figure_config(start_time, end_time, chosen_stations, chosen_sensors, 
     )
     _, all_sensors_data = CachedBackend(backend_url, backend_port, server).available_sensors()
 
-    left_main_axis_pos, right_main_axis_pos, min_max_limits, num_ticks = _determine_plot_axis_setup(
+    left_main_axis_pos, right_main_axis_pos, min_max_limits, num_ticks = determine_plot_axis_setup(
         chosen_stations,
         data,
         chosen_sensors
@@ -314,7 +314,7 @@ def _create_sensor_plot_data(color_index, dash_index, sensor_data, sensor_descri
     }
 
 
-def _determine_plot_axis_setup(chosen_stations, data, sensors):
+def determine_plot_axis_setup(chosen_stations, data, sensors):
     if len(data) > 0 and len(chosen_stations) > 0 and len(sensors) > 0:
         _num_axis_on_left = ceil(len(sensors) / 2)
         _num_axis_on_right = ceil((len(sensors) - 1) / 2)
@@ -328,8 +328,9 @@ def _determine_plot_axis_setup(chosen_stations, data, sensors):
             for station_index, station_id in enumerate(chosen_stations):
                 if len(data[station_id]) > 0:
                     sensor_data = get_sensor_data(data, station_id, sensor_id)
-                    _min_data = min(_min_data, min(sensor_data))
-                    _max_data = max(_max_data, max(sensor_data))
+                    if len(sensor_data) > 0:
+                        _min_data = min(_min_data, min(sensor_data))
+                        _max_data = max(_max_data, max(sensor_data))
             if _min_data != float('inf') and _max_data != float('-inf'):
                 _min_max_sensors[sensor_id] = {'min': _min_data, 'max': _max_data}
 

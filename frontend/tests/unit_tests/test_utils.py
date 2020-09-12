@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from frontend.src.utils import determine_start_and_end_dates
+from frontend.src.utils import determine_start_and_end_dates, update_bounded_index, convert_input_into_lists
 from frontend.src.utils import floor_to_n, ceil_to_n, get_sensor_data
 
 SOME_PORT = 80
@@ -82,3 +82,18 @@ def test_get_start_and_end_times_when_none():
     start_date, end_date = determine_start_and_end_dates(None, None)
     assert start_date is None
     assert end_date is None
+
+
+def test_update_bounded_index():
+    index_list = [0, 1, 2, 3, 4]
+    assert update_bounded_index(3, index_list) == 4
+    assert update_bounded_index(4, index_list) == 0
+
+
+def test_convert_input_into_lists():
+    a_string_for_sensor_id_list = 'a string'
+    a_string_for_station_list = 'another string'
+    assert convert_input_into_lists(a_string_for_sensor_id_list, a_string_for_station_list) == \
+           ([a_string_for_sensor_id_list], [a_string_for_station_list])
+    assert convert_input_into_lists([a_string_for_sensor_id_list], [a_string_for_station_list]) == \
+           ([a_string_for_sensor_id_list], [a_string_for_station_list])
