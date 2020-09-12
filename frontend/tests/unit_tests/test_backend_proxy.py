@@ -3,7 +3,7 @@ import json
 import pytest
 from flask import Flask
 
-from frontend.src.backend_interface import CachedBackend, Backend
+from frontend.src.backend_proxy import CachedBackendProxy, BackendProxy
 from frontend.src.cache import cache
 
 SOME_PORT = 80
@@ -107,7 +107,7 @@ def app():
 @pytest.mark.usefixtures('mocker')
 def test_backend_get_all_sensors(mocker):
     http_mock = _create_requests_mock(mocker, GeneralResponseMock())
-    backend = Backend(SOME_URL, SOME_PORT)
+    backend = BackendProxy(SOME_URL, SOME_PORT)
     stations = backend.get_all_stations()
 
     http_mock.assert_called_once()
@@ -117,7 +117,7 @@ def test_backend_get_all_sensors(mocker):
 @pytest.mark.usefixtures('mocker')
 def test_backend_get_all_available_sensors_without_temperature_or_humidity(mocker):
     http_mock = _create_requests_mock(mocker, SensorResponseMock(False))
-    backend = Backend(SOME_URL, SOME_PORT)
+    backend = BackendProxy(SOME_URL, SOME_PORT)
     all_available_sensors = backend.get_all_available_sensors()
 
     http_mock.assert_called_once()
@@ -128,7 +128,7 @@ def test_backend_get_all_available_sensors_without_temperature_or_humidity(mocke
 def test_backend_get_all_available_sensors(mocker):
     http_mock = _create_requests_mock(mocker, None)
     http_mock.side_effect = [SensorResponseMock(True), TempHumiditySensorMock()]
-    backend = Backend(SOME_URL, SOME_PORT)
+    backend = BackendProxy(SOME_URL, SOME_PORT)
     all_available_sensors = backend.get_all_available_sensors()
 
     assert http_mock.call_count == 2
@@ -153,7 +153,7 @@ def test_backend_get_all_available_sensors(mocker):
 @pytest.mark.usefixtures('mocker')
 def test_backend_get_available_time_limits(mocker):
     http_mock = _create_requests_mock(mocker, GeneralResponseMock())
-    backend = Backend(SOME_URL, SOME_PORT)
+    backend = BackendProxy(SOME_URL, SOME_PORT)
     available_time_limits = backend.get_available_time_limits()
 
     http_mock.assert_called_once()
@@ -163,7 +163,7 @@ def test_backend_get_available_time_limits(mocker):
 @pytest.mark.usefixtures('mocker')
 def test_backend_get_weather_data_in_time_range(mocker):
     http_mock = _create_requests_mock(mocker, GeneralResponseMock())
-    backend = Backend(SOME_URL, SOME_PORT)
+    backend = BackendProxy(SOME_URL, SOME_PORT)
     requested_sensors = ['pressure', 'UV', 'IN_temp', 'OUT1_humid']
 
     time_range = backend.get_weather_data_in_time_range(A_STATION_ID, requested_sensors,
@@ -187,7 +187,7 @@ def test_cached_backend_time_limits(mocker, app):
                                     'first_timepoint': A_FIRST_TIMPOINT,
                                     'last_timepoint': A_LAST_TIMEPOINT
                                 })
-    backend = CachedBackend(SOME_URL, SOME_PORT, app)
+    backend = CachedBackendProxy(SOME_URL, SOME_PORT, app)
     got_first_timepoint, got_last_timepoint = backend.time_limits()
 
     backend_mock.assert_called_once()
@@ -199,7 +199,7 @@ def test_cached_backend_time_limits(mocker, app):
 def test_cached_backend_data(mocker, app):
     backend_mock = mocker.patch('frontend.src.backend_interface.Backend.get_weather_data_in_time_range',
                                 return_value=_get_some_sensor_data())
-    backend = CachedBackend(SOME_URL, SOME_PORT, app)
+    backend = CachedBackendProxy(SOME_URL, SOME_PORT, app)
     got_data = backend.data([A_STATION_ID], [A_SENSOR_ID], A_FIRST_TIMPOINT, A_LAST_TIMEPOINT)
 
     backend_mock.assert_called_once()
@@ -216,7 +216,7 @@ def test_cached_backend_available_sensors(mocker, app):
     }
     backend_mock = mocker.patch('frontend.src.backend_interface.Backend.get_all_available_sensors',
                                 return_value=expected_sensor_data)
-    backend = CachedBackend(SOME_URL, SOME_PORT, app)
+    backend = CachedBackendProxy(SOME_URL, SOME_PORT, app)
     available_sensors, available_sensors_data = backend.available_sensors()
 
     backend_mock.assert_called_once()
@@ -236,7 +236,7 @@ def test_cached_backend_available_stations(mocker, app):
     backend_mock = mocker.patch('frontend.src.backend_interface.Backend.get_all_stations',
                                 return_value=expected_station_data)
 
-    backend = CachedBackend(SOME_URL, SOME_PORT, app)
+    backend = CachedBackendProxy(SOME_URL, SOME_PORT, app)
     available_stations, available_stations_data, available_station_ids = backend.available_stations()
 
     backend_mock.assert_called_once()

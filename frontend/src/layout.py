@@ -4,11 +4,11 @@ import dash_html_components as html
 from dateutil.parser import parse
 
 from frontend.src import dash_reusable_components as drc
-from frontend.src.backend_interface import CachedBackend
+from frontend.src.backend_proxy import CachedBackendProxy
 
 
 def get_configuration_from_backend(backend_url, backend_port, app):
-    cached_backend = CachedBackend(backend_url, backend_port, app)
+    cached_backend = CachedBackendProxy(backend_url, backend_port, app)
 
     first_time, last_time = cached_backend.time_limits()
     available_sensors, available_sensors_data = cached_backend.available_sensors()
@@ -173,7 +173,7 @@ def get_layout(data_protection_policy_file_path, impress_file_path, config_for_p
     first_time, last_time, available_stations, available_sensors, available_stations_data = \
         get_configuration_from_backend(backend_url, backend_port, app)
 
-    cached_backend = CachedBackend(backend_url, backend_port, app)
+    cached_backend = CachedBackendProxy(backend_url, backend_port, app)
     data_protection_policy_text = cached_backend.get_text_file_content(data_protection_policy_file_path)
     impress_text = cached_backend.get_text_file_content(impress_file_path)
 
@@ -229,8 +229,8 @@ def get_layout(data_protection_policy_file_path, impress_file_path, config_for_p
             dbc.Row(
                 [dbc.Col(
                     html.P(children='Copyright (C) 2020 Ralf Rettig'),
-                    width=12)
-                ]
+                    width=12
+                )]
             )
         ]
     )

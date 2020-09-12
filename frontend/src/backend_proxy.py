@@ -11,9 +11,9 @@ from frontend.src.utils import Singleton, TimeoutHTTPAdapter, TEMP_SENSOR_MARKER
 from frontend.src.utils import is_temp_sensor, is_humidity_sensor, IsoDatetimeJSONEncoder
 
 
-class CachedBackend(object, metaclass=Singleton):
+class CachedBackendProxy(object, metaclass=Singleton):
     def __init__(self, backend_url, backend_port, app):
-        self._backend = Backend(backend_url, backend_port)
+        self._backend = BackendProxy(backend_url, backend_port)
         self._app = app
 
     @cache.memoize(timeout=5 * 60)  # caching period in seconds
@@ -70,7 +70,7 @@ class CachedBackend(object, metaclass=Singleton):
             return data_protection_policy_file.read()
 
 
-class Backend(object):
+class BackendProxy(object):
     API_VERSION = '/api/v1'
     DEFAULT_TIMEOUT_IN_SEC = 20
 
@@ -87,7 +87,7 @@ class Backend(object):
             ],
             backoff_factor=2
         )
-        adapter = TimeoutHTTPAdapter(timeout=Backend.DEFAULT_TIMEOUT_IN_SEC, max_retries=retry_strategy)
+        adapter = TimeoutHTTPAdapter(timeout=BackendProxy.DEFAULT_TIMEOUT_IN_SEC, max_retries=retry_strategy)
         self._http.mount('https://', adapter)
         self._http.mount('http://', adapter)
 
@@ -158,11 +158,11 @@ class Backend(object):
             'Content-Type': 'application/json'
         }
 
-        r = self._http.get('http://{}:{}{}/data'.format(self._url, self._port, Backend.API_VERSION),
+        r = self._http.get('http://{}:{}{}/data'.format(self._url, self._port, BackendProxy.API_VERSION),
                            data=json.dumps(request_payload, cls=IsoDatetimeJSONEncoder),
                            headers=headers)
         return r.json()
 
     def _simple_get_request(self, endpoint):
-        r = self._http.get('http://{}:{}{}/{}'.format(self._url, self._port, Backend.API_VERSION, endpoint))
+        r = self._http.get('http://{}:{}{}/{}'.format(self._url, self._port, BackendProxy.API_VERSION, endpoint))
         return r.json()

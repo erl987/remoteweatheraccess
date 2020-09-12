@@ -2,7 +2,7 @@ from math import ceil
 from typing import Dict, Tuple
 
 from frontend.config.settings import *
-from frontend.src.backend_interface import CachedBackend
+from frontend.src.backend_proxy import CachedBackendProxy
 from frontend.src.utils import floor_to_n, ceil_to_n, get_current_date, update_bounded_index, get_sensor_data
 
 
@@ -208,13 +208,13 @@ def _get_min_max_axis(delta_p, delta_rain, delta_temp, min_max_sensors, min_p, m
 
 
 def create_figure_config(start_time, end_time, chosen_stations, chosen_sensors, server):
-    data = CachedBackend(backend_url, backend_port, server).data(
+    data = CachedBackendProxy(backend_url, backend_port, server).data(
         chosen_stations,
         chosen_sensors,
         start_time,
         end_time
     )
-    _, all_sensors_data = CachedBackend(backend_url, backend_port, server).available_sensors()
+    _, all_sensors_data = CachedBackendProxy(backend_url, backend_port, server).available_sensors()
 
     left_main_axis_pos, right_main_axis_pos, min_max_limits, num_ticks = determine_plot_axis_setup(
         chosen_stations,

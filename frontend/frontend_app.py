@@ -12,7 +12,7 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from frontend.config.settings import *
-from frontend.src.backend_interface import CachedBackend
+from frontend.src.backend_proxy import CachedBackendProxy
 from frontend.src.cache import cache
 from frontend.src.layout import get_layout
 from frontend.src.plot import create_figure_config
@@ -67,7 +67,8 @@ def display_page(pathname):
 
     provided_station_id = pathname.replace('/', '').upper()
 
-    available_stations, _, available_station_ids = CachedBackend(backend_url, backend_port, server).available_stations()
+    available_stations, _, available_station_ids = CachedBackendProxy(backend_url, backend_port,
+                                                                      server).available_stations()
 
     if provided_station_id in available_station_ids:
         server.logger.info('Parsed station id \'{}\' from URL'.format(provided_station_id))
