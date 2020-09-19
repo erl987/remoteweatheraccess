@@ -288,7 +288,7 @@ def _create_plot_and_layout_json(data, all_sensors_data, chosen_stations, chosen
                         time
                     ))
                     axis_name = figure_layout.add_axis(
-                        sensor_id,
+                        sensor_index,
                         color_index,
                         min_max_limits,
                         num_ticks,
