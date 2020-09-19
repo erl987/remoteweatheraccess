@@ -121,3 +121,5 @@ deployment.xml
 /.idea/dataSources/
 /.idea/httpRequests/
 /.idea/dataSources.local.xml
+/.idea/dataSources.xml
+/.idea/webServers.xml
