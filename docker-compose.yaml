@@ -20,7 +20,7 @@ version: '3'
 
 services:
   reverse-proxy:
-    image: nginx:1.19.1
+    image: nginx:1.19.2
     ports:
       - 80:80
     volumes:
@@ -67,8 +67,8 @@ services:
   database:
     build:
       context: demo_deployment/postgres
-    ports:
-      - 5432:5432  # this is for external access to the database, DO NOT USE THIS FOR PRODUCTION
+    expose:
+      - 5432
     environment:
       - POSTGRES_PASSWORD=passwd
 
