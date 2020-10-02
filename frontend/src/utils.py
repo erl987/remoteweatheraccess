@@ -16,6 +16,7 @@
 
 import math
 from datetime import datetime, timedelta
+from json.encoder import JSONEncoder
 
 import dateutil.parser
 from requests.adapters import HTTPAdapter
@@ -46,6 +47,14 @@ class TimeoutHTTPAdapter(HTTPAdapter):
         if timeout is None:
             kwargs['timeout'] = self._timeout
         return super().send(request, **kwargs)
+
+
+class IsoDatetimeJSONEncoder(JSONEncoder):
+    def default(self, o):
+        if isinstance(o, datetime):
+            return o.isoformat()
+
+        return super().default(o)
 
 
 def is_temp_sensor(sensor_id):

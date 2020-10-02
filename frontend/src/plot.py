@@ -223,14 +223,14 @@ def _get_min_max_axis(delta_p, delta_rain, delta_temp, min_max_sensors, min_p, m
     return min_max_axis
 
 
-def create_figure_config(start_time, end_time, chosen_stations, chosen_sensors, server):
-    data = CachedBackendProxy(backend_url, backend_port, server).data(
+def create_figure_config(start_time, end_time, chosen_stations, chosen_sensors, url, port, do_use_https, server):
+    data = CachedBackendProxy(url, port, do_use_https, server).data(
         chosen_stations,
         chosen_sensors,
         start_time,
         end_time
     )
-    _, all_sensors_data = CachedBackendProxy(backend_url, backend_port, server).available_sensors()
+    _, all_sensors_data = CachedBackendProxy(url, port, do_use_https, server).available_sensors()
 
     left_main_axis_pos, right_main_axis_pos, min_max_limits, num_ticks = determine_plot_axis_setup(
         chosen_stations,

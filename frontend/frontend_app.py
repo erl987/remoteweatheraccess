@@ -21,6 +21,9 @@ gunicorn -b :8050 frontend.frontend_app:server
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import gevent.monkey
+gevent.monkey.patch_all()
+
 from functools import partial
 
 import dash
@@ -50,6 +53,7 @@ app.layout = partial(get_layout,
                      initial_time_period,
                      backend_url,
                      backend_port,
+                     backend_do_use_https,
                      server)
 
 
@@ -83,7 +87,9 @@ def display_page(pathname):
 
     provided_station_id = pathname.replace('/', '').upper()
 
-    available_stations, _, available_station_ids = CachedBackendProxy(backend_url, backend_port,
+    available_stations, _, available_station_ids = CachedBackendProxy(backend_url,
+                                                                      backend_port,
+                                                                      backend_do_use_https,
                                                                       server).available_stations()
 
     if provided_station_id in available_station_ids:
@@ -129,13 +135,14 @@ def update_weather_plot(start_time_str, end_time_str, chosen_stations, chosen_se
         raise PreventUpdate
 
     chosen_sensors, chosen_stations = convert_input_into_lists(chosen_sensors, chosen_stations)
-    figure_config = create_figure_config(
-        start_time,
-        end_time,
-        chosen_stations,
-        chosen_sensors,
-        server
-    )
+    figure_config = create_figure_config(start_time,
+                                         end_time,
+                                         chosen_stations,
+                                         chosen_sensors,
+                                         backend_url,
+                                         backend_port,
+                                         backend_do_use_https,
+                                         server)
 
     server.logger.info('Updated weather data plot for stations {}, sensors {} in time period \'{}\'-\'{}\''.format(
         chosen_stations,

@@ -19,9 +19,6 @@ import os
 from http import HTTPStatus
 from pathlib import Path
 
-import gevent.monkey
-gevent.monkey.patch_all()
-
 import requests
 from requests.adapters import Retry
 
@@ -31,8 +28,8 @@ from frontend.src.utils import is_temp_sensor, is_humidity_sensor, IsoDatetimeJS
 
 
 class CachedBackendProxy(object, metaclass=Singleton):
-    def __init__(self, backend_url, backend_port, app):
-        self._backend = BackendProxy(backend_url, backend_port)
+    def __init__(self, backend_url, backend_port, do_use_https, app):
+        self._backend = BackendProxy(backend_url, backend_port, do_use_https)
         self._app = app
 
     @cache.memoize(timeout=5 * 60)  # caching period in seconds
@@ -93,7 +90,7 @@ class BackendProxy(object):
     API_VERSION = '/api/v1'
     DEFAULT_TIMEOUT_IN_SEC = 20
 
-    def __init__(self, url, port):
+    def __init__(self, url, port, do_use_https):
         self._http = requests.Session()
         retry_strategy = Retry(
             total=5,
@@ -107,8 +104,12 @@ class BackendProxy(object):
             backoff_factor=2
         )
         adapter = TimeoutHTTPAdapter(timeout=BackendProxy.DEFAULT_TIMEOUT_IN_SEC, max_retries=retry_strategy)
-        self._http.mount('https://', adapter)
-        self._http.mount('http://', adapter)
+        if do_use_https:
+            self._http.mount('https://', adapter)
+            self._scheme = 'https'
+        else:
+            self._http.mount('http://', adapter)
+            self._scheme = 'http'
 
         self._http.hooks['response'] = [lambda response, *args, **kwargs: response.raise_for_status()]
 
@@ -177,11 +178,18 @@ class BackendProxy(object):
             'Content-Type': 'application/json'
         }
 
-        r = self._http.get('http://{}:{}{}/data'.format(self._url, self._port, BackendProxy.API_VERSION),
+        r = self._http.get('{}://{}:{}{}/data'.format(self._scheme,
+                                                      self._url,
+                                                      self._port,
+                                                      BackendProxy.API_VERSION),
                            data=json.dumps(request_payload, cls=IsoDatetimeJSONEncoder),
                            headers=headers)
         return r.json()
 
     def _simple_get_request(self, endpoint):
-        r = self._http.get('http://{}:{}{}/{}'.format(self._url, self._port, BackendProxy.API_VERSION, endpoint))
+        r = self._http.get('{}://{}:{}{}/{}'.format(self._scheme,
+                                                    self._url,
+                                                    self._port,
+                                                    BackendProxy.API_VERSION,
+                                                    endpoint))
         return r.json()

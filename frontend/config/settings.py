@@ -22,6 +22,7 @@ import pytz
 # user settings via environment variables
 backend_url = os.environ.get('BACKEND_URL', 'localhost')
 backend_port = os.environ.get('BACKEND_PORT', 8000)
+backend_do_use_https = os.environ.get('BACKEND_DO_USE_HTTPS', 'false').lower() != 'false'
 initial_time_period = timedelta(days=os.environ.get('INITIAL_TIME_PERIOD', 7))
 user_time_zone = pytz.timezone(os.environ.get('TIMEZONE', 'Europe/Berlin'))
 config_for_plots = {'locale': os.environ.get('LOCALE', 'de')}

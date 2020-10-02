@@ -23,8 +23,8 @@ from frontend.src import dash_reusable_components as drc
 from frontend.src.backend_proxy import CachedBackendProxy
 
 
-def get_configuration_from_backend(backend_url, backend_port, app):
-    cached_backend = CachedBackendProxy(backend_url, backend_port, app)
+def get_configuration_from_backend(backend_url, backend_port, do_use_https, app):
+    cached_backend = CachedBackendProxy(backend_url, backend_port, do_use_https, app)
 
     first_time, last_time = cached_backend.time_limits()
     available_sensors, available_sensors_data = cached_backend.available_sensors()
@@ -185,11 +185,11 @@ def get_station_data_card(available_stations_data):
 
 
 def get_layout(data_protection_policy_file_path, impress_file_path, config_for_plots, default_selected_sensor_ids,
-               initial_time_period, backend_url, backend_port, app):
+               initial_time_period, backend_url, backend_port, backend_do_use_https, app):
     first_time, last_time, available_stations, available_sensors, available_stations_data = \
-        get_configuration_from_backend(backend_url, backend_port, app)
+        get_configuration_from_backend(backend_url, backend_port, backend_do_use_https, app)
 
-    cached_backend = CachedBackendProxy(backend_url, backend_port, app)
+    cached_backend = CachedBackendProxy(backend_url, backend_port, backend_do_use_https, app)
     data_protection_policy_text = cached_backend.get_text_file_content(data_protection_policy_file_path)
     impress_text = cached_backend.get_text_file_content(impress_file_path)
 
