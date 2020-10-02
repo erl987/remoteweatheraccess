@@ -23,6 +23,7 @@ from flask import current_app, request
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_claims, get_jwt_identity
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import BadRequest
 
 from .exceptions import raise_api_error, APIError
 from .extensions import db
@@ -68,6 +69,8 @@ def _perform_with_rollback_and_raise_exception(func, args, kwargs):
     except IntegrityError as e:
         # this is specific for psycopg2
         raise APIError(e.orig.diag.message_detail, status_code=HTTPStatus.CONFLICT)
+    except BadRequest as e:
+        raise raise_api_error(e, status_code=HTTPStatus.BAD_REQUEST)
     except Exception as e:
         raise raise_api_error(e, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
     finally:
