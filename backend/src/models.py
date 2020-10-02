@@ -24,10 +24,10 @@ from typing import List
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import validates
 
-from src.exceptions import APIError
-from src.extensions import db, flask_bcrypt
-from src.sensor.models import generate_sensors, Sensor
-from src.utils import Role, ROLES, USER_NAME_REGEX
+from .exceptions import APIError
+from .extensions import db, flask_bcrypt
+from .sensor.models import generate_sensors, Sensor
+from .utils import Role, ROLES, USER_NAME_REGEX
 
 DEFAULT_ADMIN_USER_NAME = 'default_admin'
 
