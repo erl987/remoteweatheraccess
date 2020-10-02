@@ -19,6 +19,9 @@ import os
 from http import HTTPStatus
 from pathlib import Path
 
+import gevent.monkey
+gevent.monkey.patch_all()
+
 import requests
 from requests.adapters import Retry
 
