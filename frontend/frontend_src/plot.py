@@ -17,9 +17,9 @@
 from math import ceil
 from typing import Dict, Tuple
 
-from frontend.config.settings import *
-from frontend.src.backend_proxy import CachedBackendProxy
-from frontend.src.utils import floor_to_n, ceil_to_n, get_current_date, update_bounded_index, get_sensor_data
+from frontend_config.settings import *
+from .backend_proxy import CachedBackendProxy
+from .utils import floor_to_n, ceil_to_n, get_current_date, update_bounded_index, get_sensor_data
 
 
 class FigureLayout(object):

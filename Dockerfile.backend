@@ -28,4 +28,4 @@ COPY ./backend/ /app
 RUN useradd -m backend
 USER backend
 
-ENTRYPOINT ["/usr/local/bin/gunicorn", "--worker-class", "gevent", "--preload", "--config", "config/gunicorn.py", "--log-config", "config/logging.conf", "--bind", ":8000", "wsgi:app"]
+ENTRYPOINT ["/usr/local/bin/gunicorn", "--worker-class", "gevent", "--preload", "--config", "backend_config/gunicorn.py", "--log-config", "backend_config/logging.conf", "--bind", ":8000", "wsgi:app"]

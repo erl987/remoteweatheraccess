@@ -18,9 +18,9 @@ from datetime import datetime
 
 from dateutil.parser import isoparse
 
-from frontend.src.utils import determine_start_and_end_dates, update_bounded_index, convert_input_into_lists
-from frontend.src.utils import floor_to_n, ceil_to_n, get_sensor_data
-from frontend.src.utils import get_url_encoded_iso_time_string
+from frontend.frontend_src.utils import determine_start_and_end_dates, update_bounded_index, convert_input_into_lists
+from frontend.frontend_src.utils import floor_to_n, ceil_to_n, get_sensor_data
+from frontend.frontend_src.utils import get_url_encoded_iso_time_string
 
 SOME_PORT = 80
 SOME_URL = 'http://something'

@@ -22,10 +22,10 @@ from typing import List
 import requests
 from requests.adapters import Retry
 
-from frontend.src.cache import cache
-from frontend.src.utils import Singleton, TimeoutHTTPAdapter, TEMP_SENSOR_MARKER, HUMID_SENSOR_MARKER
-from frontend.src.utils import get_url_encoded_iso_time_string
-from frontend.src.utils import is_temp_sensor, is_humidity_sensor
+from .cache import cache
+from .utils import Singleton, TimeoutHTTPAdapter, TEMP_SENSOR_MARKER, HUMID_SENSOR_MARKER
+from .utils import get_url_encoded_iso_time_string
+from .utils import is_temp_sensor, is_humidity_sensor
 
 
 class CachedBackendProxy(object, metaclass=Singleton):

@@ -14,7 +14,7 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from frontend.src.plot import get_scalings, determine_plot_axis_setup
+from frontend.frontend_src.plot import get_scalings, determine_plot_axis_setup
 
 SOME_MIN_MAX_VALUES_OF_SENSORS = {
     'pressure': {

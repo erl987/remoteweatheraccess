@@ -24,10 +24,10 @@ import pytest
 from flask_jwt_extended import create_access_token
 
 from backend_app import create_app
-from config.settings import TestConfig
-from src.extensions import db
-from src.models import WeatherStation, create_temp_humidity_sensors, create_sensors
-from src.utils import Role
+from backend_config.settings import TestConfig
+from backend_src.extensions import db
+from backend_src.models import WeatherStation, create_temp_humidity_sensors, create_sensors
+from backend_src.utils import Role
 
 
 @pytest.fixture

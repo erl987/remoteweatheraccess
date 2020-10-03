@@ -23,9 +23,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8050
 
-COPY ./frontend /app/frontend
+COPY ./frontend /app
 
 RUN useradd -m frontend
 USER frontend
 
-ENTRYPOINT ["/usr/local/bin/gunicorn", "--worker-class", "gevent", "--preload", "--config", "frontend/config/gunicorn.py", "--log-config", "frontend/config/logging.conf", "--bind", ":8050", "frontend.frontend_app:server"]
+ENTRYPOINT ["/usr/local/bin/gunicorn", "--worker-class", "gevent", "--preload", "--config", "frontend_config/gunicorn.py", "--log-config", "frontend_config/logging.conf", "--bind", ":8050", "frontend_app:server"]

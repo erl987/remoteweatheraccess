@@ -1,8 +1,8 @@
 """
 Run in the most simple way with:
 ```
-cd weatherstation
-gunicorn -b :8050 frontend.frontend_app:server
+cd frontend
+gunicorn -b :8050 frontend_app:server
 ```
 """
 #  Remote Weather Access - Client/server solution for distributed weather networks
@@ -22,6 +22,7 @@ gunicorn -b :8050 frontend.frontend_app:server
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import gevent.monkey
+
 gevent.monkey.patch_all()
 
 from functools import partial
@@ -30,12 +31,12 @@ import dash
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from frontend.config.settings import *
-from frontend.src.backend_proxy import CachedBackendProxy
-from frontend.src.cache import cache
-from frontend.src.layout import get_layout
-from frontend.src.plot import create_figure_config
-from frontend.src.utils import convert_input_into_lists, determine_start_and_end_dates
+from frontend_config.settings import *
+from frontend_src.backend_proxy import CachedBackendProxy
+from frontend_src.cache import cache
+from frontend_src.layout import get_layout
+from frontend_src.plot import create_figure_config
+from frontend_src.utils import convert_input_into_lists, determine_start_and_end_dates
 
 # this app uses the Bootstrap theme United
 app = dash.Dash(__name__,

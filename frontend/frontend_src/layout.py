@@ -19,8 +19,8 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dateutil.parser import parse
 
-from frontend.src import dash_reusable_components as drc
-from frontend.src.backend_proxy import CachedBackendProxy
+from . import dash_reusable_components as drc
+from .backend_proxy import CachedBackendProxy
 
 
 def get_configuration_from_backend(backend_url, backend_port, do_use_https, app):
