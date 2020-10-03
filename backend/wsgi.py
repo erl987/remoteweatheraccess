@@ -26,6 +26,9 @@ gunicorn -b :8000 wsgi:app
 ```
 """
 
+from psycogreen.gevent import patch_psycopg
+patch_psycopg()  # needs to be imported as early as possible
+
 from backend_app import create_app
 from backend_src.models import prepare_database
 

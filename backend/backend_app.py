@@ -17,24 +17,19 @@
 from datetime import datetime
 from logging.config import dictConfig
 
-from psycogreen.gevent import patch_psycopg
-
-from backend_src.models import prepare_database
-
-patch_psycopg()  # needs to be imported as early as possible
-
 from flask import Flask
 from flask.json import JSONEncoder
 
+from backend_config.settings import ProdConfig, DevConfig, Config, LOGGING_CONFIG
+from backend_src.errorhandlers import handle_invalid_usage, unauthorized_response
+from backend_src.exceptions import APIError
+from backend_src.extensions import db, ma, flask_bcrypt, jwt
+from backend_src.models import prepare_database
 from backend_src.sensor.routes import sensor_blueprint
 from backend_src.station.routes import station_blueprint
 from backend_src.temp_humidity_sensor.routes import temp_humidity_sensor_blueprint
 from backend_src.user.routes import user_blueprint
 from backend_src.weatherdata.routes import weatherdata_blueprint
-from backend_src.errorhandlers import handle_invalid_usage, unauthorized_response
-from backend_src.exceptions import APIError
-from backend_src.extensions import db, ma, flask_bcrypt, jwt
-from backend_config.settings import ProdConfig, DevConfig, Config, LOGGING_CONFIG
 
 
 class IsoDateTimeJSONEncoder(JSONEncoder):
@@ -57,17 +52,9 @@ def create_app(config_object: Config = ProdConfig()):
 
     register_extensions(app)
     register_blueprints(app)
-    register_before_first_request(app)
     register_errorhandlers(app)
 
     return app
-
-
-def register_before_first_request(app):
-    def setup():
-        db.create_all()
-
-    app.before_first_request(setup)
 
 
 def register_extensions(app):
