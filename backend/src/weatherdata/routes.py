@@ -21,9 +21,8 @@ from http import HTTPStatus
 import pandas as pd
 from flask import request, jsonify, current_app, Blueprint
 
-from .schemas import single_weather_dataset_schema, time_period_with_sensors_and_stations_schema, \
-    many_weather_datasets_schema
-from .schemas import time_period_with_stations_schema
+from .schemas import single_weather_dataset_schema, time_period_with_sensors_and_stations_schema
+from .schemas import time_period_with_stations_schema, many_weather_datasets_schema
 from ..exceptions import APIError
 from ..extensions import db
 from ..models import WeatherDataset, TempHumiditySensorData, WeatherStation
@@ -107,13 +106,9 @@ def update_weather_dataset():
 
 @weatherdata_blueprint.route('', methods=['GET'])
 @access_level_required(Role.GUEST)
-@json_with_rollback_and_raise_exception
+@with_rollback_and_raise_exception
 def get_weather_datasets():
-    time_period_with_sensors = time_period_with_sensors_and_stations_schema.load(request.json)
-    first = time_period_with_sensors['first_timepoint']
-    last = time_period_with_sensors['last_timepoint']
-    requested_sensors = time_period_with_sensors['sensors']
-    requested_stations = time_period_with_sensors['stations']
+    first, last, requested_sensors, requested_stations = _get_query_params()
 
     all_sensors = [sensor[0] for sensor in db.session.query(Sensor).with_entities(Sensor.sensor_id).all()]
     validate_items(requested_sensors, all_sensors, 'sensor')
@@ -160,6 +155,36 @@ def get_weather_datasets():
                                                                                            num_datasets_log_str))
 
     return response
+
+
+def _get_query_params():
+    time_period_with_sensors = time_period_with_sensors_and_stations_schema.load(_obtain_request_args_for_get_method())
+    first = time_period_with_sensors['first_timepoint']
+    last = time_period_with_sensors['last_timepoint']
+    requested_sensors = time_period_with_sensors['sensors']
+    requested_stations = time_period_with_sensors['stations']
+
+    return first, last, requested_sensors, requested_stations
+
+
+def _obtain_request_args_for_get_method():
+    request_args = request.args.to_dict()
+
+    if 'sensors' not in request_args:
+        request_args['sensors'] = []
+    else:
+        request_args['sensors'] = _get_param_list_from_str(request_args['sensors'])
+
+    if 'stations' not in request_args:
+        request_args['stations'] = []
+    else:
+        request_args['stations'] = _get_param_list_from_str(request_args['stations'])
+
+    return request_args
+
+
+def _get_param_list_from_str(string):
+    return list(filter(None, string.split(',')))
 
 
 def _get_queried_sensors(requested_sensors):
@@ -219,7 +244,7 @@ def _reshape_datasets_to_dict(found_datasets, requested_sensors, rain_calib_fact
 def _create_station_dict(requested_sensors, temp_humidity_sensor_ids):
     station_dict = {}
 
-    if 'temperature' or 'humidity' in requested_sensors:
+    if 'temperature' in requested_sensors or 'humidity' in requested_sensors:
         station_dict['temperature_humidity'] = {}
         for temp_humidity_sensor_id in temp_humidity_sensor_ids:
             station_dict['temperature_humidity'][temp_humidity_sensor_id] = {}

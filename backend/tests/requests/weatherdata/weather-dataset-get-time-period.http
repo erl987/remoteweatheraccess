@@ -1,3 +1,2 @@
 GET http://{{url}}:{{port}}/api/v1/data/limits
-Content-Type: text/html
 

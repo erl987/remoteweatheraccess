@@ -13,18 +13,19 @@
 #
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-import json
+import datetime
 import os
 from http import HTTPStatus
 from pathlib import Path
+from typing import List
 
 import requests
 from requests.adapters import Retry
 
 from frontend.src.cache import cache
 from frontend.src.utils import Singleton, TimeoutHTTPAdapter, TEMP_SENSOR_MARKER, HUMID_SENSOR_MARKER
-from frontend.src.utils import is_temp_sensor, is_humidity_sensor, IsoDatetimeJSONEncoder
+from frontend.src.utils import get_url_encoded_iso_time_string
+from frontend.src.utils import is_temp_sensor, is_humidity_sensor
 
 
 class CachedBackendProxy(object, metaclass=Singleton):
@@ -157,7 +158,8 @@ class BackendProxy(object):
 
         return available_sensors
 
-    def get_weather_data_in_time_range(self, chosen_stations, chosen_sensors, start_time, end_time):
+    def get_weather_data_in_time_range(self, chosen_stations: List[str], chosen_sensors: List[str],
+                                       start_time: datetime, end_time: datetime):
         provided_sensors = []
         for sensor in chosen_sensors:
             if is_temp_sensor(sensor):
@@ -167,23 +169,16 @@ class BackendProxy(object):
             else:
                 provided_sensors.append(sensor)
 
-        request_payload = {
-            'first_timepoint': start_time,
-            'last_timepoint': end_time,
-            'sensors': provided_sensors,
-            'stations': chosen_stations
-        }
-
-        headers = {
-            'Content-Type': 'application/json'
-        }
-
-        r = self._http.get('{}://{}:{}{}/data'.format(self._scheme,
-                                                      self._url,
-                                                      self._port,
-                                                      BackendProxy.API_VERSION),
-                           data=json.dumps(request_payload, cls=IsoDatetimeJSONEncoder),
-                           headers=headers)
+        r = self._http.get('{}://{}:{}{}/data?first_timepoint={}&last_timepoint={}&stations={}&sensors={}'.format(
+            self._scheme,
+            self._url,
+            self._port,
+            BackendProxy.API_VERSION,
+            get_url_encoded_iso_time_string(start_time),
+            get_url_encoded_iso_time_string(end_time),
+            ",".join(chosen_stations),
+            ",".join(provided_sensors))
+        )
         return r.json()
 
     def _simple_get_request(self, endpoint):

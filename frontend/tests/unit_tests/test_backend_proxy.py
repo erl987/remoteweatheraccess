@@ -17,6 +17,7 @@
 import json
 
 import pytest
+from dateutil.parser import isoparse
 from flask import Flask
 
 from frontend.src.backend_proxy import CachedBackendProxy, BackendProxy
@@ -182,18 +183,13 @@ def test_backend_get_weather_data_in_time_range(mocker):
     backend = BackendProxy(SOME_URL, SOME_PORT, False)
     requested_sensors = ['pressure', 'UV', 'IN_temp', 'OUT1_humid']
 
-    time_range = backend.get_weather_data_in_time_range(A_STATION_ID, requested_sensors,
-                                                        A_FIRST_TIMPOINT, A_LAST_TIMEPOINT)
+    time_range = backend.get_weather_data_in_time_range([A_STATION_ID],
+                                                        requested_sensors,
+                                                        isoparse(A_FIRST_TIMPOINT),
+                                                        isoparse(A_LAST_TIMEPOINT))
 
-    expected_sensors = ['pressure', 'UV', 'temperature', 'humidity']
     http_mock.assert_called_once()
     assert time_range == SOME_JSON
-
-    sent_data_json = json.loads(http_mock.call_args[1]['data'])
-    assert sent_data_json['first_timepoint'] == A_FIRST_TIMPOINT
-    assert sent_data_json['last_timepoint'] == A_LAST_TIMEPOINT
-    assert sent_data_json['stations'] == A_STATION_ID
-    assert set(sent_data_json['sensors']) == set(expected_sensors)
 
 
 @pytest.mark.usefixtures('mocker', 'app')

@@ -16,8 +16,11 @@
 
 from datetime import datetime
 
+from dateutil.parser import isoparse
+
 from frontend.src.utils import determine_start_and_end_dates, update_bounded_index, convert_input_into_lists
 from frontend.src.utils import floor_to_n, ceil_to_n, get_sensor_data
+from frontend.src.utils import get_url_encoded_iso_time_string
 
 SOME_PORT = 80
 SOME_URL = 'http://something'
@@ -113,3 +116,17 @@ def test_convert_input_into_lists():
            ([a_string_for_sensor_id_list], [a_string_for_station_list])
     assert convert_input_into_lists([a_string_for_sensor_id_list], [a_string_for_station_list]) == \
            ([a_string_for_sensor_id_list], [a_string_for_station_list])
+
+
+def test_convert_to_iso_date_string_with_timezone():
+    a_time_with_timezone = isoparse('2020-10-03T16:18:05+02:00')
+
+    # expecting URL-encoding of the plus sign
+    assert '2020-10-03T16:18:05%2b02:00' == get_url_encoded_iso_time_string(a_time_with_timezone)
+
+
+def test_convert_to_iso_date_string():
+    a_time_with_timezone = isoparse('2020-10-03T16:18:05')
+
+    # expecting URL-encoding of the plus sign
+    assert '2020-10-03T16:18:05' == get_url_encoded_iso_time_string(a_time_with_timezone)

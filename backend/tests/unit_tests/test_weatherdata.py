@@ -283,13 +283,34 @@ def test_get_available_time_period_when_empty_database(client_without_permission
     assert result.status_code == HTTPStatus.OK
 
 
+def _get_request_url(first_time_point, last_time_point, stations=None, sensors=None):
+    if not isinstance(first_time_point, str):
+        first_timepoint_str = first_time_point.isoformat()
+    else:
+        first_timepoint_str = first_time_point
+
+    if not isinstance(last_time_point, str):
+        last_timepoint_str = last_time_point.isoformat()
+    else:
+        last_timepoint_str = last_time_point
+
+    url = '/api/v1/data?first_timepoint={}&last_timepoint={}'.format(first_timepoint_str.replace('+', '%2b'),
+                                                                     last_timepoint_str.replace('+', '%2b'))
+
+    if stations:
+        url += '&stations={}'.format(','.join(stations))
+    if sensors:
+        url += '&sensors={}'.format(','.join(sensors))
+
+    return url
+
+
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset')
 def test_get_weather_datasets_only_one(client_with_push_user_permissions, a_dataset, another_dataset):
     a_station_id, client = prepare_two_entry_database(a_dataset, another_dataset, client_with_push_user_permissions)
-    search_result = client.get('/api/v1/data', json={'first_timepoint': a_dataset[0]['timepoint'],
-                                                     'last_timepoint': a_dataset[0]['timepoint'],
-                                                     'stations': [],
-                                                     'sensors': []})
+    first_timepoint = isoparse(a_dataset[0]['timepoint'])
+    last_timepoint = isoparse(a_dataset[0]['timepoint'])
+    search_result = client.get(_get_request_url(first_timepoint, last_timepoint))
     assert search_result.status_code == HTTPStatus.OK
     assert len(search_result.get_json()[a_station_id]['pressure']) == 1
     assert a_dataset[0]['timepoint'] == search_result.get_json()[a_station_id]['timepoint'][0]
@@ -299,10 +320,8 @@ def test_get_weather_datasets_only_one(client_with_push_user_permissions, a_data
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset')
 def test_get_weather_datasets_all(client_with_push_user_permissions, a_dataset, another_dataset):
     a_station_id, client = prepare_two_entry_database(a_dataset, another_dataset, client_with_push_user_permissions)
-    search_result = client.get('/api/v1/data', json={'first_timepoint': '1900-1-1T00:00',
-                                                     'last_timepoint': '2100-1-1T00:00',
-                                                     'stations': [],
-                                                     'sensors': []})
+    search_result = client.get(_get_request_url(isoparse('1900-01-01T00:00'),
+                                                isoparse('2100-01-01T00:00')))
     assert search_result.status_code == HTTPStatus.OK
     assert len(search_result.get_json()[a_station_id]['pressure']) == 2
     assert a_dataset[0]['timepoint'] == search_result.get_json()[a_station_id]['timepoint'][0]
@@ -315,20 +334,16 @@ def test_get_weather_datasets_all(client_with_push_user_permissions, a_dataset, 
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset')
 def test_get_weather_datasets_none(client_with_push_user_permissions, a_dataset, another_dataset):
     _, client = prepare_two_entry_database(a_dataset, another_dataset, client_with_push_user_permissions)
-    search_result = client.get('/api/v1/data', json={'first_timepoint': '2050-1-1T00:00',
-                                                     'last_timepoint': '2100-1-1T00:00',
-                                                     'stations': [],
-                                                     'sensors': []})
+    search_result = client.get(_get_request_url(isoparse('2050-01-01T00:00'),
+                                                isoparse('2100-01-01T00:00')))
     assert search_result.status_code == HTTPStatus.OK
     assert len(search_result.get_json()) == 0
 
 
 @pytest.mark.usefixtures('client_without_permissions')
 def test_get_weather_datasets_with_empty_database(client_without_permissions):
-    search_result = client_without_permissions.get('/api/v1/data', json={'first_timepoint': '1900-1-1T00:00',
-                                                                         'last_timepoint': '2100-1-1T00:00',
-                                                                         'stations': [],
-                                                                         'sensors': []})
+    search_result = client_without_permissions.get(_get_request_url(isoparse('1900-01-01T00:00+02:00'),
+                                                                    isoparse('2100-01-01T00:00+02:00')))
     assert search_result.status_code == HTTPStatus.OK
     assert len(search_result.get_json()) == 0
 
@@ -336,10 +351,10 @@ def test_get_weather_datasets_with_empty_database(client_without_permissions):
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset')
 def test_get_weather_datasets_for_not_existing_station(client_with_push_user_permissions, a_dataset, another_dataset):
     a_station_id, client = prepare_two_entry_database(a_dataset, another_dataset, client_with_push_user_permissions)
-    search_result = client.get('/api/v1/data', json={'first_timepoint': a_dataset[0]['timepoint'],
-                                                     'last_timepoint': a_dataset[0]['timepoint'],
-                                                     'stations': ['TES3'],
-                                                     'sensors': []})
+    search_result = client.get(_get_request_url(first_time_point=isoparse(a_dataset[0]['timepoint']),
+                                                last_time_point=isoparse(a_dataset[0]['timepoint']),
+                                                stations=['TES3'],
+                                                sensors=[]))
     assert 'error' in search_result.get_json()
     assert search_result.status_code == HTTPStatus.BAD_REQUEST
 
@@ -347,30 +362,30 @@ def test_get_weather_datasets_for_not_existing_station(client_with_push_user_per
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset')
 def test_get_weather_datasets_for_not_existing_sensor(client_with_push_user_permissions, a_dataset, another_dataset):
     a_station_id, client = prepare_two_entry_database(a_dataset, another_dataset, client_with_push_user_permissions)
-    search_result = client.get('/api/v1/data', json={'first_timepoint': a_dataset[0]['timepoint'],
-                                                     'last_timepoint': a_dataset[0]['timepoint'],
-                                                     'stations': [],
-                                                     'sensors': ['NOT_EXISTING']})
+    search_result = client.get(_get_request_url(first_time_point=isoparse(a_dataset[0]['timepoint']),
+                                                last_time_point=isoparse(a_dataset[0]['timepoint']),
+                                                stations=[],
+                                                sensors=['NOT_EXISTING']))
     assert 'error' in search_result.get_json()
     assert search_result.status_code == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.usefixtures('client_without_permissions')
 def test_get_weather_datasets_with_wrong_timepoint_order(client_without_permissions):
-    search_result = client_without_permissions.get('/api/v1/data', json={'first_timepoint': '2100-1-1T00:00',
-                                                                         'last_timepoint': '1900-1-1T00:00',
-                                                                         'stations': [],
-                                                                         'sensors': []})
+    search_result = client_without_permissions.get(_get_request_url(first_time_point=isoparse('2100-01-01T00:00'),
+                                                                    last_time_point=isoparse('1900-01-01T00:00'),
+                                                                    stations=[],
+                                                                    sensors=[]))
     assert 'error' in search_result.get_json()
     assert search_result.status_code == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.usefixtures('client_without_permissions')
 def test_get_weather_datasets_with_invalid_parameters(client_without_permissions):
-    search_result = client_without_permissions.get('/api/v1/data', json={'first_timepoint': 'invalid',
-                                                                         'last_timepoint': '2100-1-1T00:00',
-                                                                         'stations': [],
-                                                                         'sensors': []})
+    search_result = client_without_permissions.get(_get_request_url(first_time_point='invalid',
+                                                                    last_time_point=isoparse('2100-01-01T00:00'),
+                                                                    stations=[],
+                                                                    sensors=[]))
     assert 'error' in search_result.get_json()
     assert search_result.status_code == HTTPStatus.BAD_REQUEST
 

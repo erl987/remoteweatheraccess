@@ -7,26 +7,44 @@ Content-Type: application/json
   "password": "{{admin_password}}"
 }
 
-> {% client.global.set("auth_token", response.body.token); %}
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+})
+
+client.global.set("auth_token", response.body.token); %}
 
 ### Delete station
 DELETE http://{{url}}:{{port}}/api/v1/station/1
 Authorization: Bearer {{auth_token}}
 
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 204, "Response status is not 204");
+})%}
+
 ### Delete push user
 DELETE http://{{url}}:{{port}}/api/v1/user/2
 Authorization: Bearer {{auth_token}}
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 204, "Response status is not 204");
+})%}
 
 ### Get stations
 GET http://{{url}}:{{port}}/api/v1/station
 Authorization: Bearer {{auth_token}}
 
-### Get datasets
-GET http://{{url}}:{{port}}/api/v1/data
-Content-Type: application/json
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+})%}
 
-{
-  "first_timepoint": "2019-07-01T12:35:00+02:00",
-  "last_timepoint": "2019-07-30T00:00:00+02:00",
-  "sensors": []
-}
+### Get datasets
+GET http://{{url}}:{{port}}/api/v1/data?first_timepoint=2019-07-01T12:35:00&last_timepoint=2019-07-30T00:00:00
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+})%}

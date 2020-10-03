@@ -7,7 +7,12 @@ Content-Type: application/json
   "password": "{{admin_password}}"
 }
 
-> {% client.global.set("auth_token", response.body.token); %}
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+})
+
+client.global.set("auth_token", response.body.token); %}
 
 ### Create a station
 POST http://{{url}}:{{port}}/api/v1/station
@@ -24,6 +29,11 @@ Authorization: Bearer {{auth_token}}
   "rain_calib_factor": 1.0
 }
 
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 201, "Response status is not 201");
+})%}
+
 ### Create a push user
 POST http://{{url}}:{{port}}/api/v1/user
 Content-Type: application/json
@@ -36,6 +46,11 @@ Authorization: Bearer {{auth_token}}
   "station_id": "{{station_id}}"
 }
 
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 201, "Response status is not 201");
+})%}
+
 ### Login as push user
 POST http://{{url}}:{{port}}/api/v1/login
 Content-Type: application/json
@@ -45,7 +60,12 @@ Content-Type: application/json
   "password": "{{push_user_password}}"
 }
 
-> {% client.global.set("auth_token", response.body.token); %}
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+})
+
+client.global.set("auth_token", response.body.token); %}
 
 ### Create weather dataset
 POST http://{{url}}:{{port}}/api/v1/data
@@ -124,13 +144,15 @@ Authorization: Bearer {{auth_token}}
   }
 ]
 
-### Get datasets
-GET http://{{url}}:{{port}}/api/v1/data
-Content-Type: application/json
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 204, "Response status is not 204");
+})%}
 
-{
-  "first_timepoint": "2019-07-01T12:35:00+02:00",
-  "last_timepoint": "2019-07-30T00:00:00+02:00",
-  "sensors": [],
-  "stations": []
-}
+### Get datasets
+GET http://{{url}}:{{port}}/api/v1/data?first_timepoint=2019-07-01T12:35:00&last_timepoint=2019-07-30T00:00:00
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+})%}
