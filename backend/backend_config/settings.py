@@ -27,7 +27,8 @@ class Config(object):
     SQLALCHEMY_ENGINE_OPTIONS = {
         'connect_args': {
             'options': '-c timezone={}'.format(TIMEZONE)
-        }
+        },
+        'pool_pre_ping': True
     }
 
 
