@@ -1,10 +1,3 @@
-"""
-Run in the most simple way with:
-```
-cd frontend
-gunicorn -b :8050 frontend_app:server
-```
-"""
 #  Remote Weather Access - Client/server solution for distributed weather networks
 #   Copyright (C) 2013-2020 Ralf Rettig (info@personalfme.de)
 #
@@ -20,6 +13,14 @@ gunicorn -b :8050 frontend_app:server
 #
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+Run in the most simple way with:
+```
+cd frontend
+gunicorn -b :8050 frontend_app:server
+```
+"""
 
 import gevent.monkey
 

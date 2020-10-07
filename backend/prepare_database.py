@@ -15,20 +15,27 @@
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Gunicorn application object
+Helper application to set up the database in the production environment so that the backend application can run
 
 Run in the most simple way with:
 ```
 cd backend
-export JWT_SECRET_KEY=SECRET-KEY
-export DB_PASSWORD=passwd
-gunicorn -b :8000 wsgi:app
+export DB_URL=database url
+export DB_USER_DB_USER=userdb
+export DB_USER_DB_PASSWORD=password
+export DB_WEATHER_DB_USER=weatherdatadb
+export DB_WEATHER_DB_PASSWORD=password
+export DB_USER_DATABASE=users
+export DB_WEATHER_DATABASE=weatherdata
+python3 prepare_database.py
 ```
 """
 
-from psycogreen.gevent import patch_psycopg
-patch_psycopg()  # needs to be imported as early as possible
-
 from backend_app import create_app
+from backend_config.settings import ProdConfig
+from backend_src.models import prepare_database
 
-app = create_app()
+if __name__ == '__main__':
+    app = create_app(ProdConfig())
+    prepare_database(app)
+    app.logger.info('Database successfully prepared for usage by the application')
