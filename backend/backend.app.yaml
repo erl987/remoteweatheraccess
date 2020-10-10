@@ -24,3 +24,9 @@ env_variables:
 
 vpc_access_connector:
   name: projects/quick-heaven-279220/locations/europe-west3/connectors/weatherapp-connector
+
+handlers:
+  - url: /.*
+    secure: always
+    redirect_http_response_code: 301
+    script: auto
