@@ -29,6 +29,11 @@ gunicorn -b :8000 wsgi:app
 from psycogreen.gevent import patch_psycopg
 patch_psycopg()  # needs to be imported as early as possible
 
+import os
 from backend_app import create_app
+from backend_src.models import prepare_database
 
 app = create_app()
+
+if 'DOCKER_COMPOSE_APP' in os.environ:
+    prepare_database(app)

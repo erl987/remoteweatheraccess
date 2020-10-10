@@ -51,6 +51,7 @@ services:
     expose:
       - 8000
     environment:
+      - DOCKER_COMPOSE_APP=true
       - JWT_SECRET_KEY=SECRET-KEY
       - DB_URL=database
       - DB_PORT=5432
