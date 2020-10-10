@@ -15,6 +15,7 @@
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
+from multiprocessing import Process, Pipe
 from datetime import timedelta
 
 
@@ -50,23 +51,12 @@ class ProdConfig(Config):
 
     def __init__(self):
         if 'GOOGLE_CLOUD_PROJECT' in os.environ:
-            from backend_src.google_secret_manager import SecretManager
-            secrets = SecretManager(os.environ.get('GOOGLE_CLOUD_PROJECT'))
-
-            ProdConfig.DB_USER_DB_PASSWORD = secrets.load(
-                os.environ.get('DB_USER_DB_PASSWORD_SECRET'),
-                os.environ.get('DB_USER_DB_PASSWORD_SECRET_VERSION')
-            )
-
-            ProdConfig.DB_WEATHER_DB_PASSWORD = secrets.load(
-                os.environ.get('DB_WEATHER_DB_PASSWORD_SECRET'),
-                os.environ.get('DB_WEATHER_DB_PASSWORD_SECRET_VERSION')
-            )
-
-            ProdConfig.JWT_SECRET_KEY = secrets.load(
-                os.environ.get('JWT_SECRET_KEY_SECRET'),
-                os.environ.get('JWT_SECRET_KEY_SECRET_VERSION')
-            )
+            parent_conn, child_conn = Pipe()
+            p = Process(target=ProdConfig._load_from_google_secret_manager, args=(child_conn,))
+            p.start()
+            ProdConfig.DB_USER_DB_PASSWORD, ProdConfig.DB_WEATHER_DB_PASSWORD, ProdConfig.JWT_SECRET_KEY = \
+                parent_conn.recv()
+            p.join()
 
         ProdConfig.SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(
             ProdConfig.DB_USER_DB_USER,
@@ -81,6 +71,30 @@ class ProdConfig(Config):
             ProdConfig.DB_URL, Config.DB_PORT,
             ProdConfig.DB_WEATHER_DATABASE
         )
+
+    @staticmethod
+    def _load_from_google_secret_manager(conn):
+        # run in a subprocess to prevent issues with gevent-unpatched SSL-connections later
+        from backend_src.google_secret_manager import SecretManager
+        secrets = SecretManager(os.environ.get('GOOGLE_CLOUD_PROJECT'))
+
+        db_user_db_password = secrets.load(
+            os.environ.get('DB_USER_DB_PASSWORD_SECRET'),
+            os.environ.get('DB_USER_DB_PASSWORD_SECRET_VERSION')
+        )
+
+        db_weather_db_password = secrets.load(
+            os.environ.get('DB_WEATHER_DB_PASSWORD_SECRET'),
+            os.environ.get('DB_WEATHER_DB_PASSWORD_SECRET_VERSION')
+        )
+
+        jwt_secret_key = secrets.load(
+            os.environ.get('JWT_SECRET_KEY_SECRET'),
+            os.environ.get('JWT_SECRET_KEY_SECRET_VERSION')
+        )
+
+        conn.send((db_user_db_password, db_weather_db_password, jwt_secret_key))
+        conn.close()
 
 
 class DevConfig(Config):
