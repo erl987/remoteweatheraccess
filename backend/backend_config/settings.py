@@ -42,13 +42,45 @@ class ProdConfig(Config):
     DB_WEATHER_DB_USER = os.environ.get('DB_WEATHER_DB_USER')
     DB_WEATHER_DB_PASSWORD = os.environ.get('DB_WEATHER_DB_PASSWORD')
     DB_WEATHER_DATABASE = os.environ.get('DB_WEATHER_DATABASE')
-    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER_DB_USER, DB_USER_DB_PASSWORD,
-                                                                            DB_URL, Config.DB_PORT, DB_USER_DATABASE)
+    SQLALCHEMY_DATABASE_URI = None
     SQLALCHEMY_BINDS = {
-        'weather-data': 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_WEATHER_DB_USER, DB_WEATHER_DB_PASSWORD,
-                                                                      DB_URL, Config.DB_PORT, DB_WEATHER_DATABASE)
+        'weather-data': ''
     }
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=1)
+
+    def __init__(self):
+        if 'GOOGLE_CLOUD_PROJECT' in os.environ:
+            from backend_src.google_secret_manager import SecretManager
+            secrets = SecretManager(os.environ.get('GOOGLE_CLOUD_PROJECT'))
+
+            ProdConfig.DB_USER_DB_PASSWORD = secrets.load(
+                os.environ.get('DB_USER_DB_PASSWORD_SECRET'),
+                os.environ.get('DB_USER_DB_PASSWORD_SECRET_VERSION')
+            )
+
+            ProdConfig.DB_WEATHER_DB_PASSWORD = secrets.load(
+                os.environ.get('DB_WEATHER_DB_PASSWORD_SECRET'),
+                os.environ.get('DB_WEATHER_DB_PASSWORD_SECRET_VERSION')
+            )
+
+            ProdConfig.JWT_SECRET_KEY = secrets.load(
+                os.environ.get('JWT_SECRET_KEY_SECRET'),
+                os.environ.get('JWT_SECRET_KEY_SECRET_VERSION')
+            )
+
+        ProdConfig.SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(
+            ProdConfig.DB_USER_DB_USER,
+            ProdConfig.DB_USER_DB_PASSWORD,
+            ProdConfig.DB_URL, Config.DB_PORT,
+            ProdConfig.DB_USER_DATABASE
+        )
+
+        ProdConfig.SQLALCHEMY_BINDS['weather-data'] = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(
+            ProdConfig.DB_WEATHER_DB_USER,
+            ProdConfig.DB_WEATHER_DB_PASSWORD,
+            ProdConfig.DB_URL, Config.DB_PORT,
+            ProdConfig.DB_WEATHER_DATABASE
+        )
 
 
 class DevConfig(Config):

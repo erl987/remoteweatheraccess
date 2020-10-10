@@ -1,0 +1,14 @@
+runtime: python38
+
+service: frontend
+
+instance_class: F2
+
+entrypoint: gunicorn --worker-class gevent --preload --config frontend_config/gunicorn.py --bind :$PORT frontend_app:server
+
+env_variables:
+  BACKEND_URL: "backend-dot-quick-heaven-279220.ey.r.appspot.com"
+  BACKEND_PORT: 443
+  BACKEND_DO_USE_HTTPS: "True"
+  GUNICORN_WORKERS: 2
+  GUNICORN_ACCESSLOG: "-"
