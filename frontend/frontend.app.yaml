@@ -12,3 +12,12 @@ env_variables:
   BACKEND_DO_USE_HTTPS: "True"
   GUNICORN_WORKERS: 2
   GUNICORN_ACCESSLOG: "-"
+
+handlers:
+  - url: /assets
+    static_dir: assets
+
+  - url: /.*
+    secure: always
+    redirect_http_response_code: 301
+    script: auto
