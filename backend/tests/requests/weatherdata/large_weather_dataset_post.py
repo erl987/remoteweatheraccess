@@ -14,6 +14,7 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import os
 import time
 from datetime import datetime, timedelta
 from random import uniform
@@ -22,7 +23,7 @@ import requests
 
 from tests.utils import zip_payload
 
-url = '35.217.32.244'
+url = os.environ.get('SERVER_IP')
 port = 80
 jwt_token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTc1Nzg4NzksIm5iZiI6MTU5NzU3ODg3OSwianRpIjoiYmEyOGUyY2YtMDNkMi00ZTg5LWIyM2UtMDdmYTlhZDg2NDNlIiwiZXhwIjoxNTk3NTgyNDc5LCJpZGVudGl0eSI6ImRlZmF1bHRfYWRtaW4iLCJmcmVzaCI6dHJ1ZSwidHlwZSI6ImFjY2VzcyIsInVzZXJfY2xhaW1zIjp7InJvbGUiOiJBRE1JTiIsInN0YXRpb25faWQiOm51bGx9fQ.bLhAti040BZYr1Y7nX6PVPmJRQgJSsu9XgKnearQw_k'
 

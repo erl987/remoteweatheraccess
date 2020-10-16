@@ -6,5 +6,5 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTU4NjI4N
   "name": "user1",
   "password": "new password",
   "role": "PUSH_USER",
-  "station_id": "SOL"
+  "station_id": "TES"
 }

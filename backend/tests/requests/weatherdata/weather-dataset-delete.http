@@ -5,5 +5,5 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTU3NjI5N
 {
   "first_timepoint": "2010-01-01T10:00:00+02:00",
   "last_timepoint": "2031-01-01T00:00:00",
-  "stations": ["ECK", "SOL"]
+  "stations": ["TES", "MUC"]
 }

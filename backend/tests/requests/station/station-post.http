@@ -3,11 +3,11 @@ Content-Type: application/json
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTU4NTc0MjMsIm5iZiI6MTU5NTg1NzQyMywianRpIjoiMWM4Y2E3MGUtZTVlYi00NTMyLWJmYTAtNzM2ZmM4MjU1ZjY2IiwiZXhwIjoxNTk1ODkzNDIzLCJpZGVudGl0eSI6ImRlZmF1bHRfYWRtaW4iLCJmcmVzaCI6dHJ1ZSwidHlwZSI6ImFjY2VzcyIsInVzZXJfY2xhaW1zIjp7InN0YXRpb25faWQiOm51bGwsInJvbGUiOiJBRE1JTiJ9fQ.SGk4xrhI6iooLr7hUGjcTJB6HAMz8dc1az5vLEe0wS8
 
 {
-  "station_id": "SOL",
+  "station_id": "TES",
   "device": "TE923",
-  "location": "Solna/AB/SE",
-  "latitude": 59.35238,
-  "longitude": 18.00524,
+  "location": "Town/BY/DE",
+  "latitude": 38.3469,
+  "longitude": 5.23945,
   "height": 30,
   "rain_calib_factor": 1.0
 }

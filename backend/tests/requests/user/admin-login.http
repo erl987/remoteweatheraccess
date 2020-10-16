@@ -5,13 +5,3 @@ Content-Type: application/json
   "name": "{{admin_user}}",
   "password": "{{admin_password}}"
 }
-
-<> 2020-07-12T071755.200.json
-<> 2020-07-12T055649.401.json
-<> 2020-07-12T055428.401.json
-<> 2020-07-12T055230.401.json
-<> 2020-07-12T055111.401.json
-<> 2020-07-12T055100.400.json
-<> 2020-07-12T055031.401.json
-<> 2020-07-12T053622.404.html
-
