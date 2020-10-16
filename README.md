@@ -135,7 +135,7 @@ underlying infrastructure (such as address of the backend and of the SQL-databas
 ## Get started in a production environment
 
 The server software will not prepare the database automatically in a production environment (such as Google App Engine)
-- in contrast to the `docker-compose` deployment. The Python-script `prepare_database.py` allows to bootstrap the 
+in contrast to the `docker-compose` deployment. The Python-script `prepare_database.py` allows to bootstrap the 
 application in a production environment.
 
 1. It needs to be executed on a machine that can access the database. It will set up the database tables but also 
