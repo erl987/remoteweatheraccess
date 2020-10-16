@@ -1,0 +1,1 @@
+GET http://{{url}}:{{port}}/api/v1/sensor

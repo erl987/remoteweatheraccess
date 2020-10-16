@@ -1,0 +1,5 @@
+tests
+prepare_database.py
+requirements-test.txt
+.pytest_cache/
+__pycache__/

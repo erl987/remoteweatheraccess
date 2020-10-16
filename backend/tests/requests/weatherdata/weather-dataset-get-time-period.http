@@ -1,0 +1,2 @@
+GET http://{{url}}:{{port}}/api/v1/data/limits
+

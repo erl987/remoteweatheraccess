@@ -1,0 +1,3 @@
+DELETE http://{{url}}:{{port}}/api/v1/station/1
+Content-Type: text/html
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTU4Mzk2OTQsIm5iZiI6MTU5NTgzOTY5NCwianRpIjoiNzc1YzUwMTEtMTExYS00YWRmLWFkNDctMjU3NjY4MWEyZGRmIiwiZXhwIjoxNTk1ODc1Njk0LCJpZGVudGl0eSI6ImRlZmF1bHRfYWRtaW4iLCJmcmVzaCI6dHJ1ZSwidHlwZSI6ImFjY2VzcyIsInVzZXJfY2xhaW1zIjp7InJvbGUiOiJBRE1JTiJ9fQ.Jj8zP4nW-bVE8W6-CI2C_cQIGwj0_KcUpsvhTQ3bNzg

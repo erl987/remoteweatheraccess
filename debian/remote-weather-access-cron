@@ -1,8 +1,0 @@
-# /etc/cron.d/remote-weather-access-cron: crontab entries for the remote-weather-access package
-
-SHELL=/bin/sh
-PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-MPLCONFIGDIR=/tmp/matplotlib-weather-daemon
-
-1-59/10 * * * * weather-daemon weatherplot /etc/remote-weather-access/weatherplot.ini ALL > /dev/null 2>&1
-1 * * * * weather-daemon export-weatherdata /etc/remote-weather-access/weatherexport.ini > /dev/null 2>&1

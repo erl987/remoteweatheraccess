@@ -1,0 +1,41 @@
+POST http://{{url}}:{{port}}/_dash-update-component
+Content-Type: application/json
+
+
+{
+  "output": "weather-data-graph.figure",
+  "outputs": {
+    "id": "weather-data-graph",
+    "property": "figure"
+  },
+  "inputs": [
+    {
+      "id": "time-period-picker",
+      "property": "start_date",
+      "value": "2020-08-16"
+    },
+    {
+      "id": "time-period-picker",
+      "property": "end_date",
+      "value": "2020-08-31T23:50:00+02:00"
+    },
+    {
+      "id": "station-dropdown",
+      "property": "value",
+      "value": "TES"
+    },
+    {
+      "id": "sensor-dropdown",
+      "property": "value",
+      "value": [
+        "pressure",
+        "rain",
+        "OUT1_temp",
+        "OUT1_humid"
+      ]
+    }
+  ],
+  "changedPropIds": [
+    "time-period-picker.start_date"
+  ]
+}

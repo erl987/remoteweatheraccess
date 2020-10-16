@@ -1,0 +1,2 @@
+GET http://{{url}}:{{port}}/api/v1/data?first_timepoint=2019-07-06T12:30:00%2b02:00&last_timepoint=2019-07-06T13:00:00%2b02:00&stations=TES&sensors=pressure,uv
+Accept-Encoding: gzip, deflate
