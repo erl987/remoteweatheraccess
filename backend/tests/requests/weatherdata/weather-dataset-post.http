@@ -1,0 +1,75 @@
+POST http://{{url}}:{{port}}/api/v1/data
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1OTYwMTU0MTksIm5iZiI6MTU5NjAxNTQxOSwianRpIjoiNDY5NjY0YTktOWE0My00ZWQ1LThjYWEtNDlmN2QyYzU5NTE5IiwiZXhwIjoxNTk2MDE5MDE5LCJpZGVudGl0eSI6InVzZXIxIiwiZnJlc2giOnRydWUsInR5cGUiOiJhY2Nlc3MiLCJ1c2VyX2NsYWltcyI6eyJyb2xlIjoiUFVTSF9VU0VSIiwic3RhdGlvbl9pZCI6IlRFUyJ9fQ.hTK5Zei-w-Oi_JdHNftAQa5BMo8IMnlf49zkwtl4ny0
+
+[
+  {
+    "timepoint": "2019-07-06T12:34:20+02:00",
+    "station_id": "TES",
+    "pressure": 1013.5,
+    "uv": 8.3,
+    "rain_counter": 1230.5,
+    "temperature_humidity": [
+      {
+        "sensor_id": "OUT1",
+        "temperature": 18.3,
+        "humidity": 78.9
+      },
+      {
+        "sensor_id": "IN",
+        "temperature": 23.5,
+        "humidity": 63.5
+      }
+    ],
+    "speed": 89.5,
+    "gusts": 103.5,
+    "direction": 190.5,
+    "wind_temperature": 16.5
+  },
+  {
+    "timepoint": "2019-07-06T12:44:20+02:00",
+    "station_id": "TES",
+    "pressure": 1013.5,
+    "uv": 8.3,
+    "rain_counter": 1230.5,
+    "temperature_humidity": [
+      {
+        "sensor_id": "OUT1",
+        "temperature": 18.3,
+        "humidity": 78.9
+      },
+      {
+        "sensor_id": "IN",
+        "temperature": 23.5,
+        "humidity": 63.5
+      }
+    ],
+    "speed": 89.5,
+    "gusts": 103.5,
+    "direction": 190.5,
+    "wind_temperature": 16.5
+  },
+  {
+    "timepoint": "2019-07-06T12:54:20+02:00",
+    "station_id": "TES",
+    "pressure": 1013.5,
+    "uv": 8.3,
+    "rain_counter": 1230.5,
+    "temperature_humidity": [
+      {
+        "sensor_id": "OUT1",
+        "temperature": 18.3,
+        "humidity": 78.9
+      },
+      {
+        "sensor_id": "IN",
+        "temperature": 23.5,
+        "humidity": 63.5
+      }
+    ],
+    "speed": 89.5,
+    "gusts": 103.5,
+    "direction": 190.5,
+    "wind_temperature": 16.5
+  }
+]

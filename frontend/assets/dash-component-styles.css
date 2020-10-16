@@ -1,0 +1,186 @@
+/* Date picker
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+/* Will edit everything selected including everything between a range of dates */
+#configuration .CalendarDay__selected_span {
+    background-color: #E95420;
+    border: none;
+    color: white;
+}
+
+/* Will edit selected date or the endpoints of a range of dates */
+#configuration .CalendarDay__selected {
+    background-color: #EFB73E;
+    border: none;
+    color: white;
+}
+
+/* Will edit when hovered over. _span style also has this property */
+#configuration .CalendarDay__selected:hover {
+  background-color: #DF382C;
+  color: white;
+}
+
+/* Will edit when the second date (end date) in a range of dates
+   is not yet selected. Edits the dates between your mouse and said date */
+#configuration .CalendarDay__hovered_span, .CalendarDay__hovered_span {
+  background-color: #DF382C;
+  color: white;
+}
+
+
+/* Dropdowns
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+#configuration .Select--multi .Select-value {
+    background-color: #E95420;
+    color: white;
+}
+
+#configuration .VirtualizedSelectFocusedOption {
+    background-color: #ffffff;
+}
+
+#configuration .Select-control {
+    color: white;
+}
+
+#configuration .Select {
+    color: black;
+}
+
+#configuration .Select-menu-outer {
+    border: 1px solid gray;
+}
+
+#configuration .Select-menu-outer div:hover {
+    background-color: rgba(255, 255, 255, 0.01);
+}
+
+#configuration .Select-value-label {
+    color: white !important;
+}
+
+#configuration .Select--single > .Select-control .Select-value, .Select-placeholder {
+    border: 1px solid gray;
+    border-radius: 4px;
+}
+
+#configuration .card {
+    padding: 2rem 0;
+}
+
+#configuration #last-card {
+    border-bottom: none;
+}
+
+#configuration .graph-title {
+    font-size: 2rem;
+    margin: 15% 0 0 25%;
+}
+
+#configuration #button-zero-threshold {
+    background-color: #2f3445;
+    color: #a5b1cd;
+    border-color: gray;
+}
+
+#configuration #button-zero-threshold:hover {
+    border-color: white;
+}
+
+#configuration #button-card {
+    display: flex;
+    flex-direction: column;
+}
+
+#configuration #first-card {
+    padding-top: 0;
+}
+
+@media (max-width: 1500px) {
+    #configuration .rc-slider-mark-text {
+        font-size: 0.7vw;
+    }
+}
+
+@media (max-width: 950px) {
+    #configuration .rc-slider-mark-text {
+        font-size: 1.5vw;
+    }
+}
+
+
+@media (max-width: 650px) {
+    #configuration .rc-slider-mark-text {
+        font-size: 2vw;
+    }
+}
+
+
+@media (min-width: 1301px) {
+    #configuration #left-column {
+        flex: 1 20%;
+        margin: 0 3rem 0 0;
+        max-height: 83rem;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    #configuration .card {
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+}
+
+@media (max-width: 1300px) {
+    #configuration #left-column {
+        flex: 1 20%;
+        margin: 0 3rem 0 0;
+        max-height: 70rem;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+}
+
+@media (max-width: 1200px) {
+    #configuration #button-zero-threshold {
+        font-size: 0.8rem;
+        padding: 0
+    }
+}
+
+@media (max-width: 950px) {
+    #configuration #button-zero-threshold {
+        font-size: 1.0rem;
+        padding: 0
+    }
+}
+
+@media (max-width: 950px) {
+    #configuration #left-column {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0;
+        max-height: none;
+        max-width: none;
+    }
+}
+
+@media (max-width: 700px) {
+    #configuration #first-card {
+        margin: 0;
+        padding-right: 0;
+        padding-left: 0;
+    }
+}
+
+
+/** Diagram
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+/* Bootstrap breakpoint 'xl' and up */
+@media (min-width: 992px) {
+    .diagram {
+        height: 70vh;
+    }
+}
