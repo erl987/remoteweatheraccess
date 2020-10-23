@@ -342,7 +342,7 @@ def determine_plot_axis_setup(chosen_stations, data, sensors):
             _min_data = float('inf')
             _max_data = float('-inf')
             for station_index, station_id in enumerate(chosen_stations):
-                if len(data[station_id]) > 0:
+                if station_id in data and len(data[station_id]) > 0:
                     sensor_data = get_sensor_data(data, station_id, sensor_id)
                     if len(sensor_data) > 0:
                         _min_data = min(_min_data, min(sensor_data))
