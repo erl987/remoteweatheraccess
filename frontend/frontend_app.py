@@ -100,7 +100,6 @@ def display_page(pathname):
     elif len(provided_station_id) == 0:
         server.logger.info('Parsed default station id from URL')
         if len(available_station_ids) > 0:
-            available_station_ids.sort()
             return available_station_ids[-1]
         else:
             raise PreventUpdate
