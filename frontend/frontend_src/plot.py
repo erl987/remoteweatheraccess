@@ -159,7 +159,7 @@ def get_scalings(min_max_sensors: Dict[str, Dict[str, float]]) -> Tuple[int, Dic
     all_num_ticks = []
     # determine number of ticks
     for key, sensor in min_max_sensors.items():
-        if 'temperature' in key:
+        if 'temp' in key:
             # temperatures should have an identical scaling
             curr_min_temp = floor_to_n(sensor['min'], delta_temp)
             if curr_min_temp < min_temp:
@@ -201,11 +201,11 @@ def get_scalings(min_max_sensors: Dict[str, Dict[str, float]]) -> Tuple[int, Dic
 def _get_min_max_axis(delta_p, delta_rain, delta_temp, min_max_sensors, min_p, min_temp, num_ticks):
     min_max_axis = dict()
     for key, sensor in min_max_sensors.items():
-        if 'temperature' in key:
+        if 'temp' in key:
             # temperature minimum is always the next lower temperature dividable by 5 degree C (already calculated)
             max_temp = min_temp + delta_temp * (num_ticks - 1)
             min_max_axis[key] = {'min': min_temp, 'max': max_temp}
-        elif 'humidity' in key:
+        elif 'humid' in key:
             # humidity is always in the range from 0 - 100 pct
             min_max_axis[key] = {'min': 0, 'max': 100}
         elif 'rain' in key:
