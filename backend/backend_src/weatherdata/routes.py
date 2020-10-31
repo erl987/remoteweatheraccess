@@ -19,6 +19,7 @@ import json
 from http import HTTPStatus
 
 import pandas as pd
+import pytz
 from flask import request, jsonify, current_app, Blueprint
 
 from .schemas import single_weather_dataset_schema, time_period_with_sensors_and_stations_schema
@@ -31,6 +32,7 @@ from ..utils import Role, with_rollback_and_raise_exception, approve_committed_s
 from ..utils import access_level_required, json_with_rollback_and_raise_exception
 
 weatherdata_blueprint = Blueprint('data', __name__, url_prefix='/api/v1/data')
+local_time_zone = None
 
 
 @weatherdata_blueprint.route('', methods=['POST'])
@@ -158,9 +160,20 @@ def get_weather_datasets():
 
 
 def _get_query_params():
+    global local_time_zone
+    if not local_time_zone:
+        local_time_zone = pytz.timezone(current_app.config['TIMEZONE'])
+
     time_period_with_sensors = time_period_with_sensors_and_stations_schema.load(_obtain_request_args_for_get_method())
     first = time_period_with_sensors['first_timepoint']
     last = time_period_with_sensors['last_timepoint']
+
+    # times without given timezone are assumed to be given in server time zone
+    if not first.tzinfo:
+        first = local_time_zone.localize(first)
+    if not last.tzinfo:
+        last = local_time_zone.localize(last)
+
     requested_sensors = time_period_with_sensors['sensors']
     requested_stations = time_period_with_sensors['stations']
 
@@ -184,7 +197,7 @@ def _obtain_request_args_for_get_method():
 
 
 def _get_param_list_from_str(string):
-    return list(filter(None, string.split(',')))
+    return list(set(filter(None, string.split(','))))
 
 
 def _get_queried_sensors(requested_sensors):
@@ -204,7 +217,8 @@ def _get_queried_sensors(requested_sensors):
 
 
 def _reshape_datasets_to_dict(found_datasets, requested_sensors, rain_calib_factors):
-    found_datasets['timepoint'] = found_datasets['timepoint'].dt.tz_convert(current_app.config['TIMEZONE'])
+    found_datasets['timepoint'] = (pd.to_datetime(found_datasets['timepoint'], utc=True).dt
+                                   .tz_convert(current_app.config['TIMEZONE']))
 
     found_datasets_per_station = {}
     temp_humidity_sensor_ids = found_datasets.sensor_id.unique()

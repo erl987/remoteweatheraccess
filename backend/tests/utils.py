@@ -23,7 +23,7 @@ from io import BytesIO
 import pytest
 from flask_jwt_extended import create_access_token
 
-from backend_app import create_app
+from backend_app import create_app, IsoDateTimeJSONEncoder
 from backend_config.settings import TestConfig
 from backend_src.extensions import db
 from backend_src.models import WeatherStation, create_temp_humidity_sensors, create_sensors
@@ -74,6 +74,26 @@ def an_updated_dataset() -> dict:
 def another_dataset() -> dict:
     yield [{
         'timepoint': '2016-02-06T15:40:36.2Z',
+        'station_id': 'TES',
+        'pressure': 1019.2,
+        'uv': 2.4,
+        'rain_counter': 980.5,
+        'direction': 350.2,
+        'speed': 95.2,
+        'wind_temperature': 9.8,
+        'gusts': 120.5,
+        'temperature_humidity': [{
+            'sensor_id': 'IN',
+            'temperature': 23.5,
+            'humidity': 53.0
+        }]
+    }]
+
+
+@pytest.fixture
+def another_dataset_without_timezone() -> dict:
+    yield [{
+        'timepoint': '2016-02-06T16:40:36.2',
         'station_id': 'TES',
         'pressure': 1019.2,
         'uv': 2.4,
@@ -289,7 +309,7 @@ def verify_database_is_empty(client_with_admin_permissions):
 
 
 def zip_payload(object_payload) -> bytes:
-    json_payload = json.dumps(object_payload)
+    json_payload = json.dumps(object_payload, cls=IsoDateTimeJSONEncoder)
     byte_stream = BytesIO()
     with gzip.GzipFile(fileobj=byte_stream, mode='w') as g:
         g.write(bytes(json_payload, 'utf8'))

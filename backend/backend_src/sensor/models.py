@@ -31,7 +31,7 @@ class Sensor(db.Model):
 
 def generate_sensors():
     sensors_info = {
-        'pressure': {'description': 'Druck', 'unit': 'Pa'},
+        'pressure': {'description': 'Luftdruck', 'unit': 'hPa'},
         'uv': {'description': 'UV', 'unit': 'UV-X'},
         'rain': {'description': 'Regen', 'unit': 'mm'},
         'rain_rate': {'description': 'Regenrate', 'unit': 'mm'},
