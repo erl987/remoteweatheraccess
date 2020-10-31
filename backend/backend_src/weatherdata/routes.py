@@ -197,7 +197,7 @@ def _obtain_request_args_for_get_method():
 
 
 def _get_param_list_from_str(string):
-    return list(filter(None, string.split(',')))
+    return list(set(filter(None, string.split(','))))
 
 
 def _get_queried_sensors(requested_sensors):
