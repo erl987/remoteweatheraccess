@@ -54,15 +54,23 @@ class CachedBackendProxy(object, metaclass=Singleton):
         available_stations = []
         available_station_ids = []
         available_stations_data = self._backend.get_all_stations()
-        for station in available_stations_data:
+
+        station_indices = {}
+        for index, station in enumerate(available_stations_data):
             curr_station_id = station['station_id']
-            splitted_location_info = station['location'].split('/')
+            available_station_ids.append(curr_station_id)
+            station_indices[curr_station_id] = index
+        available_station_ids.sort()
+
+        sorted_available_stations_data = []
+        for curr_station_id in available_station_ids:
+            sorted_available_stations_data.append(available_stations_data[station_indices[curr_station_id]])
+            splitted_location_info = sorted_available_stations_data[-1]['location'].split('/')
             station_town = splitted_location_info[0]
             available_stations.append({'label': station_town, 'value': curr_station_id})
-            available_station_ids.append(curr_station_id)
 
         self._app.logger.info('Received data for all available stations from the backend')
-        return available_stations, available_stations_data, available_station_ids
+        return available_stations, sorted_available_stations_data, available_station_ids
 
     @cache.memoize(timeout=5 * 60)  # caching period in seconds
     def data(self, chosen_stations, chosen_sensors, start_time, end_time):

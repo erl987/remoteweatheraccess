@@ -22,7 +22,7 @@ from dateutil.parser import isoparse
 
 # noinspection PyUnresolvedReferences
 from ..utils import client_without_permissions, client_with_push_user_permissions, client_with_admin_permissions, \
-    a_dataset, another_dataset, an_updated_dataset, a_dataset_for_another_station, \
+    a_dataset, another_dataset, another_dataset_without_timezone, an_updated_dataset, a_dataset_for_another_station, \
     prepare_two_entry_database  # required as a fixture
 from ..utils import drop_permissions, verify_database_is_empty, zip_payload
 
@@ -30,6 +30,12 @@ from ..utils import drop_permissions, verify_database_is_empty, zip_payload
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset')
 def test_create_dataset(client_with_push_user_permissions, a_dataset):
     result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset)
+    assert result.status_code == HTTPStatus.NO_CONTENT
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'another_dataset_without_timezone')
+def test_create_dataset_without_timezone(client_with_push_user_permissions, another_dataset_without_timezone):
+    result = client_with_push_user_permissions.post('/api/v1/data', json=another_dataset_without_timezone)
     assert result.status_code == HTTPStatus.NO_CONTENT
 
 
@@ -315,6 +321,23 @@ def test_get_weather_datasets_only_one(client_with_push_user_permissions, a_data
     assert len(search_result.get_json()[a_station_id]['pressure']) == 1
     assert a_dataset[0]['timepoint'] == search_result.get_json()[a_station_id]['timepoint'][0]
     assert a_dataset[0]['pressure'] == search_result.get_json()[a_station_id]['pressure'][0]
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset_without_timezone')
+def test_get_weather_datasets_with_timezone_info(client_with_push_user_permissions, a_dataset,
+                                                 another_dataset_without_timezone):
+    a_station_id, client = prepare_two_entry_database(a_dataset, another_dataset_without_timezone,
+                                                      client_with_push_user_permissions)
+    first_timepoint = isoparse(a_dataset[0]['timepoint'])
+    last_timepoint = isoparse(another_dataset_without_timezone[0]['timepoint'])
+    search_result = client.get(_get_request_url(first_timepoint, last_timepoint))
+    assert search_result.status_code == HTTPStatus.OK
+    assert len(search_result.get_json()[a_station_id]['pressure']) == 2
+    assert a_dataset[0]['timepoint'] == search_result.get_json()[a_station_id]['timepoint'][0]
+    assert a_dataset[0]['pressure'] == search_result.get_json()[a_station_id]['pressure'][0]
+    assert (pytz.timezone("Europe/Berlin").localize(isoparse(another_dataset_without_timezone[0]['timepoint'])) ==
+           isoparse(search_result.get_json()[a_station_id]['timepoint'][1]))
+    assert another_dataset_without_timezone[0]['pressure'] == search_result.get_json()[a_station_id]['pressure'][1]
 
 
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset')

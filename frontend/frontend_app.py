@@ -89,18 +89,18 @@ def display_page(pathname):
 
     provided_station_id = pathname.replace('/', '').upper()
 
-    available_stations, _, available_station_ids = CachedBackendProxy(backend_url,
-                                                                      backend_port,
-                                                                      backend_do_use_https,
-                                                                      server).available_stations()
+    __, _, available_station_ids = CachedBackendProxy(backend_url,
+                                                      backend_port,
+                                                      backend_do_use_https,
+                                                      server).available_stations()
 
     if provided_station_id in available_station_ids:
         server.logger.info('Parsed station id \'{}\' from URL'.format(provided_station_id))
         return provided_station_id
     elif len(provided_station_id) == 0:
         server.logger.info('Parsed default station id from URL')
-        if len(available_stations) > 0:
-            return available_stations[-1]['value']
+        if len(available_station_ids) > 0:
+            return available_station_ids[-1]
         else:
             raise PreventUpdate
     else:
