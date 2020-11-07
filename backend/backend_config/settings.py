@@ -50,13 +50,11 @@ class ProdConfig(Config):
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=1)
 
     def __init__(self):
-        if 'GOOGLE_CLOUD_PROJECT' in os.environ:
-            parent_conn, child_conn = Pipe()
-            p = Process(target=ProdConfig._load_from_google_secret_manager, args=(child_conn,))
-            p.start()
-            ProdConfig.DB_USER_DB_PASSWORD, ProdConfig.DB_WEATHER_DB_PASSWORD, ProdConfig.JWT_SECRET_KEY = \
-                parent_conn.recv()
-            p.join()
+        if 'RUNNING_ON_SERVER' in os.environ:
+            gcp_project_id = ProdConfig._get_gcp_project_id_in_subprocess()
+            if gcp_project_id:
+                secrets = ProdConfig._load_from_google_secret_manager_in_subprocess(gcp_project_id)
+                ProdConfig.DB_USER_DB_PASSWORD, ProdConfig.DB_WEATHER_DB_PASSWORD, ProdConfig.JWT_SECRET_KEY = secrets
 
         ProdConfig.SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(
             ProdConfig.DB_USER_DB_USER,
@@ -73,10 +71,36 @@ class ProdConfig(Config):
         )
 
     @staticmethod
-    def _load_from_google_secret_manager(conn):
+    def _get_gcp_project_id_in_subprocess():
         # run in a subprocess to prevent issues with gevent-unpatched SSL-connections later
-        from backend_src.google_secret_manager import SecretManager
-        secrets = SecretManager(os.environ.get('GOOGLE_CLOUD_PROJECT'))
+        parent_conn, child_conn = Pipe()
+        p = Process(target=ProdConfig._get_gcp_project_id, args=(child_conn,))
+        p.start()
+        gcp_project_id = parent_conn.recv()
+        p.join()
+        return gcp_project_id
+
+    @staticmethod
+    def _get_gcp_project_id(conn):
+        from backend_src.google_cloud_utils import get_project_id
+        gcp_project_id = get_project_id()
+        conn.send(gcp_project_id)
+        conn.close()
+
+    @staticmethod
+    def _load_from_google_secret_manager_in_subprocess(gcp_project_id):
+        # run in a subprocess to prevent issues with gevent-unpatched SSL-connections later
+        parent_conn, child_conn = Pipe()
+        p = Process(target=ProdConfig._load_from_google_secret_manager, args=(child_conn, gcp_project_id))
+        p.start()
+        secrets = parent_conn.recv()
+        p.join()
+        return secrets
+
+    @staticmethod
+    def _load_from_google_secret_manager(conn, gcp_project_id):
+        from backend_src.google_cloud_utils import SecretManager
+        secrets = SecretManager(gcp_project_id)
 
         db_user_db_password = secrets.load(
             os.environ.get('DB_USER_DB_PASSWORD_SECRET'),

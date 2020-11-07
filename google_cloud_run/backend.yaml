@@ -1,0 +1,51 @@
+# deploy with: gcloud beta run services replace backend.yaml --platform managed --region europe-west3
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/vpc-access-connector: projects/quick-heaven-279220/locations/europe-west3/connectors/weatherapp-connector
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      serviceAccountName: quick-heaven-279220@appspot.gserviceaccount.com
+      containers:
+      - image: eu.gcr.io/quick-heaven-279220/backend:latest
+        env:
+        - name: RUNNING_ON_SERVER
+          value: "True"
+        - name: DB_USER_DB_USER
+          value: userdb
+        - name: DB_WEATHER_DB_USER
+          value: weatherdatadb
+        - name: DB_USER_DATABASE
+          value: users
+        - name: DB_WEATHER_DATABASE
+          value: weatherdata
+        - name: DB_USER_DB_PASSWORD_SECRET
+          value: user-db-password
+        - name: DB_USER_DB_PASSWORD_SECRET_VERSION
+          value: '1'
+        - name: DB_WEATHER_DB_PASSWORD_SECRET
+          value: weather-db-password
+        - name: DB_WEATHER_DB_PASSWORD_SECRET_VERSION
+          value: '1'
+        - name: JWT_SECRET_KEY_SECRET
+          value: jwt-secret-key
+        - name: JWT_SECRET_KEY_SECRET_VERSION
+          value: '1'
+        - name: GUNICORN_WORKERS
+          value: '1'
+        - name: GUNICORN_ACCESSLOG
+          value: '-'
+        - name: DB_PORT
+          value: '5432'
+        - name: DB_URL
+          value: 10.107.32.3
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 256Mi

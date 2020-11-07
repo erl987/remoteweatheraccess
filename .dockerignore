@@ -1,2 +1,4 @@
 ./frontend/tests
 ./backend/tests
+./frontend/frontend.app.yaml
+./backend/backend.app.yaml

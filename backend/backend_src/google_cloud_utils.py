@@ -13,6 +13,8 @@
 #
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+import requests
+
 
 class SecretManager(object):
     def __init__(self, project_id):
@@ -26,3 +28,16 @@ class SecretManager(object):
         response = self._client.access_secret_version(name=secret_name)
 
         return response.payload.data.decode('UTF-8')
+
+
+def get_project_id():
+    """Obtains the instance metadata (which is only possible if this is running in the GCP)"""
+    try:
+        r = requests.get('http://metadata.google.internal/computeMetadata/v1/project/project-id',
+                         headers={'Metadata-Flavor': 'Google'})
+        if r.status_code == 200:
+            return r.text
+        else:
+            return None
+    except Exception:
+        return None
