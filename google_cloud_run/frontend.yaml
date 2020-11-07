@@ -1,0 +1,27 @@
+# deploy with: gcloud beta run services replace frontend.yaml --platform managed --region europe-west3
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  template:
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      containers:
+      - image: eu.gcr.io/quick-heaven-279220/frontend:latest
+        env:
+        - name: BACKEND_URL
+          value: backend-ks7it7kxpa-ey.a.run.app
+        - name: BACKEND_PORT
+          value: '443'
+        - name: BACKEND_DO_USE_HTTPS
+          value: 'True'
+        - name: GUNICORN_WORKERS
+          value: '1'
+        - name: GUNICORN_ACCESSLOG
+          value: '-'
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 128Mi

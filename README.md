@@ -22,9 +22,9 @@ The frontend is currently only localized to German.
 ### Server
 
 The server application can in principle be deployed using `docker-compose`. There are configuration files for
-Google App Engine available in the codebase which can be used to develop a deployment for the Google Cloud Platform. The
-server is written in Python using the `flask`-framework using a `PostgreSQL`-database. It can therefore be deployed to 
-a wide variety of cloud services and even a Raspberry Pi.
+Google App Engine and Google Cloud Run available in the codebase which can be used to develop a deployment for the 
+Google Cloud Platform. The server is written in Python using the `flask`-framework using a `PostgreSQL`-database. It 
+can therefore be deployed to a wide variety of cloud services and even a Raspberry Pi.
 
 
 ### Client
@@ -81,16 +81,9 @@ This starts a simple database, the data lifetime is identical to that of the con
 
 #### Backend
 
-1. Build the Docker container:
 
 ```shell script
-  docker build -f Dockerfile.backend -t backend .
-```
-    
-2. Run the Docker container (expecting the PostgreSQL-database running on the `localhost`):
-
-```shell script
-  docker run --network=host -e JWT_SECRET_KEY=SECRET-KEY -e DB_PASSWORD=passwd -e GUNICORN_WORKERS=4 -e GUNICORN_ACCESSLOG=- -p 8000:8000 backend
+  python3 backend/backend_app.py
 ```
 
   The backend is now accessible via http://server:8000.
@@ -98,16 +91,8 @@ This starts a simple database, the data lifetime is identical to that of the con
   
 #### Frontend
 
-1. Build the Docker container:
-
 ```shell script
-  docker build -f Dockerfile.frontend -t frontend .
-```
-
-2. Run the Docker container (expecting the backend running on the localhost):
-
-```shell script
-  docker run --network=host -e GUNICORN_WORKERS=4 -e GUNICORN_ACCESSLOG=- -p 8050:8050 frontend
+  python3 frontend/frontend_app.py
 ```
 
    The frontend is now accessible via http://server:8050.
@@ -129,6 +114,30 @@ underlying infrastructure (such as address of the backend and of the SQL-databas
 
 ```shell script
   gcloud app deploy ./frontend/frontend.app.yaml ./backend/backend.app.yaml
+```
+
+
+### Deployment to Google Cloud Run
+
+The deployment requires the following components in the GCP:
+
+* Google Cloud Run
+* Cloud-SQL (Postgres)
+* Google Secrets (for storing the database credentials)
+* Google VPC-connector (to connect GAE backend and SQL-database)
+
+The Cloud Run configuration files `google_cloud_run/backend.yaml` and `google_cloud_run/frontend.yaml` are examples 
+showing how the server can be configured as two separate services `backend` and `frontend`. It is necessary to adjust 
+the names / IP-addresses of the underlying infrastructure (such as address of the backend and of the SQL-database) 
+before applying them.
+
+The services can be deployed to Google Cloud Run like this:
+
+```shell script
+  gcloud builds submit --config backend-cloudbuild.yaml
+  gcloud beta run services replace ./google_cloud_run/backend.yaml --platform managed --region europe-west3
+  gcloud builds submit --config frontend-cloudbuild.yaml
+  gcloud beta run services replace ./google_cloud_run/frontend.yaml --platform managed --region europe-west3
 ```
 
 

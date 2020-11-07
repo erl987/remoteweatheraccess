@@ -16,16 +16,16 @@
 
 FROM python:3.8.5-slim-buster
 
+ENV PYTHONUNBUFFERED True
+
 WORKDIR /app
 
 COPY backend/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-
-EXPOSE 8000
 
 COPY ./backend/ /app
 
 RUN useradd -m backend
 USER backend
 
-ENTRYPOINT ["/usr/local/bin/gunicorn", "--worker-class", "gevent", "--preload", "--config", "backend_config/gunicorn.py", "--log-config", "backend_config/logging.conf", "--bind", ":8000", "wsgi:app"]
+CMD exec gunicorn --bind=:$PORT --worker-class=gevent --preload --config=backend_config/gunicorn.py --log-config=backend_config/logging.conf wsgi:app

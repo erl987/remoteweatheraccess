@@ -36,6 +36,7 @@ services:
     expose:
       - 8050
     environment:
+      - PORT=8050
       - BACKEND_URL=backend
       - BACKEND_PORT=8000
       - BACKEND_DO_USE_HTTPS=false
@@ -51,7 +52,7 @@ services:
     expose:
       - 8000
     environment:
-      - DOCKER_COMPOSE_APP=true
+      - PORT=8000
       - JWT_SECRET_KEY=SECRET-KEY
       - DB_URL=database
       - DB_PORT=5432
