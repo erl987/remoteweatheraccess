@@ -124,7 +124,6 @@ The deployment requires the following components in the GCP:
 * Google Cloud Run
 * Cloud-SQL (Postgres)
 * Google Secrets (for storing the database credentials)
-* Google VPC-connector (to connect GAE backend and SQL-database)
 
 The Cloud Run configuration files `google_cloud_run/backend.yaml` and `google_cloud_run/frontend.yaml` are examples 
 showing how the server can be configured as two separate services `backend` and `frontend`. It is necessary to adjust 
