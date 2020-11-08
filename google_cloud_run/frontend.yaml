@@ -8,6 +8,7 @@ spec:
     spec:
       containerConcurrency: 80
       timeoutSeconds: 300
+      serviceAccountName: weather-frontend@quick-heaven-279220.iam.gserviceaccount.com
       containers:
       - image: eu.gcr.io/quick-heaven-279220/frontend:latest
         env:
