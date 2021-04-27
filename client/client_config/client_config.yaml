@@ -1,0 +1,23 @@
+# HTTP-backend endpoint
+station_id: TES
+backend_url: 127.0.0.1
+backend_port: 8000
+use_ssl: False
+
+# login information
+user_name: default_admin
+password: Voy8ZJjW
+
+# client configuration
+time_zone: Europe/Stockholm
+relogin_time_in_sec: 50
+read_time_points_in_hour:
+  - :00
+  - :10
+  - :20
+  - :30
+  - :40
+  - :50
+ignored_data_fields:
+  - forecast
+  - storm_warning
