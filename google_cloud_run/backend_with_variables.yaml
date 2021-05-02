@@ -1,24 +1,23 @@
-# deploy with: gcloud beta run services replace backend.yaml --platform managed --region europe-west3
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: backend
+  name: ${BACKEND_SERVICE_NAME}
 spec:
   template:
     metadata:
       annotations:
-        run.googleapis.com/cloudsql-instances: quick-heaven-279220:europe-west3:weatherdata
+        run.googleapis.com/cloudsql-instances: ${GCP_PROJECT_ID}:${SQL_DATABASE_ID}
     spec:
       containerConcurrency: 80
       timeoutSeconds: 300
-      serviceAccountName: weather-backend@quick-heaven-279220.iam.gserviceaccount.com
+      serviceAccountName: ${BACKEND_SERVICE_ACCOUNT_NAME}
       containers:
-      - image: eu.gcr.io/quick-heaven-279220/backend:latest
+      - image: ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${BACKEND_SERVICE_NAME}:${CI_COMMIT_SHA}
         env:
         - name: RUNNING_ON_SERVER
           value: 'True'
         - name: DB_INSTANCE_CONNECTION_NAME
-          value: quick-heaven-279220:europe-west3:weatherdata
+          value: ${GCP_PROJECT_ID}:${SQL_DATABASE_ID}
         - name: DB_USER_DB_USER
           value: userdb
         - name: DB_WEATHER_DB_USER

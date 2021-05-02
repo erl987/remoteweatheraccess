@@ -159,7 +159,7 @@ class TestConfig(Config):
     ENV = 'test'
     TESTING = True
     DEBUG = True
-    DB_URL = 'localhost'
+    DB_URL = os.environ.get('POSTGRES_TEST_URL', 'localhost')
     DB_USER = 'postgres'
     DB_PASSWORD = os.environ.get('DB_PASSWORD', 'passwd')
     DB_DATABASE = 'postgres'

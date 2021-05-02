@@ -2,20 +2,20 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: frontend
+  name: ${FRONTEND_SERVICE_NAME}
 spec:
   template:
     spec:
       containerConcurrency: 80
       timeoutSeconds: 300
-      serviceAccountName: weather-frontend@quick-heaven-279220.iam.gserviceaccount.com
+      serviceAccountName: ${FRONTEND_SERVICE_ACCOUNT_NAME}
       containers:
-      - image: eu.gcr.io/quick-heaven-279220/frontend:latest
+      - image: ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}:${CI_COMMIT_SHA}
         env:
         - name: BACKEND_URL
-          value: backend-ks7it7kxpa-ey.a.run.app
+          value: ${BACKEND_URL_BASE}
         - name: BACKEND_PORT
-          value: '443'
+          value: '${BACKEND_PORT}'
         - name: BACKEND_DO_USE_HTTPS
           value: 'True'
         - name: GUNICORN_WORKERS

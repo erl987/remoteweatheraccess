@@ -1,0 +1,196 @@
+image: python:3.9.4-buster
+
+include:
+  - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
+
+variables:
+  GCP_REGION: europe-central2
+  SQL_DATABASE_ID: europe-west3:weatherdata
+  FRONTEND_SERVICE_ACCOUNT_NAME: weather-frontend@${GCP_PROJECT_ID}.iam.gserviceaccount.com
+  BACKEND_SERVICE_ACCOUNT_NAME: weather-backend@${GCP_PROJECT_ID}.iam.gserviceaccount.com
+  GCP_CONTAINER_REGISTRY: eu.gcr.io
+  BACKEND_PORT: 443
+  FRONTEND_SERVICE_NAME: "frontend-${CI_COMMIT_REF_SLUG}"
+  BACKEND_SERVICE_NAME: "backend-${CI_COMMIT_REF_SLUG}"
+  PIP_CACHE_DIR: "${CI_PROJECT_DIR}/.cache/pip"
+
+default:
+  tags:
+    - docker
+
+.python_prepare: &python_prepare
+  - python3 --version
+  - pip3 install virtualenv
+  - virtualenv venv
+  - source venv/bin/activate
+
+.install_gettext: &install_gettext
+  - apt-get update
+  - apt-get install -qq -y gettext
+
+.gcp_docker_registry_login: &gcp_docker_registry_login
+  - echo "${GCP_SERVICE_KEY}" | docker login --username _json_key --password-stdin https://${GCP_CONTAINER_REGISTRY}
+
+.gcp_cloud_build_prepare: &gcp_cloud_build_prepare
+  - echo ${GCP_SERVICE_KEY} > gcloud-service-key.json
+  - gcloud auth activate-service-account --key-file gcloud-service-key.json
+  - gcloud config set project ${GCP_PROJECT_ID}
+
+.gcp_cloud_run_deploy: &gcp_cloud_run_deploy
+  - envsubst < ./google_cloud_run/${TIER}_with_variables.yaml > ${TIER}.yaml
+  - gcloud beta run services replace ${TIER}.yaml
+    --region=${GCP_REGION}
+    --platform=managed
+  - service_name=${TIER^^}_SERVICE_NAME
+  - gcloud run services add-iam-policy-binding ${!service_name}
+    --region=${GCP_REGION}
+    --platform=managed
+    --member="allUsers"
+    --role="roles/run.invoker"
+  - export ${TIER^^}_URL=$(gcloud run services describe ${!service_name}
+    --region=${GCP_REGION}
+    --platform=managed
+    --format='value(status.url)')
+
+.gcp_deploy: &gcp_deploy
+  image: google/cloud-sdk:338.0.0
+  script:
+    - *gcp_cloud_build_prepare
+    - *install_gettext
+    - TIER=backend
+    - *gcp_cloud_run_deploy
+    - export BACKEND_URL_BASE=$(basename ${BACKEND_URL})
+    - TIER=frontend
+    - *gcp_cloud_run_deploy
+    - echo "FRONTEND_URL=${FRONTEND_URL}" > frontend_deploy.env
+  artifacts:
+    reports:
+      dotenv: frontend_deploy.env
+
+.gcp_delete_containers: &gcp_delete_containers
+  - DIGESTS=$(gcloud container images list-tags ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${IMAGE_NAME}
+    --format 'value(digest)')
+  - for DIGEST in $DIGESTS;
+    do
+    gcloud container images delete ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${IMAGE_NAME}@sha256:${DIGEST}
+    --force-delete-tags
+    --quiet;
+    done
+
+.publish_test_artifacts: &publish_test_artifacts
+  when: always
+  reports:
+    junit: report.xml
+
+stages:
+  - test
+  - build containers
+  - deploy review
+  - cleanup review
+  - deploy production
+
+unittests backend:
+  stage: test
+  cache:
+    paths:
+      - .cache/pip
+      - venv/
+  services:
+    - postgres:13.0-alpine
+  before_script:
+    - *python_prepare
+    - pip3 install -r backend/requirements.txt
+    - pip3 install -r backend/requirements-test.txt
+  variables:
+    POSTGRES_DB: postgres
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: passwd
+    POSTGRES_TEST_URL: postgres  # the URL provided by the service
+  script:
+    - export PYTHONPATH=${CI_PROJECT_DIR}/backend
+    - pytest backend/tests/unit_tests --junitxml=report.xml
+  artifacts:
+    <<: *publish_test_artifacts
+
+unittests frontend:
+  stage: test
+  cache:
+    paths:
+      - .cache/pip
+      - venv/
+  before_script:
+    - *python_prepare
+    - pip3 install -r frontend/requirements.txt
+    - pip3 install -r frontend/requirements-test.txt
+  script:
+    - export PYTHONPATH=${CI_PROJECT_DIR}/frontend
+    - pytest frontend/tests/unit_tests --junitxml=report.xml
+  artifacts:
+    <<: *publish_test_artifacts
+
+build backend:
+  stage: build containers
+  image: docker:20.10.6
+  services:
+    - docker:20.10.6-dind
+  script:
+    - docker build -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${BACKEND_SERVICE_NAME}:${CI_COMMIT_SHA}
+      --file=./Dockerfile.backend .
+    - *gcp_docker_registry_login
+    - docker push ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${BACKEND_SERVICE_NAME}:${CI_COMMIT_SHA}
+
+build frontend:
+  stage: build containers
+  image: docker:20.10.6
+  services:
+    - docker:20.10.6-dind
+  script:
+    - docker build -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}:${CI_COMMIT_SHA}
+      --file=./Dockerfile.frontend .
+    - *gcp_docker_registry_login
+    - docker push ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}:${CI_COMMIT_SHA}
+
+deploy review:
+  stage: deploy review
+  <<: *gcp_deploy
+  environment:
+    name: review/${CI_COMMIT_REF_NAME}
+    url: $FRONTEND_URL
+    on_stop: stop review
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+
+stop review:
+  stage: cleanup review
+  dependencies:
+    - deploy review
+  image: google/cloud-sdk:338.0.0
+  script:
+    - gcloud run services delete ${FRONTEND_SERVICE_NAME}
+      --region=${GCP_REGION}
+      --platform=managed
+      --quiet
+    - gcloud run services delete ${BACKEND_SERVICE_NAME}
+      --region=${GCP_REGION}
+      --platform=managed
+      --quiet
+    - IMAGE_NAME=${FRONTEND_SERVICE_NAME}
+    - *gcp_delete_containers
+    - IMAGE_NAME=${BACKEND_SERVICE_NAME}
+    - *gcp_delete_containers
+  environment:
+    name: review/${CI_COMMIT_REF_NAME}
+    action: stop
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+      when: manual
+      allow_failure: true
+
+deploy production:
+  stage: deploy production
+  <<: *gcp_deploy
+  environment:
+    name: production
+    url: $FRONTEND_URL
+  only:
+    - master

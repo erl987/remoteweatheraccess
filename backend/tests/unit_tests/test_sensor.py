@@ -34,7 +34,7 @@ def test_get_all_sensors(client_without_permissions):
 def test_get_one_sensor(client_without_permissions):
     result = client_without_permissions.get('/api/v1/sensor/pressure')
     assert result.status_code == HTTPStatus.OK
-    assert result.get_json()['unit'] == 'Pa'
+    assert result.get_json()['unit'] == 'hPa'
 
 
 @pytest.mark.usefixtures('client_without_permissions')
