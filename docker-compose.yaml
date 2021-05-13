@@ -24,7 +24,7 @@ services:
     ports:
       - 80:80
     volumes:
-      - ./demo_deployment/nginx:/etc/nginx/conf.d
+      - ./deployment/demo_deployment/nginx:/etc/nginx/conf.d
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
     depends_on:
       - frontend
@@ -69,7 +69,7 @@ services:
 
   database:
     build:
-      context: demo_deployment/postgres
+      context: deployment/demo_deployment/postgres
     expose:
       - 5432
     environment:

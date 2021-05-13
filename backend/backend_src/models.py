@@ -189,8 +189,8 @@ def prepare_database(app):
     with app.app_context():
         db.create_all()
 
-        num_default_admin_users = db.session.query(FullUser).filter(FullUser.name == DEFAULT_ADMIN_USER_NAME).count()
-        if num_default_admin_users == 0:
+        num_users = db.session.query(FullUser).count()
+        if num_users == 0:
             create_default_admin_user(app)
 
         num_temp_humidity_sensors = db.session.query(TempHumiditySensor).count()

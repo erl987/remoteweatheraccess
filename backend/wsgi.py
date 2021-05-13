@@ -35,5 +35,5 @@ from backend_src.models import prepare_database
 
 app = create_app()
 
-if 'DOCKER_COMPOSE_APP' in os.environ:
+if 'DOCKER_COMPOSE_APP' in os.environ or 'RUNNING_ON_SERVER' in os.environ:
     prepare_database(app)

@@ -4,15 +4,20 @@ include:
   - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
 
 variables:
-  GCP_REGION: europe-central2
-  SQL_DATABASE_ID: europe-west3:weatherdata
-  FRONTEND_SERVICE_ACCOUNT_NAME: weather-frontend@${GCP_PROJECT_ID}.iam.gserviceaccount.com
-  BACKEND_SERVICE_ACCOUNT_NAME: weather-backend@${GCP_PROJECT_ID}.iam.gserviceaccount.com
-  GCP_CONTAINER_REGISTRY: eu.gcr.io
+  GCP_REGION: ${GCP_REGION_ID}
+  GCP_CONTAINER_REGISTRY: ${GCP_CONTAINER_REGISTRY}
   BACKEND_PORT: 443
   FRONTEND_SERVICE_NAME: "frontend-${CI_COMMIT_REF_SLUG}"
   BACKEND_SERVICE_NAME: "backend-${CI_COMMIT_REF_SLUG}"
   PIP_CACHE_DIR: "${CI_PROJECT_DIR}/.cache/pip"
+
+before_script:
+  - if [ ${CI_COMMIT_REF_NAME} == master ];
+    then source deployment/environments/.production.env;
+    else source deployment/environments/.testing.env;
+    fi
+  - export FRONTEND_SERVICE_ACCOUNT_NAME=weather-frontend@${GCP_PROJECT_ID}.iam.gserviceaccount.com
+  - export BACKEND_SERVICE_ACCOUNT_NAME=weather-backend@${GCP_PROJECT_ID}.iam.gserviceaccount.com
 
 default:
   tags:
@@ -37,7 +42,7 @@ default:
   - gcloud config set project ${GCP_PROJECT_ID}
 
 .gcp_cloud_run_deploy: &gcp_cloud_run_deploy
-  - envsubst < ./google_cloud_run/${TIER}_with_variables.yaml > ${TIER}.yaml
+  - envsubst < ./deployment/google_cloud_run/${TIER}_with_variables.yaml > ${TIER}.yaml
   - gcloud beta run services replace ${TIER}.yaml
     --region=${GCP_REGION}
     --platform=managed
@@ -57,6 +62,9 @@ default:
   script:
     - *gcp_cloud_build_prepare
     - *install_gettext
+    - export SQL_DATABASE_ID=${GCP_REGION}:$(gcloud sql instances list --format 'value(name)')
+    - num_databases=$(wc -w <<< "$SQL_DATABASE_ID")
+    - if [ $num_databases != 1 ]; then echo "ERROR, not exactly one database in GCP-project"; exit 1; fi
     - TIER=backend
     - *gcp_cloud_run_deploy
     - export BACKEND_URL_BASE=$(basename ${BACKEND_URL})
