@@ -7,9 +7,9 @@ variables:
   GCP_REGION: ${GCP_REGION_ID}
   GCP_CONTAINER_REGISTRY: ${GCP_CONTAINER_REGISTRY}
   BACKEND_PORT: 443
-  FRONTEND_SERVICE_NAME: "frontend-${CI_COMMIT_REF_SLUG}"
-  BACKEND_SERVICE_NAME: "backend-${CI_COMMIT_REF_SLUG}"
-  PIP_CACHE_DIR: "${CI_PROJECT_DIR}/.cache/pip"
+  FRONTEND_SERVICE_NAME: frontend-${CI_COMMIT_REF_SLUG}
+  BACKEND_SERVICE_NAME: backend-${CI_COMMIT_REF_SLUG}
+  PIP_CACHE_DIR: ${CI_PROJECT_DIR}/.cache/pip
 
 default:
   tags:
@@ -108,7 +108,7 @@ unittests backend:
   before_script:
     - *python_prepare
     - pip3 install -r backend/requirements.txt
-    - pip3 install -r backend/requirements-test.txt
+    - pip3 install -r backend/dev-requirements.txt
   variables:
     POSTGRES_DB: postgres
     POSTGRES_USER: postgres
@@ -129,7 +129,7 @@ unittests frontend:
   before_script:
     - *python_prepare
     - pip3 install -r frontend/requirements.txt
-    - pip3 install -r frontend/requirements-test.txt
+    - pip3 install -r frontend/dev-requirements.txt
   script:
     - export PYTHONPATH=${CI_PROJECT_DIR}/frontend
     - pytest frontend/tests/unit_tests --junitxml=report.xml
