@@ -20,7 +20,7 @@ from functools import wraps
 from http import HTTPStatus
 
 from flask import current_app, request
-from flask_jwt_extended import verify_jwt_in_request, get_jwt_claims, get_jwt_identity
+from flask_jwt_extended import verify_jwt_in_request, get_jwt, get_jwt_identity
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import BadRequest
@@ -119,10 +119,10 @@ def _verify_and_read_jwt():
         raise_api_error(e, status_code=HTTPStatus.UNAUTHORIZED)
 
     user_name = get_jwt_identity()
-    user_claims = get_jwt_claims()
-    user_role = user_claims['role']
+    claims = get_jwt()
+    user_role = claims['role']
     user_role_id = Role[user_role].value
-    approved_station_id = user_claims['station_id']
+    approved_station_id = claims['station_id']
 
     return user_name, user_role_id, approved_station_id
 

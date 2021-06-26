@@ -6,7 +6,7 @@
 #
 attrs==21.2.0
     # via pytest
-importlib-metadata==4.3.1
+importlib-metadata==4.5.0
     # via
     #   pluggy
     #   pytest
@@ -20,9 +20,9 @@ py==1.10.0
     # via pytest
 pyparsing==2.4.7
     # via packaging
-pytest-mock==3.6.0
+pytest-mock==3.6.1
     # via -r dev-requirements.in
-pytest==6.2.3
+pytest==6.2.4
     # via
     #   -r dev-requirements.in
     #   pytest-mock

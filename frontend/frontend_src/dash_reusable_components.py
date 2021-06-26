@@ -19,11 +19,11 @@ import dash_core_components as dcc
 import dash_html_components as html
 
 
-def ModalDialog(id, dialog_content):
+def ModalDialog(the_id, dialog_content):
     return html.Div(
         [
             dbc.Modal(
-                id='{}-dialog'.format(id),
+                id='{}-dialog'.format(the_id),
                 size='xl',
                 children=[
                     dbc.ModalBody(
@@ -32,7 +32,7 @@ def ModalDialog(id, dialog_content):
                     dbc.ModalFooter(
                         dbc.Button(
                             'Schließen',
-                            id='close-{}'.format(id),
+                            id='close-{}'.format(the_id),
                             className='ml-auto')
                     ),
                 ]

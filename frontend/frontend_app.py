@@ -29,6 +29,7 @@ gevent.monkey.patch_all()
 from functools import partial
 
 import dash
+import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
@@ -39,8 +40,10 @@ from frontend_src.layout import get_layout
 from frontend_src.plot import create_figure_config
 from frontend_src.utils import convert_input_into_lists, determine_start_and_end_dates
 
-# this app uses the Bootstrap theme United
+plotly_de_locale = 'https://cdn.plot.ly/plotly-locale-de-2.1.0.js'
 app = dash.Dash(__name__,
+                external_stylesheets=[dbc.themes.UNITED],
+                external_scripts=[plotly_de_locale],
                 meta_tags=[
                     {'name': 'viewport', 'content': 'width=device-width, initial-scale=1'}
                 ])

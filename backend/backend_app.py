@@ -77,9 +77,13 @@ def register_errorhandlers(app):
     jwt.unauthorized_loader(unauthorized_response)
 
 
-# will only be executed if running directly with Python
-if __name__ == '__main__':
+def main():
     app = create_app(DevConfig())
     prepare_database(app)
 
     app.run(host='0.0.0.0', port=8000)
+
+
+# will only be executed if running directly with Python
+if __name__ == '__main__':
+    main()

@@ -5,3 +5,13 @@
     background-color: #E95420;
     color: white;
 }
+
+.nav-tabs .nav-item .nav-link {
+    background-color: white;
+    color: black;
+}
+
+ul.nav a:hover {
+    background-color: white;
+    color: black;
+}

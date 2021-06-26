@@ -201,12 +201,12 @@ def get_layout(data_protection_policy_file_path, impress_file_path, config_for_p
             dcc.Location(id='url', refresh=True),
 
             drc.ModalDialog(
-                id='data-protection-policy',
+                the_id='data-protection-policy',
                 dialog_content=data_protection_policy_text
             ),
 
             drc.ModalDialog(
-                id='impress',
+                the_id='impress',
                 dialog_content=impress_text
             ),
 
@@ -244,7 +244,7 @@ def get_layout(data_protection_policy_file_path, impress_file_path, config_for_p
 
             dbc.Row(
                 [dbc.Col(
-                    html.P(children='Copyright (C) 2020 Ralf Rettig'),
+                    html.P(children='Copyright (C) 2021 Ralf Rettig'),
                     width=12
                 )]
             )

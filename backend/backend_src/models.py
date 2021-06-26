@@ -70,7 +70,7 @@ class TempHumiditySensorData(db.Model):
     humidity: float = db.Column(db.Float, nullable=False)
 
     __table_args__ = (db.ForeignKeyConstraint(
-        [timepoint, station_id],
+        (timepoint, station_id),
         ['weather_dataset.timepoint', 'weather_dataset.station_id']),
     )
 

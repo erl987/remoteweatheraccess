@@ -15,8 +15,9 @@
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
-from multiprocessing import Process, Pipe
 from datetime import timedelta
+from multiprocessing import Process, Pipe
+from urllib.parse import quote_plus
 
 
 class Config(object):
@@ -59,33 +60,51 @@ class ProdConfig(Config):
                 secrets = ProdConfig._load_from_google_secret_manager_in_subprocess(gcp_project_id)
                 ProdConfig.DB_USER_DB_PASSWORD, ProdConfig.DB_WEATHER_DB_PASSWORD, ProdConfig.JWT_SECRET_KEY = secrets
 
+            user_db_password, weather_db_password = self._quote_sql_passwords()
+
             ProdConfig.SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@/{}?host={}'.format(
                 ProdConfig.DB_USER_DB_USER,
-                ProdConfig.DB_USER_DB_PASSWORD,
+                user_db_password,
                 ProdConfig.DB_USER_DATABASE,
                 ProdConfig.DB_INSTANCE_CONNECTION_NAME
             )
 
             ProdConfig.SQLALCHEMY_BINDS['weather-data'] = 'postgresql+psycopg2://{}:{}@/{}?host={}'.format(
                 ProdConfig.DB_WEATHER_DB_USER,
-                ProdConfig.DB_WEATHER_DB_PASSWORD,
+                weather_db_password,
                 ProdConfig.DB_WEATHER_DATABASE,
                 ProdConfig.DB_INSTANCE_CONNECTION_NAME
             )
         else:
+            user_db_password, weather_db_password = self._quote_sql_passwords()
+
             ProdConfig.SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(
                 ProdConfig.DB_USER_DB_USER,
-                ProdConfig.DB_USER_DB_PASSWORD,
+                user_db_password,
                 ProdConfig.DB_URL, Config.DB_PORT,
                 ProdConfig.DB_USER_DATABASE
             )
 
             ProdConfig.SQLALCHEMY_BINDS['weather-data'] = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(
                 ProdConfig.DB_WEATHER_DB_USER,
-                ProdConfig.DB_WEATHER_DB_PASSWORD,
+                weather_db_password,
                 ProdConfig.DB_URL, Config.DB_PORT,
                 ProdConfig.DB_WEATHER_DATABASE
             )
+
+    @staticmethod
+    def _quote_sql_passwords():
+        if ProdConfig.DB_USER_DB_PASSWORD:
+            user_db_password = quote_plus(ProdConfig.DB_USER_DB_PASSWORD)
+        else:
+            user_db_password = None
+
+        if ProdConfig.DB_WEATHER_DB_PASSWORD:
+            weather_db_password = quote_plus(ProdConfig.DB_WEATHER_DB_PASSWORD)
+        else:
+            weather_db_password = None
+
+        return user_db_password, weather_db_password
 
     @staticmethod
     def _get_gcp_project_id_in_subprocess():
@@ -111,31 +130,37 @@ class ProdConfig(Config):
         p = Process(target=ProdConfig._load_from_google_secret_manager, args=(child_conn, gcp_project_id))
         p.start()
         secrets = parent_conn.recv()
+        if isinstance(secrets, str):
+            raise AssertionError(secrets)
         p.join()
         return secrets
 
     @staticmethod
     def _load_from_google_secret_manager(conn, gcp_project_id):
-        from backend_src.google_cloud_utils import SecretManager
-        secrets = SecretManager(gcp_project_id)
+        try:
+            from backend_src.google_cloud_utils import SecretManager
+            secrets = SecretManager(gcp_project_id)
 
-        db_user_db_password = secrets.load(
-            os.environ.get('DB_USER_DB_PASSWORD_SECRET'),
-            os.environ.get('DB_USER_DB_PASSWORD_SECRET_VERSION')
-        )
+            db_user_db_password = secrets.load(
+                os.environ.get('DB_USER_DB_PASSWORD_SECRET'),
+                os.environ.get('DB_USER_DB_PASSWORD_SECRET_VERSION')
+            )
 
-        db_weather_db_password = secrets.load(
-            os.environ.get('DB_WEATHER_DB_PASSWORD_SECRET'),
-            os.environ.get('DB_WEATHER_DB_PASSWORD_SECRET_VERSION')
-        )
+            db_weather_db_password = secrets.load(
+                os.environ.get('DB_WEATHER_DB_PASSWORD_SECRET'),
+                os.environ.get('DB_WEATHER_DB_PASSWORD_SECRET_VERSION')
+            )
 
-        jwt_secret_key = secrets.load(
-            os.environ.get('JWT_SECRET_KEY_SECRET'),
-            os.environ.get('JWT_SECRET_KEY_SECRET_VERSION')
-        )
+            jwt_secret_key = secrets.load(
+                os.environ.get('JWT_SECRET_KEY_SECRET'),
+                os.environ.get('JWT_SECRET_KEY_SECRET_VERSION')
+            )
 
-        conn.send((db_user_db_password, db_weather_db_password, jwt_secret_key))
-        conn.close()
+            conn.send((db_user_db_password, db_weather_db_password, jwt_secret_key))
+        except Exception as e:
+            conn.send('ERROR loading secrets: {}'.format(e))
+        finally:
+            conn.close()
 
 
 class DevConfig(Config):
@@ -145,10 +170,10 @@ class DevConfig(Config):
     DB_USER = 'postgres'
     DB_PASSWORD = os.environ.get('DB_PASSWORD', 'passwd')
     DB_DATABASE = 'postgres'
-    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, DB_PASSWORD, DB_URL,
+    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, quote_plus(DB_PASSWORD), DB_URL,
                                                                             Config.DB_PORT, DB_DATABASE)
     SQLALCHEMY_BINDS = {
-        'weather-data': 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, DB_PASSWORD, DB_URL,
+        'weather-data': 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, quote_plus(DB_PASSWORD), DB_URL,
                                                                       Config.DB_PORT, DB_DATABASE)
     }
     JWT_SECRET_KEY = 'SECRET-KEY'
@@ -163,10 +188,10 @@ class TestConfig(Config):
     DB_USER = 'postgres'
     DB_PASSWORD = os.environ.get('DB_PASSWORD', 'passwd')
     DB_DATABASE = 'postgres'
-    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, DB_PASSWORD, DB_URL,
+    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, quote_plus(DB_PASSWORD), DB_URL,
                                                                             Config.DB_PORT, DB_DATABASE)
     SQLALCHEMY_BINDS = {
-        'weather-data': 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, DB_PASSWORD, DB_URL,
+        'weather-data': 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, quote_plus(DB_PASSWORD), DB_URL,
                                                                       Config.DB_PORT, DB_DATABASE)
     }
     JWT_SECRET_KEY = 'SECRET-KEY'

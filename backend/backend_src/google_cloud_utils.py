@@ -32,6 +32,7 @@ class SecretManager(object):
 
 def get_project_id():
     """Obtains the instance metadata (which is only possible if this is running in the GCP)"""
+    # noinspection PyBroadException
     try:
         r = requests.get('http://metadata.google.internal/computeMetadata/v1/project/project-id',
                          headers={'Metadata-Flavor': 'Google'})

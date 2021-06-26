@@ -17,10 +17,12 @@
 import gzip
 import json
 from http import HTTPStatus
+from typing import List
 
 import pandas as pd
 import pytz
 from flask import request, jsonify, current_app, Blueprint
+from sqlalchemy import column
 
 from .schemas import single_weather_dataset_schema, time_period_with_sensors_and_stations_schema
 from .schemas import time_period_with_stations_schema, many_weather_datasets_schema
@@ -63,6 +65,7 @@ def update_weather_dataset():
 
     approve_committed_station_ids([new_dataset.station_id])
 
+    # noinspection PyUnresolvedReferences
     existing_dataset = WeatherDataset.query.filter(
         WeatherDataset.timepoint == new_dataset.timepoint and
         WeatherDataset.station_id == new_dataset.station_id
@@ -181,7 +184,7 @@ def _get_query_params():
 
 
 def _obtain_request_args_for_get_method():
-    request_args = request.args.to_dict()
+    request_args = dict(request.args.to_dict())
 
     if 'sensors' not in request_args:
         request_args['sensors'] = []
@@ -200,7 +203,7 @@ def _get_param_list_from_str(string):
     return list(set(filter(None, string.split(','))))
 
 
-def _get_queried_sensors(requested_sensors):
+def _get_queried_sensors(requested_sensors) -> List[column]:
     queried_sensors = list(requested_sensors)
     rain_sensor_is_queried = False
 
@@ -212,6 +215,8 @@ def _get_queried_sensors(requested_sensors):
         rain_sensor_is_queried = True
     if rain_sensor_is_queried:
         queried_sensors.append('rain_counter')
+
+    queried_sensors = [column(sensor) for sensor in queried_sensors]
 
     return queried_sensors
 

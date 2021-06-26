@@ -63,6 +63,7 @@ class FigureLayout(object):
 
         if is_empty:
             self._create_empty_plot_axis_layout()
+            self._figure_layout['margin'] = dict(l=50, r=50, t=40, b=100)  # in px
 
     def get_json(self):
         return dict(self._figure_layout)

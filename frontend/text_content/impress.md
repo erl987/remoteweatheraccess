@@ -2,10 +2,10 @@
 
 ## Angaben gemäß § 5 TMG
 
-Ralf Rettig
-Bechhofer Str. 7b
-90453 Nürnberg
-Deutschland
+Ralf Rettig  
+Bechhofer Str. 7b  
+90453 Nürnberg  
+Deutschland  
 
 ## Kontakt
 
@@ -14,9 +14,9 @@ E-Mail: info@personalfme.de
 
 ## Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV
 
-Ralf Rettig
-Bechhofer Str. 7b
-90453 Nürnberg
+Ralf Rettig  
+Bechhofer Str. 7b  
+90453 Nürnberg  
 Deutschland  
 
 Quelle: [eRecht24](http://www.e-recht24.de/muster-disclaimer.html)

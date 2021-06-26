@@ -135,7 +135,7 @@ def get_user_details(user_id):
     return response
 
 
-@jwt.user_claims_loader
+@jwt.additional_claims_loader
 def add_claims_to_access_token(user):
     return {'role': user['role']}
 
@@ -155,8 +155,11 @@ def login():
     access_token = None
     if user_from_db:
         if flask_bcrypt.check_password_hash(user_from_db.password, submitted_user.password):
-            access_token = create_access_token(identity={'name': user_from_db.name},
-                                               user_claims=full_user_claims_dump_schema.dump(user_from_db),
+            full_user_claims = full_user_claims_dump_schema.dump(user_from_db)
+            identity_claim = {'name': user_from_db.name, 'role': full_user_claims['role']}
+            additional_claims = {'station_id': full_user_claims['station_id']}
+            access_token = create_access_token(identity=identity_claim,
+                                               additional_claims=additional_claims,
                                                fresh=True)
     else:
         flask_bcrypt.check_password_hash(INVALID_PASSWORD_SALT, 'something')  # to give always the same runtime

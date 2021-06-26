@@ -225,8 +225,8 @@ def client_with_push_user_permissions():
     with app.test_request_context():
         _create_mock_weather_stations()
         _create_sensors()
-        admin_access_token = create_access_token(identity={'name': 'pytest_user'},
-                                                 user_claims={'role': Role.PUSH_USER.name, 'station_id': 'TES'},
+        admin_access_token = create_access_token(identity={'name': 'pytest_user', 'role': Role.PUSH_USER.name},
+                                                 additional_claims={'station_id': 'TES'},
                                                  expires_delta=False,
                                                  fresh=True)
     client.environ_base['HTTP_AUTHORIZATION'] = 'Bearer {}'.format(admin_access_token)
@@ -247,8 +247,8 @@ def client_with_admin_permissions():
     with app.test_request_context():
         _create_mock_weather_stations()
         _create_sensors()
-        admin_access_token = create_access_token(identity={'name': 'pytest_admin'},
-                                                 user_claims={'role': Role.ADMIN.name, 'station_id': None},
+        admin_access_token = create_access_token(identity={'name': 'pytest_admin', 'role': Role.ADMIN.name},
+                                                 additional_claims={'station_id': None},
                                                  expires_delta=False,
                                                  fresh=True)
     client.environ_base['HTTP_AUTHORIZATION'] = 'Bearer {}'.format(admin_access_token)
