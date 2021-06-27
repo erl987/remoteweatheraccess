@@ -133,12 +133,16 @@ The following variables need to be defined in the GitLab project:
 * `GCP_PROJECT_ID_TESTING` (for example `weather-testing-123456`)
 * `GCP_REGION_ID` (for example `europe-west3`)
 * `GCP_SERVICE_KEY` (the key for the service project used by the CI/CD pipeline to deploy to GCP)
+* `BRAND_NAME` (the name of the website shown in the main header of the site, for example `Das Wetternetzwerk`)
+* `DATA_PROTECTION_POLICY_FILE` (a *file variable*, the content of the data protection policy - in Markdown format)
+* `IMPRESS_FILE` (a *file variable*, the content of the impress - in Markdown format)
 
-The *production* and *testing* projects are used by the **main** branch and the **merge request** branches respectively.
+The *production* and *testing* projects are used by the **main** branch, and the **merge request** branches
+respectively.
 
 #### Use the CI/CD pipeline
 
-Every commit to the code base trigger the unit tests and deploys the server components to either the *production* or
+Every commit to the code base trigger the unit tests and deploys the server components to either the *production*, or
 the *testing* project. The only requirement is to set up the GitLab variables as described above.
 
 ## Get started in a production environment

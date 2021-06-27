@@ -13,12 +13,14 @@
 #
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+import os
 
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 from dateutil.parser import parse
 
+from frontend_config.settings import brand_name
 from . import dash_reusable_components as drc
 from .backend_proxy import CachedBackendProxy
 
@@ -40,7 +42,7 @@ def get_navbar_component():
             dbc.NavItem(dbc.NavLink('Datenschutz', href='#', id='open-data-protection-policy')),
             dbc.NavItem(dbc.NavLink('Impressum', href='#', id='open-impress'))
         ],
-        brand='Rettigs Wetternetzwerk',
+        brand=brand_name,
         brand_href='',
         color='primary',
         dark=True,
@@ -190,8 +192,19 @@ def get_layout(data_protection_policy_file_path, impress_file_path, config_for_p
         get_configuration_from_backend(backend_url, backend_port, backend_do_use_https, app)
 
     cached_backend = CachedBackendProxy(backend_url, backend_port, backend_do_use_https, app)
-    data_protection_policy_text = cached_backend.get_text_file_content(data_protection_policy_file_path)
-    impress_text = cached_backend.get_text_file_content(impress_file_path)
+
+    if os.path.exists(data_protection_policy_file_path):
+        data_protection_policy_text = cached_backend.get_text_file_content(data_protection_policy_file_path)
+    else:
+        app.logger.warn('File containing the data protection policy not found: {}'
+                        .format(data_protection_policy_file_path))
+        data_protection_policy_text = 'File containing the data protection policy not found'
+
+    if os.path.exists(impress_file_path):
+        impress_text = cached_backend.get_text_file_content(impress_file_path)
+    else:
+        app.logger.warn('File containing the impress not found: {}'.format(impress_file_path))
+        impress_text = 'File containing the impress not found'
 
     app.logger.info('Created and provided new layout')
 

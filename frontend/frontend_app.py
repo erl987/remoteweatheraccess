@@ -51,8 +51,8 @@ app.title = 'Wetterdaten'
 server = app.server
 cache.init_app(server)
 app.layout = partial(get_layout,
-                     DATA_PROTECTION_POLICY_FILE_PATH,
-                     IMPRESS_FILE_PATH,
+                     data_protection_policy_file_path,
+                     impress_file_path,
                      config_for_plots,
                      default_selected_sensor_ids,
                      initial_time_period,

@@ -22,6 +22,8 @@ spec:
           value: '1'
         - name: GUNICORN_ACCESSLOG
           value: '-'
+        - name: BRAND_NAME
+          value: ${BRAND_NAME}
         resources:
           limits:
             cpu: 1000m

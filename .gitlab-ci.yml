@@ -10,6 +10,7 @@ variables:
   FRONTEND_SERVICE_NAME: frontend-${CI_COMMIT_REF_SLUG}
   BACKEND_SERVICE_NAME: backend-${CI_COMMIT_REF_SLUG}
   PIP_CACHE_DIR: ${CI_PROJECT_DIR}/.cache/pip
+  BRAND_NAME: ${BRAND_NAME}
 
 default:
   tags:
@@ -77,6 +78,11 @@ default:
     --quiet;
     done
 
+.copy_text_files: &copy_text_files
+  - mkdir frontend/text_content
+  - cp ${DATA_PROTECTION_POLICY_FILE} frontend/text_content/data-protection-policy.md
+  - cp ${IMPRESS_FILE} frontend/text_content/impress.md
+
 .publish_test_artifacts: &publish_test_artifacts
   when: always
   reports:
@@ -89,6 +95,8 @@ before_script:
     fi
   - export FRONTEND_SERVICE_ACCOUNT_NAME=weather-frontend@${GCP_PROJECT_ID}.iam.gserviceaccount.com
   - export BACKEND_SERVICE_ACCOUNT_NAME=weather-backend@${GCP_PROJECT_ID}.iam.gserviceaccount.com
+  - export FRONTEND_SERVICE_NAME=${FRONTEND_SERVICE_NAME:0:63}
+  - export BACKEND_SERVICE_NAME=${BACKEND_SERVICE_NAME:0:63}
 
 stages:
   - test
@@ -153,6 +161,7 @@ build frontend:
   services:
     - docker:20.10.6-dind
   script:
+    - *copy_text_files
     - docker build -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}:${CI_COMMIT_SHA}
       --file=./Dockerfile.frontend .
     - *gcp_docker_registry_login

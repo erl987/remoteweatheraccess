@@ -27,10 +27,13 @@ initial_time_period = timedelta(days=os.environ.get('INITIAL_TIME_PERIOD', 7))
 user_time_zone = pytz.timezone(os.environ.get('TIMEZONE', 'Europe/Berlin'))
 config_for_plots = {'locale': os.environ.get('LOCALE', 'de')}
 default_selected_sensor_ids = ['pressure', 'rain', 'OUT1_temp', 'OUT1_humid']
+brand_name = os.environ.get('BRAND_NAME', 'Das Wetternetzwerk')
+
+# these files need to be provided locally
+data_protection_policy_file_path = r'text_content/data-protection-policy.md'
+impress_file_path = r'text_content/impress.md'
 
 # application settings
-DATA_PROTECTION_POLICY_FILE_PATH = r'text_content/data-protection-policy.md'
-IMPRESS_FILE_PATH = r'text_content/impress.md'
 
 # color scheme based on that of the Bootstrap theme United
 COLOR_LIST = [
