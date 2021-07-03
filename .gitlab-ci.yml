@@ -174,7 +174,7 @@ deploy review:
     url: $FRONTEND_URL
     on_stop: stop review
   rules:
-    - if: $CI_MERGE_REQUEST_ID
+    - if: '$CI_MERGE_REQUEST_ID || $CI_COMMIT_BRANCH != "master"'
 
 stop review:
   stage: cleanup review
@@ -199,7 +199,7 @@ stop review:
     name: review/${CI_COMMIT_REF_NAME}
     action: stop
   rules:
-    - if: $CI_MERGE_REQUEST_ID
+    - if: '$CI_MERGE_REQUEST_ID || $CI_COMMIT_BRANCH != "master"'
       when: manual
       allow_failure: true
 
