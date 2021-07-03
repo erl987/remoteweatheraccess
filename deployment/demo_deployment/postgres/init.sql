@@ -1,6 +1,6 @@
 /*
  * Remote Weather Access - Client/server solution for distributed weather networks
- *  Copyright (C) 2013-2020 Ralf Rettig (info@personalfme.de)
+ *  Copyright (C) 2013-2021 Ralf Rettig (info@personalfme.de)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -15,7 +15,6 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 -- DO NOT DEFINE THE PASSWORDS LIKE THIS IN PRODUCTION
 CREATE USER userdb;
 ALTER USER userdb WITH PASSWORD 'passwd1';
