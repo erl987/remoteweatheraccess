@@ -1,8 +1,8 @@
 # Full-stack web application for realizing a weather network on the internet
 
 This is providing a website for a weather network with many remote weather stations. The software is running on a
-server - in the cloud or even on small devices such as as a Raspberry Pi. The clients can be any weather station that is
-capable to connect to the internet via HTTP. Usually this will be an IoT-device such as as Raspberry Pi connected to a
+server - in the cloud or even on small devices such as a Raspberry Pi. The clients can be any weather station that is
+capable to connect to the internet via HTTP. Usually this will be an IoT-device such as a Raspberry Pi connected to a
 weather station via USB.
 
 The frontend is currently only localized to German.
@@ -34,7 +34,7 @@ using a REST-API. This makes it easy to implement a client application tailored 
 
 It is easy to run the whole server application stack with `docker-compose`. This also includes a database. **The
 database will be deleted when destroying the `postgres`-container!** This configuration is only intended for development
-and documentation purposes. A production environment should run behind HTTPS and the database volume needs to be
+and documentation purposes. A production environment should run behind HTTPS, and the database volume needs to be
 persistent.
 
 1. Change to the root directory of the project:
@@ -56,8 +56,8 @@ persistent.
 ```
 
 4. The application is now accessible on http://server.
-   **You need to create at least one weather station and a push user for each station in order to run the server in a
-   meaningful way.** Check the documentation below to perform the initial configuration and get started.
+   **You need to create at least one weather station, and a push user for each station in order to run the server
+   meaningfully.** Check the documentation below to perform the initial configuration and get started.
 
 5. Stop the stack:
 
@@ -132,7 +132,7 @@ The following variables need to be defined in the GitLab project:
 * `GCP_PROJECT_ID_PRODUCTION` (for example `weather-production-123456`)
 * `GCP_PROJECT_ID_TESTING` (for example `weather-testing-123456`)
 * `GCP_REGION_ID` (for example `europe-west3`)
-* `GCP_SERVICE_KEY` (the key for the service project used by the CI/CD pipeline to deploy to GCP)
+* `GOOGLE_APPLICATION_CREDENTIALS` (the key for the service project used by the CI/CD pipeline to deploy to GCP)
 * `BRAND_NAME` (the name of the website shown in the main header of the site, for example `Das Wetternetzwerk`)
 * `DATA_PROTECTION_POLICY_FILE` (a *file variable*, the content of the data protection policy - in Markdown format)
 * `IMPRESS_FILE` (a *file variable*, the content of the impress - in Markdown format)
@@ -243,7 +243,7 @@ Authorization: Bearer jwt-access-token
 
 ## Tests
 
-The codebase has a high coverage of unit tests. All unit tests are run automatically on commits by the CI/CD-pipeline.
+The codebase has a high coverage of unit tests. All unit tests run automatically on commits by the CI/CD-pipeline.
 
 If running the tests manually, they are expecting a running `postgres` database on the `localhost`. The most easy way to
 provide an empty database is to start a `postgres` container:

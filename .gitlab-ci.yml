@@ -27,11 +27,10 @@ default:
   - apt-get install -qq -y gettext
 
 .gcp_docker_registry_login: &gcp_docker_registry_login
-  - echo "${GCP_SERVICE_KEY}" | docker login --username _json_key --password-stdin https://${GCP_CONTAINER_REGISTRY}
+  - docker login --username _json_key --password-stdin https://${GCP_CONTAINER_REGISTRY} < ${GOOGLE_APPLICATION_CREDENTIALS}
 
 .gcp_cloud_login: &gcp_cloud_login
-  - echo ${GCP_SERVICE_KEY} > gcloud-service-key.json
-  - gcloud auth activate-service-account --key-file gcloud-service-key.json
+  - gcloud auth activate-service-account --key-file ${GOOGLE_APPLICATION_CREDENTIALS}
   - gcloud config set project ${GCP_PROJECT_ID}
 
 .gcp_cloud_run_deploy: &gcp_cloud_run_deploy
