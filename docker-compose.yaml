@@ -20,7 +20,7 @@ version: '3'
 
 services:
   reverse-proxy:
-    image: nginx:1.19.3
+    image: nginx:1.21.0
     ports:
       - 80:80
     volumes:
@@ -52,6 +52,7 @@ services:
     expose:
       - 8000
     environment:
+      - DOCKER_COMPOSE_APP=true
       - PORT=8000
       - JWT_SECRET_KEY=SECRET-KEY
       - DB_URL=database
