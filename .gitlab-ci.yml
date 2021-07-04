@@ -28,10 +28,6 @@ variables:
   PIP_CACHE_DIR: ${CI_PROJECT_DIR}/.cache/pip
   BRAND_NAME: ${BRAND_NAME}
 
-workflow:
-  rules:
-    - when: always
-
 default:
   tags:
     - docker
