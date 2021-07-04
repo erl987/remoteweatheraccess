@@ -32,6 +32,11 @@ default:
   tags:
     - docker
 
+workflow:
+  rules:
+    - when: always
+
+
 .python_prepare: &python_prepare
   - python3 --version
   - pip3 install virtualenv
