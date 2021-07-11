@@ -19,6 +19,7 @@ import json
 from http import HTTPStatus
 from typing import List
 
+import numpy as np
 import pandas as pd
 import pytz
 from flask import request, jsonify, current_app, Blueprint
@@ -146,6 +147,9 @@ def get_weather_datasets():
                                                                                    TempHumiditySensorData.sensor_id,
                                                                                    *queried_sensors).statement,
                                  db.get_engine(current_app, 'weather-data'))
+
+    # required to provide standard conformant JSON containing `null` and not `NaN`
+    found_datasets = found_datasets.replace([np.nan], [None])
 
     if found_datasets.empty:
         return jsonify({}), HTTPStatus.OK

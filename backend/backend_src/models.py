@@ -66,8 +66,8 @@ class TempHumiditySensorData(db.Model):
     station_id: str = db.Column(db.String(10), primary_key=True)
     sensor_id: str = db.Column(db.String(10), ForeignKey(TempHumiditySensor.sensor_id), primary_key=True)
 
-    temperature: float = db.Column(db.Float, nullable=False)
-    humidity: float = db.Column(db.Float, nullable=False)
+    temperature: float = db.Column(db.Float, nullable=True)
+    humidity: float = db.Column(db.Float, nullable=True)
 
     __table_args__ = (db.ForeignKeyConstraint(
         (timepoint, station_id),
@@ -82,14 +82,14 @@ class WeatherDataset(db.Model):
     timepoint: datetime = db.Column(db.DateTime(timezone=True), primary_key=True)
     station_id: str = db.Column(db.String(10), ForeignKey(WeatherStation.station_id), primary_key=True)
 
-    pressure: float = db.Column(db.Float, nullable=False)
-    uv: float = db.Column(db.Float, nullable=False)
-    rain_counter: float = db.Column(db.Float, nullable=False)
+    pressure: float = db.Column(db.Float, nullable=True)
+    uv: float = db.Column(db.Float, nullable=True)
+    rain_counter: float = db.Column(db.Float, nullable=True)
 
-    direction: float = db.Column(db.Float, nullable=False)
-    speed: float = db.Column(db.Float, nullable=False)
-    wind_temperature: float = db.Column(db.Float, nullable=False)
-    gusts: float = db.Column(db.Float, nullable=False)
+    direction: float = db.Column(db.Float, nullable=True)
+    speed: float = db.Column(db.Float, nullable=True)
+    wind_temperature: float = db.Column(db.Float, nullable=True)
+    gusts: float = db.Column(db.Float, nullable=True)
 
     temperature_humidity: List[TempHumiditySensorData] = db.relationship(
         TempHumiditySensorData,

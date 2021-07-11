@@ -131,6 +131,26 @@ def a_dataset_for_another_station() -> dict:
 
 
 @pytest.fixture
+def a_dataset_with_none() -> dict:
+    yield [{
+        'timepoint': '2016-02-06T15:40:36.2Z',
+        'station_id': 'TES',
+        'pressure': None,
+        'uv': 9.6,
+        'rain_counter': 980.5,
+        'direction': 190.5,
+        'speed': 95.2,
+        'wind_temperature': 9.8,
+        'gusts': 120.5,
+        'temperature_humidity': [{
+            'sensor_id': 'IN',
+            'temperature': 10.5,
+            'humidity': None
+        }]
+    }]
+
+
+@pytest.fixture
 def a_user() -> dict:
     yield {
         'name': 'test_user',
@@ -225,6 +245,7 @@ def client_with_push_user_permissions():
     with app.test_request_context():
         _create_mock_weather_stations()
         _create_sensors()
+        # noinspection PyArgumentList
         admin_access_token = create_access_token(identity={'name': 'pytest_user', 'role': Role.PUSH_USER.name},
                                                  additional_claims={'station_id': 'TES'},
                                                  expires_delta=False,
@@ -247,6 +268,7 @@ def client_with_admin_permissions():
     with app.test_request_context():
         _create_mock_weather_stations()
         _create_sensors()
+        # noinspection PyArgumentList
         admin_access_token = create_access_token(identity={'name': 'pytest_admin', 'role': Role.ADMIN.name},
                                                  additional_claims={'station_id': None},
                                                  expires_delta=False,
@@ -317,13 +339,13 @@ def zip_payload(object_payload) -> bytes:
     return byte_stream.getvalue()
 
 
-def prepare_two_entry_database(a_dataset, another_dataset, client_with_push_user_permissions):
-    a_station_id = a_dataset[0]['station_id']
-    a_dataset_create_result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset)
-    assert a_dataset_create_result.status_code == HTTPStatus.NO_CONTENT
+def prepare_two_entry_database(first_dataset, second_dataset, client_with_push_user_permissions):
+    a_station_id = first_dataset[0]['station_id']
+    first_dataset_create_result = client_with_push_user_permissions.post('/api/v1/data', json=first_dataset)
+    assert first_dataset_create_result.status_code == HTTPStatus.NO_CONTENT
 
-    another_dataset_create_result = client_with_push_user_permissions.post('/api/v1/data', json=another_dataset)
-    assert another_dataset_create_result.status_code == HTTPStatus.NO_CONTENT
+    second_dataset_create_result = client_with_push_user_permissions.post('/api/v1/data', json=second_dataset)
+    assert second_dataset_create_result.status_code == HTTPStatus.NO_CONTENT
     client = drop_permissions(client_with_push_user_permissions)
 
     return a_station_id, client

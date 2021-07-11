@@ -18,6 +18,7 @@ import math
 from datetime import datetime, timedelta
 
 import dateutil.parser
+import numpy as np
 from requests.adapters import HTTPAdapter
 
 HUMID_SENSOR_MARKER = '_humid'
@@ -67,7 +68,10 @@ def get_sensor_data(data, station_id, sensor_id):
         sensor_data = data[station_id]['temperature_humidity'][_get_temp_humidity_sensor_id(sensor_id)]['humidity']
     else:
         sensor_data = data[station_id][sensor_id]
-    return sensor_data
+
+    sensor_data_with_nans = [np.nan if x is None else x for x in sensor_data]  # the data from the backend contains None
+
+    return sensor_data_with_nans
 
 
 def floor_to_n(val, n):

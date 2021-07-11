@@ -101,6 +101,21 @@ def test_determine_plot_axis_setup():
     assert num_ticks == 4
 
 
+def test_determine_plot_axis_setup_with_none():
+    sensors = ['pressure', 'uv']
+    stations = ['TES']
+    data = {'TES': {
+        'pressure': [1013.5, None, 1020.9],
+        'uv': [9.8, 8.4, None]
+    }}
+    left_main_axis_pos, right_main_axis_pos, min_max_limits, num_ticks = \
+        determine_plot_axis_setup(stations, data, sensors)
+    assert left_main_axis_pos == 0.1
+    assert right_main_axis_pos == 0.9
+    assert min_max_limits == {'pressure': {'min': 1010.0, 'max': 1025.0}, 'uv': {'min': 8.4, 'max': 9.8}}
+    assert num_ticks == 4
+
+
 def test_determinate_plot_axis_setup_when_empty():
     assert determine_plot_axis_setup([], {}, []) == (float('inf'), float('inf'), None, 0)
 

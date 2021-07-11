@@ -14,7 +14,7 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-image: python:3.9.5-buster
+image: python:3.9.6-buster
 
 include:
   - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
@@ -31,11 +31,6 @@ variables:
 default:
   tags:
     - docker
-
-workflow:
-  rules:
-    - when: always
-
 
 .python_prepare: &python_prepare
   - python3 --version

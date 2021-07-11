@@ -17,6 +17,8 @@
 from math import ceil
 from typing import Dict, Tuple
 
+import numpy as np
+
 from frontend_config.settings import *
 from .backend_proxy import CachedBackendProxy
 from .utils import floor_to_n, ceil_to_n, get_current_date, update_bounded_index, get_sensor_data
@@ -154,8 +156,8 @@ def get_scalings(min_max_sensors: Dict[str, Dict[str, float]]) -> Tuple[int, Dic
 
     delta_rain = 0.0
     min_p = 0.0
-    min_temp = float('inf')
-    max_temp = float('-inf')
+    min_temp = np.inf
+    max_temp = -np.inf
 
     all_num_ticks = []
     # determine number of ticks
@@ -339,17 +341,22 @@ def determine_plot_axis_setup(chosen_stations, data, sensors):
         right_main_axis_pos = 1 - _num_axis_on_right * SECONDARY_AXIS_OFFSET
 
         _min_max_sensors = {}
+        has_some_data = False
         for sensor_id in sensors:
-            _min_data = float('inf')
-            _max_data = float('-inf')
+            _min_data = np.inf
+            _max_data = -np.inf
             for station_index, station_id in enumerate(chosen_stations):
                 if station_id in data and len(data[station_id]) > 0:
                     sensor_data = get_sensor_data(data, station_id, sensor_id)
                     if len(sensor_data) > 0:
-                        _min_data = min(_min_data, min(sensor_data))
-                        _max_data = max(_max_data, max(sensor_data))
-            if _min_data != float('inf') and _max_data != float('-inf'):
+                        has_some_data = True
+                        if not np.isnan(sensor_data).all():
+                            _min_data = min(_min_data, np.nanmin(sensor_data))
+                            _max_data = max(_max_data, np.nanmax(sensor_data))
+            if np.isfinite(_min_data) and np.isfinite(_max_data):
                 _min_max_sensors[sensor_id] = {'min': _min_data, 'max': _max_data}
+            elif has_some_data:
+                _min_max_sensors[sensor_id] = {'min': 0.0, 'max': 0.0}
 
         if len(_min_max_sensors) > 0:
             num_ticks, min_max_limits = get_scalings(_min_max_sensors)
@@ -359,4 +366,4 @@ def determine_plot_axis_setup(chosen_stations, data, sensors):
 
         return left_main_axis_pos, right_main_axis_pos, min_max_limits, num_ticks
     else:
-        return float('inf'), float('inf'), None, 0
+        return np.inf, np.inf, None, 0

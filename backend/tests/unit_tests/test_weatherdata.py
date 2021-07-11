@@ -23,7 +23,7 @@ from dateutil.parser import isoparse
 # noinspection PyUnresolvedReferences
 from ..utils import client_without_permissions, client_with_push_user_permissions, client_with_admin_permissions, \
     a_dataset, another_dataset, another_dataset_without_timezone, an_updated_dataset, a_dataset_for_another_station, \
-    prepare_two_entry_database  # required as a fixture
+    prepare_two_entry_database, a_dataset_with_none  # required as a fixture
 from ..utils import drop_permissions, verify_database_is_empty, zip_payload
 
 
@@ -60,6 +60,12 @@ def test_create_two_datasets(client_with_push_user_permissions, a_dataset, anoth
 
     result_2 = client_with_push_user_permissions.post('/api/v1/data', json=another_dataset)
     assert result_2.status_code == HTTPStatus.NO_CONTENT
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset_with_none')
+def test_create_dataset_with_none(client_with_push_user_permissions, a_dataset_with_none):
+    result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset_with_none)
+    assert result.status_code == HTTPStatus.NO_CONTENT
 
 
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset')
@@ -321,6 +327,24 @@ def test_get_weather_datasets_only_one(client_with_push_user_permissions, a_data
     assert len(search_result.get_json()[a_station_id]['pressure']) == 1
     assert a_dataset[0]['timepoint'] == search_result.get_json()[a_station_id]['timepoint'][0]
     assert a_dataset[0]['pressure'] == search_result.get_json()[a_station_id]['pressure'][0]
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'a_dataset_with_none')
+def test_get_weather_dataset_with_none(client_with_push_user_permissions, a_dataset, a_dataset_with_none):
+    a_station_id, client = prepare_two_entry_database(a_dataset, a_dataset_with_none, client_with_push_user_permissions)
+    first_timepoint = isoparse(a_dataset_with_none[0]['timepoint'])
+    last_timepoint = isoparse(a_dataset_with_none[0]['timepoint'])
+    search_result = client.get(_get_request_url(first_timepoint, last_timepoint))
+
+    assert search_result.status_code == HTTPStatus.OK
+    assert len(search_result.get_json()[a_station_id]['temperature_humidity']['IN']['temperature']) == 1
+    assert isoparse(a_dataset_with_none[0]['timepoint']) == \
+           isoparse(search_result.get_json()[a_station_id]['timepoint'][0])
+    assert a_dataset_with_none[0]['temperature_humidity'][0]['temperature'] == \
+           search_result.get_json()[a_station_id]['temperature_humidity']['IN']['temperature'][0]
+
+    assert search_result.get_json()[a_station_id]['pressure'][0] is None
+    assert search_result.get_json()[a_station_id]['temperature_humidity']['IN']['humidity'][0] is None
 
 
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset_without_timezone')

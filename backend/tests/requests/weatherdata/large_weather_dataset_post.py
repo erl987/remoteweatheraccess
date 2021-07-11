@@ -21,7 +21,7 @@ from random import uniform
 
 import requests
 
-from tests.utils import zip_payload
+from backend.tests.utils import zip_payload
 
 url = os.environ.get('SERVER_IP')
 port = 80

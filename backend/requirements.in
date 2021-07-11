@@ -14,18 +14,19 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-gunicorn
-gevent
-flask
-flask-sqlalchemy
-flask-marshmallow
 bcrypt-flask
+flask
 flask-jwt-extended
-sqlalchemy
+flask-marshmallow
+flask-sqlalchemy
+gevent
+google-cloud-secret-manager
+gunicorn
+json-logging-py
+marshmallow
+marshmallow-sqlalchemy
+numpy
+pandas
 psycogreen
 psycopg2-binary
-marshmallow-sqlalchemy
-marshmallow
-pandas
-json-logging-py
-google-cloud-secret-manager
+sqlalchemy
