@@ -111,7 +111,9 @@ before_script:
   - export FRONTEND_SERVICE_ACCOUNT_NAME=weather-frontend@${GCP_PROJECT_ID}.iam.gserviceaccount.com
   - export BACKEND_SERVICE_ACCOUNT_NAME=weather-backend@${GCP_PROJECT_ID}.iam.gserviceaccount.com
   - export FRONTEND_SERVICE_NAME=${FRONTEND_SERVICE_NAME:0:63}
+  - export FRONTEND_SERVICE_NAME=${FRONTEND_SERVICE_NAME%-}
   - export BACKEND_SERVICE_NAME=${BACKEND_SERVICE_NAME:0:63}
+  - export BACKEND_SERVICE_NAME=${BACKEND_SERVICE_NAME%-}
 
 stages:
   - test
