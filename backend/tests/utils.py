@@ -19,6 +19,7 @@ import json
 import logging
 from http import HTTPStatus
 from io import BytesIO
+from typing import List, Dict
 
 import pytest
 from flask_jwt_extended import create_access_token
@@ -31,7 +32,7 @@ from backend_src.utils import Role
 
 
 @pytest.fixture
-def a_dataset() -> dict:
+def a_dataset() -> List[Dict]:
     yield [{
         'timepoint': '2016-02-05T15:40:36.078357+01:00',
         'station_id': 'TES',
@@ -51,7 +52,7 @@ def a_dataset() -> dict:
 
 
 @pytest.fixture
-def an_updated_dataset() -> dict:
+def an_updated_dataset() -> List[Dict]:
     yield {
         'timepoint': '2016-02-05T15:40:36.078357+01:00',
         'station_id': 'TES',
@@ -71,7 +72,7 @@ def an_updated_dataset() -> dict:
 
 
 @pytest.fixture
-def another_dataset() -> dict:
+def another_dataset() -> List[Dict]:
     yield [{
         'timepoint': '2016-02-06T15:40:36.2Z',
         'station_id': 'TES',
@@ -91,7 +92,7 @@ def another_dataset() -> dict:
 
 
 @pytest.fixture
-def another_dataset_without_timezone() -> dict:
+def another_dataset_without_timezone() -> List[Dict]:
     yield [{
         'timepoint': '2016-02-06T16:40:36.2',
         'station_id': 'TES',
@@ -111,7 +112,7 @@ def another_dataset_without_timezone() -> dict:
 
 
 @pytest.fixture
-def a_dataset_for_another_station() -> dict:
+def a_dataset_for_another_station() -> List[Dict]:
     yield [{
         'timepoint': '2016-02-06T15:40:36.2Z',
         'station_id': 'TES2',
@@ -131,7 +132,7 @@ def a_dataset_for_another_station() -> dict:
 
 
 @pytest.fixture
-def a_dataset_with_none() -> dict:
+def a_dataset_with_none() -> List[Dict]:
     yield [{
         'timepoint': '2016-02-06T15:40:36.2Z',
         'station_id': 'TES',

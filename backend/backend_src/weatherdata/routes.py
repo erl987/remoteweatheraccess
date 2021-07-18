@@ -21,9 +21,10 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-import pytz
 from flask import request, jsonify, current_app, Blueprint
 from sqlalchemy import column
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.sql.elements import Tuple
 
 from .schemas import single_weather_dataset_schema, time_period_with_sensors_and_stations_schema
 from .schemas import time_period_with_stations_schema, many_weather_datasets_schema
@@ -32,30 +33,68 @@ from ..extensions import db
 from ..models import WeatherDataset, TempHumiditySensorData, WeatherStation
 from ..sensor.models import Sensor
 from ..utils import Role, with_rollback_and_raise_exception, approve_committed_station_ids, validate_items
-from ..utils import access_level_required, json_with_rollback_and_raise_exception
+from ..utils import access_level_required, json_with_rollback_and_raise_exception, LocalTimeZone
 
 weatherdata_blueprint = Blueprint('data', __name__, url_prefix='/api/v1/data')
-local_time_zone = None
 
 
 @weatherdata_blueprint.route('', methods=['POST'])
 @access_level_required(Role.PUSH_USER)
 @json_with_rollback_and_raise_exception
 def add_weather_datasets():
+    num_ignored_datasets = 0
+
     if request.content_encoding == 'gzip':
         uncompressed_data = gzip.decompress(request.data)
     else:
         uncompressed_data = request.data
     json_data = json.loads(uncompressed_data)
-    new_datasets = many_weather_datasets_schema.load(json_data, session=db.session)
+    all_datasets = many_weather_datasets_schema.load(json_data, session=db.session)
 
-    db.session.add_all(new_datasets)
+    try:
+        _perform_add_datasets(all_datasets)
+    except IntegrityError:
+        num_ignored_datasets = _add_new_datasets_only(all_datasets)
+
+    log_message = 'Added {} datasets to the database'.format(len(all_datasets) - num_ignored_datasets)
+    if num_ignored_datasets > 0:
+        log_message += ', ignored {} already existing datasets'.format(num_ignored_datasets)
+    current_app.logger.info(log_message)
+
+    return '', HTTPStatus.NO_CONTENT
+
+
+def _add_new_datasets_only(all_datasets):
+    # existing datasets are ignored in the POST-request
+    db.session.rollback()
+
+    keys_to_add = [(dataset.timepoint, dataset.station_id) for dataset in all_datasets]
+    # noinspection PyUnresolvedReferences
+    existing_datasets = WeatherDataset.query.filter(Tuple(WeatherDataset.timepoint, WeatherDataset.station_id)
+                                                    .in_(keys_to_add)).all()
+    existing_keys = [(dataset.timepoint, dataset.station_id) for dataset in existing_datasets]
+
+    _add_timezone_to_datasets_if_required(all_datasets)
+
+    new_datasets = [x for x in all_datasets if (x.timepoint, x.station_id) not in existing_keys]
+    num_ignored_datasets = len(all_datasets) - len(new_datasets)
+
+    _perform_add_datasets(new_datasets)
+
+    return num_ignored_datasets
+
+
+def _add_timezone_to_datasets_if_required(all_datasets):
+    for dataset in all_datasets:
+        if not dataset.timepoint.tzinfo:
+            dataset.timepoint = LocalTimeZone.get(current_app).get_local_time_zone().localize(dataset.timepoint)
+
+
+def _perform_add_datasets(all_datasets):
+    db.session.add_all(all_datasets)
     station_ids_in_commit = [val[0] for val in db.session.query(WeatherDataset.station_id).distinct().all()]
     approve_committed_station_ids(station_ids_in_commit)
     db.session.commit()
-
-    current_app.logger.info('Added {} datasets to the database'.format(len(new_datasets)))
-    return '', HTTPStatus.NO_CONTENT
 
 
 @weatherdata_blueprint.route('', methods=['PUT'])
@@ -167,19 +206,15 @@ def get_weather_datasets():
 
 
 def _get_query_params():
-    global local_time_zone
-    if not local_time_zone:
-        local_time_zone = pytz.timezone(current_app.config['TIMEZONE'])
-
     time_period_with_sensors = time_period_with_sensors_and_stations_schema.load(_obtain_request_args_for_get_method())
     first = time_period_with_sensors['first_timepoint']
     last = time_period_with_sensors['last_timepoint']
 
     # times without given timezone are assumed to be given in server time zone
     if not first.tzinfo:
-        first = local_time_zone.localize(first)
+        first = LocalTimeZone.get(current_app).get_local_time_zone().localize(first)
     if not last.tzinfo:
-        last = local_time_zone.localize(last)
+        last = LocalTimeZone.get(current_app).get_local_time_zone().localize(last)
 
     requested_sensors = time_period_with_sensors['sensors']
     requested_stations = time_period_with_sensors['stations']

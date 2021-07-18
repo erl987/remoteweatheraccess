@@ -74,8 +74,24 @@ def test_create_same_dataset_twice(client_with_push_user_permissions, a_dataset)
     assert result.status_code == HTTPStatus.NO_CONTENT
 
     result_2 = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset)
-    assert 'error' in result_2.get_json()
-    assert result_2.status_code == HTTPStatus.CONFLICT
+    assert result_2.status_code == HTTPStatus.NO_CONTENT
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset_without_timezone')
+def test_create_same_dataset_partly_twice(client_with_push_user_permissions, a_dataset,
+                                          another_dataset_without_timezone):
+    result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset)
+    assert result.status_code == HTTPStatus.NO_CONTENT
+
+    result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset + another_dataset_without_timezone)
+    assert result.status_code == HTTPStatus.NO_CONTENT
+
+    first_timepoint = isoparse(a_dataset[0]['timepoint'])
+    last_timepoint = isoparse(another_dataset_without_timezone[0]['timepoint'])
+    search_result = client_with_push_user_permissions.get(_get_request_url(first_timepoint, last_timepoint))
+
+    assert search_result.status_code == HTTPStatus.OK
+    assert len(search_result.get_json()[a_dataset[0]['station_id']]['pressure']) == 2
 
 
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset')

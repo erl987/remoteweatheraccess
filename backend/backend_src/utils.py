@@ -19,6 +19,7 @@ from enum import Enum
 from functools import wraps
 from http import HTTPStatus
 
+import pytz
 from flask import current_app, request
 from flask_jwt_extended import verify_jwt_in_request, get_jwt, get_jwt_identity
 from marshmallow import ValidationError
@@ -159,3 +160,25 @@ def convert_to_int(user_id, error_status=HTTPStatus.BAD_REQUEST):
     except ValueError:
         raise APIError('Invalid id', error_status)
     return user_id
+
+
+class LocalTimeZone(object):
+    _instance = None
+
+    def __init__(self, app):
+        if LocalTimeZone._instance is not None:
+            raise AssertionError('This class is a singleton')
+        else:
+            LocalTimeZone._instance = self
+
+        self._local_time_zone = pytz.timezone(app.config['TIMEZONE'])
+
+    @staticmethod
+    def get(app):
+        if LocalTimeZone._instance is None:
+            LocalTimeZone(app)
+
+        return LocalTimeZone._instance
+
+    def get_local_time_zone(self):
+        return self._local_time_zone
