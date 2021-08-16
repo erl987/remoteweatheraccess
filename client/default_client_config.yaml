@@ -1,0 +1,26 @@
+# HTTP-backend endpoint
+station_id: TES
+backend_url: 127.0.0.1
+backend_port: 8000
+use_ssl: False
+
+# login information
+user_name: default_admin
+relogin_time_in_sec: 50
+
+# client configuration
+data_reading:
+  minute_of_first_read_within_an_hour: 0
+  read_period_in_minutes: 10
+ignored_data_fields:
+  - forecast
+  - storm_warning
+sleep_period_in_sec: 0.25
+timeouts_in_min:
+  all_datasets_read: 20
+  latest_dataset_read: 1
+
+# log configuration
+logging:
+  do_log_timestamps: False
+  minimal_log_level: INFO

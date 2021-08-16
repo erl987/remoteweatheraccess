@@ -39,7 +39,7 @@ default:
   - source venv/bin/activate
 
 .install_gettext: &install_gettext
-  - apt-get update
+  - apt-get --allow-releaseinfo-change update
   - apt-get install -qq -y gettext
 
 .gcp_docker_registry_login: &gcp_docker_registry_login

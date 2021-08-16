@@ -14,6 +14,7 @@ The frontend is currently only localized to German.
 * frontend: written in Python using the framework `dash`
 * backend: written in Python using the framework `flask`
 * database: `PostgresSQL`
+* client: written in Python
 
 ## Installation
 
@@ -25,8 +26,10 @@ to a wide variety of cloud services and even a Raspberry Pi.
 
 ### Client
 
-At the current stage no client application is part of the project. The client is communicating with the server via HTTP
-using a REST-API. This makes it easy to implement a client application tailored to the actually used weather station.
+There is a client available for weather stations of type TE923. It is designed to run on minicomputers with
+ARM-processors such as a Raspberry Pi 2+. It can also run on other types of computers with small adaptions. This fully
+configurable client is reading the latest data from the weather station and is sending it to the server via the 
+REST-API. It is deployed using Docker.
 
 ## Running the server application
 
@@ -167,6 +170,93 @@ The further steps are in any case:
 
 Now it is possible to send weather data to the server. The frontend will automatically update with 5 minutes delay due
 to caching.
+
+
+## Running the client application
+
+The client software gets deployed using Docker. Docker needs to be installed on the machine, one way is to use the
+available convenience script: https://docs.docker.com/engine/install/debian/#install-using-the-convenience-script
+
+
+### Configure the USB-device
+
+In order to make the USB connection from the container to the weather
+station working without root permissions, the weather station USB device needs some configuration. Execute the following
+commands on the **host** machine that will run the Docker container later:
+
+```shell
+  sudo sh -c 'echo SUBSYSTEM==\"usb\", ATTRS{idVendor}==\"1130\", ATTRS{idProduct}==\"6801\", GROUP=\"plugdev\", MODE=\"0660\" > /etc/udev/rules.d/51-usb-te923-weatherstation.rules'
+  sudo udevadm control --reload-rules && sudo udevadm trigger
+```
+
+This configuration is targeting weather stations of type TE923. Other ways to achieve that are also possible if desired.
+
+
+### Create the internal configuration directory
+
+Now create a directory where the container can permanently store its internal configuration:
+
+```shell
+  sudo mkdir -p /opt/weatherstation-client/data/
+  sudo chown -R <username>:<groupname> /opt/weatherstation-client/data/
+```
+
+Replace `<username>` and `<groupname>` by your actual user and group name.
+
+
+### Configure the client
+
+Clone the Git repository if not yet done and create and change the configuration file as required:
+
+```shell
+  cd weatherstation
+  sudo mkdir /opt/weatherstation-client/config/
+  sudo cp client/default_client_config.yaml /opt/weatherstation-client/config/client_config.yaml
+  sudo nano /opt/weatherstation-client/config/client_config.yaml
+```
+
+You could use any other editor to edit the configuration file.
+
+
+### Create and run the Docker container
+
+The client software gets finally installed as described here. **Note that the `Dockerfile` is using a base image
+suitable for Raspberry Pi 2+ computers**, this base image needs to be replaced by a regular Python image (such as 
+`FROM python:3.9.6-slim-buster`) for other computer architectures.
+
+1. Change to the root directory of the project:
+
+```shell script
+  cd weatherstation
+```
+
+2. Build the client Docker image, use the local time zone of the station (such as `Europe/Berlin`):
+
+```shell
+  docker build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) --build-arg TZ=Europe/Stockholm -t meteoradix/weatherstation-client -f Dockerfile.client .
+```
+
+3. Prepare the file containing the backend API password (corresponding to the user defined in the config `yaml`-file):
+
+```shell
+  echo BACKEND_PASSWORD=<password> > te923-client-env.list
+```
+
+Replace `<password>` by the actual password. This file can be placed anywhere - where it is not readable to other
+users. **It should be deleted after starting the container as it contains sensitive data**.
+
+4. Run the Docker container, it will be restarted automatically on system reboot:
+
+```shell
+  docker run --name te923-weather-client -d --restart always --privileged --env-file te923-client-env.list -v /opt/weatherstation-client/config:/app/config -v /dev/bus/usb:/dev/bus/usb -v /opt/weatherstation-client/data:/tmp/data/ meteoradix/weatherstation-client
+```
+
+You can check the logs of the client Docker container like this:
+
+```shell
+  docker logs te923-weather-client -t -f
+```
+
 
 ## Concepts
 

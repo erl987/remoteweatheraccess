@@ -92,7 +92,7 @@ def _add_timezone_to_datasets_if_required(all_datasets):
 
 def _perform_add_datasets(all_datasets):
     db.session.add_all(all_datasets)
-    station_ids_in_commit = [val[0] for val in db.session.query(WeatherDataset.station_id).distinct().all()]
+    station_ids_in_commit = set([dataset.station_id for dataset in all_datasets])
     approve_committed_station_ids(station_ids_in_commit)
     db.session.commit()
 

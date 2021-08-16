@@ -116,10 +116,13 @@ gen
 testWorkspace
 httpRequests/*
 deployment.xml
-/test_data
-/frontend/test_data/weather.db
 /.idea/dataSources/
 /.idea/httpRequests/
 /.idea/dataSources.local.xml
 /.idea/webServers.xml
 /.idea/dataSources.xml
+
+# application files / directories
+/test_data
+/frontend/test_data/weather.db
+/client/test_config/*
