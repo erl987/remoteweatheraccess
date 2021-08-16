@@ -147,7 +147,7 @@ class WeatherStationProxy(object):
 
     def read_and_send_with_automatic_choice(self):
         last_read_utc_time_point = LastKnownStationData.get(self.data_dir_path).get_utc_time_point()
-        time_difference = datetime.utcnow().astimezone(pytz.UTC) - last_read_utc_time_point
+        time_difference = datetime.utcnow().replace(tzinfo=pytz.UTC) - last_read_utc_time_point
         if time_difference < 2 * timedelta(minutes=self._read_period_in_minutes):
             do_read_all_datasets = False
         else:
