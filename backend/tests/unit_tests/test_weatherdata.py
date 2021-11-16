@@ -23,7 +23,7 @@ from dateutil.parser import isoparse
 # noinspection PyUnresolvedReferences
 from ..utils import client_without_permissions, client_with_push_user_permissions, client_with_admin_permissions, \
     a_dataset, another_dataset, another_dataset_without_timezone, an_updated_dataset, a_dataset_for_another_station, \
-    prepare_two_entry_database, a_dataset_with_none  # required as a fixture
+    prepare_two_entry_database, a_dataset_with_none, a_dataset_with_a_duplicate_time_point  # required as a fixture
 from ..utils import drop_permissions, verify_database_is_empty, zip_payload
 
 
@@ -124,6 +124,40 @@ def test_create_dataset_without_required_permissions_for_station(client_with_pus
     create_result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset_for_another_station)
     assert 'error' in create_result.get_json()
     assert create_result.status_code == HTTPStatus.FORBIDDEN
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset_with_a_duplicate_time_point')
+def test_create_dataset_with_a_duplicate_time_point(client_with_push_user_permissions,
+                                                    a_dataset_with_a_duplicate_time_point):
+    result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset_with_a_duplicate_time_point)
+    assert result.status_code == HTTPStatus.NO_CONTENT
+
+    first_timepoint = isoparse(a_dataset_with_a_duplicate_time_point[0]['timepoint'])
+    last_timepoint = isoparse(a_dataset_with_a_duplicate_time_point[2]['timepoint'])
+    search_result = client_with_push_user_permissions.get(_get_request_url(first_timepoint, last_timepoint))
+
+    station_id = a_dataset_with_a_duplicate_time_point[0]['station_id']
+    assert search_result.status_code == HTTPStatus.OK
+    assert len(search_result.get_json()[station_id]['timepoint']) == 2
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'a_dataset_with_a_duplicate_time_point')
+def test_create_dataset_with_a_duplicate_time_point_that_already_exists(client_with_push_user_permissions,
+                                                                        a_dataset,
+                                                                        a_dataset_with_a_duplicate_time_point):
+    result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset)
+    assert result.status_code == HTTPStatus.NO_CONTENT
+
+    result = client_with_push_user_permissions.post('/api/v1/data', json=a_dataset_with_a_duplicate_time_point)
+    assert result.status_code == HTTPStatus.NO_CONTENT
+
+    first_timepoint = isoparse(a_dataset_with_a_duplicate_time_point[0]['timepoint'])
+    last_timepoint = isoparse(a_dataset_with_a_duplicate_time_point[2]['timepoint'])
+    search_result = client_with_push_user_permissions.get(_get_request_url(first_timepoint, last_timepoint))
+
+    station_id = a_dataset_with_a_duplicate_time_point[0]['station_id']
+    assert search_result.status_code == HTTPStatus.OK
+    assert len(search_result.get_json()[station_id]['timepoint']) == 2
 
 
 @pytest.mark.usefixtures('client_with_admin_permissions', 'a_dataset', 'another_dataset')

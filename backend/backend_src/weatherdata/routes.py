@@ -79,7 +79,15 @@ def _add_new_datasets_only(all_datasets):
     new_datasets = [x for x in all_datasets if (x.timepoint, x.station_id) not in existing_keys]
     num_ignored_datasets = len(all_datasets) - len(new_datasets)
 
-    _perform_add_datasets(new_datasets)
+    # ambiguous time points can occur on shift from summer to winter time - in this case only the earlier time point
+    # of each duplicate is considered
+    _, unique_indices = np.unique([x.timepoint for x in new_datasets], return_index=True)
+    new_unique_datasets = np.array(new_datasets)[unique_indices]
+    if len(new_unique_datasets) != len(new_datasets):
+        current_app.logger.info('{} duplicate time points are present in the dataset, they have been filtered out'
+                                .format(len(new_datasets) - len(new_unique_datasets)))
+
+    _perform_add_datasets(new_unique_datasets)
 
     return num_ignored_datasets
 

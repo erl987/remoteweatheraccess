@@ -152,6 +152,56 @@ def a_dataset_with_none() -> List[Dict]:
 
 
 @pytest.fixture
+def a_dataset_with_a_duplicate_time_point() -> List[Dict]:
+    yield [{
+        'timepoint': '2016-02-05T15:40:36.078357',
+        'station_id': 'TES',
+        'pressure': 1020.5,
+        'uv': 9.6,
+        'rain_counter': 980.5,
+        'direction': 190.5,
+        'speed': 95.2,
+        'wind_temperature': 9.8,
+        'gusts': 120.5,
+        'temperature_humidity': [{
+            'sensor_id': 'IN',
+            'temperature': 10.5,
+            'humidity': 90.5
+        }]
+    }, {
+        'timepoint': '2016-02-05T15:40:36.078357',
+        'station_id': 'TES',
+        'pressure': 1030.5,
+        'uv': 13.6,
+        'rain_counter': 982.5,
+        'direction': 210.5,
+        'speed': 91.2,
+        'wind_temperature': -2.8,
+        'gusts': 130.5,
+        'temperature_humidity': [{
+            'sensor_id': 'IN',
+            'temperature': 12.5,
+            'humidity': 80.5
+        }]
+    }, {
+        'timepoint': '2016-02-05T16:40:36.078357',
+        'station_id': 'TES',
+        'pressure': 1040.5,
+        'uv': 12.6,
+        'rain_counter': 990.5,
+        'direction': 220.5,
+        'speed': 93.2,
+        'wind_temperature': 5.8,
+        'gusts': 20.8,
+        'temperature_humidity': [{
+            'sensor_id': 'IN',
+            'temperature': 9.5,
+            'humidity': 80.5
+        }]
+    }]
+
+
+@pytest.fixture
 def a_user() -> dict:
     yield {
         'name': 'test_user',
