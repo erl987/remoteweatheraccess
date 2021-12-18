@@ -1,6 +1,3 @@
-./frontend/tests
-./backend/tests
-./frontend/frontend.app.yaml
-./backend/backend.app.yaml
-./client/test_config/**/*
-./client/test_config
+frontend/tests
+backend/tests
+export/tests

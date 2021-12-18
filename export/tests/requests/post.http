@@ -1,0 +1,2 @@
+POST http://{{url}}:{{port}}/upload?station_id=TES&month=9&year=2021
+Content-Type: application/json

@@ -25,8 +25,12 @@ variables:
   BACKEND_PORT: 443
   FRONTEND_SERVICE_NAME: frontend-${CI_COMMIT_REF_SLUG}
   BACKEND_SERVICE_NAME: backend-${CI_COMMIT_REF_SLUG}
+  EXPORTER_SERVICE_NAME: exporter-${CI_COMMIT_REF_SLUG}
   PIP_CACHE_DIR: ${CI_PROJECT_DIR}/.cache/pip
   BRAND_NAME: ${BRAND_NAME}
+  EXPORTER_SCHEDULER_JOB_NAME: export-csv-job
+  EXPORTER_BUCKET_ID: weather-export-data-######
+  EXPORTER_CSV_FILE_DIR: /tmp
 
 default:
   tags:
@@ -58,12 +62,25 @@ default:
   - gcloud run services add-iam-policy-binding ${!service_name}
     --region=${GCP_REGION}
     --platform=managed
-    --member="allUsers"
+    --member="${CLOUD_RUN_INVOKER}"
     --role="roles/run.invoker"
   - export ${TIER^^}_URL=$(gcloud run services describe ${!service_name}
     --region=${GCP_REGION}
     --platform=managed
     --format='value(status.url)')
+
+.gcp_cloud_scheduler_job: &gcp_cloud_scheduler_job
+  - existing_scheduler_jobs=$(gcloud scheduler jobs list --format 'value(name)')
+  - num_scheduler_jobs=$(wc -w <<< "$existing_scheduler_jobs")
+  - if [ $num_scheduler_jobs != 0 ]; then gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet ; fi
+  - gcloud scheduler jobs create http ${EXPORTER_SCHEDULER_JOB_NAME}
+    --uri="${EXPORTER_URL}/upload"
+    --http-method=POST
+    --description="Exports PC-Wetterstation compatible CSV files of the weather data"
+    --schedule="10 0 * * *"
+    --time-zone="Europe/Stockholm"
+    --oidc-service-account-email=${EXPORTER_SERVICE_ACCOUNT_NAME}
+    --max-retry-attempts=1
 
 .gcp_deploy: &gcp_deploy
   image: google/cloud-sdk:338.0.0
@@ -74,11 +91,18 @@ default:
     - num_databases=$(wc -w <<< "$SQL_DATABASE_ID")
     - if [ $num_databases != 1 ]; then echo "ERROR, not exactly one database in GCP-project"; exit 1; fi
     - TIER=backend
+    - CLOUD_RUN_INVOKER="allUsers"
     - *gcp_cloud_run_deploy
     - export BACKEND_URL_BASE=$(basename ${BACKEND_URL})
     - TIER=frontend
+    - CLOUD_RUN_INVOKER="allUsers"
     - *gcp_cloud_run_deploy
     - echo "FRONTEND_URL=${FRONTEND_URL}" > frontend_deploy.env
+    - TIER=exporter
+    - CLOUD_RUN_INVOKER="serviceAccount:${EXPORTER_SERVICE_ACCOUNT_NAME}"
+    - *gcp_cloud_run_deploy
+    - *gcp_cloud_scheduler_job
+
   artifacts:
     reports:
       dotenv: frontend_deploy.env
@@ -110,10 +134,13 @@ before_script:
     fi
   - export FRONTEND_SERVICE_ACCOUNT_NAME=weather-frontend@${GCP_PROJECT_ID}.iam.gserviceaccount.com
   - export BACKEND_SERVICE_ACCOUNT_NAME=weather-backend@${GCP_PROJECT_ID}.iam.gserviceaccount.com
+  - export EXPORTER_SERVICE_ACCOUNT_NAME=weather-exporter@${GCP_PROJECT_ID}.iam.gserviceaccount.com
   - export FRONTEND_SERVICE_NAME=${FRONTEND_SERVICE_NAME:0:63}
   - export FRONTEND_SERVICE_NAME=${FRONTEND_SERVICE_NAME%-}
   - export BACKEND_SERVICE_NAME=${BACKEND_SERVICE_NAME:0:63}
   - export BACKEND_SERVICE_NAME=${BACKEND_SERVICE_NAME%-}
+  - export EXPORTER_SERVICE_NAME=${EXPORTER_SERVICE_NAME:0:63}
+  - export EXPORTER_SERVICE_NAME=${EXPORTER_SERVICE_NAME%-}
 
 stages:
   - test
@@ -125,6 +152,7 @@ stages:
 unittests backend:
   stage: test
   cache:
+    key: backend
     paths:
       - .cache/pip
       - venv/
@@ -148,6 +176,7 @@ unittests backend:
 unittests frontend:
   stage: test
   cache:
+    key: frontend
     paths:
       - .cache/pip
       - venv/
@@ -158,6 +187,23 @@ unittests frontend:
   script:
     - export PYTHONPATH=${CI_PROJECT_DIR}/frontend
     - pytest frontend/tests/unit_tests --junitxml=report.xml
+  artifacts:
+    <<: *publish_test_artifacts
+
+unittests exporter:
+  stage: test
+  cache:
+    key: exporter
+    paths:
+      - .cache/pip
+      - venv/
+  before_script:
+    - *python_prepare
+    - pip3 install -r export/requirements.txt
+    - pip3 install -r export/dev-requirements.txt
+  script:
+    - export PYTHONPATH=${CI_PROJECT_DIR}/export
+    - pytest export/tests/tests --junitxml=report.xml
   artifacts:
     <<: *publish_test_artifacts
 
@@ -184,6 +230,17 @@ build frontend:
     - *gcp_docker_registry_login
     - docker push ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}:${CI_COMMIT_SHA}
 
+build exporter:
+  stage: build containers
+  image: docker:20.10.6
+  services:
+    - docker:20.10.6-dind
+  script:
+    - docker build -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${EXPORTER_SERVICE_NAME}:${CI_COMMIT_SHA}
+      --file=./Dockerfile.export .
+    - *gcp_docker_registry_login
+    - docker push ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${EXPORTER_SERVICE_NAME}:${CI_COMMIT_SHA}
+
 deploy review:
   stage: deploy review
   <<: *gcp_deploy
@@ -201,6 +258,7 @@ stop review:
   image: google/cloud-sdk:338.0.0
   script:
     - *gcp_cloud_login
+    - gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet
     - gcloud run services delete ${FRONTEND_SERVICE_NAME}
       --region=${GCP_REGION}
       --platform=managed
@@ -209,9 +267,15 @@ stop review:
       --region=${GCP_REGION}
       --platform=managed
       --quiet
+    - gcloud run services delete ${EXPORTER_SERVICE_NAME}
+      --region=${GCP_REGION}
+      --platform=managed
+      --quiet
     - IMAGE_NAME=${FRONTEND_SERVICE_NAME}
     - *gcp_delete_containers
     - IMAGE_NAME=${BACKEND_SERVICE_NAME}
+    - *gcp_delete_containers
+    - IMAGE_NAME=${EXPORTER_SERVICE_NAME}
     - *gcp_delete_containers
   environment:
     name: review/${CI_COMMIT_REF_NAME}
