@@ -114,6 +114,10 @@ def _create_data_frame(month_data, station_id):
         df.drop('rain', axis=1, inplace=True)  # only the rain rate is relevant
 
     # reformat the time points
+    # TODO: this needs to be generalized ...
+    df['timepoint'] = df['timepoint'].str.replace('\+02:00', ' ')
+    df['timepoint'] = df['timepoint'].str.replace('\+01:00', ' ')
+
     df['date'] = pd.to_datetime(df['timepoint']).dt.strftime('%d.%m.%Y')
     df['time'] = pd.to_datetime(df['timepoint']).dt.strftime('%H:%M')
     df.drop('timepoint', axis=1, inplace=True)
