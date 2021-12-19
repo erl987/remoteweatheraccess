@@ -16,6 +16,7 @@
 
 import logging
 import os
+import traceback
 from logging.config import dictConfig
 
 import uvicorn
@@ -108,9 +109,11 @@ async def create_and_upload_csv_file(station_id: str = None, month: int = None, 
                 raise HTTPException(status_code=503, detail='Storage API is not available')
 
         return {'result': 'ok'}
-    except HTTPException:
+    except HTTPException as e:
+        logger.error(f'Status code: {e.status_code}, error: {e.detail}')
         raise
     except Exception:
+        logger.error(f'Internal server error: {traceback.format_exc()}')
         raise HTTPException(status_code=500, detail='Internal server error')
 
 
