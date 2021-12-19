@@ -50,7 +50,8 @@ def create_pc_weatherstation_compatible_file(month_data_in, station_id, month, y
     csv_file_path = os.path.join(destination_dir, csv_file_name)
 
     if len(month_data) > 0:
-        logger.debug('Data for station {} contains {} entries'.format(station_id, len(month_data)))
+        logger.debug('Data for station {} contains {} entries'.format(station_id,
+                                                                      len(month_data[station_id]['timepoint'])))
 
         df = _create_data_frame(month_data, station_id)
 

@@ -77,7 +77,7 @@ default:
     --uri="${EXPORTER_URL}/upload"
     --http-method=POST
     --description="Exports PC-Wetterstation compatible CSV files of the weather data"
-    --schedule="10 0 * * *"
+    --schedule="7 0 * * *"
     --time-zone="Europe/Stockholm"
     --oidc-service-account-email=${EXPORTER_SERVICE_ACCOUNT_NAME}
     --max-retry-attempts=1
