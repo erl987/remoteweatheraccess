@@ -21,6 +21,7 @@ include:
 
 variables:
   GCP_REGION: ${GCP_REGION_ID}
+  GCP_FRONTEND_REGION: ${GCP_FRONTEND_REGION_ID}
   GCP_CONTAINER_REGISTRY: ${GCP_CONTAINER_REGISTRY}
   BACKEND_PORT: 443
   FRONTEND_SERVICE_NAME: frontend-${CI_COMMIT_REF_SLUG}
@@ -56,16 +57,16 @@ default:
 .gcp_cloud_run_deploy: &gcp_cloud_run_deploy
   - envsubst < ./deployment/google_cloud_run/${TIER}_with_variables.yaml > ${TIER}.yaml
   - gcloud beta run services replace ${TIER}.yaml
-    --region=${GCP_REGION}
+    --region=${CURR_GCP_REGION}
     --platform=managed
   - service_name=${TIER^^}_SERVICE_NAME
   - gcloud run services add-iam-policy-binding ${!service_name}
-    --region=${GCP_REGION}
+    --region=${CURR_GCP_REGION}
     --platform=managed
     --member="${CLOUD_RUN_INVOKER}"
     --role="roles/run.invoker"
   - export ${TIER^^}_URL=$(gcloud run services describe ${!service_name}
-    --region=${GCP_REGION}
+    --region=${CURR_GCP_REGION}
     --platform=managed
     --format='value(status.url)')
 
@@ -92,14 +93,17 @@ default:
     - if [ $num_databases != 1 ]; then echo "ERROR, not exactly one database in GCP-project"; exit 1; fi
     - TIER=backend
     - CLOUD_RUN_INVOKER="allUsers"
+    - CURR_GCP_REGION=${GCP_REGION}
     - *gcp_cloud_run_deploy
     - export BACKEND_URL_BASE=$(basename ${BACKEND_URL})
     - TIER=frontend
     - CLOUD_RUN_INVOKER="allUsers"
+    - CURR_GCP_REGION=${GCP_FRONTEND_REGION}
     - *gcp_cloud_run_deploy
     - echo "FRONTEND_URL=${FRONTEND_URL}" > frontend_deploy.env
     - TIER=exporter
     - CLOUD_RUN_INVOKER="serviceAccount:${EXPORTER_SERVICE_ACCOUNT_NAME}"
+    - CURR_GCP_REGION=${GCP_REGION}
     - *gcp_cloud_run_deploy
     - *gcp_cloud_scheduler_job
 
@@ -260,7 +264,7 @@ stop review:
     - *gcp_cloud_login
     - gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet
     - gcloud run services delete ${FRONTEND_SERVICE_NAME}
-      --region=${GCP_REGION}
+      --region=${GCP_FRONTEND_REGION}
       --platform=managed
       --quiet
     - gcloud run services delete ${BACKEND_SERVICE_NAME}
