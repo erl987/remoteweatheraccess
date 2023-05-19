@@ -79,8 +79,9 @@ else:
 if is_on_google_cloud_run():
     cloud_run_service_url = get_cloud_run_service_url()
 
-    ALLOWED_HOSTS = [urlparse(cloud_run_service_url).netloc]
-    CSRF_TRUSTED_ORIGINS = [cloud_run_service_url]
+    ALLOWED_HOSTS = ([urlparse(cloud_run_service_url).netloc] +
+                     [urlparse(url).netloc for url in env.list('ALLOWED_URLS')])
+    CSRF_TRUSTED_ORIGINS = [cloud_run_service_url] + env.list('ALLOWED_URLS')
     SECURE_SSL_REDIRECT = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_HSTS_PRELOAD = True

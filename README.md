@@ -147,6 +147,7 @@ The following variables need to be defined in the GitLab project:
 * `BRAND_NAME` (the name of the website shown in the main header of the site, for example `Das Wetternetzwerk`)
 * `DATA_PROTECTION_POLICY_HTML_FILE` (a *file variable*, the content of the data protection policy)
 * `IMPRESS_HTML_FILE` (a *file variable*, the content of the impress)
+* `FRONTEND_ADDRESS`(the permanent public URL of the frontend, format https://server.net)
 
 The *production* and *testing* projects are used by the **main** branch, and the **merge request** branches
 respectively.
