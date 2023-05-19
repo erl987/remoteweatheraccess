@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1">
+    {% block header %}<title>{{ BRAND_NAME }}</title>{% endblock %}
+    {% include "weatherpage/css_imports.html" %}
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+{% include "weatherpage/navbar.html" %}
+
+<div class="container-fluid px-3">
+    {% block content %}{% endblock %}
+</div>
+
+{% include "weatherpage/footer.html" %}
+</body>
+
+{% include "weatherpage/js_imports.html" %}
+{% block footer %}{% endblock %}
+</html>

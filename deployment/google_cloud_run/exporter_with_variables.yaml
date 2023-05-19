@@ -1,5 +1,5 @@
 #  Remote Weather Access - Client/server solution for distributed weather networks
-#   Copyright (C) 2013-2021 Ralf Rettig (info@personalfme.de)
+#   Copyright (C) 2013-2023 Ralf Rettig (info@personalfme.de)
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU Affero General Public License as
@@ -25,17 +25,17 @@ spec:
       timeoutSeconds: 300
       serviceAccountName: ${EXPORTER_SERVICE_ACCOUNT_NAME}
       containers:
-      - image: ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${EXPORTER_SERVICE_NAME}:${CI_COMMIT_SHA}
-        env:
-        - name: BACKEND_URL
-          value: ${BACKEND_URL_BASE}
-        - name: BACKEND_PORT
-          value: '${BACKEND_PORT}'
-        - name: BUCKET_ID
-          value: ${EXPORTER_BUCKET_ID}
-        - name: CSV_FILE_DIR
-          value: ${EXPORTER_CSV_FILE_DIR}
-        resources:
-          limits:
-            cpu: 1000m
-            memory: 256Mi
+        - image: ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${EXPORTER_SERVICE_NAME}:${CI_COMMIT_SHA}
+          env:
+            - name: BACKEND_URL
+              value: ${BACKEND_URL_BASE}
+            - name: BACKEND_PORT
+              value: '${BACKEND_PORT}'
+            - name: BUCKET
+              value: ${EXPORTER_BUCKET}
+            - name: CSV_FILE_DIR
+              value: ${EXPORTER_CSV_FILE_DIR}
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 256Mi

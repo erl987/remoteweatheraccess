@@ -1,0 +1,52 @@
+#  Remote Weather Access - Client/server solution for distributed weather networks
+#   Copyright (C) 2013-2023 Ralf Rettig (info@personalfme.de)
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU Affero General Public License as
+#   published by the Free Software Foundation, either version 3 of the
+#   License, or (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU Affero General Public License for more details.
+#
+#   You should have received a copy of the GNU Affero General Public License
+#   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+steps:
+  - id: "apply migrations"
+    name: "gcr.io/google-appengine/exec-wrapper"
+    entrypoint: "bash"
+    args:
+      - -c
+      - |
+        /buildstep/execute.sh \
+        -i ${_GCP_CONTAINER_REGISTRY}/${PROJECT_ID}/${_FRONTEND_SERVICE_NAME}:${_CI_COMMIT_SHA} \
+        -s ${PROJECT_ID}:${_SQL_DATABASE_ID} \
+        -e SETTINGS_SECRET_NAME=${_SETTINGS_SECRET_NAME} \
+        -e DB_INSTANCE_CONNECTION_NAME=${PROJECT_ID}:${_SQL_DATABASE_ID} \
+        -e FRONTEND_BUCKET=${_FRONTEND_BUCKET} \
+        -e BACKEND_URL=${_BACKEND_URL_BASE} \
+        -e BACKEND_PORT=${_BACKEND_PORT} \
+        -e BRAND_NAME="${_BRAND_NAME}" \
+        -e ALLOWED_HOSTS=localhost \
+        -- python /app/frontend/django_frontend/manage.py migrate
+
+  - id: "collect static"
+    name: "gcr.io/google-appengine/exec-wrapper"
+    entrypoint: "bash"
+    args:
+      - -c
+      - |
+        /buildstep/execute.sh \
+        -i ${_GCP_CONTAINER_REGISTRY}/${PROJECT_ID}/${_FRONTEND_SERVICE_NAME}:${_CI_COMMIT_SHA} \
+        -s ${PROJECT_ID}:${_SQL_DATABASE_ID} \
+        -e SETTINGS_SECRET_NAME=${_SETTINGS_SECRET_NAME} \
+        -e DB_INSTANCE_CONNECTION_NAME=${PROJECT_ID}:${_SQL_DATABASE_ID} \
+        -e FRONTEND_BUCKET=${_FRONTEND_BUCKET} \
+        -e BACKEND_URL=${_BACKEND_URL_BASE} \
+        -e BACKEND_PORT=${_BACKEND_PORT} \
+        -e BRAND_NAME="${_BRAND_NAME}" \
+        -e ALLOWED_HOSTS=localhost \
+        -- python /app/frontend/django_frontend/manage.py collectstatic --verbosity 2 --no-input

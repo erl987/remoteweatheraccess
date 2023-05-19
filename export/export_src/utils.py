@@ -1,5 +1,5 @@
 #  Remote Weather Access - Client/server solution for distributed weather networks
-#   Copyright (C) 2013-2021 Ralf Rettig (info@personalfme.de)
+#   Copyright (C) 2013-2023 Ralf Rettig (info@personalfme.de)
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU Affero General Public License as
@@ -17,18 +17,12 @@ import os
 import datetime
 
 
-def get_bucket_id(storage_client):
-    bucket_id = os.environ['BUCKET_ID']
+def get_bucket_id():
+    bucket_address = os.environ['BUCKET']
+    bucket_id = bucket_address.replace('gs://', '')
+    bucket_id = bucket_id.replace('/', '')
 
-    if '#' not in bucket_id:
-        return bucket_id
-
-    bucket_id_base = bucket_id.replace('#', '')
-    for bucket in storage_client.list_buckets():
-        if bucket_id_base in bucket.name:
-            return bucket.name
-
-    raise FileNotFoundError('The GCP project has no bucket based on "{}"'.format(bucket_id))
+    return bucket_id
 
 
 def get_default_month():

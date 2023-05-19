@@ -1,4 +1,4 @@
-POST http://{{url}}:{{port}}/_dash-update-component
+POST http://{{url}}:{{port}}/django_plotly_dash/app/dash-frontend/_dash-update-component
 Content-Type: application/json
 
 

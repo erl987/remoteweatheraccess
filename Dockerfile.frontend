@@ -1,5 +1,5 @@
 #  Remote Weather Access - Client/server solution for distributed weather networks
-#   Copyright (C) 2013-2021 Ralf Rettig (info@personalfme.de)
+#   Copyright (C) 2013-2023 Ralf Rettig (info@personalfme.de)
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU Affero General Public License as
@@ -14,18 +14,24 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-FROM python:3.9.6-slim-buster
+FROM python:3.11.3-slim-bullseye
 
 ENV PYTHONUNBUFFERED True
+ENV PYTHONPATH /app:/app/frontend/django_frontend
 
-WORKDIR /app
+WORKDIR /app/frontend/django_frontend
 
 COPY frontend/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ./frontend /app
+COPY ./frontend /app/frontend
+
+# this is an ugly workaround because the package `django_plotly_dash` puts its migrations into `site-packages`
+COPY ./frontend/django_frontend/weatherpage/django_plotly_dash_migrations /usr/local/lib/python3.10/site-packages/django_plotly_dash/migrations
+
+RUN python -m compileall /app/frontend
 
 RUN useradd -m frontend
 USER frontend
 
-CMD exec gunicorn --bind=:$PORT --worker-class=gevent --preload --config=frontend_config/gunicorn.py --log-config=frontend_config/logging.conf frontend_app:server
+CMD exec gunicorn --bind=:$PORT --workers=1 --threads=8 --timeout=0 django_frontend.wsgi:application

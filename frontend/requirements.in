@@ -1,5 +1,5 @@
 #  Remote Weather Access - Client/server solution for distributed weather networks
-#   Copyright (C) 2013-2021 Ralf Rettig (info@personalfme.de)
+#   Copyright (C) 2013-2023 Ralf Rettig (info@personalfme.de)
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU Affero General Public License as
@@ -14,14 +14,21 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+boto3
 dash
 dash-bootstrap-components
-flask-caching
-gevent
+dash-breakpoints
+django
+django-environ
+django-plotly-dash
+django-storages[google]
+google-auth
+google-cloud-logging
+google-cloud-secret-manager
+google-cloud-storage
 gunicorn
-json-logging-py
 numpy
+psycopg2-binary
 python-dateutil
 pytz
 requests
-tblib

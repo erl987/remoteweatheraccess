@@ -1,6 +1,6 @@
 /*
  * Remote Weather Access - Client/server solution for distributed weather networks
- *  Copyright (C) 2013-2021 Ralf Rettig (info@personalfme.de)
+ *  Copyright (C) 2013-2023 Ralf Rettig (info@personalfme.de)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -25,3 +25,8 @@ CREATE USER weatherdatadb;
 ALTER USER weatherdatadb WITH PASSWORD 'passwd2';
 CREATE DATABASE weatherdata;
 GRANT ALL PRIVILEGES ON DATABASE weatherdata TO weatherdatadb;
+
+CREATE USER frontenddb;
+ALTER USER frontenddb WITH PASSWORD 'passwd3';
+CREATE DATABASE frontend;
+GRANT ALL PRIVILEGES ON DATABASE frontend TO frontenddb;

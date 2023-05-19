@@ -1,0 +1,15 @@
+{% extends "weatherpage/base_generic.html" %}
+
+{% block header %}
+    {% load plotly_dash %}
+    <title>Wetterdaten</title>
+    {% plotly_header %}
+{% endblock %}
+
+{% block content %}
+    {% plotly_direct name="dash-frontend" %}
+{% endblock %}
+
+{% block footer %}
+    {% plotly_footer %}
+{% endblock %}

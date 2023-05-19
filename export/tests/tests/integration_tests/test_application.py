@@ -1,5 +1,5 @@
 #  Remote Weather Access - Client/server solution for distributed weather networks
-#   Copyright (C) 2013-2021 Ralf Rettig (info@personalfme.de)
+#   Copyright (C) 2013-2023 Ralf Rettig (info@personalfme.de)
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU Affero General Public License as
@@ -78,7 +78,7 @@ def test_regular_run(storage_client, get_bucket_id, tmpdir):
                 m.get('https://{}:{}/api/v1/sensor'.format(URL, PORT), json=SENSOR_RESPONSE)
                 m.get('https://{}:{}/api/v1/station'.format(URL, PORT), json=STATION_RESPONSE)
                 m.get('https://{}:{}/api/v1/data'.format(URL, PORT), json=DATA_RESPONSE)
-                response = client.post('/upload')
+                response = client.post('/upload?month=12&year=2021')
                 assert response.status_code == 200
 
                 assert bucket_mock.blob.call_count == 1

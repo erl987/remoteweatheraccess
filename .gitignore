@@ -118,6 +118,7 @@ httpRequests/*
 deployment.xml
 /.idea/dataSources/
 /.idea/httpRequests/
+/.idea/httpRequests/http-requests-log.http
 /.idea/dataSources.local.xml
 /.idea/webServers.xml
 /.idea/dataSources.xml
@@ -126,3 +127,4 @@ deployment.xml
 /test_data
 /frontend/test_data/weather.db
 /client/test_config/*
+/storage/

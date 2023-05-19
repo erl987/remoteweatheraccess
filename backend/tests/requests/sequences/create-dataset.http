@@ -22,10 +22,10 @@ Authorization: Bearer {{auth_token}}
 {
   "station_id": "{{station_id}}",
   "device": "TE923",
-  "location": "Solna/AB/SE",
-  "latitude": 59.35238,
-  "longitude": 18.00524,
-  "height": 30,
+  "location": "Town/FE/KN",
+  "latitude": 49.25238,
+  "longitude": 98.50524,
+  "height": 920,
   "rain_calib_factor": 1.0
 }
 
@@ -97,7 +97,7 @@ Authorization: Bearer {{auth_token}}
     "wind_temperature": 16.5
   },
   {
-    "timepoint": "2019-07-06T12:44:20+02:00",
+    "timepoint": "2019-07-08T12:44:20+02:00",
     "station_id": "{{station_id}}",
     "pressure": 1013.5,
     "uv": 8.3,
@@ -120,7 +120,7 @@ Authorization: Bearer {{auth_token}}
     "wind_temperature": 16.5
   },
   {
-    "timepoint": "2019-07-06T12:54:20+02:00",
+    "timepoint": "2019-07-10T12:54:20+02:00",
     "station_id": "{{station_id}}",
     "pressure": 1013.5,
     "uv": 8.3,

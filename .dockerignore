@@ -1,3 +1,4 @@
 frontend/tests
 backend/tests
 export/tests
+.pytest_cache

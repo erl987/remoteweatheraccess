@@ -1,5 +1,5 @@
 #  Remote Weather Access - Client/server solution for distributed weather networks
-#   Copyright (C) 2013-2021 Ralf Rettig (info@personalfme.de)
+#   Copyright (C) 2013-2023 Ralf Rettig (info@personalfme.de)
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU Affero General Public License as
@@ -35,7 +35,7 @@ def upload_file(local_file_path, storage_folder):
     else:
         storage_client = storage.Client()
 
-    bucket_id = utils.get_bucket_id(storage_client)
+    bucket_id = utils.get_bucket_id()
     logger.debug('Uploading "{}" to bucket "{}" ...'.format(local_file_path, bucket_id))
 
     bucket = storage_client.bucket(bucket_id)

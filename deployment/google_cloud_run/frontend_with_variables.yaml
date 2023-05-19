@@ -1,5 +1,5 @@
 #  Remote Weather Access - Client/server solution for distributed weather networks
-#   Copyright (C) 2013-2021 Ralf Rettig (info@personalfme.de)
+#   Copyright (C) 2013-2023 Ralf Rettig (info@personalfme.de)
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU Affero General Public License as
@@ -20,26 +20,35 @@ metadata:
   name: ${FRONTEND_SERVICE_NAME}
 spec:
   template:
+    metadata:
+      annotations:
+        run.googleapis.com/cloudsql-instances: ${GCP_PROJECT_ID}:${SQL_DATABASE_ID}
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/startup-cpu-boost: 'true'
     spec:
       containerConcurrency: 80
       timeoutSeconds: 300
       serviceAccountName: ${FRONTEND_SERVICE_ACCOUNT_NAME}
       containers:
-      - image: ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}:${CI_COMMIT_SHA}
-        env:
-        - name: BACKEND_URL
-          value: ${BACKEND_URL_BASE}
-        - name: BACKEND_PORT
-          value: '${BACKEND_PORT}'
-        - name: BACKEND_DO_USE_HTTPS
-          value: 'True'
-        - name: GUNICORN_WORKERS
-          value: '1'
-        - name: GUNICORN_ACCESSLOG
-          value: '-'
-        - name: BRAND_NAME
-          value: ${BRAND_NAME}
-        resources:
-          limits:
-            cpu: 1000m
-            memory: 256Mi
+        - image: ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}:${CI_COMMIT_SHA}
+          env:
+            - name: SETTINGS_SECRET_NAME
+              value: ${FRONTEND_SETTINGS_SECRET_NAME}
+            - name: DB_INSTANCE_CONNECTION_NAME
+              value: ${GCP_PROJECT_ID}:${SQL_DATABASE_ID}
+            - name: FRONTEND_BUCKET
+              value: ${FRONTEND_BUCKET}
+            - name: BACKEND_URL
+              value: ${BACKEND_URL_BASE}
+            - name: BACKEND_PORT
+              value: '${BACKEND_PORT}'
+            - name: GUNICORN_WORKERS
+              value: '1'
+            - name: GUNICORN_ACCESSLOG
+              value: '-'
+            - name: BRAND_NAME
+              value: ${BRAND_NAME}
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 512Mi

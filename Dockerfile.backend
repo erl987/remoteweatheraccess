@@ -1,5 +1,5 @@
 #  Remote Weather Access - Client/server solution for distributed weather networks
-#   Copyright (C) 2013-2021 Ralf Rettig (info@personalfme.de)
+#   Copyright (C) 2013-2023 Ralf Rettig (info@personalfme.de)
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU Affero General Public License as
@@ -30,4 +30,4 @@ RUN mkdir /cloudsql
 RUN useradd -m backend
 USER backend
 
-CMD exec gunicorn --bind=:$PORT --worker-class=gevent --preload --config=backend_config/gunicorn.py --log-config=backend_config/logging.conf wsgi:app
+CMD exec gunicorn --bind=:$PORT --worker-class=gevent --workers=1 --preload --config=backend_config/gunicorn.py --log-config=backend_config/logging.conf wsgi:app

@@ -11,7 +11,7 @@ The frontend is currently only localized to German.
 
 ## Technology stack
 
-* frontend: written in Python using the framework `dash`
+* frontend: written in Python using the frameworks `django` and `dash`
 * backend: written in Python using the framework `flask`
 * database: `PostgresSQL`
 * client: written in Python
@@ -28,7 +28,7 @@ to a wide variety of cloud services and even a Raspberry Pi.
 
 There is a client available for weather stations of type TE923. It is designed to run on minicomputers with
 ARM-processors such as a Raspberry Pi 2+. It can also run on other types of computers with small adaptions. This fully
-configurable client is reading the latest data from the weather station and is sending it to the server via the 
+configurable client is reading the latest data from the weather station and is sending it to the server via the
 REST-API. It is deployed using Docker.
 
 ## Running the server application
@@ -55,7 +55,7 @@ persistent.
 3. Run the stack:
 
 ```shell script
-  docker-compose up
+  docker-compose --profile frontend --profile backend up
 ```
 
 4. The application is now accessible on http://server.
@@ -89,7 +89,13 @@ The backend is now accessible via http://server:8000.
 #### Frontend
 
 ```shell script
-  python3 frontend/frontend_app.py
+  cd frontend/django_frontend
+  export BRAND_NAME=Das Wetternetzwerk
+  export DJANGO_SETTINGS_MODULE=django_frontend.settings
+  export ENV_PATH=../environments/.frontend.ide.env
+  export TEST_MODE=true
+  export PYTHONPATH=$PYTHONPATH:/path/to/root/of/the/repository
+  python3 manage.py runserver
 ```
 
 The frontend is now accessible via http://server:8050.
@@ -102,6 +108,7 @@ It is expecting that the infrastructure is up and running, the most important ex
 * Google Cloud Run API activated
 * Cloud-SQL (Postgres)
 * Google Secrets (for storing the database credentials)
+* Google Cloud Storage (for storing the static files of `django`)
 
 The required infrastructure can be deployed through the separate subproject `infrastructure` using Terraform. In that
 subproject it is exactly documented which infrastructure is required.
@@ -138,8 +145,8 @@ The following variables need to be defined in the GitLab project:
 * `GOOGLE_APPLICATION_CREDENTIALS` (a *file variable*, the key for the service project used by the CI/CD pipeline to
                                     deploy to GCP)
 * `BRAND_NAME` (the name of the website shown in the main header of the site, for example `Das Wetternetzwerk`)
-* `DATA_PROTECTION_POLICY_FILE` (a *file variable*, the content of the data protection policy - in Markdown format)
-* `IMPRESS_FILE` (a *file variable*, the content of the impress - in Markdown format)
+* `DATA_PROTECTION_POLICY_HTML_FILE` (a *file variable*, the content of the data protection policy)
+* `IMPRESS_HTML_FILE` (a *file variable*, the content of the impress)
 
 The *production* and *testing* projects are used by the **main** branch, and the **merge request** branches
 respectively.
@@ -171,12 +178,10 @@ The further steps are in any case:
 Now it is possible to send weather data to the server. The frontend will automatically update with 5 minutes delay due
 to caching.
 
-
 ## Running the client application
 
 The client software gets deployed using Docker. Docker needs to be installed on the machine, one way is to use the
 available convenience script: https://docs.docker.com/engine/install/debian/#install-using-the-convenience-script
-
 
 ### Configure the USB-device
 
@@ -191,7 +196,6 @@ commands on the **host** machine that will run the Docker container later:
 
 This configuration is targeting weather stations of type TE923. Other ways to achieve that are also possible if desired.
 
-
 ### Create the internal configuration directory
 
 Now create a directory where the container can permanently store its internal configuration:
@@ -202,7 +206,6 @@ Now create a directory where the container can permanently store its internal co
 ```
 
 Replace `<username>` and `<groupname>` by your actual user and group name.
-
 
 ### Configure the client
 
@@ -217,11 +220,10 @@ Clone the Git repository if not yet done and create and change the configuration
 
 You could use any other editor to edit the configuration file.
 
-
 ### Create and run the Docker container
 
 The client software gets finally installed as described here. **Note that the `Dockerfile` is using a base image
-suitable for Raspberry Pi 2+ computers**, this base image needs to be replaced by a regular Python image (such as 
+suitable for Raspberry Pi 2+ computers**, this base image needs to be replaced by a regular Python image (such as
 `FROM python:3.9.6-slim-buster`) for other computer architectures.
 
 1. Change to the root directory of the project:
@@ -256,7 +258,6 @@ You can check the logs of the client Docker container like this:
 ```shell
   docker logs te923-weather-client -t -f
 ```
-
 
 ## Concepts
 
@@ -345,7 +346,7 @@ provide an empty database is to start a `postgres` container:
 
 # License
 
-Remote Weather Access - Client/server solution for distributed weather networks Copyright (C) 2013-2021 Ralf Rettig (
+Remote Weather Access - Client/server solution for distributed weather networks Copyright (C) 2013-2023 Ralf Rettig (
 info@personalfme.de)
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public
