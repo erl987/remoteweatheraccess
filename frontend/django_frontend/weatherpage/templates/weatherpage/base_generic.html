@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1">
+    {% block robots %}{% endblock %}
     {% block header %}<title>{{ BRAND_NAME }}</title>{% endblock %}
     {% include "weatherpage/css_imports.html" %}
 </head>
