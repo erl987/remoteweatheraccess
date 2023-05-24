@@ -28,13 +28,13 @@ pytest-env==0.8.1
     # via -r dev-requirements.in
 pytest-mock==3.10.0
     # via -r dev-requirements.in
-requests==2.30.0
+requests==2.31.0
     # via requests-mock
 requests-mock==1.10.0
     # via -r dev-requirements.in
 six==1.16.0
     # via requests-mock
-urllib3==1.26.15
+urllib3==1.26.16
     # via
     #   -r dev-requirements.in
     #   requests
