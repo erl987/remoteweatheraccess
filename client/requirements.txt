@@ -16,7 +16,7 @@ pytz==2021.1
     # via -r requirements.in
 pyyaml==5.4.1
     # via -r requirements.in
-requests==2.26.0
+requests==2.31.0
     # via -r requirements.in
 schedule==1.1.0
     # via -r requirements.in
