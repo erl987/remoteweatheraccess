@@ -17,14 +17,16 @@
 import gzip
 import json
 import logging
+from datetime import datetime
 from http import HTTPStatus
 from io import BytesIO
+from json import JSONEncoder
 from typing import List, Dict
 
 import pytest
 from flask_jwt_extended import create_access_token
 
-from backend_app import create_app, IsoDateTimeJSONEncoder
+from backend_app import create_app
 from backend_config.settings import TestConfig
 from backend_src.extensions import db
 from backend_src.models import WeatherStation, create_temp_humidity_sensors, create_sensors
@@ -296,7 +298,7 @@ def client_with_push_user_permissions():
     with app.test_request_context():
         _create_mock_weather_stations()
         _create_sensors()
-        # noinspection PyArgumentList
+        # noinspection PyTypeChecker
         admin_access_token = create_access_token(identity={'name': 'pytest_user', 'role': Role.PUSH_USER.name},
                                                  additional_claims={'station_id': 'TES'},
                                                  expires_delta=False,
@@ -319,7 +321,7 @@ def client_with_admin_permissions():
     with app.test_request_context():
         _create_mock_weather_stations()
         _create_sensors()
-        # noinspection PyArgumentList
+        # noinspection PyTypeChecker
         admin_access_token = create_access_token(identity={'name': 'pytest_admin', 'role': Role.ADMIN.name},
                                                  additional_claims={'station_id': None},
                                                  expires_delta=False,
@@ -379,6 +381,14 @@ def verify_database_is_empty(client_with_admin_permissions):
     check_result = client.get('/api/v1/data/limits')
     assert not check_result.get_json()['first_timepoint']
     assert not check_result.get_json()['last_timepoint']
+
+
+class IsoDateTimeJSONEncoder(JSONEncoder):
+    def default(self, o):
+        if isinstance(o, datetime):
+            return o.isoformat()
+
+        return super().default(o)
 
 
 def zip_payload(object_payload) -> bytes:

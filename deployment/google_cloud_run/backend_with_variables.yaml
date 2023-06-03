@@ -23,6 +23,8 @@ spec:
     metadata:
       annotations:
         run.googleapis.com/cloudsql-instances: ${GCP_PROJECT_ID}:${SQL_DATABASE_ID}
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/startup-cpu-boost: 'true'
     spec:
       containerConcurrency: 80
       timeoutSeconds: 300
@@ -61,4 +63,4 @@ spec:
           resources:
             limits:
               cpu: 1000m
-              memory: 256Mi
+              memory: 512Mi

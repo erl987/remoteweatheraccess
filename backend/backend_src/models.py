@@ -22,7 +22,7 @@ from http import HTTPStatus
 from typing import List
 
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import validates
+from sqlalchemy.orm import validates, Mapped
 
 from .exceptions import APIError
 from .extensions import db, flask_bcrypt
@@ -36,41 +36,43 @@ DEFAULT_ADMIN_USER_NAME = 'default_admin'
 class WeatherStation(db.Model):
     __bind_key__ = 'weather-data'
 
-    id: int = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = db.Column(db.Integer, primary_key=True)
 
-    station_id: str = db.Column(db.String(10), unique=True, nullable=False)
-    device: str = db.Column(db.String(255), nullable=False)
-    location: str = db.Column(db.String(255), nullable=False)
-    latitude: float = db.Column(db.Float, nullable=False)
-    longitude: float = db.Column(db.Float, nullable=False)
-    height: float = db.Column(db.Float, nullable=False)
-    rain_calib_factor: float = db.Column(db.Float, nullable=False)
+    station_id: Mapped[str] = db.Column(db.String(10), unique=True, nullable=False)
+    device: Mapped[str] = db.Column(db.String(255), nullable=False)
+    location: Mapped[str] = db.Column(db.String(255), nullable=False)
+    latitude: Mapped[float] = db.Column(db.Float, nullable=False)
+    longitude: Mapped[float] = db.Column(db.Float, nullable=False)
+    height: Mapped[float] = db.Column(db.Float, nullable=False)
+    rain_calib_factor: Mapped[float] = db.Column(db.Float, nullable=False)
+
+    data: Mapped[List['WeatherDataset']] = db.relationship(cascade='all, delete-orphan')
 
 
 @dataclass
 class TempHumiditySensor(db.Model):
     __bind_key__ = 'weather-data'
 
-    sensor_id: str = db.Column(db.String(10), primary_key=True)
+    sensor_id: Mapped[str] = db.Column(db.String(10), primary_key=True)
 
-    description: str = db.Column(db.String(255), nullable=False)
+    description: Mapped[str] = db.Column(db.String(255), nullable=False)
 
-    sensor_data = db.relationship('TempHumiditySensorData')
+    sensor_data: Mapped[List['TempHumiditySensorData']] = db.relationship()
 
 
 @dataclass
 class TempHumiditySensorData(db.Model):
     __bind_key__ = 'weather-data'
 
-    timepoint: int = db.Column(db.DateTime(timezone=True), primary_key=True)
-    station_id: str = db.Column(db.String(10), primary_key=True)
-    sensor_id: str = db.Column(db.String(10), ForeignKey(TempHumiditySensor.sensor_id), primary_key=True)
+    timepoint: Mapped[int] = db.Column(db.DateTime(timezone=True), primary_key=True)
+    station_id: Mapped[str] = db.Column(db.String(10), primary_key=True)
+    sensor_id: Mapped[str] = db.Column(db.String(10), ForeignKey(TempHumiditySensor.sensor_id), primary_key=True)
 
-    temperature: float = db.Column(db.Float, nullable=True)
-    humidity: float = db.Column(db.Float, nullable=True)
+    temperature: Mapped[float] = db.Column(db.Float, nullable=True)
+    humidity: Mapped[float] = db.Column(db.Float, nullable=True)
 
     __table_args__ = (db.ForeignKeyConstraint(
-        (timepoint, station_id),
+        [timepoint, station_id],
         ['weather_dataset.timepoint', 'weather_dataset.station_id']),
     )
 
@@ -79,34 +81,29 @@ class TempHumiditySensorData(db.Model):
 class WeatherDataset(db.Model):
     __bind_key__ = 'weather-data'
 
-    timepoint: datetime = db.Column(db.DateTime(timezone=True), primary_key=True)
-    station_id: str = db.Column(db.String(10), ForeignKey(WeatherStation.station_id), primary_key=True)
+    timepoint: Mapped[datetime] = db.Column(db.DateTime(timezone=True), primary_key=True)
+    station_id: Mapped[str] = db.Column(db.String(10), ForeignKey(WeatherStation.station_id), primary_key=True)
 
-    pressure: float = db.Column(db.Float, nullable=True)
-    uv: float = db.Column(db.Float, nullable=True)
-    rain_counter: float = db.Column(db.Float, nullable=True)
+    pressure: Mapped[float] = db.Column(db.Float, nullable=True)
+    uv: Mapped[float] = db.Column(db.Float, nullable=True)
+    rain_counter: Mapped[float] = db.Column(db.Float, nullable=True)
 
-    direction: float = db.Column(db.Float, nullable=True)
-    speed: float = db.Column(db.Float, nullable=True)
-    wind_temperature: float = db.Column(db.Float, nullable=True)
-    gusts: float = db.Column(db.Float, nullable=True)
+    direction: Mapped[float] = db.Column(db.Float, nullable=True)
+    speed: Mapped[float] = db.Column(db.Float, nullable=True)
+    wind_temperature: Mapped[float] = db.Column(db.Float, nullable=True)
+    gusts: Mapped[float] = db.Column(db.Float, nullable=True)
 
-    temperature_humidity: List[TempHumiditySensorData] = db.relationship(
-        TempHumiditySensorData,
-        cascade='all, delete-orphan')
-    weather_station = db.relationship(WeatherStation, backref=db.backref(
-        'data',
-        cascade='all, delete-orphan'))
+    temperature_humidity: Mapped[List[TempHumiditySensorData]] = db.relationship(cascade='all, delete-orphan')
 
 
 @dataclass
 class FullUser(db.Model):
-    id: int = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = db.Column(db.Integer, primary_key=True)
 
-    name: str = db.Column(db.String(120), unique=True, nullable=False)
-    password: str = db.Column(db.String(120), nullable=False)
-    role: str = db.Column(db.String(10), nullable=False)
-    station_id: str = db.Column(db.String(10), nullable=True)
+    name: Mapped[str] = db.Column(db.String(120), unique=True, nullable=False)
+    password: Mapped[str] = db.Column(db.String(120), nullable=False)
+    role: Mapped[str] = db.Column(db.String(10), nullable=False)
+    station_id: Mapped[str] = db.Column(db.String(10), nullable=True)
 
     @validates('role')
     def validate_role(self, _, value):

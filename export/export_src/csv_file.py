@@ -42,7 +42,6 @@ TIME_DUMMY_SENSOR_ID = -19  # can be any negative value, just for ordering the s
 logger = logging.getLogger('exporter')
 
 
-# noinspection PyTypeChecker
 def create_pc_weatherstation_compatible_file(month_data_in, station_id, month, year, sensor_metadata, station_metadata,
                                              destination_dir):
     month_data = copy.deepcopy(month_data_in)
@@ -115,8 +114,8 @@ def _create_data_frame(month_data, station_id):
 
     # reformat the time points
     # TODO: this needs to be generalized ...
-    df['timepoint'] = df['timepoint'].str.replace('\+02:00', ' ')
-    df['timepoint'] = df['timepoint'].str.replace('\+01:00', ' ')
+    df['timepoint'] = df['timepoint'].str.replace('+02:00', ' ')
+    df['timepoint'] = df['timepoint'].str.replace('+01:00', ' ')
 
     df['date'] = pd.to_datetime(df['timepoint']).dt.strftime('%d.%m.%Y')
     df['time'] = pd.to_datetime(df['timepoint']).dt.strftime('%H:%M')

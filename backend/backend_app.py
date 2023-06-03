@@ -18,7 +18,7 @@ from datetime import datetime
 from logging.config import dictConfig
 
 from flask import Flask
-from flask.json import JSONEncoder
+from flask.json.provider import DefaultJSONProvider
 
 from backend_config.settings import ProdConfig, DevConfig, Config, LOGGING_CONFIG
 from backend_src.errorhandlers import handle_invalid_usage, unauthorized_response
@@ -32,7 +32,7 @@ from backend_src.user.routes import user_blueprint
 from backend_src.weatherdata.routes import weatherdata_blueprint
 
 
-class IsoDateTimeJSONEncoder(JSONEncoder):
+class IsoDateTimeJSONProvider(DefaultJSONProvider):
     def default(self, o):
         if isinstance(o, datetime):
             return o.isoformat()
@@ -41,7 +41,7 @@ class IsoDateTimeJSONEncoder(JSONEncoder):
 
 
 class IsoDateTimeFlask(Flask):
-    json_encoder = IsoDateTimeJSONEncoder
+    json_provider_class = IsoDateTimeJSONProvider
 
 
 def create_app(config_object: Config = ProdConfig()):

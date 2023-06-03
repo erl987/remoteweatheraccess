@@ -20,7 +20,7 @@ from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
 
 
-db = SQLAlchemy(engine_options={'executemany_mode': 'batch'})
+db = SQLAlchemy()
 ma = Marshmallow()
 flask_bcrypt = Bcrypt()
 jwt = JWTManager()

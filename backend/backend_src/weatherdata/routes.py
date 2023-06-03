@@ -50,6 +50,7 @@ def add_weather_datasets():
         uncompressed_data = request.data
     json_data = json.loads(uncompressed_data)
     all_datasets = many_weather_datasets_schema.load(json_data, session=db.session)
+    _add_timezone_to_datasets_if_required(all_datasets)
 
     try:
         _perform_add_datasets(all_datasets)
@@ -69,12 +70,9 @@ def _add_new_datasets_only(all_datasets):
     db.session.rollback()
 
     keys_to_add = [(dataset.timepoint, dataset.station_id) for dataset in all_datasets]
-    # noinspection PyUnresolvedReferences
     existing_datasets = WeatherDataset.query.filter(Tuple(WeatherDataset.timepoint, WeatherDataset.station_id)
                                                     .in_(keys_to_add)).all()
     existing_keys = [(dataset.timepoint, dataset.station_id) for dataset in existing_datasets]
-
-    _add_timezone_to_datasets_if_required(all_datasets)
 
     new_datasets = [x for x in all_datasets if (x.timepoint, x.station_id) not in existing_keys]
     num_ignored_datasets = len(all_datasets) - len(new_datasets)
@@ -113,7 +111,6 @@ def update_weather_dataset():
 
     approve_committed_station_ids([new_dataset.station_id])
 
-    # noinspection PyUnresolvedReferences
     existing_dataset = WeatherDataset.query.filter(
         WeatherDataset.timepoint == new_dataset.timepoint and
         WeatherDataset.station_id == new_dataset.station_id
@@ -193,7 +190,7 @@ def get_weather_datasets():
                                                                                    WeatherDataset.station_id,
                                                                                    TempHumiditySensorData.sensor_id,
                                                                                    *queried_sensors).statement,
-                                 db.get_engine(current_app, 'weather-data'))
+                                 db.engines['weather-data'])
 
     # required to provide standard conformant JSON containing `null` and not `NaN`
     found_datasets = found_datasets.replace([np.nan], [None])

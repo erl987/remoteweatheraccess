@@ -14,5 +14,5 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-FROM postgres:13.3-alpine
+FROM postgres:13.11-alpine3.18
 COPY init.sql /docker-entrypoint-initdb.d/

@@ -43,6 +43,7 @@ class WeatherDatasetSchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
         transient = True
 
+    # noinspection PyTypeChecker
     temperature_humidity = marshmallow_sqlalchemy.fields.Nested(TempHumiditySensorSchema, many=True)
 
 

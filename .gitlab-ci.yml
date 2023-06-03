@@ -14,7 +14,7 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-image: python:3.9.6-buster
+image: python:3.11.3-bullseye
 
 include:
   - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
@@ -80,9 +80,9 @@ default:
   - printf "$(cat ./frontend/environments/.frontend.production.env)" "$(< /dev/urandom tr -cd '[:graph:]'| tr  -d '\\' | head -c 232; echo)" "${FRONTEND_ADDRESS}" | gcloud secrets versions add frontend-settings --data-file=-
 
 .gcp_cloud_scheduler_job: &gcp_cloud_scheduler_job
-  - existing_scheduler_jobs=$(gcloud scheduler jobs list --format 'value(name)')
+  - existing_scheduler_jobs=$(gcloud scheduler jobs list --format 'value(name)' --location ${GCP_REGION})
   - num_scheduler_jobs=$(wc -w <<< "$existing_scheduler_jobs")
-  - if [ $num_scheduler_jobs != 0 ]; then gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet ; fi
+  - if [ $num_scheduler_jobs != 0 ]; then gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet  --location ${GCP_REGION} ; fi
   - gcloud scheduler jobs create http ${EXPORTER_SCHEDULER_JOB_NAME}
     --uri="${EXPORTER_URL}/upload"
     --http-method=POST
@@ -91,9 +91,10 @@ default:
     --time-zone="Europe/Stockholm"
     --oidc-service-account-email=${EXPORTER_SERVICE_ACCOUNT_NAME}
     --max-retry-attempts=1
+    --location ${GCP_REGION}
 
 .gcp_deploy: &gcp_deploy
-  image: google/cloud-sdk:426.0.0
+  image: google/cloud-sdk:431.0.0
   script:
     - *gcp_cloud_login
     - *install_gettext
@@ -226,9 +227,9 @@ unittests exporter:
 
 build backend:
   stage: build containers
-  image: docker:20.10.6
+  image: docker:24.0.0-alpine3.18
   services:
-    - docker:20.10.6-dind
+    - docker:24.0.0-dind
   script:
     - docker build -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${BACKEND_SERVICE_NAME}:${CI_COMMIT_SHA}
       --file=./Dockerfile.backend .
@@ -237,9 +238,9 @@ build backend:
 
 build frontend:
   stage: build containers
-  image: docker:20.10.6
+  image: docker:24.0.0-alpine3.18
   services:
-    - docker:20.10.6-dind
+    - docker:24.0.0-dind
   script:
     - *copy_text_files
     - docker build -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}:${CI_COMMIT_SHA}
@@ -249,9 +250,9 @@ build frontend:
 
 build exporter:
   stage: build containers
-  image: docker:20.10.6
+  image: docker:24.0.0-alpine3.18
   services:
-    - docker:20.10.6-dind
+    - docker:24.0.0-dind
   script:
     - docker build -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${EXPORTER_SERVICE_NAME}:${CI_COMMIT_SHA}
       --file=./Dockerfile.export .
@@ -272,7 +273,7 @@ stop review:
   stage: cleanup review
   dependencies:
     - deploy review
-  image: google/cloud-sdk:426.0.0
+  image: google/cloud-sdk:431.0.0
   script:
     - *gcp_cloud_login
     - gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet

@@ -77,7 +77,7 @@ def get_all_users():
 def update_user(user_id):
     updated_user = full_user_load_schema.load(request.json)
 
-    existing_user = FullUser.query.get(convert_to_int(user_id))
+    existing_user = db.session.get(FullUser, convert_to_int(user_id))
     if not existing_user:
         raise APIError('No user with provided id', status_code=HTTPStatus.NOT_FOUND)
 
@@ -108,7 +108,7 @@ def update_user(user_id):
 @access_level_required(Role.ADMIN)
 @with_rollback_and_raise_exception
 def remove_user(user_id):
-    existing_user = FullUser.query.get(convert_to_int(user_id, HTTPStatus.NO_CONTENT))
+    existing_user = db.session.get(FullUser, convert_to_int(user_id, HTTPStatus.NO_CONTENT))
     if not existing_user:
         current_app.logger.info('No user with provided id')
         return '', HTTPStatus.NO_CONTENT
@@ -124,7 +124,7 @@ def remove_user(user_id):
 @access_level_required(Role.ADMIN)
 @with_rollback_and_raise_exception
 def get_user_details(user_id):
-    user = FullUser.query.get(convert_to_int(user_id))
+    user = db.session.get(FullUser, convert_to_int(user_id))
     if not user:
         raise APIError('No user with provided id', status_code=HTTPStatus.BAD_REQUEST)
 

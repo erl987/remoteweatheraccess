@@ -15,20 +15,18 @@
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # This configuration is primarily for easy testing and documents how this app can be deployed.
-# Start it with: `docker-compose --profile frontend --profile backend up`
+# Start it with: `docker-compose up`
 version: '3'
 
 services:
   reverse-proxy:
-    image: nginx:1.21.0
+    image: nginx:1.24.0
     ports:
       - "80:80"
     volumes:
       - ./deployment/demo_deployment/nginx:/etc/nginx/conf.d
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
     depends_on:
-      - frontend
-    profiles:
       - frontend
 
   frontend:
@@ -44,8 +42,6 @@ services:
       - backend
       - database
       - migrations
-    profiles:
-      - frontend
 
   migrations:
     build:
@@ -57,11 +53,9 @@ services:
     depends_on:
       - database
       - object-storage
-    profiles:
-      - frontend
 
   object-storage:
-    image: minio/minio:RELEASE.2022-08-13T21-54-44Z
+    image: minio/minio:RELEASE.2023-05-18T00-05-36Z
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -71,8 +65,6 @@ services:
       MINIO_ROOT_USER: minio_access_key
       MINIO_ROOT_PASSWORD: minio_secret_key
     command: server /data --console-address ":9001"
-    profiles:
-      - frontend
 
   backend:
     build:
@@ -96,8 +88,6 @@ services:
       - GUNICORN_ACCESSLOG=-
     depends_on:
       - database
-    profiles:
-      - backend
 
   database:
     build:
@@ -106,6 +96,3 @@ services:
       - "5432:5432"
     environment:
       - POSTGRES_PASSWORD=passwd
-    profiles:
-      - frontend
-      - backend

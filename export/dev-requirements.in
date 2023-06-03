@@ -16,3 +16,5 @@
 
 pytest
 requests-mock
+fastapi[all]
+urllib3<2.0  # required to be compatible with the main requirements file

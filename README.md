@@ -55,7 +55,7 @@ persistent.
 3. Run the stack:
 
 ```shell script
-  docker-compose --profile frontend --profile backend up
+  docker-compose up
 ```
 
 4. The application is now accessible on http://server.
@@ -75,7 +75,7 @@ persistent.
 This starts a simple database, the data lifetime is identical to that of the container:
 
 ```shell script
-  docker run -d --network=host -e POSTGRES_PASSWORD=passwd -p 5432:5432 postgres
+  docker run -d -e POSTGRES_PASSWORD=passwd -p 127.0.0.1:5432:5432 postgres
 ```
 
 #### Backend

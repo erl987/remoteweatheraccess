@@ -24,7 +24,7 @@ from flask import current_app, request
 from flask_jwt_extended import verify_jwt_in_request, get_jwt, get_jwt_identity
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, UnsupportedMediaType
 
 from .exceptions import raise_api_error, APIError
 from .extensions import db
@@ -64,12 +64,12 @@ def with_rollback_and_raise_exception(func):
 def _perform_with_rollback_and_raise_exception(func, args, kwargs):
     try:
         return func(*args, **kwargs)
-    except ValidationError as e:
+    except (UnsupportedMediaType, ValidationError) as e:
         raise APIError('Schema validation failed: {}'.format(str(e).split('\n')[0]),
                        status_code=HTTPStatus.BAD_REQUEST)
     except IntegrityError as e:
-        # this is specific for psycopg2
-        raise APIError(e.orig.diag.message_detail, status_code=HTTPStatus.CONFLICT)
+        error_info = [str(x) for x in e.orig.args]
+        raise APIError(': '.join(error_info), status_code=HTTPStatus.CONFLICT)
     except BadRequest as e:
         raise raise_api_error(e, status_code=HTTPStatus.BAD_REQUEST)
     except Exception as e:

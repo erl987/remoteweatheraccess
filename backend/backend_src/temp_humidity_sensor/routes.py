@@ -30,10 +30,13 @@ temp_humidity_sensor_blueprint = Blueprint('temp_humidity_sensor', __name__, url
 @access_level_required(Role.GUEST)
 @with_rollback_and_raise_exception
 def get_all_temp_humidity_sensors():
-    sensor_data = db.session.query(TempHumiditySensor).all()
+    sensor_data = (db.session
+                   .query(TempHumiditySensor)
+                   .with_entities(TempHumiditySensor.sensor_id, TempHumiditySensor.description)
+                   .all())
 
     current_app.logger.info('Provided details of all {} temperature-humidity sensors'.format(len(sensor_data)))
-    response = jsonify(sensor_data)
+    response = jsonify(_sensor_data_to_json(sensor_data))
     response.status_code = HTTPStatus.OK
     return response
 
@@ -45,6 +48,7 @@ def get_a_temp_humidity_sensor(sensor_id):
     sensor_id = sensor_id.upper()
     sensor_data = (db.session
                    .query(TempHumiditySensor)
+                   .with_entities(TempHumiditySensor.sensor_id, TempHumiditySensor.description)
                    .filter(TempHumiditySensor.sensor_id == sensor_id)
                    .one_or_none())
 
@@ -53,6 +57,15 @@ def get_a_temp_humidity_sensor(sensor_id):
     else:
         current_app.logger.info('Provided details for temperature-humidity sensor \'{}\''.format(sensor_id))
 
-        response = jsonify(sensor_data)
+        response = jsonify(_sensor_data_to_json([sensor_data])[0])
         response.status_code = HTTPStatus.OK
         return response
+
+
+def _sensor_data_to_json(sensor_data):
+    sensor_data_json = []
+    for row in sensor_data:
+        sensor_id, description = row
+        sensor_data_json.append({'sensor_id': sensor_id, 'description': description})
+
+    return sensor_data_json
