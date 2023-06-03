@@ -21,4 +21,4 @@ sleep 5s
 python /app/frontend/django_frontend/manage.py migrate --noinput
 
 export S3_ENDPOINT_URL=http://object-storage:9000
-python /app/frontend/django_frontend/manage.py collectstatic --noinput
+python /app/frontend/django_frontend/manage.py collectstatic --verbosity 2 --no-input
