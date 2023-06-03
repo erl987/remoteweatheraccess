@@ -25,6 +25,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./export /app
 
+RUN python -m compileall /app
+
 RUN useradd -m exporter
 USER exporter
 

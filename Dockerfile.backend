@@ -27,6 +27,8 @@ COPY ./backend/ /app
 
 RUN mkdir /cloudsql
 
+RUN python -m compileall /app
+
 RUN useradd -m backend
 USER backend
 
