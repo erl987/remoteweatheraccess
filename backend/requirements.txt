@@ -33,13 +33,13 @@ flask-sqlalchemy==3.0.3
     # via -r requirements.in
 gevent==22.10.2
     # via -r requirements.in
-google-api-core[grpc]==2.11.0
+google-api-core[grpc]==2.11.1
     # via google-cloud-secret-manager
-google-auth==2.19.1
+google-auth==2.20.0
     # via google-api-core
 google-cloud-secret-manager==2.16.1
     # via -r requirements.in
-googleapis-common-protos[grpc]==1.59.0
+googleapis-common-protos[grpc]==1.59.1
     # via
     #   google-api-core
     #   grpc-google-iam-v1
@@ -79,7 +79,7 @@ marshmallow==3.19.0
     #   marshmallow-sqlalchemy
 marshmallow-sqlalchemy==0.29.0
     # via -r requirements.in
-numpy==1.24.3
+numpy==1.25.0
     # via
     #   -r requirements.in
     #   pandas
@@ -92,7 +92,7 @@ pandas==2.0.2
     # via -r requirements.in
 proto-plus==1.22.2
     # via google-cloud-secret-manager
-protobuf==4.23.2
+protobuf==4.23.3
     # via
     #   google-api-core
     #   google-cloud-secret-manager
@@ -124,7 +124,7 @@ six==1.16.0
     # via
     #   google-auth
     #   python-dateutil
-sqlalchemy==2.0.15
+sqlalchemy==2.0.16
     # via
     #   -r requirements.in
     #   flask-sqlalchemy
@@ -137,7 +137,7 @@ urllib3==1.26.16
     # via
     #   google-auth
     #   requests
-werkzeug==2.3.4
+werkzeug==2.3.6
     # via
     #   flask
     #   flask-jwt-extended
