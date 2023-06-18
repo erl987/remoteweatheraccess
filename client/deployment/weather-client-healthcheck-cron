@@ -1,0 +1,6 @@
+# /etc/cron.d/weather-client-healthcheck-cron: crontab entries for restarting an unhealthy weather client
+
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+* * * * * root docker ps -f health=unhealthy --format "docker restart {{.ID}}" | sh

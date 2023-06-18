@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #  Remote Weather Access - Client/server solution for distributed weather networks
 #   Copyright (C) 2013-2023 Ralf Rettig (info@personalfme.de)
 #
@@ -13,23 +14,20 @@
 #
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+import sys
+import time
 
-FROM python:3.11.3-slim-bullseye
-
-ENV PYTHONUNBUFFERED True
-
-WORKDIR /app
-
-COPY backend/requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY ./backend/ /app
-
-RUN mkdir /cloudsql
-
-RUN python -m compileall /app
-
-RUN useradd -m backend
-USER backend
-
-CMD exec gunicorn --bind=:$PORT --worker-class=gevent --workers=1 --preload --config=backend_config/gunicorn.py --log-config=backend_config/logging.conf wsgi:app
+try:
+    if len(sys.argv) == 2 and sys.argv[1] == '-v':
+        print('TE923 weather station mock')
+    elif len(sys.argv) == 2 and sys.argv[1] == '-b':
+        # this mock hangs intentionally ...
+        time.sleep(1000)
+    elif len(sys.argv) == 1:
+        # this mock hangs intentionally ...
+        time.sleep(1000)
+    else:
+        raise SyntaxError('Invalid syntax: {}'.format(sys.argv))
+except Exception as e:
+    print(str(e) + '\n', file=sys.stderr)
+    sys.exit(1)

@@ -42,31 +42,31 @@ persistent.
 
 1. Change to the root directory of the project:
 
-```shell script
-  cd weatherstation
-```
+    ```shell script
+      cd weatherstation
+    ```
 
 2. Build the containers:
 
-```shell script
-  docker-compose build
-```
+    ```shell script
+      docker-compose build
+    ```
 
 3. Run the stack:
 
-```shell script
-  docker-compose up
-```
+    ```shell script
+      docker-compose up
+    ```
 
 4. The application is now accessible on http://server.
    **You need to create at least one weather station, and a push user for each station in order to run the server
    meaningfully.** Check the documentation below to perform the initial configuration and get started.
 
 5. Stop the stack:
-
-```shell script
-  docker-compose down
-```
+    
+    ```shell script
+      docker-compose down
+    ```
 
 ### Running components separately
 
@@ -165,8 +165,8 @@ environment variable `RUNNING_ON_SERVER`, which is the default) or in case of a 
 The Python-script `prepare_database.py` allows however also to bootstrap the application in a production environment
 manually if required. It needs to be executed on a machine that can access the database.
 
-The bootstraping - automatic or manual - will set up the database tables but also create a first `default_admin`
-user. **This user should only be used to create an own admin user and should be deleted afterwards!**
+The bootstrapping - automatic or manual - will set up the database tables but also create a first `default_admin`
+user. **This user should only be used to create an own admin user and should be deleted afterward!**
 
 The further steps are in any case:
 
@@ -225,40 +225,50 @@ You could use any other editor to edit the configuration file.
 
 The client software gets finally installed as described here. **Note that the `Dockerfile` is using a base image
 suitable for Raspberry Pi 2+ computers**, this base image needs to be replaced by a regular Python image (such as
-`FROM python:3.9.6-slim-buster`) for other computer architectures.
+`FROM python:3.11.3-slim-bullseye`) for other computer architectures.
+
+> **_NOTE:_**  **Docker Compose** must be available on the machine.
 
 1. Change to the root directory of the project:
+    
+    ```shell script
+      cd weatherstation/client
+    ```
 
-```shell script
-  cd weatherstation
-```
+2. Prepare the file containing the backend API password (corresponding to the user defined in the config `yaml`-file):
 
-2. Build the client Docker image, use the local time zone of the station (such as `Europe/Berlin`):
+    ```shell
+      echo BACKEND_PASSWORD=<password> > te923-client-env.list
+    ```
 
-```shell
-  docker build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) --build-arg TZ=Europe/Stockholm -t meteoradix/weatherstation-client -f Dockerfile.client .
-```
+    Replace `<password>` by the actual password. This file should not be readable to other users. **It should be 
+    deleted after starting the container as it contains sensitive data**.
 
-3. Prepare the file containing the backend API password (corresponding to the user defined in the config `yaml`-file):
+3. Start the container, it will be built automatically:
 
-```shell
-  echo BACKEND_PASSWORD=<password> > te923-client-env.list
-```
+   ```shell
+      export GIT_COMMIT=$(git rev-parse --short HEAD)
+      docker-compose up -d
+   ```
+   
+   You can check the logs of the client Docker container like this:
 
-Replace `<password>` by the actual password. This file can be placed anywhere - where it is not readable to other
-users. **It should be deleted after starting the container as it contains sensitive data**.
+    ```shell
+      docker logs client-te923-weather-client-1 -t -f
+    ```
 
-4. Run the Docker container, it will be restarted automatically on system reboot:
+4. Add a cron job to automatically restart the container if the client is not working properly:
 
-```shell
-  docker run --name te923-weather-client -d --restart always --privileged --env-file te923-client-env.list -v /opt/weatherstation-client/config:/app/config -v /dev/bus/usb:/dev/bus/usb -v /opt/weatherstation-client/data:/tmp/data/ meteoradix/weatherstation-client
-```
+   ```shell
+      sudo cp client/deployment/weather-client-healthcheck-cron /etc/cron.d
+   ```
+   
+   You can check the syslog to verify that the cron job runs every minute:
 
-You can check the logs of the client Docker container like this:
+   ```shell
+      tail -f /var/log/syslog
+   ```
 
-```shell
-  docker logs te923-weather-client -t -f
-```
 
 ## Concepts
 

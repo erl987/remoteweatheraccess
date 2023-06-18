@@ -1,0 +1,26 @@
+version: '3.4'
+
+services:
+  te923-weather-client:
+    build:
+      context: ..
+      dockerfile: Dockerfile.client
+      args:
+        GIT_COMMIT: ${GIT_COMMIT}
+        TZ: Europe/Stockholm
+    image: te923-weather-client:${GIT_COMMIT}
+    env_file:
+      - te923-client-env.list  # needs to be created before starting the container
+    restart: always
+    privileged: true
+    network_mode: host
+    volumes:
+      - /opt/weatherstation-client/config:/app/config
+      - /opt/weatherstation-client/data:/tmp/data/
+      - /dev/bus/usb:/dev/bus/usb
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/healthcheck" ]
+      interval: 120m
+      timeout: 15s
+      retries: 1
+      start_period: 120m

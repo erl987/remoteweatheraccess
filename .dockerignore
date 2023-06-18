@@ -1,4 +1,6 @@
+client/tests
 frontend/tests
 backend/tests
 export/tests
 .pytest_cache
+client/te923-client-env.list

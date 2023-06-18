@@ -1,0 +1,3 @@
+fastapi[all]
+pytest
+requests-mock

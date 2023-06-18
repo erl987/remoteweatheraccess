@@ -225,6 +225,23 @@ unittests exporter:
   artifacts:
     <<: *publish_test_artifacts
 
+unittests client:
+  stage: test
+  cache:
+    key: client
+    paths:
+      - .cache/pip
+      - venv/
+  before_script:
+    - *python_prepare
+    - pip3 install -r client/requirements.txt
+    - pip3 install -r client/dev-requirements.txt
+  script:
+    - export PYTHONPATH=${CI_PROJECT_DIR}/client
+    - pytest client/tests --junitxml=report.xml
+  artifacts:
+    <<: *publish_test_artifacts
+
 build backend:
   stage: build containers
   image: docker:24.0.0-alpine3.18

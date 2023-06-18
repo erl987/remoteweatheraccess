@@ -13,23 +13,31 @@
 #
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+USER_NAME = 'a_user'
+PASSWORD = 'a_passwd'
+TOKEN = 'a_token'
 
-FROM python:3.11.3-slim-bullseye
+LOGIN_RESPONSE = {
+    'token': TOKEN,
+    'user': USER_NAME
+}
 
-ENV PYTHONUNBUFFERED True
+URL = 'something'
+PORT = 443
 
-WORKDIR /app
+DATA_DIR = 'data_dir'
 
-COPY backend/requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY ./backend/ /app
-
-RUN mkdir /cloudsql
-
-RUN python -m compileall /app
-
-RUN useradd -m backend
-USER backend
-
-CMD exec gunicorn --bind=:$PORT --worker-class=gevent --workers=1 --preload --config=backend_config/gunicorn.py --log-config=backend_config/logging.conf wsgi:app
+EXPECTED_DATA_FOR_SINGLE_TIMEPOINT = {
+    'station_id': 'TES',
+    'pressure': 1018.0,
+    'uv': None,
+    'rain_counter': 3620,
+    'speed': None,
+    'gusts': None,
+    'direction': None,
+    'wind_temperature': None,
+    'temperature_humidity': [
+        {'sensor_id': 'OUT1', 'temperature': 3.7, 'humidity': 54.0},
+        {'sensor_id': 'IN', 'temperature': 22.75, 'humidity': 26.0}
+    ]
+}

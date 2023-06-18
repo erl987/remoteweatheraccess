@@ -1,5 +1,7 @@
-requests
-pytz
-schedule
-pyyaml
 cerberus
+fastapi
+pytz
+pyyaml
+requests
+schedule
+uvicorn

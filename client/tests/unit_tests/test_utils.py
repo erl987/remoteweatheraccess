@@ -13,23 +13,18 @@
 #
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+import json
 
-FROM python:3.11.3-slim-bullseye
+from client_src.utils import IsoDateTimeJSONEncoder, IsoDateTimeJSONDecoder
+from .common import A_LOCAL_TIME_POINT
 
-ENV PYTHONUNBUFFERED True
 
-WORKDIR /app
+def test_encoder():
+    json_object = json.dumps({'a_time_point': A_LOCAL_TIME_POINT}, cls=IsoDateTimeJSONEncoder)
+    assert json_object == '{"a_time_point": "2023-06-11T15:42:52+02:00"}'
 
-COPY backend/requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ./backend/ /app
-
-RUN mkdir /cloudsql
-
-RUN python -m compileall /app
-
-RUN useradd -m backend
-USER backend
-
-CMD exec gunicorn --bind=:$PORT --worker-class=gevent --workers=1 --preload --config=backend_config/gunicorn.py --log-config=backend_config/logging.conf wsgi:app
+def test_decoder():
+    json_str = '{"a_time_point": "2023-06-11T15:42:52+02:00"}'
+    json_object = json.loads(json_str, cls=IsoDateTimeJSONDecoder)
+    assert json_object['a_time_point'] == A_LOCAL_TIME_POINT

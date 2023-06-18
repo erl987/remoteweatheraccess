@@ -16,6 +16,7 @@
 import json
 import logging
 import os
+import threading
 from datetime import datetime, timedelta
 from json import JSONDecodeError
 from pathlib import Path
@@ -62,6 +63,7 @@ RAIN_COUNTER = 21  # rain counter [tipping bucket counts since last resetting]
 class LastKnownStationData(object):
     DATA_FILE = r'last_known_station_data.json'
     BACKUP_FILE = DATA_FILE + '.backup'
+    _lock = threading.Lock()
     _instance = None  # type: LastKnownStationData
 
     def __init__(self, data_dir_path):
@@ -78,10 +80,11 @@ class LastKnownStationData(object):
 
     @staticmethod
     def get(data_dir_path):
-        if LastKnownStationData._instance is None:
-            LastKnownStationData(data_dir_path)
+        with LastKnownStationData._lock:
+            if LastKnownStationData._instance is None:
+                LastKnownStationData(data_dir_path)
 
-        return LastKnownStationData._instance
+            return LastKnownStationData._instance
 
     def get_utc_time_point(self):
         return self._last_read_utc_time_point
@@ -153,8 +156,8 @@ class WeatherStationProxy(object):
         else:
             do_read_all_datasets = True
 
-        has_found_data = self.read_and_send(do_read_all_datasets)
-        if do_read_all_datasets and has_found_data:
+        self.read_and_send(do_read_all_datasets)
+        if do_read_all_datasets:
             return True
         else:
             return False
@@ -203,7 +206,7 @@ class WeatherStationProxy(object):
         data_reader_process = Popen(command,
                                     stdout=PIPE,
                                     stderr=PIPE,
-                                    universal_newlines=True)
+                                    text=True)
         try:
             stdout_str, stderr_str = data_reader_process.communicate(timeout=60 * timeout_in_min)
         except TimeoutExpired:
@@ -222,7 +225,7 @@ class WeatherStationProxy(object):
         json_data = []
 
         for dataset in data:
-            local_time = self._local_time_zone.localize(datetime.fromtimestamp(int(dataset[TIME])), is_dst=True)
+            local_time = datetime.fromtimestamp(int(dataset[TIME]), self._local_time_zone)
 
             dataset_json = self._create_dataset(dataset, local_time)
 

@@ -19,18 +19,27 @@ import signal
 import sys
 import threading
 import time
+import traceback
 from argparse import ArgumentParser
+from contextlib import contextmanager
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from http import HTTPStatus
 
+import pytz
 import schedule
 import yaml
 from cerberus import Validator
+from fastapi import FastAPI, HTTPException
+from uvicorn import Server, Config
 
-from client_src.station_interface import WeatherStationProxy
+from client_src.station_interface import WeatherStationProxy, LastKnownStationData
 
 # default settings than can be overwritten by command line arguments
 DEFAULT_CONFIG_FILE_PATH = r'./default_client_config.yaml'
 DEFAULT_DATA_DIR_PATH = r'../test_data/'
-DEFAULT_WEATHER_DATA_READER_PATH = r'../client_helpers/te923con_mock.py'  # path to `te923con` executable in production
+# path to `te923con` executable in production
+DEFAULT_WEATHER_DATA_READER_PATH = r'tests/weather_station_mock/te923con_mock.py'
 
 CONFIG_FILE_SCHEMA = {
     'station_id': {'type': 'string'},
@@ -55,7 +64,17 @@ CONFIG_FILE_SCHEMA = {
         'type': 'dict',
         'schema': {
             'all_datasets_read': {'type': 'integer'},
-            'latest_dataset_read': {'type': 'integer'}
+            'latest_dataset_read': {'type': 'integer'},
+            'server_connect_timeout': {'type': 'float'},
+            'server_write_timeout': {'type': 'float'}
+        }
+    },
+    'health_check': {
+        'type': 'dict',
+        'schema': {
+            'host': {'type': 'string'},
+            'port': {'type': 'integer'},
+            'unhealthy_after_this_time_without_transfer_in_min': {'type': 'float'}
         }
     },
     'logging': {
@@ -66,6 +85,16 @@ CONFIG_FILE_SCHEMA = {
         }
     }
 }
+
+app = FastAPI()
+
+endpoint_settings = None  # type: EndpointSettings | None
+
+
+@dataclass
+class EndpointSettings:
+    data_dir_path: str
+    unhealthy_after_this_time_without_transfer: float
 
 
 class Runner(object):
@@ -100,26 +129,39 @@ class Runner(object):
             pass
 
 
+class EndpointServer(Server):
+    def install_signal_handlers(self):
+        pass
+
+    @contextmanager
+    def run_in_thread(self):
+        thread = threading.Thread(target=self.run)
+        thread.start()
+        try:
+            while not self.started:
+                time.sleep(0.01)
+            yield
+        finally:
+            self.should_exit = True
+            thread.join()
+
+
 class Client(object):
     _REGULAR_STOP = 'REGULAR_STOP'
 
     def __init__(self, config, data_dir_path, weather_data_reader_path):
         self._config = config
         self._sleep_period_in_sec = config['sleep_period_in_sec']
-        self._station_is_free_for_read = threading.Event()
-        self._lock = threading.Lock()
+        self._station_is_free_for_read = threading.Semaphore()
         self._weather_station_proxy = WeatherStationProxy(self._config,
                                                           data_dir_path,
                                                           weather_data_reader_path)
         self._runner = Runner(self._perform_run)
 
     def _read_and_send_data_from_station(self):
-        with self._lock:
-            if not self._station_is_free_for_read.is_set():
-                logging.debug('A previous weather station read is not yet finalized, skipping the reading this time')
-                return
-
-            self._station_is_free_for_read.clear()
+        if not self._station_is_free_for_read.acquire(blocking=False):
+            logging.debug('A previous weather station read is not yet finalized, skipping the reading this time')
+            return
 
         try:
             # can take more than 10 minutes if all data needs to be read
@@ -130,7 +172,7 @@ class Client(object):
         except Exception as e:
             logging.error('Read or send of data failed: {}'.format(e))
         finally:
-            self._station_is_free_for_read.set()
+            self._station_is_free_for_read.release()
 
     @staticmethod
     def _run_threaded(job_func):
@@ -151,8 +193,6 @@ class Client(object):
         return time_points_in_hour
 
     def _perform_run(self):
-        self._station_is_free_for_read.set()
-
         time_points_in_hour = self._determine_read_time_points_in_hour(
             self._config['data_reading']['minute_of_first_read_within_an_hour'],
             self._config['data_reading']['read_period_in_minutes']
@@ -221,7 +261,30 @@ def load_config_file(config_file_path):
     return config, config_file_is_not_present, config_file_path
 
 
+@app.get('/healthcheck')
+async def health_check():
+    logging.debug('Performing health check')
+    last_read_utc_time_point = LastKnownStationData.get(endpoint_settings.data_dir_path).get_utc_time_point()
+    time_difference = datetime.utcnow().replace(tzinfo=pytz.UTC) - last_read_utc_time_point
+
+    try:
+        if time_difference < timedelta(minutes=endpoint_settings.unhealthy_after_this_time_without_transfer):
+            return {'result': 'ok'}
+        else:
+            raise HTTPException(status_code=HTTPStatus.SERVICE_UNAVAILABLE,
+                                detail=f'Last trial reading from the station was more than '
+                                       f'{endpoint_settings.unhealthy_after_this_time_without_transfer} minutes ago')
+    except HTTPException as e:
+        logging.error(f'Status code: {e.status_code}, error: {e.detail}')
+        raise
+    except Exception:
+        logging.error(f'Internal server error: {traceback.format_exc()}')
+        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail='Internal server error')
+
+
 def main():
+    global endpoint_settings
+
     try:
         config_file_path, data_dir_path, weather_data_reader_path = get_command_line_arguments()
         config, config_file_is_not_present, actual_config_file_path = load_config_file(config_file_path)
@@ -230,14 +293,26 @@ def main():
         if config_file_is_not_present:
             logging.warning('Config file \'{}\' is not present, using the default config file instead'
                             .format(config_file_path))
+
+        endpoint_settings = \
+            EndpointSettings(data_dir_path,
+                             config['health_check']['unhealthy_after_this_time_without_transfer_in_min'])
+
     except Exception as e:
         print('Fatal error while loading configuration: {}: {}'.format(type(e).__name__, str(e)))
         sys.exit(-1)
 
     try:
-        logging.debug('Starting weather station client')
-        client = Client(config, data_dir_path, weather_data_reader_path)
-        client.run()
+        logging.debug('Starting health check endpoint')
+        endpoint_config = Config(app, host=config['health_check']['host'],
+                                 port=config['health_check']['port'],
+                                 log_level='info')
+        endpoint_server = EndpointServer(config=endpoint_config)
+
+        with endpoint_server.run_in_thread():
+            logging.debug('Starting weather station client')
+            client = Client(config, data_dir_path, weather_data_reader_path)
+            client.run()
     except Exception as e:
         print('Fatal error: {}: {}'.format(type(e).__name__, e))
         sys.exit(-2)

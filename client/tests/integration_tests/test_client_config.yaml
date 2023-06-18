@@ -1,17 +1,17 @@
 # HTTP-backend endpoint
 station_id: TES
-backend_url: 127.0.0.1
-backend_port: 8000
-use_ssl: False
+backend_url: something
+backend_port: 443
+use_ssl: True
 
 # login information
-user_name: default_admin
+user_name: a_user
 relogin_time_in_sec: 50
 
 # client configuration
 data_reading:
   minute_of_first_read_within_an_hour: 0
-  read_period_in_minutes: 10
+  read_period_in_minutes: 1  # as short as possible for the sake of the test
 ignored_data_fields:
   - forecast
   - storm_warning
@@ -22,7 +22,7 @@ timeouts_in_min:
   server_connect_timeout: 0.51
   server_write_timeout: 5.0
 health_check:
-  host: 127.0.0.1
+  host: 0.0.0.0
   port: 3000
   unhealthy_after_this_time_without_transfer_in_min: 60
 

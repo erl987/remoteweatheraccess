@@ -15,6 +15,7 @@
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import gzip
 import json
+import logging
 import os
 import time
 from datetime import datetime
@@ -34,7 +35,6 @@ class ServerProxy(object):
             self._protocol = 'http'
         else:
             self._protocol = 'https'
-        self._local_time_zone = os.getenv('TZ', 'UTC')
         self._relogin_time_in_sec = config['relogin_time_in_sec']
 
         if 'BACKEND_PASSWORD' not in os.environ:
@@ -42,11 +42,14 @@ class ServerProxy(object):
                              'in the environment variable \'BACKEND_PASSWORD\'')
         self._password = os.environ['BACKEND_PASSWORD']
 
+        self._server_connect_timeout_in_s = 60 * config['timeouts_in_min']['server_connect_timeout']
+        self._server_write_timeout_in_s = 60 * config['timeouts_in_min']['server_write_timeout']
+
         self._token = None
         self._last_login_time = datetime.min
-        self._log_buffer = []
 
     def send_data(self, json_data, station_id: str):
+        logging.debug(f'Sending read data to server {self.url}:{self.port}')
         first_date, last_date = self._get_first_and_last_date(json_data)
 
         if len(json_data) > 0:
@@ -55,17 +58,12 @@ class ServerProxy(object):
             start_time = time.time()
             r = requests.post('{}://{}:{}/api/v1/data'.format(self._protocol, self.url, self.port),
                               data=zipped_json,
-                              headers=self._get_headers(jwt_token))
+                              headers=self._get_headers(jwt_token),
+                              timeout=self._get_timeouts())
             end_time = time.time()
             r.raise_for_status()
-            self._log_buffer.append(('INFO',
-                                     'Upload for station {} in time period {} - {} took {} ms, status code {}'
-                                     .format(
-                                         station_id,
-                                         first_date,
-                                         last_date,
-                                         (end_time - start_time) * 1000,
-                                         r.status_code)))
+            logging.debug(f'Upload for station {station_id} in time period {first_date} - {last_date} '
+                          f'took {(end_time - start_time) * 1000} ms, status code {r.status_code}')
 
     @staticmethod
     def _get_first_and_last_date(json_data):
@@ -101,13 +99,17 @@ class ServerProxy(object):
 
     def _perform_login(self):
         if (datetime.utcnow() - self._last_login_time).total_seconds() > self._relogin_time_in_sec:
-            self._log_buffer.append(('INFO', 'Logging into the backend'))
+            logging.debug('Logging into the backend')
             r = requests.post('{}://{}:{}/api/v1/login'.format(self._protocol, self.url, self.port),
                               json={'name': self._user_name, 'password': self._password},
-                              headers=self._get_headers())
+                              headers=self._get_headers(),
+                              timeout=self._get_timeouts())
             r.raise_for_status()
             self._token = r.json()['token']
             self._last_login_time = datetime.utcnow()
             return self._token
         else:
             return self._token
+
+    def _get_timeouts(self):
+        return self._server_connect_timeout_in_s, self._server_write_timeout_in_s

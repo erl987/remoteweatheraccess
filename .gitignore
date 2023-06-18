@@ -128,3 +128,4 @@ deployment.xml
 /frontend/test_data/weather.db
 /client/test_config/*
 /storage/
+/weather.db
