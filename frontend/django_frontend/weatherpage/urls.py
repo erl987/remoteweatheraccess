@@ -25,6 +25,7 @@ app_name = 'weatherpage'
 urlpatterns = [
     path('', views.main, name='index'),
     path('<SSS:station_id>/', views.main_for_station, name='index_station'),
+    path('download/', views.download, name='download'),
     path('impress/', views.impress, name='impress'),
     path('policy/', views.policy, name='policy')
 ]

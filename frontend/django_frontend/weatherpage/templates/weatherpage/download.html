@@ -1,0 +1,17 @@
+{% extends "weatherpage/base_generic.html" %}
+
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+
+{% block header %}
+    {% load plotly_dash %}
+    <title>Download</title>
+    {% plotly_header %}
+{% endblock %}
+
+{% block content %}
+    {% plotly_direct name="dash-download" %}
+{% endblock %}
+
+{% block footer %}
+    {% plotly_footer %}
+{% endblock %}

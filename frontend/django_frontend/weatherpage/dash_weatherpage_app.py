@@ -30,7 +30,7 @@ from .dash_weatherpage.utils import convert_input_into_lists, determine_start_an
     is_at_least_bootstrap_breakpoint, BootstrapBreakpoint
 
 plotly_de_locale = 'https://cdn.plot.ly/plotly-locale-de-2.1.0.js'
-app = DjangoDash("dash-frontend",
+app = DjangoDash('dash-frontend',
                  external_scripts=[plotly_de_locale])
 app.title = 'Wetterdaten'
 app.layout = get_layout(CONFIG_FOR_PLOTS,

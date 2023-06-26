@@ -77,7 +77,7 @@ default:
   - gcloud builds submit --config=./deployment/google_cloud_build/cloudmigrate.yaml --substitutions=_GCP_CONTAINER_REGISTRY=${GCP_CONTAINER_REGISTRY},_FRONTEND_SERVICE_NAME=${FRONTEND_SERVICE_NAME},_CI_COMMIT_SHA=${CI_COMMIT_SHA},_SQL_DATABASE_ID=${SQL_DATABASE_ID},_SETTINGS_SECRET_NAME=${FRONTEND_SETTINGS_SECRET_NAME},_FRONTEND_BUCKET=${FRONTEND_BUCKET},_BACKEND_URL_BASE=${BACKEND_URL_BASE},_BACKEND_PORT=${BACKEND_PORT},_BRAND_NAME="${BRAND_NAME}"
 
 .gcp_upload_environment_to_secret_manager: &gcp_upload_environment_to_secret_manager
-  - printf "$(cat ./frontend/environments/.frontend.production.env)" "$(< /dev/urandom tr -cd '[:graph:]'| tr  -d '\\' | head -c 232; echo)" "${FRONTEND_ADDRESS}" | gcloud secrets versions add frontend-settings --data-file=-
+  - printf "$(cat ./frontend/environments/.frontend.production.env)" "$(< /dev/urandom tr -cd '[:graph:]'| tr  -d '\\' | head -c 232; echo)" "${FRONTEND_ADDRESS}" "${EXPORTER_BUCKET}" | gcloud secrets versions add frontend-settings --data-file=-
 
 .gcp_cloud_scheduler_job: &gcp_cloud_scheduler_job
   - existing_scheduler_jobs=$(gcloud scheduler jobs list --format 'value(name)' --location ${GCP_REGION})
@@ -108,6 +108,7 @@ default:
     - export BACKEND_URL_BASE=$(basename ${BACKEND_URL})
     - TIER=frontend
     - export FRONTEND_BUCKET=$(gcloud storage ls | grep ${FRONTEND_BUCKET_ID})
+    - export EXPORTER_BUCKET=$(gcloud storage ls | grep ${EXPORTER_BUCKET_ID})
     - CLOUD_RUN_INVOKER="allUsers"
     - CURR_GCP_REGION=${GCP_FRONTEND_REGION}
     - *gcp_upload_environment_to_secret_manager
@@ -115,7 +116,6 @@ default:
     - *gcp_cloud_run_deploy
     - echo "FRONTEND_URL=${FRONTEND_URL}" > frontend_deploy.env
     - TIER=exporter
-    - export EXPORTER_BUCKET=$(gcloud storage ls | grep ${EXPORTER_BUCKET_ID})
     - CLOUD_RUN_INVOKER="serviceAccount:${EXPORTER_SERVICE_ACCOUNT_NAME}"
     - CURR_GCP_REGION=${GCP_REGION}
     - *gcp_cloud_run_deploy
@@ -204,7 +204,7 @@ unittests frontend:
     - pip3 install -r frontend/dev-requirements.txt
   script:
     - export PYTHONPATH=${CI_PROJECT_DIR}/frontend
-    - pytest frontend/tests/unit_tests --junitxml=report.xml
+    - pytest frontend/tests --junitxml=report.xml
   artifacts:
     <<: *publish_test_artifacts
 

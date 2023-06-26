@@ -19,6 +19,7 @@ SOME_PORT = 80
 SOME_URL = 'something'
 
 A_STATION_ID = 'TES'
+ANOTHER_STATION_ID = 'ANO'
 A_SENSOR_ID = 'pressure'
 A_UNIT = 'Pa'
 A_TEMP_UNIT = 'degree C'

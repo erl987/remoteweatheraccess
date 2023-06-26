@@ -13,33 +13,3 @@
 #
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-FROM python:3.11.3-slim-bullseye
-
-ENV PYTHONUNBUFFERED True
-ENV PYTHONPATH /app:/app/frontend/django_frontend
-
-WORKDIR /app/frontend/django_frontend
-
-RUN apt-get update \
-    && apt-get -y install --no-install-recommends \
-      locales \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && sed -i -e 's/# de_DE.UTF-8 UTF-8/de_DE.UTF-8 UTF-8/' /etc/locale.gen \
-    && dpkg-reconfigure --frontend=noninteractive locales
-
-ENV LANG de_DE.UTF-8
-ENV LC_ALL de_DE.UTF-8
-
-COPY frontend/requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY ./frontend /app/frontend
-
-RUN python -m compileall /app/frontend
-
-RUN useradd -m frontend
-USER frontend
-
-CMD exec gunicorn --bind=:$PORT --workers=1 --threads=8 --timeout=0 django_frontend.wsgi:application

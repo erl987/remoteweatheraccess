@@ -13,6 +13,8 @@
 #
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+from unittest.mock import patch
+
 import pytest
 
 # noinspection PyUnresolvedReferences
@@ -21,7 +23,8 @@ from ..mocks import use_dummy_cache_backend, TimeLimitsResponseMock, SensorRespo
 
 
 @pytest.mark.usefixtures('client', 'db', 'requests_mock', 'use_dummy_cache_backend')
-def test_main_page(client, db, requests_mock, use_dummy_cache_backend):
+@patch('google.cloud.storage.Client')
+def test_main_page(_, client, db, requests_mock, use_dummy_cache_backend):
     requests_mock.get('https://something:443/api/v1/data/limits', json=TimeLimitsResponseMock().json())
     requests_mock.get('https://something:443/api/v1/sensor', json=SensorResponseMock(with_temp_humidity=True).json())
     requests_mock.get('https://something:443/api/v1/temp-humidity-sensor', json=TempHumiditySensorMock().json())
@@ -31,7 +34,7 @@ def test_main_page(client, db, requests_mock, use_dummy_cache_backend):
     assert response.status_code == 200
     assert response.headers['Content-Type'] == 'text/html; charset=utf-8'
     assert '<title>Wetterdaten</title>' in response.content.decode()
-    assert requests_mock.call_count == 4
+    assert requests_mock.call_count == 5
 
 
 def test_policy_page(client, db):
@@ -46,3 +49,13 @@ def test_impress_page(client, db):
     assert response.status_code == 200
     assert response.headers['Content-Type'] == 'text/html; charset=utf-8'
     assert '<h1>Impressum</h1>' in response.content.decode()
+
+
+@patch('google.cloud.storage.Client')
+def test_download_page(_, client, db, requests_mock):
+    requests_mock.get('https://something:443/api/v1/station', json=StationResponseMock.json())
+
+    response = client.get('/download/')
+    assert response.status_code == 200
+    assert response.headers['Content-Type'] == 'text/html; charset=utf-8'
+    assert '<title>Download</title>' in response.content.decode()

@@ -27,7 +27,8 @@ BACKEND_PORT = int(environ['BACKEND_PORT'])
 BACKEND_DO_USE_HTTPS = backend_uses_https()
 INITIAL_TIME_PERIOD = timedelta(days=int(environ['INITIAL_TIME_PERIOD']))
 USER_TIME_ZONE = timezone(environ['USER_TIME_ZONE'])
-CONFIG_FOR_PLOTS = {'locale': environ['LANGUAGE_CODE'], 'modeBarButtonsToAdd': ['v1hovermode', 'toggleSpikelines']}
+CONFIG_FOR_PLOTS = {'locale': environ['LANGUAGE_CODE'].split('_')[0],
+                    'modeBarButtonsToAdd': ['v1hovermode', 'toggleSpikelines']}
 
 DEFAULT_SELECTED_SENSOR_IDS_LARGE_SCREEN = ['pressure', 'rain', 'OUT1_temp', 'OUT1_humid']
 DEFAULT_SELECTED_SENSOR_IDS_SMALL_SCREEN = ['OUT1_temp', 'rain']

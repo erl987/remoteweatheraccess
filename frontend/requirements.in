@@ -18,6 +18,7 @@ boto3
 dash
 dash-bootstrap-components
 dash-breakpoints
+cacheout
 django
 django-environ
 django-plotly-dash
@@ -32,3 +33,4 @@ psycopg2-binary
 python-dateutil
 pytz
 requests
+stream-zip

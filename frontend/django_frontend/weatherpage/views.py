@@ -19,6 +19,8 @@ from django.shortcuts import render
 
 # noinspection PyUnresolvedReferences
 from . import dash_weatherpage_app
+# noinspection PyUnresolvedReferences
+from . import dash_download_page_app
 
 
 def main(request):
@@ -28,6 +30,10 @@ def main(request):
 # noinspection PyUnusedLocal
 def main_for_station(request, station_id):
     return render(request, 'weatherpage/weatherdata.html', context={'BRAND_NAME': environ.get('BRAND_NAME')})
+
+
+def download(request):
+    return render(request, 'weatherpage/download.html', context={'BRAND_NAME': environ.get('BRAND_NAME')})
 
 
 def impress(request):
