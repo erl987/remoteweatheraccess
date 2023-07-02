@@ -171,7 +171,7 @@ def plot_plotly(mean_rain_by_month, mean_temps_by_month, month_names_short):
                      tickfont_family=DIAGRAM_FONT_FAMILY)
     fig.update_layout(plot_bgcolor='white', hovermode='x'),
 
-    fig.show()
+    fig.show(config=dict(modeBarButtonsToAdd=['v1hovermode', 'toggleSpikelines']))
 
 
 def main():
