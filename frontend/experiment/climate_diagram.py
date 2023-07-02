@@ -79,41 +79,14 @@ def round_down_to_next(value, reference):
     return reference * np.floor(value / reference)
 
 
-def plot_plotly(mean_rain_by_month, mean_temps_by_month, month_names_short):
-    df_rain_plot = pd.DataFrame(dict(
-        x=month_names_short,
-        y=mean_rain_by_month
-    ))
+def add_temp_trace(fig, mean_temps_by_month, month_names_short):
     df_temp_plot = pd.DataFrame(dict(
         x=month_names_short,
         y=mean_temps_by_month
     ))
 
-    fig = make_subplots(specs=[[{'secondary_y': True}]])
-
-    fig.add_trace(px.bar(df_rain_plot, x='x', y='y').data[0], secondary_y=False)
-    fig.update_yaxes(showline=True,
-                     linewidth=DIAGRAM_LINE_WIDTH,
-                     title_text='Regen / mm',
-                     title_font_size=DIAGRAM_FONT_SIZE,
-                     title_font_family=DIAGRAM_FONT_FAMILY,
-                     tickfont_size=DIAGRAM_FONT_SIZE,
-                     tickfont_family=DIAGRAM_FONT_FAMILY,
-                     linecolor=COLOR_RAIN,
-                     color=COLOR_RAIN,
-                     showgrid=True,
-                     gridcolor=GRID_COLOR,
-                     secondary_y=False)
-    fig.update_traces(marker_color=COLOR_RAIN,
-                      hovertemplate='%{y:.0f}',
-                      hoverlabel_font_family=DIAGRAM_FONT_FAMILY,
-                      hoverlabel_font_size=DIAGRAM_FONT_SIZE,
-                      secondary_y=False)
-
-    if mean_rain_by_month.max() > 0:
-        fig.update_layout(yaxis_range=[0, round_up_to_next(mean_rain_by_month.max(), RAIN_AXIS_TICK_REFERENCE)])
-
     fig.add_trace(px.line(df_temp_plot, x='x', y='y').data[0], secondary_y=True)
+
     fig.update_yaxes(showline=True,
                      linewidth=DIAGRAM_LINE_WIDTH,
                      title_text='Temperatur / \N{DEGREE SIGN}C',
@@ -123,12 +96,15 @@ def plot_plotly(mean_rain_by_month, mean_temps_by_month, month_names_short):
                      tickfont_family=DIAGRAM_FONT_FAMILY,
                      linecolor=COLOR_TEMP,
                      color=COLOR_TEMP,
+                     zeroline=True,
+                     zerolinecolor=GRID_COLOR,
                      showgrid=False,
                      range=[
                          round_down_to_next(mean_temps_by_month.min(), TEMP_AXIS_TICK_REFERENCE),
                          round_up_to_next(mean_temps_by_month.max(), TEMP_AXIS_TICK_REFERENCE)
                      ],
                      secondary_y=True)
+
     fig.update_traces(line_color=COLOR_TEMP,
                       line_width=DIAGRAM_LINE_WIDTH,
                       mode='lines+markers',
@@ -143,8 +119,48 @@ def plot_plotly(mean_rain_by_month, mean_temps_by_month, month_names_short):
                      linewidth=DIAGRAM_LINE_WIDTH,
                      tickfont_size=DIAGRAM_FONT_SIZE,
                      tickfont_family=DIAGRAM_FONT_FAMILY)
-    fig.update_layout(plot_bgcolor='white', hovermode='x'),
 
+
+def add_rain_trace(fig, mean_rain_by_month, month_names_short):
+    df_rain_plot = pd.DataFrame(dict(
+        x=month_names_short,
+        y=mean_rain_by_month
+    ))
+
+    fig.add_trace(px.bar(df_rain_plot, x='x', y='y').data[0], secondary_y=False)
+
+    fig.update_yaxes(showline=True,
+                     linewidth=DIAGRAM_LINE_WIDTH,
+                     title_text='Regen / mm',
+                     title_font_size=DIAGRAM_FONT_SIZE,
+                     title_font_family=DIAGRAM_FONT_FAMILY,
+                     tickfont_size=DIAGRAM_FONT_SIZE,
+                     tickfont_family=DIAGRAM_FONT_FAMILY,
+                     linecolor=COLOR_RAIN,
+                     color=COLOR_RAIN,
+                     showgrid=True,
+                     gridcolor=GRID_COLOR,
+                     secondary_y=False)
+
+    fig.update_traces(marker_color=COLOR_RAIN,
+                      hovertemplate='%{y:.0f}',
+                      hoverlabel_font_family=DIAGRAM_FONT_FAMILY,
+                      hoverlabel_font_size=DIAGRAM_FONT_SIZE,
+                      secondary_y=False)
+
+    if mean_rain_by_month.max() > 0:
+        fig.update_layout(yaxis_range=[0, round_up_to_next(mean_rain_by_month.max(), RAIN_AXIS_TICK_REFERENCE)])
+    else:
+        fig.update_layout(yaxis_range=[0, round_up_to_next(mean_rain_by_month.max() + 1, RAIN_AXIS_TICK_REFERENCE)])
+
+
+def plot_plotly(mean_rain_by_month, mean_temps_by_month, month_names_short):
+    fig = make_subplots(specs=[[{'secondary_y': True}]])
+
+    add_rain_trace(fig, mean_rain_by_month, month_names_short)
+    add_temp_trace(fig, mean_temps_by_month, month_names_short)
+
+    fig.update_layout(plot_bgcolor='white', hovermode='x'),
     fig.show(config=dict(modeBarButtonsToAdd=['v1hovermode', 'toggleSpikelines']))
 
 
