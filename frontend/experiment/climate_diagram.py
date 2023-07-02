@@ -19,12 +19,28 @@ import os
 from calendar import month_abbr
 from typing import Dict
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import plotly.express as px
+import plotly.io as pio
+from matplotlib import pyplot as plt
+from plotly.subplots import make_subplots
+
+pio.renderers.default = "browser"
 
 STATION_IDS = ['ECK', 'SOL']
 FILE_BASE_DIR = './data'
+
+LOCALE = 'de_DE.UTF-8'
+TEMP_AXIS_TICK_REFERENCE = 5
+RAIN_AXIS_TICK_REFERENCE = 50
+
+DIAGRAM_FONT_SIZE = 18
+DIAGRAM_FONT_FAMILY = 'Helvetica Neue, Helvetica, Arial, sans-serif'  # default for Bootstrap
+DIAGRAM_LINE_WIDTH = 2
+COLOR_TEMP = '#DF382C'  # red
+COLOR_RAIN = '#007bff'  # blue
+GRID_COLOR = '#a5b1cd'  # grey
 
 
 # TODO: handle missing data
@@ -63,8 +79,91 @@ def round_down_to_next(value, reference):
     return reference * np.floor(value / reference)
 
 
+def plot_matplotlib(mean_rain_by_month, mean_temps_by_month, month_names_short, station_id):
+    plt.figure()
+    plt.title(f'Klimadiagramm Station {station_id}')
+
+    plt.bar(month_names_short, mean_rain_by_month)
+    ax_rain = plt.gca()
+    ax_rain.set_ylabel('Regen / mm')
+    ax_rain.yaxis.label.set_color('blue')
+    ax_rain.tick_params(axis='y', colors='blue')
+    ax_rain.spines['left'].set_color('blue')
+    if mean_rain_by_month.max() > 0:
+        ax_rain.set_ylim([0, round_up_to_next(mean_rain_by_month.max(), 50)])
+
+    ax_temp = ax_rain.twinx()
+    ax_temp.plot(month_names_short, mean_temps_by_month, 'r')
+    ax_temp.set_ylabel('Temperatur / \N{DEGREE SIGN}C')
+    ax_temp.yaxis.label.set_color('red')
+    ax_temp.tick_params(axis='y', colors='red')
+    ax_temp.spines['right'].set_color('red')
+    ax_temp.set_ylim([
+        round_down_to_next(mean_temps_by_month.min(), 5),
+        round_up_to_next(mean_temps_by_month.max(), 5)
+    ])
+
+
+def plot_plotly(mean_rain_by_month, mean_temps_by_month, month_names_short):
+    df_rain_plot = pd.DataFrame(dict(
+        x=month_names_short,
+        y=mean_rain_by_month
+    ))
+    df_temp_plot = pd.DataFrame(dict(
+        x=month_names_short,
+        y=mean_temps_by_month
+    ))
+
+    fig = make_subplots(specs=[[{'secondary_y': True}]])
+
+    fig.add_trace(px.bar(df_rain_plot, x='x', y='y').data[0], secondary_y=False)
+    fig.update_yaxes(showline=True,
+                     linewidth=DIAGRAM_LINE_WIDTH,
+                     title_text='Regen / mm',
+                     title_font_size=DIAGRAM_FONT_SIZE,
+                     title_font_family=DIAGRAM_FONT_FAMILY,
+                     tickfont_size=DIAGRAM_FONT_SIZE,
+                     tickfont_family=DIAGRAM_FONT_FAMILY,
+                     linecolor=COLOR_RAIN,
+                     color=COLOR_RAIN,
+                     showgrid=True,
+                     gridcolor=GRID_COLOR,
+                     secondary_y=False)
+    fig.update_traces(marker_color=COLOR_RAIN, secondary_y=False)
+
+    if mean_rain_by_month.max() > 0:
+        fig.update_layout(yaxis_range=[0, round_up_to_next(mean_rain_by_month.max(), RAIN_AXIS_TICK_REFERENCE)])
+
+    fig.add_trace(px.line(df_temp_plot, x='x', y='y').data[0], secondary_y=True)
+    fig.update_yaxes(showline=True,
+                     linewidth=DIAGRAM_LINE_WIDTH,
+                     title_text='Temperatur / \N{DEGREE SIGN}C',
+                     title_font_size=DIAGRAM_FONT_SIZE,
+                     title_font_family=DIAGRAM_FONT_FAMILY,
+                     tickfont_size=DIAGRAM_FONT_SIZE,
+                     tickfont_family=DIAGRAM_FONT_FAMILY,
+                     linecolor=COLOR_TEMP,
+                     color=COLOR_TEMP,
+                     showgrid=False,
+                     range=[
+                         round_down_to_next(mean_temps_by_month.min(), TEMP_AXIS_TICK_REFERENCE),
+                         round_up_to_next(mean_temps_by_month.max(), TEMP_AXIS_TICK_REFERENCE)
+                     ],
+                     secondary_y=True)
+    fig.update_traces(line_color=COLOR_TEMP, line_width=DIAGRAM_LINE_WIDTH, secondary_y=True)
+
+    fig.update_xaxes(showgrid=False,
+                     linecolor='black',
+                     linewidth=DIAGRAM_LINE_WIDTH,
+                     tickfont_size=DIAGRAM_FONT_SIZE,
+                     tickfont_family=DIAGRAM_FONT_FAMILY)
+    fig.update_layout(plot_bgcolor='white'),
+
+    fig.show()
+
+
 def main():
-    locale.setlocale(locale.LC_TIME, 'de_DE.UTF-8')
+    locale.setlocale(locale.LC_TIME, LOCALE)
 
     all_dfs = read_for_stations(STATION_IDS, FILE_BASE_DIR)
 
@@ -78,27 +177,8 @@ def main():
 
         month_names_short = [month_abbr[m] for m in mean_temps_by_month.index]
 
-        plt.figure()
-        plt.title(f'Klimadiagramm Station {station_id}')
-        plt.bar(month_names_short, mean_rain_by_month)
-        ax_rain = plt.gca()
-        ax_rain.set_ylabel('Regen / mm')
-        ax_rain.yaxis.label.set_color('blue')
-        ax_rain.tick_params(axis='y', colors='blue')
-        ax_rain.spines['left'].set_color('blue')
-        if mean_rain_by_month.max() > 0:
-            ax_rain.set_ylim([0, round_up_to_next(mean_rain_by_month.max(), 50)])
-
-        ax_temp = ax_rain.twinx()
-        ax_temp.plot(month_names_short, mean_temps_by_month, 'r')
-        ax_temp.set_ylabel('Temperatur / \N{DEGREE SIGN}C')
-        ax_temp.yaxis.label.set_color('red')
-        ax_temp.tick_params(axis='y', colors='red')
-        ax_temp.spines['right'].set_color('red')
-        ax_temp.set_ylim([
-            round_down_to_next(mean_temps_by_month.min(), 5),
-            round_up_to_next(mean_temps_by_month.max(), 5)
-        ])
+        plot_plotly(mean_rain_by_month, mean_temps_by_month, month_names_short)
+        plot_matplotlib(mean_rain_by_month, mean_temps_by_month, month_names_short, station_id)
 
 
 if __name__ == '__main__':
