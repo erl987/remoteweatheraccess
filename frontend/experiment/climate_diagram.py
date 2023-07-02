@@ -23,7 +23,6 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.io as pio
-from matplotlib import pyplot as plt
 from plotly.subplots import make_subplots
 
 pio.renderers.default = "browser"
@@ -78,31 +77,6 @@ def round_up_to_next(value, reference):
 
 def round_down_to_next(value, reference):
     return reference * np.floor(value / reference)
-
-
-def plot_matplotlib(mean_rain_by_month, mean_temps_by_month, month_names_short, station_id):
-    plt.figure()
-    plt.title(f'Klimadiagramm Station {station_id}')
-
-    plt.bar(month_names_short, mean_rain_by_month)
-    ax_rain = plt.gca()
-    ax_rain.set_ylabel('Regen / mm')
-    ax_rain.yaxis.label.set_color('blue')
-    ax_rain.tick_params(axis='y', colors='blue')
-    ax_rain.spines['left'].set_color('blue')
-    if mean_rain_by_month.max() > 0:
-        ax_rain.set_ylim([0, round_up_to_next(mean_rain_by_month.max(), 50)])
-
-    ax_temp = ax_rain.twinx()
-    ax_temp.plot(month_names_short, mean_temps_by_month, 'r')
-    ax_temp.set_ylabel('Temperatur / \N{DEGREE SIGN}C')
-    ax_temp.yaxis.label.set_color('red')
-    ax_temp.tick_params(axis='y', colors='red')
-    ax_temp.spines['right'].set_color('red')
-    ax_temp.set_ylim([
-        round_down_to_next(mean_temps_by_month.min(), 5),
-        round_up_to_next(mean_temps_by_month.max(), 5)
-    ])
 
 
 def plot_plotly(mean_rain_by_month, mean_temps_by_month, month_names_short):
@@ -190,7 +164,6 @@ def main():
         month_names_short = [month_abbr[m] for m in mean_temps_by_month.index]
 
         plot_plotly(mean_rain_by_month, mean_temps_by_month, month_names_short)
-        plot_matplotlib(mean_rain_by_month, mean_temps_by_month, month_names_short, station_id)
 
 
 if __name__ == '__main__':
