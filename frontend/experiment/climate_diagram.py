@@ -38,6 +38,7 @@ RAIN_AXIS_TICK_REFERENCE = 50
 DIAGRAM_FONT_SIZE = 18
 DIAGRAM_FONT_FAMILY = 'Helvetica Neue, Helvetica, Arial, sans-serif'  # default for Bootstrap
 DIAGRAM_LINE_WIDTH = 2
+DIAGRAM_MARKER_SIZE = 12
 COLOR_TEMP = '#DF382C'  # red
 COLOR_RAIN = '#007bff'  # blue
 GRID_COLOR = '#a5b1cd'  # grey
@@ -129,7 +130,11 @@ def plot_plotly(mean_rain_by_month, mean_temps_by_month, month_names_short):
                      showgrid=True,
                      gridcolor=GRID_COLOR,
                      secondary_y=False)
-    fig.update_traces(marker_color=COLOR_RAIN, secondary_y=False)
+    fig.update_traces(marker_color=COLOR_RAIN,
+                      hovertemplate='%{y:.0f}',
+                      hoverlabel_font_family=DIAGRAM_FONT_FAMILY,
+                      hoverlabel_font_size=DIAGRAM_FONT_SIZE,
+                      secondary_y=False)
 
     if mean_rain_by_month.max() > 0:
         fig.update_layout(yaxis_range=[0, round_up_to_next(mean_rain_by_month.max(), RAIN_AXIS_TICK_REFERENCE)])
@@ -150,14 +155,21 @@ def plot_plotly(mean_rain_by_month, mean_temps_by_month, month_names_short):
                          round_up_to_next(mean_temps_by_month.max(), TEMP_AXIS_TICK_REFERENCE)
                      ],
                      secondary_y=True)
-    fig.update_traces(line_color=COLOR_TEMP, line_width=DIAGRAM_LINE_WIDTH, secondary_y=True)
+    fig.update_traces(line_color=COLOR_TEMP,
+                      line_width=DIAGRAM_LINE_WIDTH,
+                      mode='lines+markers',
+                      marker=dict(size=DIAGRAM_MARKER_SIZE),
+                      hovertemplate='%{y:.1f}',
+                      hoverlabel_font_family=DIAGRAM_FONT_FAMILY,
+                      hoverlabel_font_size=DIAGRAM_FONT_SIZE,
+                      secondary_y=True)
 
     fig.update_xaxes(showgrid=False,
                      linecolor='black',
                      linewidth=DIAGRAM_LINE_WIDTH,
                      tickfont_size=DIAGRAM_FONT_SIZE,
                      tickfont_family=DIAGRAM_FONT_FAMILY)
-    fig.update_layout(plot_bgcolor='white'),
+    fig.update_layout(plot_bgcolor='white', hovermode='x'),
 
     fig.show()
 
