@@ -129,3 +129,4 @@ deployment.xml
 /client/test_config/*
 /storage/
 /weather.db
+/frontend/experiment/data/
