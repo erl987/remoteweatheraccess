@@ -6,7 +6,7 @@
 #
 certifi==2023.5.7
     # via requests
-charset-normalizer==3.1.0
+charset-normalizer==3.2.0
     # via requests
 idna==3.4
     # via requests
@@ -14,9 +14,9 @@ iniconfig==2.0.0
     # via pytest
 packaging==23.1
     # via pytest
-pluggy==1.0.0
+pluggy==1.2.0
     # via pytest
-pytest==7.3.2
+pytest==7.4.0
     # via
     #   -r dev-requirements.in
     #   pytest-django
