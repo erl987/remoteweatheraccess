@@ -15,7 +15,7 @@
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # configured for a Raspberry Pi 2+
-FROM balenalib/raspberry-pi-python:3.11.2-bullseye AS build-stage
+FROM balenalib/raspberry-pi-python:3.11.2-bookworm AS build-stage
 
 RUN apt-get update \
     && apt-get -y install --no-install-recommends \
@@ -33,7 +33,7 @@ RUN cd te923tool \
     && make all
 
 
-FROM balenalib/raspberry-pi-python:3.11.2-bullseye
+FROM balenalib/raspberry-pi-python:3.11.2-bookworm
 
 ENV PYTHONUNBUFFERED True
 

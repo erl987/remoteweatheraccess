@@ -39,29 +39,29 @@ class LogConfig(BaseModel):
     LOG_LEVEL: str = 'DEBUG'
 
     # Logging config
-    version = 1
-    disable_existing_loggers = False
-    formatters = {
+    version: int = 1
+    disable_existing_loggers: bool = False
+    formatters: dict = {
         'default': {
             '()': 'uvicorn.logging.DefaultFormatter',
             'fmt': LOG_FORMAT,
             'datefmt': '%Y-%m-%d %H:%M:%S',
         },
     }
-    handlers = {
+    handlers: dict = {
         'default': {
             'formatter': 'default',
             'class': 'logging.StreamHandler',
             'stream': 'ext://sys.stderr',
         },
     }
-    loggers = {
+    loggers: dict = {
         'exporter': {'handlers': ['default'], 'level': LOG_LEVEL},
     }
 
 
 app = FastAPI()
-dictConfig(LogConfig().dict())
+dictConfig(LogConfig().model_dump())
 logger = logging.getLogger('exporter')
 
 backend_url = os.environ['BACKEND_URL']
