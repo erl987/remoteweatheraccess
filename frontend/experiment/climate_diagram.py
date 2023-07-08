@@ -44,7 +44,7 @@ GRID_COLOR = '#a5b1cd'  # grey
 
 
 # TODO: handle missing data
-# TODO: provide error bars
+# TODO: add official long-term climate data as reference
 # TODO: connect to REST-API
 
 
