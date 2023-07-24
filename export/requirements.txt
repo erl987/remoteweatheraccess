@@ -10,11 +10,11 @@ anyio==3.7.1
     # via starlette
 cachetools==5.3.1
     # via google-auth
-certifi==2023.5.7
+certifi==2023.7.22
     # via requests
 charset-normalizer==3.2.0
     # via requests
-click==8.1.4
+click==8.1.6
     # via uvicorn
 fastapi==0.100.0
     # via -r requirements.in
@@ -22,7 +22,7 @@ google-api-core==2.11.1
     # via
     #   google-cloud-core
     #   google-cloud-storage
-google-auth==2.21.0
+google-auth==2.22.0
     # via
     #   google-api-core
     #   google-cloud-core
@@ -43,7 +43,7 @@ idna==3.4
     # via
     #   anyio
     #   requests
-numpy==1.25.0
+numpy==1.25.1
     # via
     #   -r requirements.in
     #   pandas
@@ -59,9 +59,9 @@ pyasn1==0.5.0
     #   rsa
 pyasn1-modules==0.3.0
     # via google-auth
-pydantic==2.0.2
+pydantic==2.0.3
     # via fastapi
-pydantic-core==2.1.2
+pydantic-core==2.3.0
     # via pydantic
 python-dateutil==2.8.2
     # via
@@ -95,5 +95,5 @@ urllib3==1.26.16
     # via
     #   google-auth
     #   requests
-uvicorn==0.22.0
+uvicorn==0.23.1
     # via -r requirements.in

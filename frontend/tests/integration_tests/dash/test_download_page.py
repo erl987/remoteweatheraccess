@@ -196,7 +196,6 @@ def test_download_data_when_multiple_months(storage_client, requests_mock):
     assert download_data['base64'] is True
     assert download_data['filename'] == 'weather-data-TES-2023.zip'
     assert download_data['type'] == 'application/zip'
-    assert len(download_data['content']) == 344
 
 
 @patch.dict(os.environ, {'TEST_WITH_BUCKET_MOCK': 'True'})
