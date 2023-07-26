@@ -14,7 +14,7 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-image: python:3.11.4-bookworm
+image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.11.4-bookworm
 
 include:
   - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
@@ -28,6 +28,7 @@ variables:
   BACKEND_SERVICE_NAME: backend-${CI_COMMIT_REF_SLUG}
   EXPORTER_SERVICE_NAME: exporter-${CI_COMMIT_REF_SLUG}
   PIP_CACHE_DIR: ${CI_PROJECT_DIR}/.cache/pip
+  DOCKER_TLS_CERTDIR: "/certs"
   BRAND_NAME: ${BRAND_NAME}
   EXPORTER_SCHEDULER_JOB_NAME: export-csv-job
   EXPORTER_BUCKET_ID: weather-export-data-
@@ -94,7 +95,7 @@ default:
     --location ${GCP_REGION}
 
 .gcp_deploy: &gcp_deploy
-  image: google/cloud-sdk:431.0.0
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:431.0.0
   script:
     - *gcp_cloud_login
     - *install_gettext
@@ -175,7 +176,8 @@ unittests backend:
       - .cache/pip
       - venv/
   services:
-    - postgres:13.0-alpine
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/postgres:13.0-alpine
+      alias: postgres
   before_script:
     - *python_prepare
     - pip3 install -r backend/requirements.txt
@@ -244,37 +246,52 @@ unittests client:
 
 build backend:
   stage: build containers
-  image: docker:24.0.0-alpine3.18
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.5
   services:
-    - docker:24.0.0-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.5-dind
+      alias: docker
   script:
-    - docker build -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${BACKEND_SERVICE_NAME}:${CI_COMMIT_SHA}
-      --file=./Dockerfile.backend .
     - *gcp_docker_registry_login
-    - docker push ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${BACKEND_SERVICE_NAME}:${CI_COMMIT_SHA}
+    - docker build .
+      --file=./Dockerfile.backend
+      -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${BACKEND_SERVICE_NAME}:${CI_COMMIT_SHA}
+      -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${BACKEND_SERVICE_NAME}:latest
+      --build-arg BUILDKIT_INLINE_CACHE=1
+      --cache-from ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${BACKEND_SERVICE_NAME}:latest
+    - docker push --all-tags ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${BACKEND_SERVICE_NAME}
 
 build frontend:
   stage: build containers
-  image: docker:24.0.0-alpine3.18
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.5
   services:
-    - docker:24.0.0-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.5-dind
+      alias: docker
   script:
     - *copy_text_files
-    - docker build -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}:${CI_COMMIT_SHA}
-      --file=./Dockerfile.frontend .
     - *gcp_docker_registry_login
-    - docker push ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}:${CI_COMMIT_SHA}
+    - docker build .
+      --file=./Dockerfile.frontend
+      -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}:${CI_COMMIT_SHA}
+      -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}:latest
+      --build-arg BUILDKIT_INLINE_CACHE=1
+      --cache-from ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}:latest
+    - docker push --all-tags ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}
 
 build exporter:
   stage: build containers
-  image: docker:24.0.0-alpine3.18
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.5
   services:
-    - docker:24.0.0-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.5-dind
+      alias: docker
   script:
-    - docker build -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${EXPORTER_SERVICE_NAME}:${CI_COMMIT_SHA}
-      --file=./Dockerfile.export .
     - *gcp_docker_registry_login
-    - docker push ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${EXPORTER_SERVICE_NAME}:${CI_COMMIT_SHA}
+    - docker build .
+      --file=./Dockerfile.export
+      -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${EXPORTER_SERVICE_NAME}:${CI_COMMIT_SHA}
+      -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${EXPORTER_SERVICE_NAME}:latest
+      --build-arg BUILDKIT_INLINE_CACHE=1
+      --cache-from ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${EXPORTER_SERVICE_NAME}:latest
+    - docker push --all-tags ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${EXPORTER_SERVICE_NAME}
 
 deploy review:
   stage: deploy review
@@ -290,7 +307,7 @@ stop review:
   stage: cleanup review
   dependencies:
     - deploy review
-  image: google/cloud-sdk:431.0.0
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:431.0.0
   script:
     - *gcp_cloud_login
     - gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet
