@@ -23,7 +23,8 @@ from dateutil.parser import isoparse
 # noinspection PyUnresolvedReferences
 from ..utils import client_without_permissions, client_with_push_user_permissions, client_with_admin_permissions, \
     a_dataset, another_dataset, another_dataset_without_timezone, an_updated_dataset, a_dataset_for_another_station, \
-    prepare_two_entry_database, a_dataset_with_none, a_dataset_with_a_duplicate_time_point  # required as a fixture
+    prepare_two_entry_database, a_dataset_with_none, a_dataset_with_a_duplicate_time_point, \
+    a_dataset_with_rain_counter_reset  # required as a fixture
 from ..utils import drop_permissions, verify_database_is_empty, zip_payload
 
 
@@ -410,7 +411,7 @@ def test_get_weather_datasets_with_timezone_info(client_with_push_user_permissio
     assert a_dataset[0]['timepoint'] == search_result.get_json()[a_station_id]['timepoint'][0]
     assert a_dataset[0]['pressure'] == search_result.get_json()[a_station_id]['pressure'][0]
     assert (pytz.timezone("Europe/Berlin").localize(isoparse(another_dataset_without_timezone[0]['timepoint'])) ==
-           isoparse(search_result.get_json()[a_station_id]['timepoint'][1]))
+            isoparse(search_result.get_json()[a_station_id]['timepoint'][1]))
     assert another_dataset_without_timezone[0]['pressure'] == search_result.get_json()[a_station_id]['pressure'][1]
 
 
@@ -426,6 +427,22 @@ def test_get_weather_datasets_all(client_with_push_user_permissions, a_dataset, 
            isoparse(search_result.get_json()[a_station_id]['timepoint'][1])
     assert a_dataset[0]['pressure'] == search_result.get_json()[a_station_id]['pressure'][0]
     assert another_dataset[0]['pressure'] == search_result.get_json()[a_station_id]['pressure'][1]
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset_with_rain_counter_reset')
+def test_get_weather_datasets_with_rain_sensor_reset_inbetween(client_with_push_user_permissions,
+                                                               a_dataset_with_rain_counter_reset):
+    client_with_push_user_permissions.post('/api/v1/data', json=a_dataset_with_rain_counter_reset)
+    a_station_id = 'TES'
+
+    search_result = client_with_push_user_permissions.get(_get_request_url(isoparse('1900-01-01T00:00'),
+                                                                           isoparse('2100-01-01T00:00')))
+    assert search_result.status_code == HTTPStatus.OK
+
+    got_data = search_result.get_json()[a_station_id]
+    assert len(got_data['rain_rate']) == 4
+    assert got_data['rain_rate'] == [0, 9, 0, 2.25]
+    assert got_data['rain'] == [0, 9, 9, 11.25]
 
 
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset')

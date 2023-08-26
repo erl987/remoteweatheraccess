@@ -94,6 +94,76 @@ def another_dataset() -> List[Dict]:
 
 
 @pytest.fixture
+def a_dataset_with_rain_counter_reset() -> List[Dict]:
+    yield [
+        {
+            'timepoint': '2016-02-06T15:30:36.2Z',
+            'station_id': 'TES',
+            'pressure': 1019.2,
+            'uv': 2.4,
+            'rain_counter': 970.5,
+            'direction': 350.2,
+            'speed': 95.2,
+            'wind_temperature': 9.8,
+            'gusts': 120.5,
+            'temperature_humidity': [{
+                'sensor_id': 'IN',
+                'temperature': 29.5,
+                'humidity': 58.0
+            }]
+        },
+        {
+            'timepoint': '2016-02-06T15:40:36.2Z',
+            'station_id': 'TES',
+            'pressure': 1019.2,
+            'uv': 2.4,
+            'rain_counter': 980.5,
+            'direction': 350.2,
+            'speed': 95.2,
+            'wind_temperature': 9.8,
+            'gusts': 120.5,
+            'temperature_humidity': [{
+                'sensor_id': 'IN',
+                'temperature': 23.5,
+                'humidity': 53.0
+            }]
+        },
+        {
+            'timepoint': '2016-02-06T15:50:36.2Z',
+            'station_id': 'TES',
+            'pressure': 1018.2,
+            'uv': 2.6,
+            'rain_counter': 0,
+            'direction': 350.2,
+            'speed': 95.2,
+            'wind_temperature': 9.8,
+            'gusts': 120.5,
+            'temperature_humidity': [{
+                'sensor_id': 'IN',
+                'temperature': 21.3,
+                'humidity': 52.5
+            }]
+        },
+        {
+            'timepoint': '2016-02-06T16:00:36.2Z',
+            'station_id': 'TES',
+            'pressure': 1018.2,
+            'uv': 2.6,
+            'rain_counter': 2.5,
+            'direction': 350.2,
+            'speed': 95.2,
+            'wind_temperature': 9.8,
+            'gusts': 120.5,
+            'temperature_humidity': [{
+                'sensor_id': 'IN',
+                'temperature': 19.6,
+                'humidity': 56.2
+            }]
+        }
+    ]
+
+
+@pytest.fixture
 def another_dataset_without_timezone() -> List[Dict]:
     yield [{
         'timepoint': '2016-02-06T16:40:36.2',

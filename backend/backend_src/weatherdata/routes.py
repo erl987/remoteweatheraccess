@@ -289,6 +289,9 @@ def _reshape_datasets_to_dict(found_datasets, requested_sensors, rain_calib_fact
                         sensor_id] = data
                 elif sensor_id in ['rain_counter']:
                     rain_rate = dataset[1].diff() * rain_calib_factors[station_id]
+
+                    # handle reset of the rain counter to 0 due to battery replacement, etc.
+                    rain_rate = rain_rate.clip(lower=0)
                     rain_rate.iloc[0] = 0
                     if 'rain_rate' in requested_sensors:
                         found_datasets_per_station[station_id]['rain_rate'] = rain_rate.to_list()
