@@ -27,7 +27,7 @@ def test_get_all_sensors(client_without_permissions):
     result = client_without_permissions.get('/api/v1/sensor')
     assert result.status_code == HTTPStatus.OK
     returned_json = result.get_json()
-    assert len(returned_json) == 10
+    assert len(returned_json) == 11
 
 
 @pytest.mark.usefixtures('client_without_permissions')

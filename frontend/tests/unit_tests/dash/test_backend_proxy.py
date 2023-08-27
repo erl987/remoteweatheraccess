@@ -16,14 +16,14 @@
 
 import pytest
 from dateutil.parser import isoparse
+# noinspection PyUnresolvedReferences
+from tests.unit_tests.mocks import GeneralResponseMock, TempHumiditySensorMock, SensorResponseMock, \
+    StationResponseMock, TimeLimitsResponseMock, get_some_sensor_data, use_dummy_cache_backend, A_SENSOR_ID, \
+    SOME_URL, SOME_PORT, SOME_JSON, A_SENSOR_DESCRIPTION, A_UNIT, A_TEMP_HUMIDITY_SENSOR_ID, \
+    A_TEMP_SENSOR_DESCRIPTION, A_TEMP_HUMIDITY_SENSOR_DESCRIPTION, A_TEMP_UNIT, A_HUMID_SENSOR_DESCRIPTION, \
+    A_HUMID_UNIT, A_STATION_ID, A_FIRST_TIMPOINT, A_LAST_TIMEPOINT, A_DEWPOINT_SENSOR_DESCRIPTION, A_DEWPOINT_UNIT
 
 from frontend.django_frontend.weatherpage.dash_weatherpage.backend_proxy import CachedBackendProxy, BackendProxy
-# noinspection PyUnresolvedReferences
-from tests.unit_tests.mocks import GeneralResponseMock, TempHumiditySensorMock, SensorResponseMock,\
-    StationResponseMock, TimeLimitsResponseMock,  get_some_sensor_data, use_dummy_cache_backend, A_SENSOR_ID,\
-    SOME_URL, SOME_PORT, SOME_JSON, A_SENSOR_DESCRIPTION, A_UNIT, A_TEMP_HUMIDITY_SENSOR_ID,\
-    A_TEMP_SENSOR_DESCRIPTION, A_TEMP_HUMIDITY_SENSOR_DESCRIPTION, A_TEMP_UNIT, A_HUMID_SENSOR_DESCRIPTION,\
-    A_HUMID_UNIT, A_STATION_ID, A_FIRST_TIMPOINT, A_LAST_TIMEPOINT
 
 
 @pytest.mark.usefixtures('requests_mock')
@@ -69,6 +69,11 @@ def test_backend_get_all_available_sensors(requests_mock):
             {
                 'description': '{} {}'.format(A_HUMID_SENSOR_DESCRIPTION, A_TEMP_HUMIDITY_SENSOR_DESCRIPTION),
                 'unit': A_HUMID_UNIT
+            },
+        '{}_dewpoint'.format(A_TEMP_HUMIDITY_SENSOR_ID):
+            {
+                'description': '{} {}'.format(A_DEWPOINT_SENSOR_DESCRIPTION, A_TEMP_HUMIDITY_SENSOR_DESCRIPTION),
+                'unit': A_DEWPOINT_UNIT
             }
     }
 
@@ -87,7 +92,7 @@ def test_backend_get_available_time_limits(requests_mock):
 def test_backend_get_weather_data_in_time_range(requests_mock):
     requests_mock.get('http://something:80/api/v1/data', json=GeneralResponseMock().json())
     backend = BackendProxy(SOME_URL, SOME_PORT, False)
-    requested_sensors = ['pressure', 'UV', 'IN_temp', 'OUT1_humid']
+    requested_sensors = ['pressure', 'UV', 'IN_temp', 'OUT1_humid', 'OUT1_dewpoint']
 
     time_range = backend.get_weather_data_in_time_range([A_STATION_ID],
                                                         requested_sensors,

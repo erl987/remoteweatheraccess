@@ -396,6 +396,7 @@ def test_get_weather_dataset_with_none(client_with_push_user_permissions, a_data
 
     assert search_result.get_json()[a_station_id]['pressure'][0] is None
     assert search_result.get_json()[a_station_id]['temperature_humidity']['IN']['humidity'][0] is None
+    assert search_result.get_json()[a_station_id]['temperature_humidity']['IN']['dewpoint'][0] is None
 
 
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset_without_timezone')
@@ -443,6 +444,20 @@ def test_get_weather_datasets_with_rain_sensor_reset_inbetween(client_with_push_
     assert len(got_data['rain_rate']) == 4
     assert got_data['rain_rate'] == [0, 9, 0, 2.25]
     assert got_data['rain'] == [0, 9, 9, 11.25]
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset')
+def test_get_dew_point(client_with_push_user_permissions, a_dataset, another_dataset):
+    a_station_id, client = prepare_two_entry_database(a_dataset, another_dataset, client_with_push_user_permissions)
+    search_result = client.get(_get_request_url(isoparse('1900-01-01T00:00+02:00'),
+                                                isoparse('2100-01-01T00:00+02:00'), sensors=['dewpoint']))
+    assert search_result.status_code == HTTPStatus.OK
+    assert 'temperature' not in search_result.get_json()[a_station_id]['temperature_humidity']['IN']
+    assert 'humidity' not in search_result.get_json()[a_station_id]['temperature_humidity']['IN']
+    assert len(search_result.get_json()[a_station_id]['temperature_humidity']['IN']['dewpoint']) == 2
+    assert a_dataset[0]['timepoint'] == search_result.get_json()[a_station_id]['timepoint'][0]
+    assert 9.0 == search_result.get_json()[a_station_id]['temperature_humidity']['IN']['dewpoint'][0]
+    assert 13.4 == search_result.get_json()[a_station_id]['temperature_humidity']['IN']['dewpoint'][1]
 
 
 @pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset', 'another_dataset')

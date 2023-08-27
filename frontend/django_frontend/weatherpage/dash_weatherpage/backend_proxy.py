@@ -23,7 +23,8 @@ from django.core.cache import cache
 from requests import Session
 from requests.adapters import Retry
 
-from .utils import Singleton, TimeoutHTTPAdapter, TEMP_SENSOR_MARKER, HUMID_SENSOR_MARKER
+from .utils import Singleton, TimeoutHTTPAdapter, TEMP_SENSOR_MARKER, HUMID_SENSOR_MARKER, DEWPOINT_SENSOR_MARKER, \
+    is_dewpoint_sensor
 from .utils import get_url_encoded_iso_time_string
 from .utils import is_temp_sensor, is_humidity_sensor
 
@@ -139,6 +140,7 @@ class BackendProxy(object):
 
         temperature_sensor_info = None
         humidity_sensor_info = None
+        dewpoint_sensor_info = None
 
         sensor_infos = self._simple_get_request('sensor')
         for sensor_info in sensor_infos:
@@ -147,25 +149,35 @@ class BackendProxy(object):
                 temperature_sensor_info = sensor_info
             elif sensor_id == 'humidity':
                 humidity_sensor_info = sensor_info
+            elif sensor_id == 'dewpoint':
+                dewpoint_sensor_info = sensor_info
             else:
                 available_sensors[sensor_id] = {
                     'description': sensor_info['description'],
                     'unit': sensor_info['unit']
                 }
 
-        if temperature_sensor_info and humidity_sensor_info:
+        if temperature_sensor_info or humidity_sensor_info or dewpoint_sensor_info:
             sensor_infos = self._simple_get_request('temp-humidity-sensor')
             for sensor_info in sensor_infos:
                 temp_sensor_id = sensor_info['sensor_id'] + TEMP_SENSOR_MARKER
                 humidity_sensor_id = sensor_info['sensor_id'] + HUMID_SENSOR_MARKER
-                available_sensors[temp_sensor_id] = {
-                    'description': temperature_sensor_info['description'] + ' ' + sensor_info['description'],
-                    'unit': temperature_sensor_info['unit']
-                }
-                available_sensors[humidity_sensor_id] = {
-                    'description': humidity_sensor_info['description'] + ' ' + sensor_info['description'],
-                    'unit': humidity_sensor_info['unit']
-                }
+                dewpoint_sensor_id = sensor_info['sensor_id'] + DEWPOINT_SENSOR_MARKER
+                if temperature_sensor_info:
+                    available_sensors[temp_sensor_id] = {
+                        'description': temperature_sensor_info['description'] + ' ' + sensor_info['description'],
+                        'unit': temperature_sensor_info['unit']
+                    }
+                if humidity_sensor_info:
+                    available_sensors[humidity_sensor_id] = {
+                        'description': humidity_sensor_info['description'] + ' ' + sensor_info['description'],
+                        'unit': humidity_sensor_info['unit']
+                    }
+                if dewpoint_sensor_info:
+                    available_sensors[dewpoint_sensor_id] = {
+                        'description': dewpoint_sensor_info['description'] + ' ' + sensor_info['description'],
+                        'unit': dewpoint_sensor_info['unit']
+                    }
 
         return available_sensors
 
@@ -177,6 +189,8 @@ class BackendProxy(object):
                 provided_sensors.append('temperature')
             elif is_humidity_sensor(sensor):
                 provided_sensors.append('humidity')
+            elif is_dewpoint_sensor(sensor):
+                provided_sensors.append('dewpoint')
             else:
                 provided_sensors.append(sensor)
 

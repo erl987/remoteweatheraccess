@@ -18,7 +18,9 @@ import re
 from enum import Enum
 from functools import wraps
 from http import HTTPStatus
+from typing import List, Any
 
+import numpy as np
 import pytz
 from flask import current_app, request
 from flask_jwt_extended import verify_jwt_in_request, get_jwt, get_jwt_identity
@@ -182,3 +184,45 @@ class LocalTimeZone(object):
 
     def get_local_time_zone(self):
         return self._local_time_zone
+
+
+def calc_dewpoint(temperature: List[float], humidity: List[float]) -> List[Any]:
+    # parameters of Magnus formula for saturation vapor pressure above water
+    # range -45 C - 60 C, below 0 C for supercooled water
+    k_2_water = 17.62
+    k_3_water = 243.12  # degree C
+
+    # parameters of Magnus formula for saturation vapor pressure above ice
+    # range -65 C - 0.01 C
+    k_2_ice = 22.46
+    k_3_ice = 272.62  # degree C
+
+    # converts also None to NaN
+    temperature = np.array(temperature, dtype=np.float64)
+    humidity = np.array(humidity, dtype=np.float64)
+
+    indices_above_water = np.where((temperature >= 0) | np.isnan(temperature))[0]
+    indices_above_ice = np.where(temperature < 0)[0]
+
+    dew_point_above_water = _calc_dewpoint_for_indices(indices_above_water, temperature, humidity, k_2_water, k_3_water)
+    dew_point_above_ice = _calc_dewpoint_for_indices(indices_above_ice, temperature, humidity, k_2_ice, k_3_ice)
+
+    dew_point = np.zeros(len(indices_above_water) + len(indices_above_ice))
+    dew_point[indices_above_water] = dew_point_above_water
+    dew_point[indices_above_ice] = dew_point_above_ice
+
+    # noinspection PyTypeChecker
+    dew_point = np.where(np.isnan(dew_point), None, dew_point)
+    return list(dew_point)
+
+
+def _calc_dewpoint_for_indices(indices, temperature, humidity, k_2, k_3):
+    temperature = temperature[indices]
+    humidity = humidity[indices]
+
+    with np.errstate(divide='ignore', invalid='ignore'):
+        nominator = (k_2 * temperature) / (k_3 + temperature) + np.log(humidity / 100)
+        denominator = (k_2 * k_3) / (k_3 + temperature) - np.log(humidity / 100)
+        dew_point = k_3 * nominator / denominator
+
+    return np.around(dew_point, decimals=1)

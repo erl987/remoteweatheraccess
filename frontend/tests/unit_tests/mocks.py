@@ -24,11 +24,13 @@ A_SENSOR_ID = 'pressure'
 A_UNIT = 'Pa'
 A_TEMP_UNIT = 'degree C'
 A_HUMID_UNIT = 'percent'
+A_DEWPOINT_UNIT = 'degree C'
 A_SENSOR_DESCRIPTION = 'a description'
 A_TEMP_HUMIDITY_SENSOR_ID = 'IN'
 A_TEMP_HUMIDITY_SENSOR_DESCRIPTION = 'inside'
 A_TEMP_SENSOR_DESCRIPTION = 'a temperature sensor'
 A_HUMID_SENSOR_DESCRIPTION = 'a humid sensor'
+A_DEWPOINT_SENSOR_DESCRIPTION = 'a dewpoint sensor'
 
 A_STATION = {"device": "some",
              "height": 951.0,
@@ -100,6 +102,11 @@ class SensorResponseMock(object):
                     'sensor_id': 'humidity',
                     'description': A_HUMID_SENSOR_DESCRIPTION,
                     'unit': A_HUMID_UNIT
+                },
+                {
+                    'sensor_id': 'dewpoint',
+                    'description': A_DEWPOINT_SENSOR_DESCRIPTION,
+                    'unit': A_DEWPOINT_UNIT
                 }
 
             ]

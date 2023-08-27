@@ -352,7 +352,7 @@ If running the tests manually, they are expecting a running `postgres` database 
 provide an empty database is to start a `postgres` container:
 
 ```shell script
-  docker run -d --network=host -e POSTGRES_PASSWORD=passwd -p 5432:5432 postgres
+  docker run -d -e POSTGRES_PASSWORD=passwd -p 5432:5432 postgres
 ```
 
 # License

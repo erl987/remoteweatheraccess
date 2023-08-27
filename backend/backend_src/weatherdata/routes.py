@@ -32,7 +32,8 @@ from ..exceptions import APIError
 from ..extensions import db
 from ..models import WeatherDataset, TempHumiditySensorData, WeatherStation
 from ..sensor.models import Sensor
-from ..utils import Role, with_rollback_and_raise_exception, approve_committed_station_ids, validate_items
+from ..utils import Role, with_rollback_and_raise_exception, approve_committed_station_ids, validate_items, \
+    calc_dewpoint
 from ..utils import access_level_required, json_with_rollback_and_raise_exception, LocalTimeZone
 
 weatherdata_blueprint = Blueprint('data', __name__, url_prefix='/api/v1/data')
@@ -248,7 +249,7 @@ def _get_param_list_from_str(string):
 
 
 def _get_queried_sensors(requested_sensors) -> List[column]:
-    queried_sensors = list(requested_sensors)
+    queried_sensors = set(requested_sensors)
     rain_sensor_is_queried = False
 
     if 'rain' in queried_sensors:
@@ -258,7 +259,12 @@ def _get_queried_sensors(requested_sensors) -> List[column]:
         queried_sensors.remove('rain_rate')
         rain_sensor_is_queried = True
     if rain_sensor_is_queried:
-        queried_sensors.append('rain_counter')
+        queried_sensors.add('rain_counter')
+
+    if 'dewpoint' in queried_sensors:
+        queried_sensors.remove('dewpoint')
+        queried_sensors.add('temperature')
+        queried_sensors.add('humidity')
 
     queried_sensors = [column(sensor) for sensor in queried_sensors]
 
@@ -288,17 +294,13 @@ def _reshape_datasets_to_dict(found_datasets, requested_sensors, rain_calib_fact
                     found_datasets_per_station[station_id]['temperature_humidity'][temp_humidity_sensor][
                         sensor_id] = data
                 elif sensor_id in ['rain_counter']:
-                    rain_rate = dataset[1].diff() * rain_calib_factors[station_id]
-
-                    # handle reset of the rain counter to 0 due to battery replacement, etc.
-                    rain_rate = rain_rate.clip(lower=0)
-                    rain_rate.iloc[0] = 0
-                    if 'rain_rate' in requested_sensors:
-                        found_datasets_per_station[station_id]['rain_rate'] = rain_rate.to_list()
-                    if 'rain' in requested_sensors:
-                        found_datasets_per_station[station_id]['rain'] = rain_rate.cumsum().to_list()
+                    _reshape_rain(found_datasets_per_station, requested_sensors, dataset, rain_calib_factors,
+                                  station_id)
                 else:
                     found_datasets_per_station[station_id][sensor_id] = data
+
+    if 'dewpoint' in requested_sensors:
+        _reshape_dewpoint(found_datasets_per_station, requested_sensors)
 
     num_datasets_per_station = []
     for station_id, dataset in found_datasets_per_station.items():
@@ -307,10 +309,35 @@ def _reshape_datasets_to_dict(found_datasets, requested_sensors, rain_calib_fact
     return found_datasets_per_station, num_datasets_per_station
 
 
+def _reshape_dewpoint(found_datasets_per_station, requested_sensors):
+    for station_id in found_datasets_per_station:
+        for temp_humidity_sensor_id in found_datasets_per_station[station_id]['temperature_humidity']:
+            temp_humid_data = found_datasets_per_station[station_id]['temperature_humidity'][temp_humidity_sensor_id]
+            dew_points = calc_dewpoint(temp_humid_data['temperature'], temp_humid_data['humidity'])
+            temp_humid_data['dewpoint'] = dew_points
+            if 'temperature' not in requested_sensors:
+                del temp_humid_data['temperature']
+            if 'humidity' not in requested_sensors:
+                del temp_humid_data['humidity']
+
+
+def _reshape_rain(found_datasets_per_station, requested_sensors, dataset, rain_calib_factors, station_id):
+    rain_rate = dataset[1].diff() * rain_calib_factors[station_id]
+
+    # handle reset of the rain counter to 0 due to battery replacement, etc.
+    rain_rate = rain_rate.clip(lower=0)
+    rain_rate.iloc[0] = 0
+
+    if 'rain_rate' in requested_sensors:
+        found_datasets_per_station[station_id]['rain_rate'] = rain_rate.to_list()
+    if 'rain' in requested_sensors:
+        found_datasets_per_station[station_id]['rain'] = rain_rate.cumsum().to_list()
+
+
 def _create_station_dict(requested_sensors, temp_humidity_sensor_ids):
     station_dict = {}
 
-    if 'temperature' in requested_sensors or 'humidity' in requested_sensors:
+    if not {'temperature', 'humidity', 'dewpoint'}.isdisjoint(requested_sensors):
         station_dict['temperature_humidity'] = {}
         for temp_humidity_sensor_id in temp_humidity_sensor_ids:
             station_dict['temperature_humidity'][temp_humidity_sensor_id] = {}

@@ -24,6 +24,7 @@ from requests.adapters import HTTPAdapter
 
 HUMID_SENSOR_MARKER = '_humid'
 TEMP_SENSOR_MARKER = '_temp'
+DEWPOINT_SENSOR_MARKER = '_dewpoint'
 
 
 class Singleton(type):
@@ -58,6 +59,10 @@ def is_humidity_sensor(sensor_id):
     return sensor_id.endswith(HUMID_SENSOR_MARKER)
 
 
+def is_dewpoint_sensor(sensor_id):
+    return sensor_id.endswith(DEWPOINT_SENSOR_MARKER)
+
+
 def _get_temp_humidity_sensor_id(sensor_id):
     return sensor_id.split('_')[0]
 
@@ -67,6 +72,8 @@ def get_sensor_data(data, station_id, sensor_id):
         sensor_data = data[station_id]['temperature_humidity'][_get_temp_humidity_sensor_id(sensor_id)]['temperature']
     elif is_humidity_sensor(sensor_id):
         sensor_data = data[station_id]['temperature_humidity'][_get_temp_humidity_sensor_id(sensor_id)]['humidity']
+    elif is_dewpoint_sensor(sensor_id):
+        sensor_data = data[station_id]['temperature_humidity'][_get_temp_humidity_sensor_id(sensor_id)]['dewpoint']
     else:
         sensor_data = data[station_id][sensor_id]
 

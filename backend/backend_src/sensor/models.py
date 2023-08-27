@@ -37,6 +37,7 @@ def generate_sensors():
         'rain_rate': {'description': 'Regenrate', 'unit': 'mm'},
         'temperature': {'description': 'Temperatur', 'unit': '\N{DEGREE SIGN}C'},
         'humidity': {'description': 'Luftfeuchte', 'unit': '%'},
+        'dewpoint': {'description': 'Taupunkt', 'unit': '\N{DEGREE SIGN}C'},
         'speed': {'description': 'Windgeschwindigkeit', 'unit': 'km/h'},
         'gusts': {'description': 'Windböen', 'unit': 'km/h'},
         'direction': {'description': 'Windrichtung', 'unit': '\N{DEGREE SIGN}'},
