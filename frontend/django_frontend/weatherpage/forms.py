@@ -14,21 +14,15 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from django.urls import path, register_converter
+from django.forms import Form, ChoiceField
 
-from . import views
-from .converters import StationIDConverter
-from .views import LatestDataView
 
-register_converter(StationIDConverter, 'SSS')
+class LatestDataForm(Form):
+    station = ChoiceField()
 
-app_name = 'weatherpage'
-urlpatterns = [
-    path('', views.main, name='index'),
-    path('<SSS:station_id>/', views.main_for_station, name='index_station'),
-    path('download/', views.download, name='download'),
-    path('impress/', views.impress, name='impress'),
-    path('policy/', views.policy, name='policy'),
-    path('latest/', LatestDataView.as_view(), name='latest'),
-    path('latest/<SSS:station_id>/', LatestDataView.as_view(), name='latest_station')
-]
+    def __init__(self, *args, **kwargs):
+        station_choices = kwargs.pop('station_choices')
+
+        super().__init__(*args, **kwargs)
+
+        self.fields['station'].choices = station_choices
