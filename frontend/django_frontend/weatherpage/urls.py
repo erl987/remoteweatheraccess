@@ -18,6 +18,7 @@ from django.urls import path, register_converter
 
 from . import views
 from .converters import StationIDConverter
+from .views import LatestDataView
 
 register_converter(StationIDConverter, 'SSS')
 
@@ -27,5 +28,6 @@ urlpatterns = [
     path('<SSS:station_id>/', views.main_for_station, name='index_station'),
     path('download/', views.download, name='download'),
     path('impress/', views.impress, name='impress'),
-    path('policy/', views.policy, name='policy')
+    path('policy/', views.policy, name='policy'),
+    path('latest/', LatestDataView.as_view(), name='latest')
 ]
