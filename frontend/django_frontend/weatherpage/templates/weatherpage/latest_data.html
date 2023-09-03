@@ -1,6 +1,8 @@
 {% extends "weatherpage/base_generic.html" %}
 
-{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block robots %}
+    <meta name="robots" content="noindex">
+{% endblock %}
 
 {% block header %}<title>Neuste Wetterdaten</title>{% endblock %}
 
@@ -9,13 +11,11 @@
         <div class="col-lg-6">
             <h1>Neuste Wetterdaten</h1>
 
-            <label for="stations">Station:</label>
-
-            <select name="stations" id="stations">
-                {% for station in stations %}
-                    <option value="{{ station.value }}">{{ station.label }}</option>
-                {% endfor %}
-            </select>
+            <form method="post">
+                {% csrf_token %}
+                {{ form }}
+                <button class="btn btn-primary" type="submit">Auswählen</button>
+            </form>
 
             <div>
                 <p>Zeitpunkt: {{ time_point }}</p>
