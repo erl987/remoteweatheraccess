@@ -18,7 +18,7 @@ from django.forms import Form, ChoiceField
 
 
 class LatestDataForm(Form):
-    station = ChoiceField()
+    station = ChoiceField(required=False)
 
     def __init__(self, *args, **kwargs):
         station_choices = kwargs.pop('station_choices')
@@ -26,6 +26,3 @@ class LatestDataForm(Form):
         super().__init__(*args, **kwargs)
 
         self.fields['station'].choices = station_choices
-
-        for visible in self.visible_fields():
-            visible.field.widget.attrs['class'] = 'form-control'

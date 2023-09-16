@@ -1,5 +1,7 @@
 {% extends "weatherpage/base_generic.html" %}
 
+{% load crispy_forms_filters %}
+
 {% block robots %}
     <meta name="robots" content="noindex">
 {% endblock %}
@@ -7,16 +9,25 @@
 {% block header %}<title>Neuste Wetterdaten</title>{% endblock %}
 
 {% block content %}
-    <div class="row justify-content-center m-2">
+    <div class="row m-2">
         <div class="col-12">
             <h1>Neuste Wetterdaten</h1>
+        </div>
+    </div>
 
-            <form method="post" class="form-group">
-                {% csrf_token %}
-                {{ form }}
+    <div class="row m-2">
+        <form method="post">
+            {% csrf_token %}
+            <div class="col-12 col-md-6 col-lg-2">
+                {{ form|crispy }}
+            </div>
+            <div class="col-auto mt-3">
                 <button class="btn btn-primary" type="submit">Auswählen</button>
-            </form>
-
+            </div>
+        </form>
+    </div>
+    <div class="row m-2">
+        <div class="col-12">
             <div class="mt-4">
                 <p><strong>Zeitpunkt:</strong> {{ time_point|date:'d.m.Y H:i' }}</p>
 
@@ -58,7 +69,7 @@
                                         <p>{{ dataset.description }}:</p>
                                     </div>
                                     <div class="col-6 col-md-4">
-                                    <p>{{ dataset.value }} {{ dataset.unit }}</p>
+                                        <p>{{ dataset.value }} {{ dataset.unit }}</p>
                                     </div>
                                 {% endfor %}
                             </div>

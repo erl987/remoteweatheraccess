@@ -28,6 +28,8 @@ charset-normalizer==3.2.0
     # via requests
 click==8.1.6
     # via flask
+crispy-bootstrap4==2022.1
+    # via -r requirements.in
 dash==2.9.3
     # via
     #   -r requirements.in
@@ -49,8 +51,14 @@ django==4.2.3
     # via
     #   -r requirements.in
     #   channels
+    #   crispy-bootstrap4
+    #   django-crispy-forms
     #   django-plotly-dash
     #   django-storages
+django-crispy-forms==2.0
+    # via
+    #   -r requirements.in
+    #   crispy-bootstrap4
 django-environ==0.10.0
     # via -r requirements.in
 django-plotly-dash==2.2.1

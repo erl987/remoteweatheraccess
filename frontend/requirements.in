@@ -19,7 +19,9 @@ dash
 dash-bootstrap-components
 dash-breakpoints
 cacheout
+crispy-bootstrap4
 django
+django-crispy-forms
 django-environ
 django-plotly-dash
 django-storages[google]
