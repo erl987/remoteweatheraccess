@@ -8,20 +8,63 @@
 
 {% block content %}
     <div class="row justify-content-center m-2">
-        <div class="col-lg-6">
+        <div class="col-12">
             <h1>Neuste Wetterdaten</h1>
 
-            <form method="post">
+            <form method="post" class="form-group">
                 {% csrf_token %}
                 {{ form }}
                 <button class="btn btn-primary" type="submit">Auswählen</button>
             </form>
 
-            <div>
-                <p>Zeitpunkt: {{ time_point }}</p>
-                {% for dataset in sensor_data %}
-                    <p>{{ dataset.description }}: {{ dataset.value }} {{ dataset.unit }}</p>
-                {% endfor %}
+            <div class="mt-4">
+                <p><strong>Zeitpunkt:</strong> {{ time_point|date:'d.m.Y H:i' }}</p>
+
+                <div id="accordion">
+                    <div class="card">
+                        <div class="card-header" id="headingGeneral">
+                            <button class="btn btn-link" data-toggle="collapse" data-target="#collapseGeneral"
+                                    aria-expanded="true" aria-controls="collapseGeneral">
+                                Allgemeine Sensoren
+                            </button>
+                        </div>
+                        <div id="collapseGeneral" class="collapse show" aria-labelledby="headingGeneral"
+                             data-parent="#accordion">
+                            <div class="card-body row">
+                                {% for dataset in sensor_data %}
+                                    <div class="col-6 col-md-2">
+                                        <p>{{ dataset.description }}:</p>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <p>{{ dataset.value }}</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header" id="headingSpecial">
+                            <button class="btn btn-link" data-toggle="collapse" data-target="#collapseSpecial"
+                                    aria-expanded="true" aria-controls="collapseSpecial">
+                                Spezielle Sensoren
+                            </button>
+                        </div>
+                        <div id="collapseSpecial" class="collapse" aria-labelledby="headingSpecial"
+                             data-parent="#accordion">
+                            <div class="card-body row">
+                                {% for dataset in special_sensor_data %}
+                                    <div class="col-6 col-md-2">
+                                        <p>{{ dataset.description }}:</p>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                    <p>{{ dataset.value }} {{ dataset.unit }}</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -56,6 +56,9 @@ class LatestDataView(FormView):
     template_name = 'weatherpage/latest_data.html'
     form_class = LatestDataForm
 
+    SPECIAL_SENSOR_IDS = ['direction', 'gusts', 'rain_rate', 'speed', 'wind_temperature', 'uv']
+    GENERAL_SENSOR_ORDER = ['temperature', 'humidity', 'rain', 'dewpoint']
+
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -72,6 +75,7 @@ class LatestDataView(FormView):
 
         if len(latest_data) > 0:
             sensor_data = []
+            special_sensor_data = []
             for sensor_id, values in latest_data[station_id].items():
                 if sensor_id == 'timepoint':
                     continue
@@ -79,26 +83,65 @@ class LatestDataView(FormView):
                 if sensor_id == 'temperature_humidity':
                     for temp_humid_sensor_id, subsensors in values.items():
                         for subsensor_id, sub_values in subsensors.items():
-                            if subsensor_id == 'temperature':
-                                short_subsensor_id = 'temp'
-                            elif subsensor_id == 'humidity':
-                                short_subsensor_id = 'humid'
-                            else:
-                                short_subsensor_id = subsensor_id
-                            this_sensor_id = f'{temp_humid_sensor_id}_{short_subsensor_id}'
-                            human_readable_name = available_sensors[1][this_sensor_id]['description']
-                            unit = available_sensors[1][this_sensor_id]['unit']
                             sensor_data.append(
-                                {'description': human_readable_name, 'unit': unit, 'value': sub_values[-1]})
+                                self._get_subsensor_data(subsensor_id, temp_humid_sensor_id, sub_values[-1],
+                                                         available_sensors))
                 else:
-                    human_readable_name = available_sensors[1][sensor_id]['description']
-                    unit = available_sensors[1][sensor_id]['unit']
-                    sensor_data.append({'description': human_readable_name, 'unit': unit, 'value': values[-1]})
+                    this_sensor_data = self._get_sensor_data(sensor_id, values[-1], available_sensors)
+                    self._replace_sensor_descritions(this_sensor_data)
 
-            context['time_point'] = latest_data[station_id]['timepoint'][-1]
-            context['sensor_data'] = sensor_data
+                    if sensor_id not in LatestDataView.SPECIAL_SENSOR_IDS:
+                        sensor_data.append(this_sensor_data)
+                    else:
+                        special_sensor_data.append(this_sensor_data)
+
+            sensor_data = sorted(sensor_data, key=lambda d: d['description'])
+
+            context['time_point'] = datetime.fromisoformat(latest_data[station_id]['timepoint'][-1])
+            context['sensor_data'] = sorted(sensor_data, key=lambda d: d['description'])
+            context['special_sensor_data'] = sorted(special_sensor_data, key=lambda d: d['description'])
 
         return context
+
+    @staticmethod
+    def _replace_sensor_descritions(this_sensor_data):
+        if this_sensor_data['description'] == 'Regen':
+            this_sensor_data['description'] = 'Regen (letzte 24 Stunden)'
+        if this_sensor_data['description'] == 'Regenrate':
+            this_sensor_data['description'] = 'Regen (letzte 10 Minuten)'
+        if this_sensor_data['description'] == 'Windböen':
+            this_sensor_data['description'] = 'Böen (letzte 10 Minuten)'
+        if this_sensor_data['description'] == 'Windgeschwindigkeit':
+            this_sensor_data['description'] = 'Wind (letzte 10 Minuten)'
+
+    @staticmethod
+    def _get_subsensor_data(subsensor_id, temp_humid_sensor_id, last_value, available_sensors):
+        if subsensor_id == 'temperature':
+            short_subsensor_id = 'temp'
+        elif subsensor_id == 'humidity':
+            short_subsensor_id = 'humid'
+        else:
+            short_subsensor_id = subsensor_id
+        this_sensor_id = f'{temp_humid_sensor_id}_{short_subsensor_id}'
+        human_readable_name = available_sensors[1][this_sensor_id]['description']
+        unit = available_sensors[1][this_sensor_id]['unit']
+
+        return {'description': human_readable_name, 'value': LatestDataView._get_presented_value(last_value, unit)}
+
+    @staticmethod
+    def _get_sensor_data(sensor_id, last_value, available_sensors):
+        human_readable_name = available_sensors[1][sensor_id]['description']
+        unit = available_sensors[1][sensor_id]['unit']
+
+        return {'description': human_readable_name, 'value': LatestDataView._get_presented_value(last_value, unit)}
+
+    @staticmethod
+    def _get_presented_value(last_value, unit):
+        if unit == '%' or unit == '°':
+            presented_value = f'{last_value}{unit}'
+        else:
+            presented_value = f'{last_value} {unit}'
+        return presented_value
 
     def get_initial(self):
         initial = super().get_initial()
