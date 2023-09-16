@@ -26,3 +26,6 @@ class LatestDataForm(Form):
         super().__init__(*args, **kwargs)
 
         self.fields['station'].choices = station_choices
+
+        for visible in self.visible_fields():
+            visible.field.widget.attrs['class'] = 'form-control'
