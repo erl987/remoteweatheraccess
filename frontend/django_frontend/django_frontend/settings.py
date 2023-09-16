@@ -93,7 +93,7 @@ if is_on_google_cloud_run():
     SESSION_COOKIE_SECURE = True
     X_FRAME_OPTIONS = "DENY"
 else:
-    ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
+    ALLOWED_HOSTS = ['*']
 
 # Application definition
 
