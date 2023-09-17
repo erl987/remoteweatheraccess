@@ -69,7 +69,7 @@ class LatestDataView(FormView):
 
         backend_proxy = CachedBackendProxy(BACKEND_URL, BACKEND_PORT, BACKEND_DO_USE_HTTPS)
         if not station_id:
-            station_id = backend_proxy.available_stations()[0][-1]['value']
+            station_id = self._get_sorted_stations(backend_proxy)[-1]['value']
         latest_data = backend_proxy.data([station_id], [], start_time, end_time)
         available_sensors = backend_proxy.available_sensors()
 
@@ -88,7 +88,7 @@ class LatestDataView(FormView):
                                                          available_sensors))
                 else:
                     this_sensor_data = self._get_sensor_data(sensor_id, values[-1], available_sensors)
-                    self._replace_sensor_descritions(this_sensor_data)
+                    self._replace_sensor_descriptions(this_sensor_data)
 
                     if sensor_id not in LatestDataView.SPECIAL_SENSOR_IDS:
                         sensor_data.append(this_sensor_data)
@@ -104,7 +104,7 @@ class LatestDataView(FormView):
         return context
 
     @staticmethod
-    def _replace_sensor_descritions(this_sensor_data):
+    def _replace_sensor_descriptions(this_sensor_data):
         if this_sensor_data['description'] == 'Regen':
             this_sensor_data['description'] = 'Regen (letzte 24 Stunden)'
         if this_sensor_data['description'] == 'Regenrate':
@@ -147,18 +147,23 @@ class LatestDataView(FormView):
         initial = super().get_initial()
         if 'station_id' not in self.kwargs:
             backend_proxy = CachedBackendProxy(BACKEND_URL, BACKEND_PORT, BACKEND_DO_USE_HTTPS)
-            initial['station'] = backend_proxy.available_stations()[0][-1]['value']
+            stations = self._get_sorted_stations(backend_proxy)
+            initial['station'] = stations[-1]['value']
         else:
             initial['station'] = self.kwargs['station_id']
 
         return initial
+
+    @staticmethod
+    def _get_sorted_stations(backend_proxy):
+        return sorted(backend_proxy.available_stations()[0], key=lambda d: d['label'])
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
 
         backend_proxy = CachedBackendProxy(BACKEND_URL, BACKEND_PORT, BACKEND_DO_USE_HTTPS)
         initial_dropdown_settings = []
-        for entry in backend_proxy.available_stations()[0]:
+        for entry in self._get_sorted_stations(backend_proxy):
             initial_dropdown_settings.append((entry['value'], entry['label']))
         kwargs['station_choices'] = initial_dropdown_settings
 
