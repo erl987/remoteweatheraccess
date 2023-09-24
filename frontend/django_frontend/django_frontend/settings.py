@@ -264,4 +264,4 @@ if is_on_google_cloud_run():
         },
     }
 
-setlocale(LC_ALL, environ['LANGUAGE_CODE'])
+setlocale(LC_ALL, env.str('LANGUAGE_CODE'))
