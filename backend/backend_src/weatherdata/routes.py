@@ -16,6 +16,7 @@
 
 import gzip
 import json
+from datetime import timedelta
 from http import HTTPStatus
 from typing import List
 
@@ -161,23 +162,60 @@ def update_weather_dataset():
 def get_weather_datasets():
     first, last, requested_sensors, requested_stations = _get_query_params()
 
-    all_sensors = [sensor[0] for sensor in db.session.query(Sensor).with_entities(Sensor.sensor_id).all()]
-    validate_items(requested_sensors, all_sensors, 'sensor')
+    found_datasets_per_station, num_datasets_per_station = _perform_get_weather_datasets(first, last, requested_sensors,
+                                                                                         requested_stations)
 
-    if len(requested_sensors) == 0:
-        requested_sensors = all_sensors
+    num_datasets_log_str = ', '.join(num_datasets_per_station)
+    response = jsonify(found_datasets_per_station)
+    response.status_code = HTTPStatus.OK
+    current_app.logger.info('Returned datasets from time period \'{}\'-\'{}\' ({})'.format(first, last,
+                                                                                           num_datasets_log_str))
 
+    return response
+
+
+def _perform_get_weather_datasets(first, last, requested_sensors, requested_stations):
+    requested_sensors = _get_requested_sensors(requested_sensors)
     queried_sensors = _get_queried_sensors(requested_sensors)
+    requested_stations, rain_calib_factors = _get_requested_stations(requested_stations)
+    found_datasets = _read_weather_data_from_db(first, last, queried_sensors, requested_stations)
 
+    if found_datasets.empty:
+        found_datasets_per_station = {}
+        num_datasets_per_station = 0
+    else:
+        found_datasets_per_station, num_datasets_per_station = _reshape_datasets_to_dict(found_datasets,
+                                                                                         requested_sensors,
+                                                                                         rain_calib_factors)
+
+    return found_datasets_per_station, num_datasets_per_station
+
+
+def _get_requested_stations(requested_stations):
     all_stations_data = db.session.query(WeatherStation).with_entities(WeatherStation.station_id,
                                                                        WeatherStation.rain_calib_factor).all()
     all_stations = [station_data[0] for station_data in all_stations_data]
+
     rain_calib_factors = {station_data[0]: station_data[1] for station_data in all_stations_data}
     validate_items(requested_stations, all_stations, 'station')
 
     if len(requested_stations) == 0:
         requested_stations = all_stations
 
+    return requested_stations, rain_calib_factors
+
+
+def _get_requested_sensors(requested_sensors):
+    all_sensors = [sensor[0] for sensor in db.session.query(Sensor).with_entities(Sensor.sensor_id).all()]
+    validate_items(requested_sensors, all_sensors, 'sensor')
+
+    if len(requested_sensors) == 0:
+        requested_sensors = all_sensors
+
+    return requested_sensors
+
+
+def _read_weather_data_from_db(first, last, queried_sensors, requested_stations):
     if last < first:
         raise APIError('Last time \'{}\' is later than first time \'{}\''.format(last, first),
                        status_code=HTTPStatus.BAD_REQUEST)
@@ -196,19 +234,7 @@ def get_weather_datasets():
     # required to provide standard conformant JSON containing `null` and not `NaN`
     found_datasets = found_datasets.replace([np.nan], [None])
 
-    if found_datasets.empty:
-        return jsonify({}), HTTPStatus.OK
-
-    found_datasets_per_station, num_datasets_per_station = _reshape_datasets_to_dict(found_datasets, requested_sensors,
-                                                                                     rain_calib_factors)
-
-    num_datasets_log_str = ', '.join(num_datasets_per_station)
-    response = jsonify(found_datasets_per_station)
-    response.status_code = HTTPStatus.OK
-    current_app.logger.info('Returned datasets from time period \'{}\'-\'{}\' ({})'.format(first, last,
-                                                                                           num_datasets_log_str))
-
-    return response
+    return found_datasets
 
 
 def _get_query_params():
@@ -387,10 +413,7 @@ def _delete_datasets_from_table(table, first_timepoint, last_timepoint, stations
 @access_level_required(Role.GUEST)
 @with_rollback_and_raise_exception
 def get_available_time_period():
-    min_max_query_result = db.session.query(db.func.min(WeatherDataset.timepoint).label('min_time'),
-                                            db.func.max(WeatherDataset.timepoint).label('max_time')).one()
-    first_timepoint = min_max_query_result.min_time
-    last_timepoint = min_max_query_result.max_time
+    first_timepoint, last_timepoint = _get_first_and_last_time_point()
 
     time_range = {
         'first_timepoint': first_timepoint,
@@ -403,3 +426,123 @@ def get_available_time_period():
                                                                                    time_range['last_timepoint']))
 
     return response
+
+
+def _get_first_and_last_time_point():
+    min_max_query_result = db.session.query(db.func.min(WeatherDataset.timepoint).label('min_time'),
+                                            db.func.max(WeatherDataset.timepoint).label('max_time')).one()
+    first_time_point = min_max_query_result.min_time
+    last_time_point = min_max_query_result.max_time
+    return first_time_point, last_time_point
+
+
+@weatherdata_blueprint.route('/latest', methods=['GET'])
+@access_level_required(Role.GUEST)
+@with_rollback_and_raise_exception
+def get_latest_data():
+    _, last_time_point = _get_first_and_last_time_point()
+
+    if not last_time_point:
+        return jsonify({}), HTTPStatus.OK
+
+    first_time_point = last_time_point - timedelta(hours=25)
+    found_datasets_per_station, _ = _perform_get_weather_datasets(first_time_point,
+                                                                  last_time_point,
+                                                                  [],  # all
+                                                                  [])  # all
+
+    if len(found_datasets_per_station) == 0:
+        raise APIError('Did not find any dataset when requesting the latest data')
+
+    latest_dataset = _get_latest_dataset(found_datasets_per_station)
+
+    response = jsonify(latest_dataset)
+    response.status_code = HTTPStatus.OK
+    current_app.logger.info('Returned latest data ({})'.format(last_time_point))
+
+    return response
+
+
+def _get_latest_dataset(found_datasets_per_station):
+    latest_dataset = {}
+
+    for station_id in found_datasets_per_station:
+        if station_id not in latest_dataset:
+            latest_dataset[station_id] = {}
+        curr_dataset = latest_dataset[station_id]
+
+        for sensor_id, entry in found_datasets_per_station[station_id].items():
+            if sensor_id == 'temperature_humidity':
+                if 'temperature_humidity' not in curr_dataset:
+                    curr_dataset['temperature_humidity'] = {}
+
+                for temp_humid_sensor_id, temp_humid_entry in entry.items():
+                    if temp_humid_sensor_id not in curr_dataset['temperature_humidity']:
+                        curr_dataset['temperature_humidity'][temp_humid_sensor_id] = {}
+
+                    for temp_humid_quantity_id, temp_humid_quantity_entry in temp_humid_entry.items():
+                        curr_dataset[sensor_id][temp_humid_sensor_id][temp_humid_quantity_id] = \
+                            temp_humid_quantity_entry[-1]
+            else:
+                curr_dataset[sensor_id] = entry[-1]
+
+    rain_last_day, rain_last_hour = _get_rain_data(found_datasets_per_station)
+    for station_id in found_datasets_per_station:
+        latest_dataset[station_id]['rain_last_hour'] = rain_last_hour[station_id]
+        latest_dataset[station_id]['rain_last_day'] = rain_last_day[station_id]
+        del latest_dataset[station_id]['rain']
+        del latest_dataset[station_id]['rain_rate']
+
+    return latest_dataset
+
+
+def _get_rain_data(found_datasets_per_station):
+    rain_last_hour = {}
+    rain_last_day = {}
+
+    for station_id in found_datasets_per_station:
+        if station_id not in rain_last_hour:
+            rain_last_hour[station_id] = {}
+        if station_id not in rain_last_day:
+            rain_last_day[station_id] = {}
+
+        one_hour_index = _get_index_for_time_period_before_latest(1,
+                                                                  found_datasets_per_station[station_id])
+        one_day_index = _get_index_for_time_period_before_latest(24,
+                                                                 found_datasets_per_station[station_id])
+
+        if one_hour_index is not None:
+            rain_last_hour[station_id] = found_datasets_per_station[station_id]['rain'][-1] - \
+                                         found_datasets_per_station[station_id]['rain'][one_hour_index]
+        else:
+            rain_last_hour[station_id] = None
+        if one_day_index is not None:
+            rain_last_day[station_id] = found_datasets_per_station[station_id]['rain'][-1] - \
+                                        found_datasets_per_station[station_id]['rain'][one_day_index]
+        else:
+            rain_last_day[station_id] = None
+
+    return rain_last_day, rain_last_hour
+
+
+def _get_index_for_time_period_before_latest(time_period_in_hours, found_datasets):
+    timepoints = found_datasets['timepoint']
+    latest_time_point = timepoints[-1]
+
+    upper_accepted_limit = np.array((latest_time_point - pd.Series(timepoints))
+                                    .ge(pd.Timedelta(hours=time_period_in_hours * 0.9)))
+    if len(np.argwhere(upper_accepted_limit)) > 0:
+        upper_accepted_limit_index = np.argwhere(upper_accepted_limit)[-1][0]
+    else:
+        upper_accepted_limit_index = None
+
+    lower_accepted_limit = np.array((latest_time_point - pd.Series(timepoints))
+                                    .le(pd.Timedelta(hours=time_period_in_hours + 1)))
+    if len(np.argwhere(lower_accepted_limit)) > 0:
+        lower_accepted_limit_index = np.argwhere(lower_accepted_limit)[0][0]
+    else:
+        lower_accepted_limit_index = None
+
+    one_hour_index = np.nanmax(upper_accepted_limit_index, lower_accepted_limit_index)
+
+    return one_hour_index
