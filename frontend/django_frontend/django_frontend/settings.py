@@ -26,8 +26,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 from datetime import timedelta
+from locale import setlocale, LC_ALL
 from multiprocessing import Process
-from os import getenv, path
+from os import getenv, path, environ
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -262,3 +263,5 @@ if is_on_google_cloud_run():
             }
         },
     }
+
+setlocale(LC_ALL, environ['LANGUAGE_CODE'])
