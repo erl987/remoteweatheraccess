@@ -182,7 +182,7 @@ def _perform_get_weather_datasets(first, last, requested_sensors, requested_stat
 
     if found_datasets.empty:
         found_datasets_per_station = {}
-        num_datasets_per_station = 0
+        num_datasets_per_station = ['0']
     else:
         found_datasets_per_station, num_datasets_per_station = _reshape_datasets_to_dict(found_datasets,
                                                                                          requested_sensors,
