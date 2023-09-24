@@ -51,6 +51,12 @@ class CachedBackendProxy(object, metaclass=Singleton):
         logger.info('Received data for all available sensors from the backend')
         return available_sensors, available_sensors_data
 
+    def latest_data(self):
+        latest_data = cache.get_or_set('latest-data', self._backend.get_latest_data(),
+                                       timeout=5 * 60)  # caching period in seconds
+        logger.info('Received latest data for all stations from the backend')
+        return latest_data
+
     def available_stations(self):
         available_stations = []
         available_station_ids = []
@@ -134,6 +140,9 @@ class BackendProxy(object):
 
     def get_available_time_limits(self):
         return self._simple_get_request('data/limits')
+
+    def get_latest_data(self):
+        return self._simple_get_request('data/latest')
 
     def get_all_available_sensors(self):
         available_sensors = {}

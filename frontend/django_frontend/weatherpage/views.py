@@ -14,7 +14,7 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from os import environ
 
 from django.http import HttpResponseRedirect
@@ -56,59 +56,64 @@ class LatestDataView(FormView):
     template_name = 'weatherpage/latest_data.html'
     form_class = LatestDataForm
 
-    SPECIAL_SENSOR_IDS = ['direction', 'gusts', 'rain_rate', 'speed', 'wind_temperature', 'uv']
+    SPECIAL_SENSOR_IDS = ['direction', 'gusts', 'rain_last_hour', 'speed', 'wind_temperature', 'uv']
     GENERAL_SENSOR_ORDER = ['temperature', 'humidity', 'rain', 'dewpoint']
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        end_time = datetime.now(timezone.utc)
-        start_time = end_time - timedelta(hours=3)
-
         station_id = self.kwargs.get('station_id', None)
 
         backend_proxy = CachedBackendProxy(BACKEND_URL, BACKEND_PORT, BACKEND_DO_USE_HTTPS)
         if not station_id:
             station_id = self._get_sorted_stations(backend_proxy)[-1]['value']
-        latest_data = backend_proxy.data([station_id], [], start_time, end_time)
-        available_sensors = backend_proxy.available_sensors()
+        available_sensors = self._get_available_sensors(backend_proxy)
+        latest_data = backend_proxy.latest_data()
 
         if len(latest_data) > 0:
-            sensor_data = []
-            special_sensor_data = []
-            for sensor_id, values in latest_data[station_id].items():
-                if sensor_id == 'timepoint':
-                    continue
+            sensor_data, special_sensor_data = self._get_human_readable_sensor_data(available_sensors, latest_data,
+                                                                                    station_id)
 
-                if sensor_id == 'temperature_humidity':
-                    for temp_humid_sensor_id, subsensors in values.items():
-                        for subsensor_id, sub_values in subsensors.items():
-                            sensor_data.append(
-                                self._get_subsensor_data(subsensor_id, temp_humid_sensor_id, sub_values[-1],
-                                                         available_sensors))
-                else:
-                    this_sensor_data = self._get_sensor_data(sensor_id, values[-1], available_sensors)
-                    self._replace_sensor_descriptions(this_sensor_data)
-
-                    if sensor_id not in LatestDataView.SPECIAL_SENSOR_IDS:
-                        sensor_data.append(this_sensor_data)
-                    else:
-                        special_sensor_data.append(this_sensor_data)
-
-            sensor_data = sorted(sensor_data, key=lambda d: d['description'])
-
-            context['time_point'] = datetime.fromisoformat(latest_data[station_id]['timepoint'][-1])
+            context['time_point'] = datetime.fromisoformat(latest_data[station_id]['timepoint'])
             context['sensor_data'] = sorted(sensor_data, key=lambda d: d['description'])
             context['special_sensor_data'] = sorted(special_sensor_data, key=lambda d: d['description'])
 
         return context
 
     @staticmethod
+    def _get_available_sensors(backend_proxy):
+        available_sensors = backend_proxy.available_sensors()
+
+        available_sensors[1]['rain_last_day'] = {'description': 'Regen (letzte 24 Stunden)', 'unit': 'mm'}
+        available_sensors[1]['rain_last_hour'] = {'description': 'Regen (letzte Stunde)', 'unit': 'mm'}
+
+        return available_sensors
+
+    def _get_human_readable_sensor_data(self, available_sensors, latest_data, station_id):
+        sensor_data = []
+        special_sensor_data = []
+
+        for sensor_id, value in latest_data[station_id].items():
+            if sensor_id == 'timepoint':
+                continue
+
+            if sensor_id == 'temperature_humidity':
+                for temp_humid_sensor_id, subsensors in value.items():
+                    for subsensor_id, sub_value in subsensors.items():
+                        sensor_data.append(self._get_subsensor_data(subsensor_id, temp_humid_sensor_id, sub_value,
+                                                                    available_sensors))
+            else:
+                this_sensor_data = self._get_sensor_data(sensor_id, value, available_sensors)
+                self._replace_sensor_descriptions(this_sensor_data)
+
+                if sensor_id not in LatestDataView.SPECIAL_SENSOR_IDS:
+                    sensor_data.append(this_sensor_data)
+                else:
+                    special_sensor_data.append(this_sensor_data)
+
+        return sensor_data, special_sensor_data
+
+    @staticmethod
     def _replace_sensor_descriptions(this_sensor_data):
-        if this_sensor_data['description'] == 'Regen':
-            this_sensor_data['description'] = 'Regen (letzte 24 Stunden)'
-        if this_sensor_data['description'] == 'Regenrate':
-            this_sensor_data['description'] = 'Regen (letzte 10 Minuten)'
         if this_sensor_data['description'] == 'Windböen':
             this_sensor_data['description'] = 'Böen (letzte 10 Minuten)'
         if this_sensor_data['description'] == 'Windgeschwindigkeit':
@@ -137,10 +142,14 @@ class LatestDataView(FormView):
 
     @staticmethod
     def _get_presented_value(last_value, unit):
-        if unit == '%' or unit == '°':
-            presented_value = f'{last_value}{unit}'
+        if last_value is None:
+            presented_value = '-'
         else:
-            presented_value = f'{last_value} {unit}'
+            if unit == '%' or unit == '°':
+                presented_value = f'{last_value}{unit}'
+            else:
+                presented_value = f'{last_value} {unit}'
+
         return presented_value
 
     def get_initial(self):
@@ -170,5 +179,4 @@ class LatestDataView(FormView):
         return kwargs
 
     def form_valid(self, form):
-        return HttpResponseRedirect(
-            reverse('weatherpage:latest_station', kwargs={'station_id': form.data['station']}))
+        return HttpResponseRedirect(reverse('weatherpage:latest_station', kwargs={'station_id': form.data['station']}))
