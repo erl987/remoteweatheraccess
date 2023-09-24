@@ -264,4 +264,5 @@ if is_on_google_cloud_run():
         },
     }
 
-setlocale(LC_ALL, env.str('LANGUAGE_CODE'))
+if 'TEST_MODE' not in environ:
+    setlocale(LC_ALL, env.str('LANGUAGE_CODE'))
