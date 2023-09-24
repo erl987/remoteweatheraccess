@@ -146,9 +146,9 @@ class LatestDataView(FormView):
             presented_value = '-'
         else:
             if unit == '%' or unit == '°':
-                presented_value = f'{last_value}{unit}'
+                presented_value = f'{format_string("%.1f", last_value)}{unit}'
             else:
-                presented_value = f'{last_value} {unit}'
+                presented_value = f'{format_string("%.1f", last_value)} {unit}'
 
         return presented_value
 
