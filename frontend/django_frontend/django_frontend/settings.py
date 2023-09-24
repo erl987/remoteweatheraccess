@@ -264,5 +264,4 @@ if is_on_google_cloud_run():
         },
     }
 
-print('Language code: ' + env.str('LANGUAGE_CODE'))
 setlocale(LC_ALL, env.str('LANGUAGE_CODE'))
