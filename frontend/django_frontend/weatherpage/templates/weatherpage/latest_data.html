@@ -27,10 +27,29 @@
         </form>
     </div>
     <div class="row m-2">
+        <div class="col-12 mt-4">
+            <p><strong>Zeitpunkt:</strong> {{ time_point|date:'d.m.Y H:i' }}</p>
+        </div>
+        <div class="col-12">
+            {% if status == 'current' %}
+                <p><strong>Datenübertragung: </strong><span class="icon-green"><i class="bi bi-check-circle"></i>
+                    aktuell</span></p>
+            {% elif status == 'delayed' %}
+                <p><strong>Datenübertragung: </strong><span class="icon-orange"><i
+                        class="bi bi-exclamation-triangle"></i>
+                    verzögert</span>
+                </p>
+            {% else %}
+                <p><strong>Datenübertragung: </strong><span class="icon-red"><i class="bi bi-exclamation-circle"></i>
+                    gestört</span>
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row m-2">
         <div class="col-12">
             <div class="mt-4">
-                <p><strong>Zeitpunkt:</strong> {{ time_point|date:'d.m.Y H:i' }}</p>
-
                 <div id="accordion">
                     <div class="card">
                         <div class="card-header" id="headingGeneral">
