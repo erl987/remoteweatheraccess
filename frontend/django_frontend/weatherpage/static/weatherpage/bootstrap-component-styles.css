@@ -32,3 +32,15 @@ ul.nav a:hover {
     background-color: white;
     color: black;
 }
+
+.icon-green {
+    color: green;
+}
+
+.icon-orange{
+    color: orange;
+}
+
+.icon-red {
+    color: red;
+}

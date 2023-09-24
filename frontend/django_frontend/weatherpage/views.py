@@ -14,7 +14,8 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+from locale import format_string
 from os import environ
 
 from django.http import HttpResponseRedirect
@@ -73,11 +74,23 @@ class LatestDataView(FormView):
             sensor_data, special_sensor_data = self._get_human_readable_sensor_data(available_sensors, latest_data,
                                                                                     station_id)
 
-            context['time_point'] = datetime.fromisoformat(latest_data[station_id]['timepoint'])
+            time_point = datetime.fromisoformat(latest_data[station_id]['timepoint'])
+
+            context['time_point'] = time_point
             context['sensor_data'] = sorted(sensor_data, key=lambda d: d['description'])
             context['special_sensor_data'] = sorted(special_sensor_data, key=lambda d: d['description'])
+            context['status'] = self._get_transmission_status(time_point)
 
         return context
+
+    @staticmethod
+    def _get_transmission_status(time_point):
+        if (datetime.now(timezone.utc) - time_point) <= timedelta(minutes=10):
+            return 'current'
+        elif (datetime.now(timezone.utc) - time_point) <= timedelta(hours=1):
+            return 'delayed'
+        else:
+            return 'interrupted'
 
     @staticmethod
     def _get_available_sensors(backend_proxy):
