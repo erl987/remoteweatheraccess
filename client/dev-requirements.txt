@@ -8,6 +8,7 @@ annotated-types==0.5.0
     # via pydantic
 anyio==3.7.1
     # via
+    #   fastapi
     #   httpcore
     #   starlette
     #   watchfiles
@@ -16,27 +17,25 @@ certifi==2023.7.22
     #   httpcore
     #   httpx
     #   requests
-charset-normalizer==3.2.0
+charset-normalizer==3.3.0
     # via requests
-click==8.1.6
+click==8.1.7
     # via uvicorn
-dnspython==2.4.0
+dnspython==2.4.2
     # via email-validator
 email-validator==2.0.0.post2
     # via fastapi
-fastapi[all]==0.100.0
+fastapi[all]==0.103.2
     # via -r dev-requirements.in
 h11==0.14.0
     # via
     #   httpcore
     #   uvicorn
-httpcore==0.17.3
-    # via
-    #   dnspython
-    #   httpx
+httpcore==0.18.0
+    # via httpx
 httptools==0.6.0
     # via uvicorn
-httpx==0.24.1
+httpx==0.25.0
     # via fastapi
 idna==3.4
     # via
@@ -52,24 +51,24 @@ jinja2==3.1.2
     # via fastapi
 markupsafe==2.1.3
     # via jinja2
-orjson==3.9.2
+orjson==3.9.7
     # via fastapi
 packaging==23.1
     # via pytest
-pluggy==1.2.0
+pluggy==1.3.0
     # via pytest
-pydantic==2.0.3
+pydantic==2.4.2
     # via
     #   fastapi
     #   pydantic-extra-types
     #   pydantic-settings
-pydantic-core==2.3.0
+pydantic-core==2.10.1
     # via pydantic
-pydantic-extra-types==2.0.0
+pydantic-extra-types==2.1.0
     # via fastapi
-pydantic-settings==2.0.2
+pydantic-settings==2.0.3
     # via fastapi
-pytest==7.4.0
+pytest==7.4.2
     # via -r dev-requirements.in
 python-dotenv==1.0.0
     # via
@@ -90,25 +89,24 @@ six==1.16.0
 sniffio==1.3.0
     # via
     #   anyio
-    #   dnspython
     #   httpcore
     #   httpx
 starlette==0.27.0
     # via fastapi
-typing-extensions==4.7.1
+typing-extensions==4.8.0
     # via
     #   fastapi
     #   pydantic
     #   pydantic-core
 ujson==5.8.0
     # via fastapi
-urllib3==2.0.4
+urllib3==2.0.5
     # via requests
-uvicorn[standard]==0.23.1
+uvicorn[standard]==0.23.2
     # via fastapi
 uvloop==0.17.0
     # via uvicorn
-watchfiles==0.19.0
+watchfiles==0.20.0
     # via uvicorn
 websockets==11.0.3
     # via uvicorn

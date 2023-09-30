@@ -89,8 +89,8 @@ def _create_header_data_frames(pc_wetterstation_sensor_ids, sensor_names, sensor
     header_2_df = header_2_df.reindex(columns=header_2_df.columns[sorted_indices])
 
     # remove the dummy sensor indices for date and time
-    header_2_df.iloc[0, 0] = ''
-    header_2_df.iloc[0, 1] = ''
+    header_2_df.iloc[0, 0] = np.nan
+    header_2_df.iloc[0, 1] = np.nan
 
     return header_1_df, header_2_df
 
