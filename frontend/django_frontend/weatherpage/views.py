@@ -68,13 +68,12 @@ class LatestDataView(FormView):
         if not station_id:
             station_id = self._get_sorted_stations(backend_proxy)[-1]['value']
         available_sensors = self._get_available_sensors(backend_proxy)
-        latest_data = backend_proxy.latest_data()
+        latest_data = backend_proxy.latest_data(station_id)
 
         if len(latest_data) > 0:
-            sensor_data, special_sensor_data = self._get_human_readable_sensor_data(available_sensors, latest_data,
-                                                                                    station_id)
+            sensor_data, special_sensor_data = self._get_human_readable_sensor_data(available_sensors, latest_data)
 
-            time_point = datetime.fromisoformat(latest_data[station_id]['timepoint'])
+            time_point = datetime.fromisoformat(latest_data['timepoint'])
 
             context['time_point'] = time_point
             context['sensor_data'] = sorted(sensor_data, key=lambda d: d['description'])
@@ -101,11 +100,11 @@ class LatestDataView(FormView):
 
         return available_sensors
 
-    def _get_human_readable_sensor_data(self, available_sensors, latest_data, station_id):
+    def _get_human_readable_sensor_data(self, available_sensors, latest_data):
         sensor_data = []
         special_sensor_data = []
 
-        for sensor_id, value in latest_data[station_id].items():
+        for sensor_id, value in latest_data.items():
             if sensor_id == 'timepoint':
                 continue
 

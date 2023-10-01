@@ -51,10 +51,11 @@ class CachedBackendProxy(object, metaclass=Singleton):
         logger.info('Received data for all available sensors from the backend')
         return available_sensors, available_sensors_data
 
-    def latest_data(self):
-        latest_data = cache.get_or_set('latest-data', self._backend.get_latest_data(),
+    def latest_data(self, station):
+        cache_key = self._get_latest_data_request_cache_key(station)
+        latest_data = cache.get_or_set(cache_key, self._backend.get_latest_data(station),
                                        timeout=5 * 60)  # caching period in seconds
-        logger.info('Received latest data for all stations from the backend')
+        logger.info(f'Received latest data for the station {station} from the backend')
         return latest_data
 
     def available_stations(self):
@@ -103,6 +104,11 @@ class CachedBackendProxy(object, metaclass=Singleton):
         cache_key = md5(f'{chosen_stations_str}-{chosen_sensors_str}-{start_time}-{end_time}'.encode()).hexdigest()
         return f'weather-data-{cache_key}'
 
+    @staticmethod
+    def _get_latest_data_request_cache_key(station):
+        cache_key = md5(f'{station}'.encode()).hexdigest()
+        return f'latest-data-{cache_key}'
+
 
 class BackendProxy(object):
     API_VERSION = '/api/v1'
@@ -141,8 +147,15 @@ class BackendProxy(object):
     def get_available_time_limits(self):
         return self._simple_get_request('data/limits')
 
-    def get_latest_data(self):
-        return self._simple_get_request('data/latest')
+    def get_latest_data(self, station):
+        r = self._http.get('{}://{}:{}{}/data/latest?station={}'.format(
+            self._scheme,
+            self._url,
+            self._port,
+            BackendProxy.API_VERSION,
+            station
+        ))
+        return r.json()
 
     def get_all_available_sensors(self):
         available_sensors = {}
