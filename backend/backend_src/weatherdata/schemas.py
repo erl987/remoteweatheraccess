@@ -60,8 +60,13 @@ class TimePeriodWithStationSchema(Schema):
     stations = marshmallow.fields.List(marshmallow.fields.String, required=True)
 
 
+class LatestTimePointSchema(Schema):
+    station = marshmallow.fields.String(required=True)
+
+
 # initialize the schemas
 time_period_with_sensors_and_stations_schema = TimePeriodWithSensorsAndStationsSchema()
 time_period_with_stations_schema = TimePeriodWithStationSchema()
 single_weather_dataset_schema = WeatherDatasetSchema()
 many_weather_datasets_schema = WeatherDatasetSchema(many=True)
+latest_time_point_schema = LatestTimePointSchema()

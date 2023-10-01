@@ -27,7 +27,8 @@ from sqlalchemy import column
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.elements import Tuple
 
-from .schemas import single_weather_dataset_schema, time_period_with_sensors_and_stations_schema
+from .schemas import single_weather_dataset_schema, time_period_with_sensors_and_stations_schema, \
+    latest_time_point_schema
 from .schemas import time_period_with_stations_schema, many_weather_datasets_schema
 from ..exceptions import APIError
 from ..extensions import db
@@ -436,11 +437,20 @@ def _get_first_and_last_time_point():
     return first_time_point, last_time_point
 
 
+def _get_last_time_point_for_station(station_id):
+    result = (db.session.query(db.func.max(WeatherDataset.timepoint).label('max_time'))
+              .filter_by(station_id=station_id).one())
+    last_time_point = result.max_time
+    return last_time_point
+
+
 @weatherdata_blueprint.route('/latest', methods=['GET'])
 @access_level_required(Role.GUEST)
 @with_rollback_and_raise_exception
 def get_latest_data():
-    _, last_time_point = _get_first_and_last_time_point()
+    station_id = latest_time_point_schema.load(request.args.to_dict())['station']
+
+    last_time_point = _get_last_time_point_for_station(station_id)
 
     if not last_time_point:
         return jsonify({}), HTTPStatus.OK
@@ -449,12 +459,12 @@ def get_latest_data():
     found_datasets_per_station, _ = _perform_get_weather_datasets(first_time_point,
                                                                   last_time_point,
                                                                   [],  # all
-                                                                  [])  # all
+                                                                  [station_id])
 
     if len(found_datasets_per_station) == 0:
         raise APIError('Did not find any dataset when requesting the latest data')
 
-    latest_dataset = _get_latest_dataset(found_datasets_per_station)
+    latest_dataset = _get_latest_dataset(found_datasets_per_station[station_id])
 
     response = jsonify(latest_dataset)
     response.status_code = HTTPStatus.OK
@@ -463,64 +473,45 @@ def get_latest_data():
     return response
 
 
-def _get_latest_dataset(found_datasets_per_station):
+def _get_latest_dataset(found_datasets):
     latest_dataset = {}
 
-    for station_id in found_datasets_per_station:
-        if station_id not in latest_dataset:
-            latest_dataset[station_id] = {}
-        curr_dataset = latest_dataset[station_id]
+    for sensor_id, entry in found_datasets.items():
+        if sensor_id == 'temperature_humidity':
+            if 'temperature_humidity' not in latest_dataset:
+                latest_dataset['temperature_humidity'] = {}
 
-        for sensor_id, entry in found_datasets_per_station[station_id].items():
-            if sensor_id == 'temperature_humidity':
-                if 'temperature_humidity' not in curr_dataset:
-                    curr_dataset['temperature_humidity'] = {}
+            for temp_humid_sensor_id, temp_humid_entry in entry.items():
+                if temp_humid_sensor_id not in latest_dataset['temperature_humidity']:
+                    latest_dataset['temperature_humidity'][temp_humid_sensor_id] = {}
 
-                for temp_humid_sensor_id, temp_humid_entry in entry.items():
-                    if temp_humid_sensor_id not in curr_dataset['temperature_humidity']:
-                        curr_dataset['temperature_humidity'][temp_humid_sensor_id] = {}
+                for temp_humid_quantity_id, temp_humid_quantity_entry in temp_humid_entry.items():
+                    latest_dataset[sensor_id][temp_humid_sensor_id][temp_humid_quantity_id] = \
+                        temp_humid_quantity_entry[-1]
+        else:
+            latest_dataset[sensor_id] = entry[-1]
 
-                    for temp_humid_quantity_id, temp_humid_quantity_entry in temp_humid_entry.items():
-                        curr_dataset[sensor_id][temp_humid_sensor_id][temp_humid_quantity_id] = \
-                            temp_humid_quantity_entry[-1]
-            else:
-                curr_dataset[sensor_id] = entry[-1]
-
-    rain_last_day, rain_last_hour = _get_rain_data(found_datasets_per_station)
-    for station_id in found_datasets_per_station:
-        latest_dataset[station_id]['rain_last_hour'] = rain_last_hour[station_id]
-        latest_dataset[station_id]['rain_last_day'] = rain_last_day[station_id]
-        del latest_dataset[station_id]['rain']
-        del latest_dataset[station_id]['rain_rate']
+    rain_last_day, rain_last_hour = _get_rain_data(found_datasets)
+    latest_dataset['rain_last_hour'] = rain_last_hour
+    latest_dataset['rain_last_day'] = rain_last_day
+    del latest_dataset['rain']
+    del latest_dataset['rain_rate']
 
     return latest_dataset
 
 
-def _get_rain_data(found_datasets_per_station):
-    rain_last_hour = {}
-    rain_last_day = {}
+def _get_rain_data(found_datasets):
+    one_hour_index = _get_index_for_time_period_before_latest(1, found_datasets)
+    one_day_index = _get_index_for_time_period_before_latest(24, found_datasets)
 
-    for station_id in found_datasets_per_station:
-        if station_id not in rain_last_hour:
-            rain_last_hour[station_id] = {}
-        if station_id not in rain_last_day:
-            rain_last_day[station_id] = {}
-
-        one_hour_index = _get_index_for_time_period_before_latest(1,
-                                                                  found_datasets_per_station[station_id])
-        one_day_index = _get_index_for_time_period_before_latest(24,
-                                                                 found_datasets_per_station[station_id])
-
-        if one_hour_index is not None:
-            rain_last_hour[station_id] = found_datasets_per_station[station_id]['rain'][-1] - \
-                                         found_datasets_per_station[station_id]['rain'][one_hour_index]
-        else:
-            rain_last_hour[station_id] = None
-        if one_day_index is not None:
-            rain_last_day[station_id] = found_datasets_per_station[station_id]['rain'][-1] - \
-                                        found_datasets_per_station[station_id]['rain'][one_day_index]
-        else:
-            rain_last_day[station_id] = None
+    if one_hour_index is not None:
+        rain_last_hour = found_datasets['rain'][-1] - found_datasets['rain'][one_hour_index]
+    else:
+        rain_last_hour = None
+    if one_day_index is not None:
+        rain_last_day = found_datasets['rain'][-1] - found_datasets['rain'][one_day_index]
+    else:
+        rain_last_day = None
 
     return rain_last_day, rain_last_hour
 
