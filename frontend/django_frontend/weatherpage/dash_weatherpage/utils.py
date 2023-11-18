@@ -67,7 +67,22 @@ def _get_temp_humidity_sensor_id(sensor_id):
     return sensor_id.split('_')[0]
 
 
+def _is_temp_humidity_sensor(sensor_id):
+    if is_temp_sensor(sensor_id):
+        return True
+    elif is_humidity_sensor(sensor_id):
+        return True
+    elif is_dewpoint_sensor(sensor_id):
+        return True
+    else:
+        return False
+
+
 def get_sensor_data(data, station_id, sensor_id):
+    if (_is_temp_humidity_sensor(sensor_id) and
+            _get_temp_humidity_sensor_id(sensor_id) not in data[station_id]['temperature_humidity']):
+        return []
+
     if is_temp_sensor(sensor_id):
         sensor_data = data[station_id]['temperature_humidity'][_get_temp_humidity_sensor_id(sensor_id)]['temperature']
     elif is_humidity_sensor(sensor_id):
