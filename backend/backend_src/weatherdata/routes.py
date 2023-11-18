@@ -186,7 +186,7 @@ def get_weather_datasets():
                                  .filter(WeatherDataset.timepoint >= first)
                                  .filter(WeatherDataset.timepoint <= last)
                                  .filter(WeatherDataset.station_id.in_(requested_stations))
-                                 .join(WeatherDataset.temperature_humidity)
+                                 .join(WeatherDataset.temperature_humidity, isouter=True)
                                  .order_by(WeatherDataset.timepoint).with_entities(WeatherDataset.timepoint,
                                                                                    WeatherDataset.station_id,
                                                                                    TempHumiditySensorData.sensor_id,
