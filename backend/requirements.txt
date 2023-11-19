@@ -89,7 +89,7 @@ packaging==23.1
     #   gunicorn
     #   marshmallow
     #   marshmallow-sqlalchemy
-pandas==2.1.1
+pandas==2.1.3
     # via -r requirements.in
 proto-plus==1.22.3
     # via google-cloud-secret-manager
