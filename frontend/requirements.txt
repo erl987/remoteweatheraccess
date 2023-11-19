@@ -102,7 +102,7 @@ googleapis-common-protos[grpc]==1.60.0
     #   google-cloud-audit-log
     #   grpc-google-iam-v1
     #   grpcio-status
-grpc-google-iam-v1==0.12.6
+grpc-google-iam-v1==0.12.7
     # via
     #   google-cloud-logging
     #   google-cloud-secret-manager
