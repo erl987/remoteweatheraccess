@@ -5,9 +5,43 @@
   ],
   "packageRules": [
     {
-      "matchUpdateTypes": ["minor", "patch"],
-      "matchCurrentVersion": "!/^0/",
-      "automerge": true
+      "description": "Automatically merge minor and patch-level updates",
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "automerge": true,
+    },
+    {
+      "description": "Disables the creation of branches/PRs for any minor/patch updates etc. of Renovate bot",
+      "matchPaths": [
+        "renovate-update-notification/Dockerfile"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest",
+        "rollback"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Causes the bot to create a PR (and thus, an email notification), whenever there is a new major Renovate version",
+      "matchPaths": [
+        "renovate-update-notification/Dockerfile"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": false,
+      "prCreation": "immediate"
     }
-  ]
+  ],
+  "platformAutomerge": true,
+  "rebaseWhen": "behind-base-branch",
+  "rollbackPrs": true,
+  "dependencyDashboard": true,
+  "dependencyDashboardAutoclose": true
 }
