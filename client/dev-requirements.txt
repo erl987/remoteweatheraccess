@@ -68,7 +68,7 @@ pydantic-extra-types==2.1.0
     # via fastapi
 pydantic-settings==2.0.3
     # via fastapi
-pytest==7.4.2
+pytest==7.4.3
     # via -r dev-requirements.in
 python-dotenv==1.0.0
     # via
