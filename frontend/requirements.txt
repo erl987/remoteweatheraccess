@@ -55,7 +55,7 @@ django-environ==0.11.2
     # via -r requirements.in
 django-plotly-dash==2.2.2
     # via -r requirements.in
-django-storages[google]==1.14.1
+django-storages[google]==1.14.2
     # via -r requirements.in
 dpd-components==0.1.0
     # via django-plotly-dash
