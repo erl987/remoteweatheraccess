@@ -88,7 +88,7 @@ google-cloud-logging==3.7.0
     # via -r requirements.in
 google-cloud-secret-manager==2.16.4
     # via -r requirements.in
-google-cloud-storage==2.11.0
+google-cloud-storage==2.13.0
     # via
     #   -r requirements.in
     #   django-storages
