@@ -12,7 +12,7 @@ anyio==3.7.1
     #   httpcore
     #   starlette
     #   watchfiles
-certifi==2023.7.22
+certifi==2023.11.17
     # via
     #   httpcore
     #   httpx
