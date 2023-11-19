@@ -95,7 +95,7 @@ default:
     --location ${GCP_REGION}
 
 .gcp_deploy: &gcp_deploy
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:431.0.0
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:455.0.0
   script:
     - *gcp_cloud_login
     - *install_gettext
@@ -307,7 +307,7 @@ stop review:
   stage: cleanup review
   dependencies:
     - deploy review
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:431.0.0
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:455.0.0
   script:
     - *gcp_cloud_login
     - gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet
