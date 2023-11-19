@@ -225,7 +225,7 @@ You could use any other editor to edit the configuration file.
 
 The client software gets finally installed as described here. **Note that the `Dockerfile` is using a base image
 suitable for Raspberry Pi 2+ computers**, this base image needs to be replaced by a regular Python image (such as
-`FROM python:3.11.5-slim-bookworm`) for other computer architectures.
+`FROM python:3.11.6-slim-bookworm`) for other computer architectures.
 
 > **_NOTE:_**  **Docker Compose** must be available on the machine.
 

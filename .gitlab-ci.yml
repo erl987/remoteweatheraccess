@@ -14,7 +14,7 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.11.5-bookworm
+image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.11.6-bookworm
 
 include:
   - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'

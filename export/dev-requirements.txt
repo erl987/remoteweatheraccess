@@ -4,12 +4,12 @@
 #
 #    pip-compile dev-requirements.in
 #
-annotated-types==0.5.0
+annotated-types==0.6.0
     # via pydantic
 anyio==3.7.1
     # via
     #   fastapi
-    #   httpcore
+    #   httpx
     #   starlette
     #   watchfiles
 certifi==2023.11.17
@@ -23,15 +23,15 @@ click==8.1.7
     # via uvicorn
 dnspython==2.4.2
     # via email-validator
-email-validator==2.0.0.post2
+email-validator==2.1.0.post1
     # via fastapi
-fastapi[all]==0.103.2
+fastapi[all]==0.104.1
     # via -r dev-requirements.in
 h11==0.14.0
     # via
     #   httpcore
     #   uvicorn
-httpcore==0.18.0
+httpcore==1.0.2
     # via httpx
 httptools==0.6.1
     # via uvicorn
@@ -53,20 +53,20 @@ markupsafe==2.1.3
     # via jinja2
 orjson==3.9.10
     # via fastapi
-packaging==23.1
+packaging==23.2
     # via pytest
 pluggy==1.3.0
     # via pytest
-pydantic==2.4.2
+pydantic==2.5.1
     # via
     #   fastapi
     #   pydantic-extra-types
     #   pydantic-settings
-pydantic-core==2.10.1
+pydantic-core==2.14.3
     # via pydantic
 pydantic-extra-types==2.1.0
     # via fastapi
-pydantic-settings==2.0.3
+pydantic-settings==2.1.0
     # via fastapi
 pytest==7.4.3
     # via -r dev-requirements.in
@@ -89,7 +89,6 @@ six==1.16.0
 sniffio==1.3.0
     # via
     #   anyio
-    #   httpcore
     #   httpx
 starlette==0.27.0
     # via fastapi
@@ -100,13 +99,13 @@ typing-extensions==4.8.0
     #   pydantic-core
 ujson==5.8.0
     # via fastapi
-urllib3==2.0.5
+urllib3==2.1.0
     # via requests
-uvicorn[standard]==0.23.2
+uvicorn[standard]==0.24.0.post1
     # via fastapi
-uvloop==0.17.0
+uvloop==0.19.0
     # via uvicorn
-watchfiles==0.20.0
+watchfiles==0.21.0
     # via uvicorn
-websockets==11.0.3
+websockets==12.0
     # via uvicorn
