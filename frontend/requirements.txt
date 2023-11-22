@@ -10,7 +10,7 @@ asgiref==3.7.2
     #   django
 blinker==1.7.0
     # via flask
-boto3==1.29.5
+boto3==1.29.6
     # via -r requirements.in
 botocore==1.32.6
     # via
