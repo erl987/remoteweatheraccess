@@ -43,7 +43,7 @@ googleapis-common-protos==1.61.0
     # via google-api-core
 h11==0.14.0
     # via uvicorn
-idna==3.4
+idna==3.5
     # via
     #   anyio
     #   requests
