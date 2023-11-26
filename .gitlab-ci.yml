@@ -96,6 +96,7 @@ default:
 
 .gcp_deploy: &gcp_deploy
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:455.0.0
+  resource_group: deploy
   script:
     - *gcp_cloud_login
     - *install_gettext
