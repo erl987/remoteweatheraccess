@@ -306,6 +306,7 @@ deploy review:
 
 stop review:
   stage: cleanup review
+  resource_group: review
   dependencies:
     - deploy review
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:455.0.0
