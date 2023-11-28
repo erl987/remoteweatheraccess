@@ -41,6 +41,10 @@
       ],
       "automerge": false,
       "prCreation": "immediate"
+    },
+    {
+      "matchPackagePatterns": ["^boto"],
+      "enabled": false
     }
   ],
   "platformAutomerge": true,
