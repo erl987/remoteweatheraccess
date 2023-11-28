@@ -30,7 +30,7 @@ variables:
   PIP_CACHE_DIR: ${CI_PROJECT_DIR}/.cache/pip
   DOCKER_TLS_CERTDIR: "/certs"
   BRAND_NAME: ${BRAND_NAME}
-  EXPORTER_SCHEDULER_JOB_NAME: export-csv-job
+  EXPORTER_SCHEDULER_JOB_NAME: export-csv-job-${CI_COMMIT_REF_SLUG}
   EXPORTER_BUCKET_ID: weather-export-data-
   EXPORTER_CSV_FILE_DIR: /tmp
   FRONTEND_BUCKET_ID: frontend-static-
@@ -81,7 +81,7 @@ default:
   - printf "$(cat ./frontend/environments/.frontend.production.env)" "$(< /dev/urandom tr -cd '[:graph:]'| tr  -d '\\' | head -c 232; echo)" "${FRONTEND_ADDRESS}" "${EXPORTER_BUCKET}" | gcloud secrets versions add frontend-settings --data-file=-
 
 .gcp_cloud_scheduler_job: &gcp_cloud_scheduler_job
-  - existing_scheduler_jobs=$(gcloud scheduler jobs list --format 'value(name)' --location ${GCP_REGION})
+  - existing_scheduler_jobs=$(gcloud scheduler jobs list --format 'value(name)' --filter "name ~ ${EXPORTER_SCHEDULER_JOB_NAME}" --location ${GCP_REGION})
   - num_scheduler_jobs=$(wc -w <<< "$existing_scheduler_jobs")
   - if [ $num_scheduler_jobs != 0 ]; then gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet  --location ${GCP_REGION} ; fi
   - gcloud scheduler jobs create http ${EXPORTER_SCHEDULER_JOB_NAME}
@@ -312,7 +312,7 @@ stop review:
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:455.0.0
   script:
     - *gcp_cloud_login
-    - gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet
+    - gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet --location ${GCP_REGION}
     - gcloud run services delete ${FRONTEND_SERVICE_NAME}
       --region=${GCP_FRONTEND_REGION}
       --platform=managed
