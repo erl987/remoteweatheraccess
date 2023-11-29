@@ -14,10 +14,6 @@
       "automerge": true
     },
     {
-      "matchPackagePatterns": ["postgres"],
-      "enabled": false
-    },
-    {
       "description": "Disables the creation of branches/PRs for any minor/patch updates etc. of Renovate bot",
       "matchPaths": [
         "renovate-update-notification/Dockerfile"
@@ -47,14 +43,21 @@
       "enabled": false
     },
     {
-      "enabled": false,
+      "matchPackagePatterns": ["postgres"],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
+    },
+    {
       "matchPackageNames": [
         "python"
       ],
       "matchUpdateTypes": [
         "major",
         "minor"
-      ]
+      ],
+      "enabled": false
     },
     {
       "separateMinorPatch": true,
