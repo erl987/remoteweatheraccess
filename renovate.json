@@ -45,6 +45,22 @@
     {
       "matchPackagePatterns": ["^boto"],
       "enabled": false
+    },
+    {
+      "enabled": false,
+      "matchPackageNames": [
+        "python"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor"
+      ]
+    },
+    {
+      "separateMinorPatch": true,
+      "matchPackageNames": [
+        "python"
+      ]
     }
   ],
   "platformAutomerge": true,
