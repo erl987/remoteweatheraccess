@@ -179,7 +179,7 @@ requests==2.31.0
     #   google-cloud-storage
 rsa==4.9
     # via google-auth
-s3transfer==0.7.0
+s3transfer==0.8.2
     # via boto3
 six==1.16.0
     # via python-dateutil
