@@ -43,6 +43,10 @@
       "enabled": false
     },
     {
+      "matchPackagePatterns": ["s3transfer"],
+      "enabled": false
+    },
+    {
       "matchPackagePatterns": ["postgres"],
       "matchUpdateTypes": [
         "major"
