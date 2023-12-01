@@ -75,5 +75,6 @@
   "rebaseWhen": "behind-base-branch",
   "rollbackPrs": true,
   "dependencyDashboard": true,
-  "dependencyDashboardAutoclose": true
+  "dependencyDashboardAutoclose": true,
+  "dependencyDashboardOSVVulnerabilitySummary": "all"
 }
