@@ -3,6 +3,7 @@
   "extends": [
     "config:recommended"
   ],
+  "labels": ["dependency-update"],
   "packageRules": [
     {
       "description": "Automatically merge minor and patch-level updates",
