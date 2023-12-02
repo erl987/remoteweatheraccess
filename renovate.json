@@ -71,6 +71,9 @@
       ]
     }
   ],
+  "docker": {
+    "enabled": false
+  },
   "platformAutomerge": true,
   "rebaseWhen": "behind-base-branch",
   "rollbackPrs": true,
