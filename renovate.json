@@ -69,6 +69,15 @@
       "matchPackageNames": [
         "python"
       ]
+    },
+    {
+      "matchPackageNames": [
+        "google/cloud-sdk"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": true
     }
   ],
   "platformAutomerge": true,
