@@ -91,7 +91,7 @@ packaging==23.2
     #   marshmallow-sqlalchemy
 pandas==2.1.3
     # via -r requirements.in
-proto-plus==1.22.3
+proto-plus==1.23.0
     # via google-cloud-secret-manager
 protobuf==4.25.1
     # via
