@@ -80,7 +80,7 @@ google-cloud-appengine-logging==1.4.0
     # via google-cloud-logging
 google-cloud-audit-log==0.2.5
     # via google-cloud-logging
-google-cloud-core==2.4.0
+google-cloud-core==2.4.1
     # via
     #   google-cloud-logging
     #   google-cloud-storage
