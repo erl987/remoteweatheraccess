@@ -44,7 +44,7 @@ googleapis-common-protos[grpc]==1.62.0
     #   google-api-core
     #   grpc-google-iam-v1
     #   grpcio-status
-greenlet==3.0.1
+greenlet==3.0.2
     # via
     #   gevent
     #   sqlalchemy
