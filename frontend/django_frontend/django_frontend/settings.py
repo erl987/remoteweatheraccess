@@ -51,14 +51,15 @@ env_file = getenv('ENV_PATH', None)
 if env_file and path.isfile(env_file):
     env.read_env(env_file)
     print(f'Using environment file: {env_file}')
-elif IS_ON_GOOGLE_CLOUD_PLATFORM:
-    SECRET_KEY = load_environment_from_secret_manager()
-    print(f'Using environment settings from Google Secret Manager')
 else:
-    raise FileNotFoundError('No local .env file and not running on Google Cloud Run')
+    raise FileNotFoundError('No local .env file')
 
-if not IS_ON_GOOGLE_CLOUD_PLATFORM:
+if IS_ON_GOOGLE_CLOUD_PLATFORM:
+    SECRET_KEY = load_environment_from_secret_manager()
+    print(f'Using Django secret key from Google Secret Manager')
+else:
     SECRET_KEY = env.str('SECRET_KEY')
+    print(f'Using Django secret key from environment variable')
 
 # trigger the startup of the backend service as early as possible
 p = Process(target=trigger_startup_of_backend_service)
