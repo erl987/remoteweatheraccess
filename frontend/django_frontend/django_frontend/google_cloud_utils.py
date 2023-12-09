@@ -15,7 +15,6 @@
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from http import HTTPStatus
-from io import StringIO
 from os import getenv, environ
 
 from google.auth import default
@@ -126,11 +125,10 @@ def load_db_password_from_secret_manager():
     return db_frontend_user_password
 
 
-def load_environment_from_secret_manager(env):
+def load_environment_from_secret_manager():
     _, gcp_project_id = get_gcp_credentials_and_project_id()
     secrets = SecretManager(gcp_project_id)
-    environment_settings = secrets.load(environ.get('SETTINGS_SECRET_NAME'), 'latest')
-    env.read_env(StringIO(environment_settings))
+    return secrets.load(environ.get('SECRET_DJANGO_SECRET_KEY_NAME'), 'latest')
 
 
 def configure_gcp_logging():

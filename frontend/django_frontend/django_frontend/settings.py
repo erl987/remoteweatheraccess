@@ -50,11 +50,12 @@ IS_ON_GOOGLE_CLOUD_PLATFORM = is_on_google_cloud_platform(env)
 env_file = getenv('ENV_PATH', None)
 if env_file and path.isfile(env_file):
     env.read_env(env_file)
+    SECRET_KEY = env.str('SECRET_KEY')
     print(f'Using environment file: {env_file}')
 
 elif IS_ON_GOOGLE_CLOUD_PLATFORM:
-    load_environment_from_secret_manager(env)
-    print(f'Using environment from Google Secret Manager')
+    SECRET_KEY = load_environment_from_secret_manager()
+    print(f'Using environment settings from Google Secret Manager')
 
 else:
     raise FileNotFoundError('No local .env file and not running on Google Cloud Run')
@@ -62,8 +63,6 @@ else:
 # trigger the startup of the backend service as early as possible
 p = Process(target=trigger_startup_of_backend_service)
 p.start()
-
-SECRET_KEY = env.str('SECRET_KEY')
 
 if IS_ON_GOOGLE_CLOUD_PLATFORM:
     DEBUG = False
@@ -79,9 +78,8 @@ else:
 if is_on_google_cloud_run():
     cloud_run_service_url = get_cloud_run_service_url()
 
-    ALLOWED_HOSTS = ([urlparse(cloud_run_service_url).netloc] +
-                     [urlparse(url).netloc for url in env.list('ALLOWED_URLS')])
-    CSRF_TRUSTED_ORIGINS = [cloud_run_service_url] + env.list('ALLOWED_URLS')
+    ALLOWED_HOSTS = [urlparse(cloud_run_service_url).netloc, urlparse(getenv('FRONTEND_ADDRESS')).netloc]
+    CSRF_TRUSTED_ORIGINS = [cloud_run_service_url, getenv('FRONTEND_ADDRESS')]
     SECURE_SSL_REDIRECT = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_HSTS_PRELOAD = True
