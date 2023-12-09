@@ -27,7 +27,7 @@ steps:
         -e EXPORTER_BUCKET_NAME=${_EXPORTER_BUCKET} \
         -e FRONTEND_ADDRESS=${_FRONTEND_ADDRESS} \
         -e SECRET_DJANGO_SECRET_KEY_NAME=${_SECRET_DJANGO_SECRET_KEY_NAME} \
-        -e ENV_PATH=/app/frontend/environments/.frontend.production.env \
+        -e ENV_PATH=${_FRONTEND_ENV_PATH} \
         -e DB_INSTANCE_CONNECTION_NAME=${PROJECT_ID}:${_SQL_DATABASE_ID} \
         -e FRONTEND_BUCKET=${_FRONTEND_BUCKET} \
         -e BACKEND_URL=${_BACKEND_URL_BASE} \
@@ -48,7 +48,7 @@ steps:
         -e EXPORTER_BUCKET_NAME=${_EXPORTER_BUCKET} \
         -e FRONTEND_ADDRESS=${_FRONTEND_ADDRESS} \
         -e SECRET_DJANGO_SECRET_KEY_NAME=${_SECRET_DJANGO_SECRET_KEY_NAME} \
-        -e ENV_PATH=/app/frontend/environments/.frontend.production.env \
+        -e ENV_PATH=${_FRONTEND_ENV_PATH} \
         -e DB_INSTANCE_CONNECTION_NAME=${PROJECT_ID}:${_SQL_DATABASE_ID} \
         -e FRONTEND_BUCKET=${_FRONTEND_BUCKET} \
         -e BACKEND_URL=${_BACKEND_URL_BASE} \
