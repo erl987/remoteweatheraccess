@@ -47,15 +47,15 @@ spec:
             - name: DB_USER_DB_PASSWORD_SECRET
               value: user-db-password
             - name: DB_USER_DB_PASSWORD_SECRET_VERSION
-              value: '1'
+              value: 'latest'
             - name: DB_WEATHER_DB_PASSWORD_SECRET
               value: weather-db-password
             - name: DB_WEATHER_DB_PASSWORD_SECRET_VERSION
-              value: '1'
+              value: 'latest'
             - name: JWT_SECRET_KEY_SECRET
               value: jwt-secret-key
             - name: JWT_SECRET_KEY_SECRET_VERSION
-              value: '1'
+              value: 'latest'
             - name: GUNICORN_WORKERS
               value: '1'
             - name: GUNICORN_ACCESSLOG

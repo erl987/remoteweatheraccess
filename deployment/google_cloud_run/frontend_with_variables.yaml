@@ -32,8 +32,14 @@ spec:
       containers:
         - image: ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}:${CI_COMMIT_SHA}
           env:
-            - name: SETTINGS_SECRET_NAME
-              value: ${FRONTEND_SETTINGS_SECRET_NAME}
+            - name: SECRET_DJANGO_SECRET_KEY_NAME
+              value: ${SECRET_DJANGO_SECRET_KEY_NAME}
+            - name: EXPORTER_BUCKET_NAME
+              value: ${EXPORTER_BUCKET}
+            - name: FRONTEND_ADDRESS
+              value: ${FRONTEND_ADDRESS}
+            - name: ENV_PATH
+              value: ${FRONTEND_ENV_PATH}
             - name: DB_INSTANCE_CONNECTION_NAME
               value: ${GCP_PROJECT_ID}:${SQL_DATABASE_ID}
             - name: FRONTEND_BUCKET
