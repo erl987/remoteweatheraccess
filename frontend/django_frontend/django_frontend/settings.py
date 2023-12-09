@@ -50,15 +50,15 @@ IS_ON_GOOGLE_CLOUD_PLATFORM = is_on_google_cloud_platform(env)
 env_file = getenv('ENV_PATH', None)
 if env_file and path.isfile(env_file):
     env.read_env(env_file)
-    SECRET_KEY = env.str('SECRET_KEY')
     print(f'Using environment file: {env_file}')
-
 elif IS_ON_GOOGLE_CLOUD_PLATFORM:
     SECRET_KEY = load_environment_from_secret_manager()
     print(f'Using environment settings from Google Secret Manager')
-
 else:
     raise FileNotFoundError('No local .env file and not running on Google Cloud Run')
+
+if not IS_ON_GOOGLE_CLOUD_PLATFORM:
+    SECRET_KEY = env.str('SECRET_KEY')
 
 # trigger the startup of the backend service as early as possible
 p = Process(target=trigger_startup_of_backend_service)
