@@ -23,19 +23,20 @@ from dash import Output, Input, State, ALL
 from django_plotly_dash import DjangoDash
 from google.cloud.storage import Bucket
 
+from frontend.django_frontend.django_frontend.google_cloud_utils import is_on_google_cloud_run
 from frontend.django_frontend.weatherpage.dash_download_page.callback import update_downloadable_data_callback, \
     download_data_callback
 from frontend.django_frontend.weatherpage.dash_download_page.dash_settings import AVAILABLE_DATA_CACHE_TIMEOUT_IN_SEC, \
     EXPORTER_BUCKET_NAME
 from frontend.django_frontend.weatherpage.dash_download_page.layout import get_layout
-from frontend.django_frontend.weatherpage.dash_download_page.utils import get_storage_client, is_deployed_environment
+from frontend.django_frontend.weatherpage.dash_download_page.utils import get_storage_client
 
 logger = getLogger('django')
 
 app = DjangoDash('dash-download')
 data_cache = Cache(ttl=int(AVAILABLE_DATA_CACHE_TIMEOUT_IN_SEC))
 
-if is_deployed_environment():
+if is_on_google_cloud_run():
     setlocale(LC_ALL, environ['LANGUAGE_CODE'])
     bucket = Bucket(get_storage_client(), EXPORTER_BUCKET_NAME)
 else:
