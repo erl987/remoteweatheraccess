@@ -34,7 +34,7 @@ variables:
   EXPORTER_BUCKET_ID: weather-export-data-
   EXPORTER_CSV_FILE_DIR: /tmp
   FRONTEND_BUCKET_ID: frontend-static-
-  SECRET_DJANGO_SECRET_KEY_NAME: secret-django-secret-key
+  SECRET_DJANGO_SECRET_KEY_NAME: django-secret-key
   FRONTEND_ADDRESS: ${FRONTEND_ADDRESS}
 
 default:
