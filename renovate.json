@@ -78,6 +78,12 @@
         "major"
       ],
       "automerge": true
+    },
+    {
+      "groupName": "Pydantic",
+      "matchPackagePrefixes": [
+        "pydantic"
+      ]
     }
   ],
   "platformAutomerge": true,
