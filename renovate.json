@@ -84,13 +84,6 @@
       "matchPackagePrefixes": [
         "pydantic"
       ]
-    },
-    {
-      "groupName": "fastapi",
-      "matchPackagePrefixes": [
-        "fastapi",
-        "starlette"
-      ]
     }
   ],
   "platformAutomerge": true,
