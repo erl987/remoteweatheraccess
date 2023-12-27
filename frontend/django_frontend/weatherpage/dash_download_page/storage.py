@@ -22,7 +22,8 @@ from os import environ
 
 from stream_zip import ZIP_32, stream_zip
 
-from .utils import is_deployed_environment, get_station_label_info_from_backend, get_station_id
+from .utils import get_station_label_info_from_backend, get_station_id
+from ...django_frontend.google_cloud_utils import is_on_google_cloud_run
 
 logger = getLogger('django')
 
@@ -30,7 +31,7 @@ logger = getLogger('django')
 def get_available_data(data_cache, bucket):
     data = data_cache.get('available-data')
     if not data:
-        if not is_deployed_environment() and 'TEST_WITH_BUCKET_MOCK' not in environ:
+        if not is_on_google_cloud_run() and 'TEST_WITH_BUCKET_MOCK' not in environ:
             return {}
 
         logger.info('Obtaining list of data blobs')

@@ -20,7 +20,7 @@ version: '3'
 
 services:
   reverse-proxy:
-    image: nginx:1.24.0
+    image: nginx:1.25.3
     ports:
       - "80:80"
     volumes:
@@ -39,7 +39,6 @@ services:
       - ENV_PATH=/app/frontend/environments/.frontend.docker-compose.env
       - DOCKER_COMPOSE_APP=true
       - PORT=8050
-      - GCP_SERVICE_ACCOUNT_JSON
       - BRAND_NAME
     depends_on:
       - backend

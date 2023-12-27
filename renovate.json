@@ -1,0 +1,95 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "labels": ["dependency-update"],
+  "packageRules": [
+    {
+      "description": "Automatically merge minor and patch-level updates",
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Disables the creation of branches/PRs for any minor/patch updates etc. of Renovate bot",
+      "matchPaths": [
+        "renovate-update-notification/Dockerfile"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest",
+        "rollback"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Causes the bot to create a PR (and thus, an email notification), whenever there is a new major Renovate version",
+      "matchPaths": [
+        "renovate-update-notification/Dockerfile"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": false,
+      "prCreation": "immediate"
+    },
+    {
+      "matchPackagePatterns": ["^boto"],
+      "enabled": false
+    },
+    {
+      "matchPackagePatterns": ["s3transfer"],
+      "enabled": false
+    },
+    {
+      "matchPackagePatterns": ["postgres"],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
+    },
+    {
+      "matchPackageNames": [
+        "python"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor"
+      ],
+      "enabled": false
+    },
+    {
+      "separateMinorPatch": true,
+      "matchPackageNames": [
+        "python"
+      ]
+    },
+    {
+      "matchPackageNames": [
+        "google/cloud-sdk"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": true
+    },
+    {
+      "groupName": "pydantic",
+      "matchPackagePrefixes": [
+        "pydantic"
+      ]
+    }
+  ],
+  "platformAutomerge": true,
+  "rebaseWhen": "behind-base-branch",
+  "rollbackPrs": true,
+  "dependencyDashboard": true,
+  "dependencyDashboardAutoclose": true,
+  "dependencyDashboardOSVVulnerabilitySummary": "all"
+}

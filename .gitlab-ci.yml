@@ -14,7 +14,7 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.11.5-bookworm
+image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.11.7-bookworm
 
 include:
   - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
@@ -30,12 +30,13 @@ variables:
   PIP_CACHE_DIR: ${CI_PROJECT_DIR}/.cache/pip
   DOCKER_TLS_CERTDIR: "/certs"
   BRAND_NAME: ${BRAND_NAME}
-  EXPORTER_SCHEDULER_JOB_NAME: export-csv-job
+  EXPORTER_SCHEDULER_JOB_NAME: export-csv-job-${CI_COMMIT_REF_SLUG}
   EXPORTER_BUCKET_ID: weather-export-data-
   EXPORTER_CSV_FILE_DIR: /tmp
   FRONTEND_BUCKET_ID: frontend-static-
-  FRONTEND_SETTINGS_SECRET_NAME: frontend-settings
+  SECRET_DJANGO_SECRET_KEY_NAME: django-secret-key
   FRONTEND_ADDRESS: ${FRONTEND_ADDRESS}
+  FRONTEND_ENV_PATH: /app/frontend/environments/.frontend.production.env
 
 default:
   tags:
@@ -75,13 +76,10 @@ default:
     --format='value(status.url)')
 
 .gcp_django_migration: &gcp_django_migration
-  - gcloud builds submit --config=./deployment/google_cloud_build/cloudmigrate.yaml --substitutions=_GCP_CONTAINER_REGISTRY=${GCP_CONTAINER_REGISTRY},_FRONTEND_SERVICE_NAME=${FRONTEND_SERVICE_NAME},_CI_COMMIT_SHA=${CI_COMMIT_SHA},_SQL_DATABASE_ID=${SQL_DATABASE_ID},_SETTINGS_SECRET_NAME=${FRONTEND_SETTINGS_SECRET_NAME},_FRONTEND_BUCKET=${FRONTEND_BUCKET},_BACKEND_URL_BASE=${BACKEND_URL_BASE},_BACKEND_PORT=${BACKEND_PORT},_BRAND_NAME="${BRAND_NAME}"
-
-.gcp_upload_environment_to_secret_manager: &gcp_upload_environment_to_secret_manager
-  - printf "$(cat ./frontend/environments/.frontend.production.env)" "$(< /dev/urandom tr -cd '[:graph:]'| tr  -d '\\' | head -c 232; echo)" "${FRONTEND_ADDRESS}" "${EXPORTER_BUCKET}" | gcloud secrets versions add frontend-settings --data-file=-
+  - gcloud builds submit --config=./deployment/google_cloud_build/cloudmigrate.yaml --substitutions=_GCP_CONTAINER_REGISTRY=${GCP_CONTAINER_REGISTRY},_FRONTEND_SERVICE_NAME=${FRONTEND_SERVICE_NAME},_CI_COMMIT_SHA=${CI_COMMIT_SHA},_SQL_DATABASE_ID=${SQL_DATABASE_ID},_SECRET_DJANGO_SECRET_KEY_NAME=${SECRET_DJANGO_SECRET_KEY_NAME},_FRONTEND_ENV_PATH=${FRONTEND_ENV_PATH},_FRONTEND_ADDRESS=${FRONTEND_ADDRESS},_EXPORTER_BUCKET=${EXPORTER_BUCKET},_FRONTEND_BUCKET=${FRONTEND_BUCKET},_BACKEND_URL_BASE=${BACKEND_URL_BASE},_BACKEND_PORT=${BACKEND_PORT},_BRAND_NAME="${BRAND_NAME}"
 
 .gcp_cloud_scheduler_job: &gcp_cloud_scheduler_job
-  - existing_scheduler_jobs=$(gcloud scheduler jobs list --format 'value(name)' --location ${GCP_REGION})
+  - existing_scheduler_jobs=$(gcloud scheduler jobs list --format 'value(name)' --filter "name ~ ${EXPORTER_SCHEDULER_JOB_NAME}" --location ${GCP_REGION})
   - num_scheduler_jobs=$(wc -w <<< "$existing_scheduler_jobs")
   - if [ $num_scheduler_jobs != 0 ]; then gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet  --location ${GCP_REGION} ; fi
   - gcloud scheduler jobs create http ${EXPORTER_SCHEDULER_JOB_NAME}
@@ -95,7 +93,8 @@ default:
     --location ${GCP_REGION}
 
 .gcp_deploy: &gcp_deploy
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:431.0.0
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:458.0.1
+  resource_group: deploy
   script:
     - *gcp_cloud_login
     - *install_gettext
@@ -112,7 +111,6 @@ default:
     - export EXPORTER_BUCKET=$(gcloud storage ls | grep ${EXPORTER_BUCKET_ID})
     - CLOUD_RUN_INVOKER="allUsers"
     - CURR_GCP_REGION=${GCP_FRONTEND_REGION}
-    - *gcp_upload_environment_to_secret_manager
     - *gcp_django_migration
     - *gcp_cloud_run_deploy
     - echo "FRONTEND_URL=${FRONTEND_URL}" > frontend_deploy.env
@@ -176,7 +174,7 @@ unittests backend:
       - .cache/pip
       - venv/
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/postgres:13.0-alpine
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/postgres:13.13-alpine
       alias: postgres
   before_script:
     - *python_prepare
@@ -246,9 +244,9 @@ unittests client:
 
 build backend:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.5
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.7
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.5-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.7-dind
       alias: docker
   script:
     - *gcp_docker_registry_login
@@ -262,9 +260,9 @@ build backend:
 
 build frontend:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.5
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.7
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.5-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.7-dind
       alias: docker
   script:
     - *copy_text_files
@@ -279,9 +277,9 @@ build frontend:
 
 build exporter:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.5
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.7
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.5-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:24.0.7-dind
       alias: docker
   script:
     - *gcp_docker_registry_login
@@ -305,12 +303,13 @@ deploy review:
 
 stop review:
   stage: cleanup review
+  resource_group: review
   dependencies:
     - deploy review
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:431.0.0
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:458.0.1
   script:
     - *gcp_cloud_login
-    - gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet
+    - gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet --location ${GCP_REGION}
     - gcloud run services delete ${FRONTEND_SERVICE_NAME}
       --region=${GCP_FRONTEND_REGION}
       --platform=managed
