@@ -80,9 +80,16 @@
       "automerge": true
     },
     {
-      "groupName": "Pydantic",
+      "groupName": "pydantic",
       "matchPackagePrefixes": [
         "pydantic"
+      ]
+    },
+    {
+      "groupName": "fastapi",
+      "matchPackagePrefixes": [
+        "fastapi",
+        "starlette"
       ]
     }
   ],
