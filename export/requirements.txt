@@ -47,7 +47,7 @@ idna==3.6
     # via
     #   anyio
     #   requests
-numpy==1.26.2
+numpy==1.26.3
     # via
     #   -r requirements.in
     #   pandas
