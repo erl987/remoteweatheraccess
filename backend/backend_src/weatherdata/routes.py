@@ -223,7 +223,10 @@ def _add_missing_temperature_sensor_data(found_datasets):
     for sensor_id in missing_time_points:
         nan_dataset = found_datasets[found_datasets['timepoint'].isin(missing_time_points[sensor_id])]
         nan_dataset.loc[:, 'sensor_id'] = sensor_id
-        nan_dataset.loc[:, 'temperature'] = np.nan
+        if 'temperature' in found_datasets.columns:
+            nan_dataset.loc[:, 'temperature'] = np.nan
+        if 'humidity' in found_datasets.columns:
+            nan_dataset.loc[:, 'humidity'] = np.nan
         nan_datasets.append(nan_dataset)
 
     found_datasets = pd.concat(nan_datasets + [found_datasets])
