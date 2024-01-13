@@ -245,7 +245,7 @@ def _get_missing_time_points(found_datasets):
             continue
 
         time_points = set(found_datasets[found_datasets['sensor_id'] == sensor_id]['timepoint'])
-        missing_time_points[sensor_id] = (list(time_points_in.difference(time_points)))
+        missing_time_points[sensor_id] = list(time_points_in.difference(time_points))
         if len(missing_time_points[sensor_id]) > 0:
             time_points_are_missing = True
 
