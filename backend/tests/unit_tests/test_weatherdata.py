@@ -24,7 +24,7 @@ from dateutil.parser import isoparse
 from ..utils import client_without_permissions, client_with_push_user_permissions, client_with_admin_permissions, \
     a_dataset, another_dataset, another_dataset_without_timezone, an_updated_dataset, a_dataset_for_another_station, \
     prepare_two_entry_database, a_dataset_with_none, a_dataset_with_a_duplicate_time_point, \
-    a_dataset_with_rain_counter_reset  # required as a fixture
+    a_dataset_with_rain_counter_reset, a_dataset_with_missing_outside_sensor_data  # required as a fixture
 from ..utils import drop_permissions, verify_database_is_empty, zip_payload
 
 
@@ -524,3 +524,25 @@ def test_update_dataset_with_wrong_content_type(client_with_push_user_permission
     result = client_with_push_user_permissions.get('/api/v1/data', data={}, content_type='text/html')
     assert 'error' in result.get_json()
     assert result.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures('client_with_push_user_permissions', 'a_dataset_with_missing_outside_sensor_data')
+def test_get_weather_datasets_with_missing_temperature_data(client_with_push_user_permissions,
+                                                            a_dataset_with_missing_outside_sensor_data):
+    dataset_create_result = client_with_push_user_permissions.post('/api/v1/data',
+                                                                   json=a_dataset_with_missing_outside_sensor_data)
+    assert dataset_create_result.status_code == HTTPStatus.NO_CONTENT
+
+    client = drop_permissions(client_with_push_user_permissions)
+    first_timepoint = isoparse(a_dataset_with_missing_outside_sensor_data[0]['timepoint'])
+    last_timepoint = isoparse(a_dataset_with_missing_outside_sensor_data[-1]['timepoint'])
+    search_result = client.get(_get_request_url(first_timepoint, last_timepoint))
+    assert search_result.status_code == HTTPStatus.OK
+
+    a_station_id = a_dataset_with_missing_outside_sensor_data[0]['station_id']
+    assert len(search_result.get_json()[a_station_id]['pressure']) == 3
+    assert len(search_result.get_json()[a_station_id]['temperature_humidity']) == 2
+    assert search_result.get_json()[a_station_id]['temperature_humidity']['OUT1']['temperature'] == [21.3, None, 26.4]
+    assert search_result.get_json()[a_station_id]['temperature_humidity']['OUT1']['humidity'] == [42.6, None, 48.9]
+    assert search_result.get_json()[a_station_id]['temperature_humidity']['OUT1']['dewpoint'] == [8.1, None, 14.8]
+    assert search_result.get_json()[a_station_id]['temperature_humidity']['IN']['temperature'] == [10.5, 12.5, 9.5]
