@@ -186,12 +186,14 @@ def get_weather_datasets():
                                  .filter(WeatherDataset.timepoint >= first)
                                  .filter(WeatherDataset.timepoint <= last)
                                  .filter(WeatherDataset.station_id.in_(requested_stations))
-                                 .join(WeatherDataset.temperature_humidity)
+                                 .join(WeatherDataset.temperature_humidity, isouter=True)
                                  .order_by(WeatherDataset.timepoint).with_entities(WeatherDataset.timepoint,
                                                                                    WeatherDataset.station_id,
                                                                                    TempHumiditySensorData.sensor_id,
                                                                                    *queried_sensors).statement,
                                  db.engines['weather-data'])
+
+    found_datasets = _add_missing_temperature_sensor_data(found_datasets)
 
     # required to provide standard conformant JSON containing `null` and not `NaN`
     found_datasets = found_datasets.replace([np.nan], [None])
@@ -209,6 +211,46 @@ def get_weather_datasets():
                                                                                            num_datasets_log_str))
 
     return response
+
+
+def _add_missing_temperature_sensor_data(found_datasets):
+    missing_time_points, time_points_are_missing = _get_missing_time_points(found_datasets)
+
+    if not time_points_are_missing:
+        return found_datasets
+
+    nan_datasets = []
+    for sensor_id in missing_time_points:
+        nan_dataset = found_datasets[found_datasets['timepoint'].isin(missing_time_points[sensor_id])
+                                     & (found_datasets['sensor_id'] == 'IN')]
+        nan_dataset.loc[:, 'sensor_id'] = sensor_id
+        if 'temperature' in found_datasets.columns:
+            nan_dataset.loc[:, 'temperature'] = np.nan
+        if 'humidity' in found_datasets.columns:
+            nan_dataset.loc[:, 'humidity'] = np.nan
+        nan_datasets.append(nan_dataset)
+
+    found_datasets = pd.concat(nan_datasets + [found_datasets])
+    found_datasets = found_datasets.sort_values('timepoint')
+
+    return found_datasets
+
+
+def _get_missing_time_points(found_datasets):
+    missing_time_points = {}
+    time_points_in = set(found_datasets[found_datasets['sensor_id'] == 'IN']['timepoint'])  # IN is always available
+    time_points_are_missing = False
+
+    for sensor_id in found_datasets['sensor_id'].unique():
+        if sensor_id == 'IN':
+            continue
+
+        time_points = set(found_datasets[found_datasets['sensor_id'] == sensor_id]['timepoint'])
+        missing_time_points[sensor_id] = list(time_points_in.difference(time_points))
+        if len(missing_time_points[sensor_id]) > 0:
+            time_points_are_missing = True
+
+    return missing_time_points, time_points_are_missing
 
 
 def _get_query_params():
