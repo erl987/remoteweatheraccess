@@ -20,7 +20,7 @@ click==8.1.7
     # via uvicorn
 fastapi==0.109.0
     # via -r requirements.in
-google-api-core==2.15.0
+google-api-core==2.16.0
     # via
     #   google-cloud-core
     #   google-cloud-storage
