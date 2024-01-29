@@ -26,9 +26,9 @@ idna==3.6
     # via
     #   anyio
     #   requests
-pydantic==2.5.3
+pydantic==2.6.0
     # via fastapi
-pydantic-core==2.14.6
+pydantic-core==2.16.1
     # via pydantic
 pytz==2023.4
     # via -r requirements.in
