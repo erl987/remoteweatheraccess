@@ -22,7 +22,7 @@ pytest==8.0.0
     #   pytest-django
     #   pytest-env
     #   pytest-mock
-pytest-django==4.7.0
+pytest-django==4.8.0
     # via -r dev-requirements.in
 pytest-env==1.1.3
     # via -r dev-requirements.in
