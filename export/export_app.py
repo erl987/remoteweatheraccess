@@ -14,6 +14,7 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import logging
 import os
 import traceback
 
@@ -30,7 +31,8 @@ from export_src.utils import get_default_month
 
 app = FastAPI()
 log_client = Client()
-logger = log_client.logger('exporter')
+log_client.setup_logging()
+logger = logging.getLogger()
 
 backend_url = os.environ['BACKEND_URL']
 port = os.environ['BACKEND_PORT']
