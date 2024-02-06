@@ -16,6 +16,7 @@
 
 numpy
 pandas
+pyarrow  # dependency of pandas 3.0+, added to silene a warning
 requests
 uvicorn
 python-dateutil

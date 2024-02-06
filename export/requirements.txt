@@ -73,6 +73,7 @@ numpy==1.26.3
     # via
     #   -r requirements.in
     #   pandas
+    #   pyarrow
 pandas==2.2.0
     # via -r requirements.in
 proto-plus==1.23.0
@@ -89,6 +90,8 @@ protobuf==4.25.2
     #   grpc-google-iam-v1
     #   grpcio-status
     #   proto-plus
+pyarrow==15.0.0
+    # via -r requirements.in
 pyasn1==0.5.1
     # via
     #   pyasn1-modules
