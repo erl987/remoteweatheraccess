@@ -21,6 +21,7 @@ import traceback
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from google.api_core import exceptions
+from google.cloud import error_reporting
 from google.cloud.logging_v2 import Client
 from requests import HTTPError
 
@@ -31,9 +32,14 @@ from export_src.utils import get_default_month
 
 app = FastAPI()
 logging.basicConfig(level=logging.DEBUG)
-if 'RUNNING_ON_GCP' in os.environ and os.environ['RUNNING_ON_GCP'].lower() == 'true':
+is_on_gcp = 'RUNNING_ON_GCP' in os.environ and os.environ['RUNNING_ON_GCP'].lower() == 'true'
+
+if is_on_gcp:
     log_client = Client()
     log_client.setup_logging()
+
+    error_reporting_client = error_reporting.Client()
+
 logger = logging.getLogger()
 
 backend_url = os.environ['BACKEND_URL']
@@ -86,9 +92,13 @@ async def create_and_upload_csv_file(station_id: str = None, month: int = None, 
         return {'result': 'ok'}
     except HTTPException as e:
         logger.error(f'Status code: {e.status_code}, error: {e.detail}')
+        if is_on_gcp and e.status_code >= 500:
+            error_reporting_client.report_exception()
         raise
     except Exception:
         logger.error(f'Internal server error: {traceback.format_exc()}')
+        if is_on_gcp:
+            error_reporting_client.report_exception()
         raise HTTPException(status_code=500, detail='Internal server error')
 
 

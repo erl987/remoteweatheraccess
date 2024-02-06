@@ -22,6 +22,7 @@ google-api-core[grpc]==2.15.0
     # via
     #   google-cloud-appengine-logging
     #   google-cloud-core
+    #   google-cloud-error-reporting
     #   google-cloud-logging
     #   google-cloud-storage
 google-auth==2.27.0
@@ -37,8 +38,12 @@ google-cloud-core==2.4.1
     # via
     #   google-cloud-logging
     #   google-cloud-storage
-google-cloud-logging==3.9.0
+google-cloud-error-reporting==1.10.0
     # via -r requirements.in
+google-cloud-logging==3.9.0
+    # via
+    #   -r requirements.in
+    #   google-cloud-error-reporting
 google-cloud-storage==2.14.0
     # via -r requirements.in
 google-crc32c==1.5.0
@@ -79,12 +84,14 @@ pandas==2.2.0
 proto-plus==1.23.0
     # via
     #   google-cloud-appengine-logging
+    #   google-cloud-error-reporting
     #   google-cloud-logging
 protobuf==4.25.2
     # via
     #   google-api-core
     #   google-cloud-appengine-logging
     #   google-cloud-audit-log
+    #   google-cloud-error-reporting
     #   google-cloud-logging
     #   googleapis-common-protos
     #   grpc-google-iam-v1
