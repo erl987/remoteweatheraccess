@@ -14,64 +14,23 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import logging
 import os
 import traceback
-from logging.config import dictConfig
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from google.api_core import exceptions
-from pydantic import BaseModel
+from google.cloud.logging_v2 import Client
 from requests import HTTPError
 
 from export_src.backend_requests import get_sensor_metadata, get_station_metadata_for, get_weather_data_for
 from export_src.csv_file import create_pc_weatherstation_compatible_file
-from export_src.google_cloud_storage import upload_file, configure_gcp_logging
+from export_src.google_cloud_storage import upload_file
 from export_src.utils import get_default_month
 
-logging_client = configure_gcp_logging()
-
-
-class LogConfig(BaseModel):
-    """Logging configuration to be set for the server"""
-
-    LOGGER_NAME: str = 'exporter'
-    LOG_FORMAT: str = '%(levelprefix)s %(message)s'
-    LOG_LEVEL: str = 'DEBUG'
-
-    # Logging config
-    version: int = 1
-    disable_existing_loggers: bool = False
-    formatters: dict = {
-        'default': {
-            '()': 'uvicorn.logging.DefaultFormatter',
-            'fmt': LOG_FORMAT,
-            'datefmt': '%Y-%m-%d %H:%M:%S',
-        },
-    }
-    handlers: dict = {
-        'default': {
-            'formatter': 'default',
-            'class': 'logging.StreamHandler',
-            'stream': 'ext://sys.stderr',
-        },
-        'stackdriver': {
-            'class': 'google.cloud.logging.handlers.CloudLoggingHandler',
-            'client': logging_client
-        }
-    }
-    loggers: dict = {
-        'exporter': {
-            'handlers': ['default', 'stackdriver'],
-            'level': LOG_LEVEL
-        }
-    }
-
-
 app = FastAPI()
-dictConfig(LogConfig().model_dump())
-logger = logging.getLogger('exporter')
+log_client = Client()
+logger = log_client.logger('exporter')
 
 backend_url = os.environ['BACKEND_URL']
 port = os.environ['BACKEND_PORT']

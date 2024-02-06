@@ -17,7 +17,6 @@ import logging
 import os
 import time
 
-from google.cloud import logging as gcp_logging
 from google.cloud import storage
 
 from export_src import utils
@@ -52,10 +51,3 @@ def upload_file(local_file_path, storage_folder):
     file_size_in_mb = os.path.getsize(local_file_path) / 1.0e6
     upload_rate_in_mbit_per_sec = 8 * file_size_in_mb / elapsed_time_in_sec
     logger.debug('... done ({:.1f} MB), {:.1f} Mbit/s'.format(file_size_in_mb, upload_rate_in_mbit_per_sec))
-
-
-def configure_gcp_logging():
-    client = gcp_logging.Client()
-    client.setup_logging()
-
-    return client
