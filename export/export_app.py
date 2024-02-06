@@ -27,7 +27,7 @@ from requests import HTTPError
 
 from export_src.backend_requests import get_sensor_metadata, get_station_metadata_for, get_weather_data_for
 from export_src.csv_file import create_pc_weatherstation_compatible_file
-from export_src.google_cloud_storage import upload_file
+from export_src.google_cloud_storage import upload_file, configure_gcp_logging
 from export_src.utils import get_default_month
 
 
@@ -54,9 +54,16 @@ class LogConfig(BaseModel):
             'class': 'logging.StreamHandler',
             'stream': 'ext://sys.stderr',
         },
+        'stackdriver': {
+            'class': 'google.cloud.logging.handlers.CloudLoggingHandler',
+            'client': configure_gcp_logging()
+        }
     }
     loggers: dict = {
-        'exporter': {'handlers': ['default'], 'level': LOG_LEVEL},
+        'exporter': {
+            'handlers': ['default', 'stackdriver'],
+            'level': LOG_LEVEL
+        }
     }
 
 

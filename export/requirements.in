@@ -20,4 +20,5 @@ requests
 uvicorn
 python-dateutil
 fastapi
+google-cloud-logging
 google-cloud-storage
