@@ -30,8 +30,9 @@ from export_src.google_cloud_storage import upload_file
 from export_src.utils import get_default_month
 
 app = FastAPI()
-log_client = Client()
-log_client.setup_logging()
+if 'RUNNING_ON_GCP' in os.environ and os.environ['RUNNING_ON_GCP'].upper() == 'true':
+    log_client = Client()
+    log_client.setup_logging()
 logger = logging.getLogger()
 
 backend_url = os.environ['BACKEND_URL']
