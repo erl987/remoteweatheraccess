@@ -58,7 +58,7 @@ def get_weather_data_for(month, year, station_id, url, port):
     first_timepoint = datetime(day=1, month=month, year=year)
     last_timepoint = first_timepoint + relativedelta(months=1)
 
-    logger.debug('Requesting data from backend {}:{} for station {}'.format(url, port, station_id))
+    logger.info('Requesting data from backend {}:{} for station {}'.format(url, port, station_id))
     r = requests.get('https://{}:{}/api/v1/data?first_timepoint={}&last_timepoint={}&stations={}'.format(
         url,
         port,
@@ -66,7 +66,7 @@ def get_weather_data_for(month, year, station_id, url, port):
         last_timepoint,
         station_id
     ))
-    logger.debug('Received data for period {} - {}'.format(first_timepoint, last_timepoint))
+    logger.info('Received data for period {} - {}'.format(first_timepoint, last_timepoint))
     r.raise_for_status()
     month_data = r.json()
     return month_data

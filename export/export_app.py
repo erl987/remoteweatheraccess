@@ -31,7 +31,6 @@ from export_src.google_cloud_storage import upload_file
 from export_src.utils import get_default_month
 
 app = FastAPI()
-logging.basicConfig(level=logging.DEBUG)
 is_on_gcp = 'RUNNING_ON_GCP' in os.environ and os.environ['RUNNING_ON_GCP'].lower() == 'true'
 
 if is_on_gcp:
@@ -59,7 +58,7 @@ async def create_and_upload_csv_file(station_id: str = None, month: int = None, 
 
         if not month and not year:
             month, year = get_default_month()
-            logger.debug('No month specified in the request, using the default: {}/{}'.format(month, year))
+            logger.info('No month specified in the request, using the default: {}/{}'.format(month, year))
 
         try:
             sensor_metadata = get_sensor_metadata(backend_url, port)
