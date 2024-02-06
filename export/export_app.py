@@ -30,6 +30,8 @@ from export_src.csv_file import create_pc_weatherstation_compatible_file
 from export_src.google_cloud_storage import upload_file, configure_gcp_logging
 from export_src.utils import get_default_month
 
+logging_client = configure_gcp_logging()
+
 
 class LogConfig(BaseModel):
     """Logging configuration to be set for the server"""
@@ -56,7 +58,7 @@ class LogConfig(BaseModel):
         },
         'stackdriver': {
             'class': 'google.cloud.logging.handlers.CloudLoggingHandler',
-            'client': configure_gcp_logging()
+            'client': logging_client
         }
     }
     loggers: dict = {
