@@ -61,8 +61,7 @@ async def create_and_upload_csv_file(station_id: str = None, month: int = None, 
             month, year = get_default_month()
             logger.debug('No month specified in the request, using the default: {}/{}'.format(month, year))
 
-        if 'RUNNING_ON_GCP' in os.environ and os.environ['RUNNING_ON_GCP'].lower() == 'true':
-            raise AssertionError("A dummy exception")
+        raise AssertionError("A dummy exception")
 
         try:
             sensor_metadata = get_sensor_metadata(backend_url, port)
