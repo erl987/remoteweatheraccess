@@ -95,5 +95,5 @@ tzdata==2023.4
     # via pandas
 urllib3==2.1.0
     # via requests
-uvicorn==0.27.0.post1
+uvicorn==0.27.1
     # via -r requirements.in
