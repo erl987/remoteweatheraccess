@@ -14,7 +14,7 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.11.7-bookworm
+image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.11.8-bookworm
 
 include:
   - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
@@ -93,7 +93,7 @@ default:
     --location ${GCP_REGION}
 
 .gcp_deploy: &gcp_deploy
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:461.0.0
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:463.0.0
   resource_group: deploy
   script:
     - *gcp_cloud_login
@@ -244,9 +244,9 @@ unittests client:
 
 build backend:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:25.0.1
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:25.0.3
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:25.0.1-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:25.0.3-dind
       alias: docker
   script:
     - *gcp_docker_registry_login
@@ -260,9 +260,9 @@ build backend:
 
 build frontend:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:25.0.1
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:25.0.3
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:25.0.1-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:25.0.3-dind
       alias: docker
   script:
     - *copy_text_files
@@ -277,9 +277,9 @@ build frontend:
 
 build exporter:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:25.0.1
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:25.0.3
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:25.0.1-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:25.0.3-dind
       alias: docker
   script:
     - *gcp_docker_registry_login
@@ -306,7 +306,7 @@ stop review:
   resource_group: review
   dependencies:
     - deploy review
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:461.0.0
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:463.0.0
   script:
     - *gcp_cloud_login
     - gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet --location ${GCP_REGION}

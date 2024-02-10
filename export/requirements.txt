@@ -7,43 +7,30 @@
 annotated-types==0.6.0
     # via pydantic
 anyio==3.7.1
-    # via starlette
+    # via
+    #   fastapi
+    #   starlette
 cachetools==5.3.2
     # via google-auth
-certifi==2023.11.17
+certifi==2024.2.2
     # via requests
 charset-normalizer==3.3.2
     # via requests
 click==8.1.7
     # via uvicorn
-fastapi==0.109.0
+fastapi==0.109.2
     # via -r requirements.in
-google-api-core[grpc]==2.15.0
+google-api-core==2.17.0
     # via
-    #   google-cloud-appengine-logging
     #   google-cloud-core
-    #   google-cloud-error-reporting
-    #   google-cloud-logging
     #   google-cloud-storage
 google-auth==2.27.0
     # via
     #   google-api-core
     #   google-cloud-core
     #   google-cloud-storage
-google-cloud-appengine-logging==1.4.0
-    # via google-cloud-logging
-google-cloud-audit-log==0.2.5
-    # via google-cloud-logging
 google-cloud-core==2.4.1
-    # via
-    #   google-cloud-logging
-    #   google-cloud-storage
-google-cloud-error-reporting==1.10.0
-    # via -r requirements.in
-google-cloud-logging==3.9.0
-    # via
-    #   -r requirements.in
-    #   google-cloud-error-reporting
+    # via google-cloud-storage
 google-cloud-storage==2.14.0
     # via -r requirements.in
 google-crc32c==1.5.0
@@ -52,21 +39,7 @@ google-crc32c==1.5.0
     #   google-resumable-media
 google-resumable-media==2.7.0
     # via google-cloud-storage
-googleapis-common-protos[grpc]==1.62.0
-    # via
-    #   google-api-core
-    #   google-cloud-audit-log
-    #   grpc-google-iam-v1
-    #   grpcio-status
-grpc-google-iam-v1==0.13.0
-    # via google-cloud-logging
-grpcio==1.60.1
-    # via
-    #   google-api-core
-    #   googleapis-common-protos
-    #   grpc-google-iam-v1
-    #   grpcio-status
-grpcio-status==1.60.1
+googleapis-common-protos==1.62.0
     # via google-api-core
 h11==0.14.0
     # via uvicorn
@@ -74,46 +47,31 @@ idna==3.6
     # via
     #   anyio
     #   requests
-numpy==1.26.3
+numpy==1.26.4
     # via
     #   -r requirements.in
     #   pandas
-    #   pyarrow
 pandas==2.2.0
     # via -r requirements.in
-proto-plus==1.23.0
-    # via
-    #   google-cloud-appengine-logging
-    #   google-cloud-error-reporting
-    #   google-cloud-logging
 protobuf==4.25.2
     # via
     #   google-api-core
-    #   google-cloud-appengine-logging
-    #   google-cloud-audit-log
-    #   google-cloud-error-reporting
-    #   google-cloud-logging
     #   googleapis-common-protos
-    #   grpc-google-iam-v1
-    #   grpcio-status
-    #   proto-plus
-pyarrow==15.0.0
-    # via -r requirements.in
 pyasn1==0.5.1
     # via
     #   pyasn1-modules
     #   rsa
 pyasn1-modules==0.3.0
     # via google-auth
-pydantic==2.5.3
+pydantic==2.6.1
     # via fastapi
-pydantic-core==2.14.6
+pydantic-core==2.16.2
     # via pydantic
 python-dateutil==2.8.2
     # via
     #   -r requirements.in
     #   pandas
-pytz==2023.3.post1
+pytz==2024.1
     # via pandas
 requests==2.31.0
     # via
@@ -126,7 +84,7 @@ six==1.16.0
     # via python-dateutil
 sniffio==1.3.0
     # via anyio
-starlette==0.35.1
+starlette==0.36.3
     # via fastapi
 typing-extensions==4.9.0
     # via
@@ -137,5 +95,5 @@ tzdata==2023.4
     # via pandas
 urllib3==2.1.0
     # via requests
-uvicorn==0.27.0
+uvicorn==0.27.0.post1
     # via -r requirements.in
