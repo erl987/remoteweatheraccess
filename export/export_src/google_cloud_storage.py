@@ -26,7 +26,7 @@ logger = logging.getLogger('exporter')
 
 def upload_file(local_file_path, storage_folder):
     if not local_file_path:
-        logger.debug('No CSV-file had been generated, skipping the upload')
+        logger.info('No CSV-file had been generated, skipping the upload')
         return
 
     service_account_json = os.getenv('GCP_SERVICE_ACCOUNT_JSON', None)
@@ -36,7 +36,7 @@ def upload_file(local_file_path, storage_folder):
         storage_client = storage.Client()
 
     bucket_id = utils.get_bucket_id()
-    logger.debug('Uploading "{}" to bucket "{}" ...'.format(local_file_path, bucket_id))
+    logger.info('Uploading "{}" to bucket "{}" ...'.format(local_file_path, bucket_id))
 
     bucket = storage_client.bucket(bucket_id)
     file_name = os.path.basename(local_file_path)
@@ -50,4 +50,4 @@ def upload_file(local_file_path, storage_folder):
     elapsed_time_in_sec = end_time - start_time
     file_size_in_mb = os.path.getsize(local_file_path) / 1.0e6
     upload_rate_in_mbit_per_sec = 8 * file_size_in_mb / elapsed_time_in_sec
-    logger.debug('... done ({:.1f} MB), {:.1f} Mbit/s'.format(file_size_in_mb, upload_rate_in_mbit_per_sec))
+    logger.info('... done ({:.1f} MB), {:.1f} Mbit/s'.format(file_size_in_mb, upload_rate_in_mbit_per_sec))

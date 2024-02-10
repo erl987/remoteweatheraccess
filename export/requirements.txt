@@ -7,9 +7,7 @@
 annotated-types==0.6.0
     # via pydantic
 anyio==3.7.1
-    # via
-    #   fastapi
-    #   starlette
+    # via starlette
 cachetools==5.3.2
     # via google-auth
 certifi==2024.2.2
@@ -20,17 +18,33 @@ click==8.1.7
     # via uvicorn
 fastapi==0.109.2
     # via -r requirements.in
-google-api-core==2.17.0
+google-api-core[grpc]==2.17.0
     # via
+    #   google-cloud-appengine-logging
     #   google-cloud-core
+    #   google-cloud-error-reporting
+    #   google-cloud-logging
     #   google-cloud-storage
 google-auth==2.27.0
     # via
     #   google-api-core
+    #   google-cloud-appengine-logging
     #   google-cloud-core
     #   google-cloud-storage
+google-cloud-appengine-logging==1.4.1
+    # via google-cloud-logging
+google-cloud-audit-log==0.2.5
+    # via google-cloud-logging
 google-cloud-core==2.4.1
-    # via google-cloud-storage
+    # via
+    #   google-cloud-logging
+    #   google-cloud-storage
+google-cloud-error-reporting==1.10.0
+    # via -r requirements.in
+google-cloud-logging==3.9.0
+    # via
+    #   -r requirements.in
+    #   google-cloud-error-reporting
 google-cloud-storage==2.14.0
     # via -r requirements.in
 google-crc32c==1.5.0
@@ -39,7 +53,21 @@ google-crc32c==1.5.0
     #   google-resumable-media
 google-resumable-media==2.7.0
     # via google-cloud-storage
-googleapis-common-protos==1.62.0
+googleapis-common-protos[grpc]==1.62.0
+    # via
+    #   google-api-core
+    #   google-cloud-audit-log
+    #   grpc-google-iam-v1
+    #   grpcio-status
+grpc-google-iam-v1==0.13.0
+    # via google-cloud-logging
+grpcio==1.60.1
+    # via
+    #   google-api-core
+    #   googleapis-common-protos
+    #   grpc-google-iam-v1
+    #   grpcio-status
+grpcio-status==1.60.1
     # via google-api-core
 h11==0.14.0
     # via uvicorn
@@ -51,12 +79,27 @@ numpy==1.26.4
     # via
     #   -r requirements.in
     #   pandas
+    #   pyarrow
 pandas==2.2.0
     # via -r requirements.in
+proto-plus==1.23.0
+    # via
+    #   google-cloud-appengine-logging
+    #   google-cloud-error-reporting
+    #   google-cloud-logging
 protobuf==4.25.2
     # via
     #   google-api-core
+    #   google-cloud-appengine-logging
+    #   google-cloud-audit-log
+    #   google-cloud-error-reporting
+    #   google-cloud-logging
     #   googleapis-common-protos
+    #   grpc-google-iam-v1
+    #   grpcio-status
+    #   proto-plus
+pyarrow==15.0.0
+    # via -r requirements.in
 pyasn1==0.5.1
     # via
     #   pyasn1-modules

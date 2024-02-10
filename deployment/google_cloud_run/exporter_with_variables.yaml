@@ -27,6 +27,8 @@ spec:
       containers:
         - image: ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${EXPORTER_SERVICE_NAME}:${CI_COMMIT_SHA}
           env:
+            - name: RUNNING_ON_GCP
+              value: 'True'
             - name: BACKEND_URL
               value: ${BACKEND_URL_BASE}
             - name: BACKEND_PORT

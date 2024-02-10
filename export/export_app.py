@@ -17,12 +17,12 @@
 import logging
 import os
 import traceback
-from logging.config import dictConfig
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from google.api_core import exceptions
-from pydantic import BaseModel
+from google.cloud import error_reporting
+from google.cloud.logging_v2 import Client
 from requests import HTTPError
 
 from export_src.backend_requests import get_sensor_metadata, get_station_metadata_for, get_weather_data_for
@@ -30,39 +30,16 @@ from export_src.csv_file import create_pc_weatherstation_compatible_file
 from export_src.google_cloud_storage import upload_file
 from export_src.utils import get_default_month
 
-
-class LogConfig(BaseModel):
-    """Logging configuration to be set for the server"""
-
-    LOGGER_NAME: str = 'exporter'
-    LOG_FORMAT: str = '%(levelprefix)s %(message)s'
-    LOG_LEVEL: str = 'DEBUG'
-
-    # Logging config
-    version: int = 1
-    disable_existing_loggers: bool = False
-    formatters: dict = {
-        'default': {
-            '()': 'uvicorn.logging.DefaultFormatter',
-            'fmt': LOG_FORMAT,
-            'datefmt': '%Y-%m-%d %H:%M:%S',
-        },
-    }
-    handlers: dict = {
-        'default': {
-            'formatter': 'default',
-            'class': 'logging.StreamHandler',
-            'stream': 'ext://sys.stderr',
-        },
-    }
-    loggers: dict = {
-        'exporter': {'handlers': ['default'], 'level': LOG_LEVEL},
-    }
-
-
 app = FastAPI()
-dictConfig(LogConfig().model_dump())
-logger = logging.getLogger('exporter')
+is_on_gcp = 'RUNNING_ON_GCP' in os.environ and os.environ['RUNNING_ON_GCP'].lower() == 'true'
+
+if is_on_gcp:
+    log_client = Client()
+    log_client.setup_logging()
+
+    error_reporting_client = error_reporting.Client()
+
+logger = logging.getLogger()
 
 backend_url = os.environ['BACKEND_URL']
 port = os.environ['BACKEND_PORT']
@@ -81,7 +58,7 @@ async def create_and_upload_csv_file(station_id: str = None, month: int = None, 
 
         if not month and not year:
             month, year = get_default_month()
-            logger.debug('No month specified in the request, using the default: {}/{}'.format(month, year))
+            logger.info('No month specified in the request, using the default: {}/{}'.format(month, year))
 
         try:
             sensor_metadata = get_sensor_metadata(backend_url, port)
@@ -111,9 +88,13 @@ async def create_and_upload_csv_file(station_id: str = None, month: int = None, 
         return {'result': 'ok'}
     except HTTPException as e:
         logger.error(f'Status code: {e.status_code}, error: {e.detail}')
+        if is_on_gcp and e.status_code >= 500:
+            error_reporting_client.report_exception()
         raise
     except Exception:
         logger.error(f'Internal server error: {traceback.format_exc()}')
+        if is_on_gcp:
+            error_reporting_client.report_exception()
         raise HTTPException(status_code=500, detail='Internal server error')
 
 
