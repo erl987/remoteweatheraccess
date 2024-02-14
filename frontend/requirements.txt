@@ -63,7 +63,7 @@ flask==3.0.2
     # via
     #   dash
     #   django-plotly-dash
-google-api-core[grpc]==2.17.0
+google-api-core[grpc]==2.17.1
     # via
     #   google-cloud-appengine-logging
     #   google-cloud-core
