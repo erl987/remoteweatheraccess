@@ -45,7 +45,7 @@ dash-html-components==2.0.0
     # via dash
 dash-table==5.0.0
     # via dash
-django==4.2.10
+django==5.0.2
     # via
     #   -r requirements.in
     #   channels
