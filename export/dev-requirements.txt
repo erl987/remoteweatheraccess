@@ -34,7 +34,7 @@ httpcore==1.0.4
     # via httpx
 httptools==0.6.1
     # via uvicorn
-httpx==0.26.0
+httpx==0.27.0
     # via fastapi
 idna==3.6
     # via
