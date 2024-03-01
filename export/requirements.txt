@@ -110,7 +110,7 @@ pydantic==2.6.3
     # via fastapi
 pydantic-core==2.16.3
     # via pydantic
-python-dateutil==2.9.0
+python-dateutil==2.9.0.post0
     # via
     #   -r requirements.in
     #   pandas
