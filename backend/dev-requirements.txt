@@ -16,7 +16,7 @@ pytest==8.0.2
     #   pytest-mock
 pytest-mock==3.12.0
     # via -r dev-requirements.in
-python-dateutil==2.8.2
+python-dateutil==2.9.0
     # via -r dev-requirements.in
 pytz==2024.1
     # via -r dev-requirements.in
