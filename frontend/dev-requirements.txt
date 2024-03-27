@@ -30,7 +30,7 @@ pytest-mock==3.14.0
     # via -r dev-requirements.in
 requests==2.31.0
     # via requests-mock
-requests-mock==1.11.0
+requests-mock==1.12.0
     # via -r dev-requirements.in
 six==1.16.0
     # via requests-mock
