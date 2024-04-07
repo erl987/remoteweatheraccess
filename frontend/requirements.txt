@@ -59,7 +59,7 @@ django-storages[google]==1.14.2
     # via -r requirements.in
 dpd-components==0.1.0
     # via django-plotly-dash
-flask==3.0.2
+flask==3.0.3
     # via
     #   dash
     #   django-plotly-dash
