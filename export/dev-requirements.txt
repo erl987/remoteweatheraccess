@@ -54,7 +54,7 @@ orjson==3.10.1
     # via fastapi
 packaging==24.0
     # via pytest
-pluggy==1.4.0
+pluggy==1.5.0
     # via pytest
 pydantic==2.7.0
     # via
