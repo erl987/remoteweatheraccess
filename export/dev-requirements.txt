@@ -56,12 +56,12 @@ packaging==24.0
     # via pytest
 pluggy==1.5.0
     # via pytest
-pydantic==2.7.0
+pydantic==2.7.1
     # via
     #   fastapi
     #   pydantic-extra-types
     #   pydantic-settings
-pydantic-core==2.18.1
+pydantic-core==2.18.2
     # via pydantic
 pydantic-extra-types==2.7.0
     # via fastapi
