@@ -8,7 +8,7 @@ bcrypt==4.1.2
     # via bcrypt-flask
 bcrypt-flask==1.0.2
     # via -r requirements.in
-blinker==1.8.0
+blinker==1.8.1
     # via flask
 cachetools==5.3.3
     # via google-auth
