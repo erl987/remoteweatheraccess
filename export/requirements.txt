@@ -18,7 +18,7 @@ click==8.1.7
     # via uvicorn
 fastapi==0.110.3
     # via -r requirements.in
-google-api-core[grpc]==2.18.0
+google-api-core[grpc]==2.19.0
     # via
     #   google-cloud-appengine-logging
     #   google-cloud-core
