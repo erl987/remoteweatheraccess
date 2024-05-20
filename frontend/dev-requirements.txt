@@ -28,7 +28,7 @@ pytest-env==1.1.3
     # via -r dev-requirements.in
 pytest-mock==3.14.0
     # via -r dev-requirements.in
-requests==2.31.0
+requests==2.32.0
     # via requests-mock
 requests-mock==1.12.1
     # via -r dev-requirements.in
