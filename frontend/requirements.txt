@@ -172,7 +172,7 @@ python-dateutil==2.9.0.post0
     #   botocore
 pytz==2024.1
     # via -r requirements.in
-requests==2.32.1
+requests==2.32.2
     # via
     #   -r requirements.in
     #   google-api-core
