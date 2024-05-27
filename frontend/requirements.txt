@@ -185,7 +185,7 @@ six==1.16.0
     # via python-dateutil
 sqlparse==0.5.0
     # via django
-stream-zip==0.0.77
+stream-zip==0.0.78
     # via -r requirements.in
 tenacity==8.3.0
     # via plotly
