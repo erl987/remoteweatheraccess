@@ -11,7 +11,7 @@ anyio==4.4.0
     #   httpx
     #   starlette
     #   watchfiles
-certifi==2024.2.2
+certifi==2024.6.2
     # via
     #   httpcore
     #   httpx
