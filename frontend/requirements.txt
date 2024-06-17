@@ -189,7 +189,7 @@ stream-zip==0.0.81
     # via -r requirements.in
 tenacity==8.4.1
     # via plotly
-urllib3==2.2.1
+urllib3==2.2.2
     # via
     #   botocore
     #   requests
