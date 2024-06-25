@@ -59,7 +59,7 @@ googleapis-common-protos[grpc]==1.63.2
     #   google-cloud-audit-log
     #   grpc-google-iam-v1
     #   grpcio-status
-grpc-google-iam-v1==0.13.0
+grpc-google-iam-v1==0.13.1
     # via google-cloud-logging
 grpcio==1.64.1
     # via
