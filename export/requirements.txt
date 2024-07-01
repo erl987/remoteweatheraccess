@@ -106,9 +106,9 @@ pyasn1==0.6.0
     #   rsa
 pyasn1-modules==0.4.0
     # via google-auth
-pydantic==2.7.4
+pydantic==2.8.0
     # via fastapi
-pydantic-core==2.18.4
+pydantic-core==2.20.0
     # via pydantic
 python-dateutil==2.9.0.post0
     # via
