@@ -93,7 +93,7 @@ pandas==2.2.2
     # via -r requirements.in
 proto-plus==1.24.0
     # via google-cloud-secret-manager
-protobuf==4.25.3
+protobuf==4.25.4
     # via
     #   google-api-core
     #   google-cloud-secret-manager
