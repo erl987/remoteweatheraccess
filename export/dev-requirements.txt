@@ -61,7 +61,7 @@ pydantic==2.8.2
     #   fastapi
     #   pydantic-extra-types
     #   pydantic-settings
-pydantic-core==2.20.1
+pydantic-core==2.21.0
     # via pydantic
 pydantic-extra-types==2.9.0
     # via fastapi
