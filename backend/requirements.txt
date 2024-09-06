@@ -39,7 +39,7 @@ google-auth==2.34.0
     # via google-api-core
 google-cloud-secret-manager==2.20.2
     # via -r requirements.in
-googleapis-common-protos[grpc]==1.63.2
+googleapis-common-protos[grpc]==1.65.0
     # via
     #   google-api-core
     #   grpc-google-iam-v1
