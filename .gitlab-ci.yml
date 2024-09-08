@@ -244,9 +244,9 @@ unittests client:
 
 build backend:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:26.1.4
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.2.0
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:26.1.4-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.2.0-dind
       alias: docker
   script:
     - *gcp_docker_registry_login
@@ -260,9 +260,9 @@ build backend:
 
 build frontend:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:26.1.4
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.2.0
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:26.1.4-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.2.0-dind
       alias: docker
   script:
     - *copy_text_files
@@ -277,9 +277,9 @@ build frontend:
 
 build exporter:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:26.1.4
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.2.0
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:26.1.4-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.2.0-dind
       alias: docker
   script:
     - *gcp_docker_registry_login
