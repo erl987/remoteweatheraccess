@@ -100,7 +100,7 @@ protobuf==4.25.4
     #   proto-plus
 pyarrow==17.0.0
     # via -r requirements.in
-pyasn1==0.6.0
+pyasn1==0.6.1
     # via
     #   pyasn1-modules
     #   rsa
