@@ -18,7 +18,7 @@ pytest-mock==3.14.0
     # via -r dev-requirements.in
 python-dateutil==2.9.0.post0
     # via -r dev-requirements.in
-pytz==2024.1
+pytz==2024.2
     # via -r dev-requirements.in
 six==1.16.0
     # via python-dateutil
