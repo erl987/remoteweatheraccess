@@ -118,7 +118,7 @@ grpcio-status==1.62.2
     # via google-api-core
 gunicorn==23.0.0
     # via -r requirements.in
-idna==3.8
+idna==3.9
     # via requests
 itsdangerous==2.2.0
     # via flask
