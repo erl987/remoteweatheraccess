@@ -71,7 +71,7 @@ grpcio-status==1.62.2
     # via google-api-core
 h11==0.14.0
     # via uvicorn
-idna==3.9
+idna==3.10
     # via
     #   anyio
     #   requests
