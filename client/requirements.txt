@@ -28,7 +28,7 @@ idna==3.10
     #   requests
 pydantic==2.9.2
     # via fastapi
-pydantic-core==2.23.4
+pydantic-core==2.24.0
     # via pydantic
 pytz==2024.2
     # via -r requirements.in
