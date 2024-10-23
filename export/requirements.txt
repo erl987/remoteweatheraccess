@@ -82,7 +82,7 @@ numpy==2.1.2
     #   pyarrow
 pandas==2.2.3
     # via -r requirements.in
-proto-plus==1.24.0
+proto-plus==1.25.0
     # via
     #   google-cloud-appengine-logging
     #   google-cloud-error-reporting
