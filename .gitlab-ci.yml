@@ -123,6 +123,7 @@ default:
       dotenv: frontend_deploy.env
 
 .gcp_build_image:
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.3.1
   script:
     - gcloud auth configure-docker ${GCP_ARTIFACT_REGISTRY}
     - docker build .
@@ -265,7 +266,6 @@ unittests client:
     <<: *publish_test_artifacts
 
 build backend:
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.3.1
   stage: build containers
   extends: .gcp_build_image
   variables:
@@ -273,7 +273,6 @@ build backend:
     DIRECTORY: ./backend
 
 build frontend:
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.3.1
   stage: build containers
   extends: .gcp_build_image
   script:
@@ -283,7 +282,6 @@ build frontend:
     DIRECTORY: ./frontend
 
 build exporter:
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.3.1
   stage: build containers
   extends: .gcp_build_image
   variables:
