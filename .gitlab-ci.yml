@@ -123,7 +123,7 @@ default:
       dotenv: frontend_deploy.env
 
 .gcp_build_image:
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.3.1
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:472.0.0
   script:
     - gcloud auth configure-docker ${GCP_ARTIFACT_REGISTRY}
     - docker build .
