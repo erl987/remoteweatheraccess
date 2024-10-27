@@ -129,6 +129,7 @@ default:
     - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:26.0.1-dind
       alias: docker
   script:
+    - echo "The value of DIRECTORY is: ${DIRECTORY}"
     - gcloud auth configure-docker ${GCP_ARTIFACT_REGISTRY}
     - docker build .
       --file=${DIRECTORY}/Dockerfile
