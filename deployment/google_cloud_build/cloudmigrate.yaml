@@ -22,7 +22,7 @@ steps:
       - -c
       - |
         /buildstep/execute.sh \
-        -i ${_GCP_CONTAINER_REGISTRY}/${PROJECT_ID}/${_FRONTEND_SERVICE_NAME}:${_CI_COMMIT_SHA} \
+        -i ${_GCP_ARTIFACT_REGISTRY}/${PROJECT_ID}/${_DOCKER_REPOSITORY}/${_FRONTEND_SERVICE_NAME}:${_CI_COMMIT_SHA} \
         -s ${PROJECT_ID}:${_SQL_DATABASE_ID} \
         -e EXPORTER_BUCKET_NAME=${_EXPORTER_BUCKET} \
         -e FRONTEND_ADDRESS=${_FRONTEND_ADDRESS} \
@@ -43,7 +43,7 @@ steps:
       - -c
       - |
         /buildstep/execute.sh \
-        -i ${_GCP_CONTAINER_REGISTRY}/${PROJECT_ID}/${_FRONTEND_SERVICE_NAME}:${_CI_COMMIT_SHA} \
+        -i ${_GCP_ARTIFACT_REGISTRY}/${PROJECT_ID}/${DOCKER_REPOSITORY}/${_FRONTEND_SERVICE_NAME}:${_CI_COMMIT_SHA} \
         -s ${PROJECT_ID}:${_SQL_DATABASE_ID} \
         -e EXPORTER_BUCKET_NAME=${_EXPORTER_BUCKET} \
         -e FRONTEND_ADDRESS=${_FRONTEND_ADDRESS} \
