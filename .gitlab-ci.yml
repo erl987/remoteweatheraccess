@@ -129,10 +129,9 @@ default:
     - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:26.0.1-dind
       alias: docker
   script:
-    - echo "The value of DIRECTORY is: ${DIRECTORY}"
     - gcloud auth configure-docker ${GCP_ARTIFACT_REGISTRY}
     - docker build .
-      --file=${DIRECTORY}/Dockerfile
+      --file=Dockerfile${DOCKER_FILE_ENDING}
       -t ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${SERVICE_NAME}:${CI_COMMIT_SHA}
       -t ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${SERVICE_NAME}:latest
       --build-arg BUILDKIT_INLINE_CACHE=1
@@ -275,7 +274,7 @@ build backend:
   extends: .gcp_build_image
   variables:
     SERVICE_NAME: ${BACKEND_SERVICE_NAME}
-    DIRECTORY: ./backend
+    DOCKER_FILE_ENDING: .backend
 
 build frontend:
   stage: build containers
@@ -284,14 +283,14 @@ build frontend:
     - *copy_text_files
   variables:
     SERVICE_NAME: ${FRONTEND_SERVICE_NAME}
-    DIRECTORY: ./frontend
+    DOCKER_FILE_ENDING: .frontend
 
 build exporter:
   stage: build containers
   extends: .gcp_build_image
   variables:
     SERVICE_NAME: ${EXPORTER_SERVICE_NAME}
-    DIRECTORY: ./exporter
+    DOCKER_FILE_ENDING: .exporter
 
 deploy review:
   stage: deploy review
