@@ -273,9 +273,9 @@ build backend:
     - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:26.0.1-dind
       alias: docker
   script:
+    - export SERVICE_NAME=${BACKEND_SERVICE_NAME}
     - *gcp_build_image
   variables:
-    SERVICE_NAME: ${BACKEND_SERVICE_NAME}
     DOCKER_FILE_ENDING: backend
 
 build frontend:
@@ -285,10 +285,10 @@ build frontend:
     - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:26.0.1-dind
       alias: docker
   script:
+    - export SERVICE_NAME=${FRONTEND_SERVICE_NAME}
     - *copy_text_files
     - *gcp_build_image
   variables:
-    SERVICE_NAME: ${FRONTEND_SERVICE_NAME}
     DOCKER_FILE_ENDING: frontend
 
 build exporter:
@@ -298,9 +298,9 @@ build exporter:
     - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:26.0.1-dind
       alias: docker
   script:
+    - export SERVICE_NAME=${EXPORTER_SERVICE_NAME}
     - *gcp_build_image
   variables:
-    SERVICE_NAME: ${EXPORTER_SERVICE_NAME}
     DOCKER_FILE_ENDING: export
 
 deploy review:
