@@ -30,7 +30,7 @@ spec:
       timeoutSeconds: 300
       serviceAccountName: ${BACKEND_SERVICE_ACCOUNT_NAME}
       containers:
-        - image: ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${BACKEND_SERVICE_NAME}:${CI_COMMIT_SHA}
+        - image: ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${BACKEND_SERVICE_NAME}:${CI_COMMIT_SHA}
           env:
             - name: RUNNING_ON_SERVER
               value: 'True'

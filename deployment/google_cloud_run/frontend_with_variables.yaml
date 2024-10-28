@@ -30,7 +30,7 @@ spec:
       timeoutSeconds: 300
       serviceAccountName: ${FRONTEND_SERVICE_ACCOUNT_NAME}
       containers:
-        - image: ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}:${CI_COMMIT_SHA}
+        - image: ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${FRONTEND_SERVICE_NAME}:${CI_COMMIT_SHA}
           env:
             - name: SECRET_DJANGO_SECRET_KEY_NAME
               value: ${SECRET_DJANGO_SECRET_KEY_NAME}
