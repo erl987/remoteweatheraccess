@@ -123,21 +123,17 @@ default:
     reports:
       dotenv: frontend_deploy.env
 
-.gcp_build_image:
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:472.0.0
-  services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:26.0.1-dind
-      alias: docker
-  script:
-    - *gcp_cloud_login
-    - gcloud auth configure-docker ${GCP_ARTIFACT_REGISTRY}
-    - docker build .
-      --file=Dockerfile.${DOCKER_FILE_ENDING}
-      -t ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${SERVICE_NAME}:${CI_COMMIT_SHA}
-      -t ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${SERVICE_NAME}:latest
-      --build-arg BUILDKIT_INLINE_CACHE=1
-      --cache-from ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${SERVICE_NAME}:latest
-    - docker push --all-tags ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${SERVICE_NAME}
+.gcp_build_image: &gcp_build_image
+  - gcloud auth activate-service-account --key-file ${GOOGLE_APPLICATION_CREDENTIALS}
+  - gcloud config set project ${GCP_PROJECT_ID}
+  - gcloud auth configure-docker ${GCP_ARTIFACT_REGISTRY}
+  - docker build .
+    --file=Dockerfile.${DOCKER_FILE_ENDING}
+    -t ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${SERVICE_NAME}:${CI_COMMIT_SHA}
+    -t ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${SERVICE_NAME}:latest
+    --build-arg BUILDKIT_INLINE_CACHE=1
+    --cache-from ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${SERVICE_NAME}:latest
+  - docker push --all-tags ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${SERVICE_NAME}
 
 .gcp_image_delete: &gcp_image_delete
   - gcloud artifacts docker images delete ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${SERVICE_NAME}
@@ -272,23 +268,37 @@ unittests client:
 
 build backend:
   stage: build containers
-  extends: .gcp_build_image
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:472.0.0
+  services:
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:26.0.1-dind
+      alias: docker
+  script:
+    - *gcp_build_image
   variables:
     SERVICE_NAME: ${BACKEND_SERVICE_NAME}
     DOCKER_FILE_ENDING: backend
 
 build frontend:
   stage: build containers
-  extends: .gcp_build_image
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:472.0.0
+  services:
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:26.0.1-dind
+      alias: docker
   script:
     - *copy_text_files
+    - *gcp_build_image
   variables:
     SERVICE_NAME: ${FRONTEND_SERVICE_NAME}
     DOCKER_FILE_ENDING: frontend
 
 build exporter:
   stage: build containers
-  extends: .gcp_build_image
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:472.0.0
+  services:
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:26.0.1-dind
+      alias: docker
+  script:
+    - *gcp_build_image
   variables:
     SERVICE_NAME: ${EXPORTER_SERVICE_NAME}
     DOCKER_FILE_ENDING: export
