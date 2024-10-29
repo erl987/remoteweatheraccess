@@ -25,7 +25,7 @@ spec:
       timeoutSeconds: 300
       serviceAccountName: ${EXPORTER_SERVICE_ACCOUNT_NAME}
       containers:
-        - image: ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${EXPORTER_SERVICE_NAME}:${CI_COMMIT_SHA}
+        - image: ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${EXPORTER_SERVICE_NAME}:${CI_COMMIT_SHA}
           env:
             - name: RUNNING_ON_GCP
               value: 'True'

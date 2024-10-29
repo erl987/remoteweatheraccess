@@ -22,13 +22,15 @@ include:
 variables:
   GCP_REGION: ${GCP_REGION_ID}
   GCP_FRONTEND_REGION: ${GCP_FRONTEND_REGION_ID}
-  GCP_CONTAINER_REGISTRY: ${GCP_CONTAINER_REGISTRY}
+  DOCKER_REPOSITORY: webapp
+  GCP_ARTIFACT_REGISTRY: ${GCP_REGION}-docker.pkg.dev
   BACKEND_PORT: 443
   FRONTEND_SERVICE_NAME: frontend-${CI_COMMIT_REF_SLUG}
   BACKEND_SERVICE_NAME: backend-${CI_COMMIT_REF_SLUG}
   EXPORTER_SERVICE_NAME: exporter-${CI_COMMIT_REF_SLUG}
   PIP_CACHE_DIR: ${CI_PROJECT_DIR}/.cache/pip
-  DOCKER_TLS_CERTDIR: "/certs"
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
   BRAND_NAME: ${BRAND_NAME}
   EXPORTER_SCHEDULER_JOB_NAME: export-csv-job-${CI_COMMIT_REF_SLUG}
   EXPORTER_BUCKET_ID: weather-export-data-
@@ -52,9 +54,6 @@ default:
   - apt-get --allow-releaseinfo-change update
   - apt-get install -qq -y gettext
 
-.gcp_docker_registry_login: &gcp_docker_registry_login
-  - docker login --username _json_key --password-stdin https://${GCP_CONTAINER_REGISTRY} < ${GOOGLE_APPLICATION_CREDENTIALS}
-
 .gcp_cloud_login: &gcp_cloud_login
   - gcloud auth activate-service-account --key-file ${GOOGLE_APPLICATION_CREDENTIALS}
   - gcloud config set project ${GCP_PROJECT_ID}
@@ -76,7 +75,7 @@ default:
     --format='value(status.url)')
 
 .gcp_django_migration: &gcp_django_migration
-  - gcloud builds submit --config=./deployment/google_cloud_build/cloudmigrate.yaml --substitutions=_GCP_CONTAINER_REGISTRY=${GCP_CONTAINER_REGISTRY},_FRONTEND_SERVICE_NAME=${FRONTEND_SERVICE_NAME},_CI_COMMIT_SHA=${CI_COMMIT_SHA},_SQL_DATABASE_ID=${SQL_DATABASE_ID},_SECRET_DJANGO_SECRET_KEY_NAME=${SECRET_DJANGO_SECRET_KEY_NAME},_FRONTEND_ENV_PATH=${FRONTEND_ENV_PATH},_FRONTEND_ADDRESS=${FRONTEND_ADDRESS},_EXPORTER_BUCKET=${EXPORTER_BUCKET},_FRONTEND_BUCKET=${FRONTEND_BUCKET},_BACKEND_URL_BASE=${BACKEND_URL_BASE},_BACKEND_PORT=${BACKEND_PORT},_BRAND_NAME="${BRAND_NAME}"
+  - gcloud builds submit --config=./deployment/google_cloud_build/cloudmigrate.yaml --substitutions=_GCP_ARTIFACT_REGISTRY=${GCP_ARTIFACT_REGISTRY},_DOCKER_REPOSITORY=${DOCKER_REPOSITORY},_FRONTEND_SERVICE_NAME=${FRONTEND_SERVICE_NAME},_CI_COMMIT_SHA=${CI_COMMIT_SHA},_SQL_DATABASE_ID=${SQL_DATABASE_ID},_SECRET_DJANGO_SECRET_KEY_NAME=${SECRET_DJANGO_SECRET_KEY_NAME},_FRONTEND_ENV_PATH=${FRONTEND_ENV_PATH},_FRONTEND_ADDRESS=${FRONTEND_ADDRESS},_EXPORTER_BUCKET=${EXPORTER_BUCKET},_FRONTEND_BUCKET=${FRONTEND_BUCKET},_BACKEND_URL_BASE=${BACKEND_URL_BASE},_BACKEND_PORT=${BACKEND_PORT},_BRAND_NAME="${BRAND_NAME}"
 
 .gcp_cloud_scheduler_job: &gcp_cloud_scheduler_job
   - existing_scheduler_jobs=$(gcloud scheduler jobs list --format 'value(name)' --filter "name ~ ${EXPORTER_SCHEDULER_JOB_NAME}" --location ${GCP_REGION})
@@ -124,15 +123,41 @@ default:
     reports:
       dotenv: frontend_deploy.env
 
-.gcp_delete_containers: &gcp_delete_containers
-  - DIGESTS=$(gcloud container images list-tags ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${IMAGE_NAME}
-    --format 'value(digest)')
-  - for DIGEST in $DIGESTS;
-    do
-    gcloud container images delete ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${IMAGE_NAME}@sha256:${DIGEST}
-    --force-delete-tags
-    --quiet;
-    done
+.gcp_build_image: &gcp_build_image
+  - gcloud auth activate-service-account --key-file ${GOOGLE_APPLICATION_CREDENTIALS}
+  - gcloud config set project ${GCP_PROJECT_ID}
+  - gcloud auth configure-docker ${GCP_ARTIFACT_REGISTRY}
+  - docker build .
+    --file=Dockerfile.${DOCKER_FILE_ENDING}
+    -t ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${SERVICE_NAME}:${CI_COMMIT_SHA}
+    -t ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${SERVICE_NAME}:latest
+    --build-arg BUILDKIT_INLINE_CACHE=1
+    --cache-from ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${SERVICE_NAME}:latest
+  - docker push --all-tags ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${SERVICE_NAME}
+
+.gcp_image_delete: &gcp_image_delete
+  - gcloud artifacts docker images delete ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${SERVICE_NAME}
+    --delete-tags
+
+.gcp_cloud_run_delete: &gcp_cloud_run_delete
+  - gcloud run services delete ${SERVICE_NAME}
+    --region=${GCP_REGION_ID}
+    --platform=managed
+    --quiet
+
+.gcp_delete: &gcp_delete
+  script:
+    - *gcp_cloud_login
+    - gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet --location ${GCP_REGION}
+    - SERVICE_NAME=${FRONTEND_SERVICE_NAME}
+    - *gcp_cloud_run_delete
+    - *gcp_image_delete
+    - SERVICE_NAME=${BACKEND_SERVICE_NAME}
+    - *gcp_cloud_run_delete
+    - *gcp_image_delete
+    - SERVICE_NAME=${EXPORTER_SERVICE_NAME}
+    - *gcp_cloud_run_delete
+    - *gcp_image_delete
 
 .copy_text_files: &copy_text_files
   - mkdir frontend/text_content
@@ -244,52 +269,40 @@ unittests client:
 
 build backend:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.3.1
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:499.0.0
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.3.1-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:26.0.1-dind
       alias: docker
   script:
-    - *gcp_docker_registry_login
-    - docker build .
-      --file=./Dockerfile.backend
-      -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${BACKEND_SERVICE_NAME}:${CI_COMMIT_SHA}
-      -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${BACKEND_SERVICE_NAME}:latest
-      --build-arg BUILDKIT_INLINE_CACHE=1
-      --cache-from ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${BACKEND_SERVICE_NAME}:latest
-    - docker push --all-tags ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${BACKEND_SERVICE_NAME}
+    - export SERVICE_NAME=${BACKEND_SERVICE_NAME}
+    - *gcp_build_image
+  variables:
+    DOCKER_FILE_ENDING: backend
 
 build frontend:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.3.1
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:499.0.0
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.3.1-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:26.0.1-dind
       alias: docker
   script:
+    - export SERVICE_NAME=${FRONTEND_SERVICE_NAME}
     - *copy_text_files
-    - *gcp_docker_registry_login
-    - docker build .
-      --file=./Dockerfile.frontend
-      -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}:${CI_COMMIT_SHA}
-      -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}:latest
-      --build-arg BUILDKIT_INLINE_CACHE=1
-      --cache-from ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}:latest
-    - docker push --all-tags ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${FRONTEND_SERVICE_NAME}
+    - *gcp_build_image
+  variables:
+    DOCKER_FILE_ENDING: frontend
 
 build exporter:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.3.1
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:499.0.0
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.3.1-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:26.0.1-dind
       alias: docker
   script:
-    - *gcp_docker_registry_login
-    - docker build .
-      --file=./Dockerfile.export
-      -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${EXPORTER_SERVICE_NAME}:${CI_COMMIT_SHA}
-      -t ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${EXPORTER_SERVICE_NAME}:latest
-      --build-arg BUILDKIT_INLINE_CACHE=1
-      --cache-from ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${EXPORTER_SERVICE_NAME}:latest
-    - docker push --all-tags ${GCP_CONTAINER_REGISTRY}/${GCP_PROJECT_ID}/${EXPORTER_SERVICE_NAME}
+    - export SERVICE_NAME=${EXPORTER_SERVICE_NAME}
+    - *gcp_build_image
+  variables:
+    DOCKER_FILE_ENDING: export
 
 deploy review:
   stage: deploy review
@@ -306,28 +319,7 @@ stop review:
   resource_group: review
   dependencies:
     - deploy review
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:499.0.0
-  script:
-    - *gcp_cloud_login
-    - gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet --location ${GCP_REGION}
-    - gcloud run services delete ${FRONTEND_SERVICE_NAME}
-      --region=${GCP_FRONTEND_REGION}
-      --platform=managed
-      --quiet
-    - gcloud run services delete ${BACKEND_SERVICE_NAME}
-      --region=${GCP_REGION}
-      --platform=managed
-      --quiet
-    - gcloud run services delete ${EXPORTER_SERVICE_NAME}
-      --region=${GCP_REGION}
-      --platform=managed
-      --quiet
-    - IMAGE_NAME=${FRONTEND_SERVICE_NAME}
-    - *gcp_delete_containers
-    - IMAGE_NAME=${BACKEND_SERVICE_NAME}
-    - *gcp_delete_containers
-    - IMAGE_NAME=${EXPORTER_SERVICE_NAME}
-    - *gcp_delete_containers
+  <<: *gcp_delete
   environment:
     name: review/${CI_COMMIT_REF_NAME}
     action: stop
