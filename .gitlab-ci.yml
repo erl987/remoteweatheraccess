@@ -156,6 +156,7 @@ default:
     - *gcp_cloud_run_delete
     - *gcp_image_delete
     - SERVICE_NAME=${EXPORTER_SERVICE_NAME}
+    - *gcp_cloud_run_delete
     - *gcp_image_delete
 
 .copy_text_files: &copy_text_files
