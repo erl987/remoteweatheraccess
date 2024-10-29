@@ -16,9 +16,9 @@ charset-normalizer==3.4.0
     # via requests
 click==8.1.7
     # via uvicorn
-fastapi==0.115.3
+fastapi==0.115.4
     # via -r requirements.in
-google-api-core[grpc]==2.21.0
+google-api-core[grpc]==2.22.0
     # via
     #   google-cloud-appengine-logging
     #   google-cloud-core
@@ -61,7 +61,7 @@ googleapis-common-protos[grpc]==1.65.0
     #   grpcio-status
 grpc-google-iam-v1==0.13.1
     # via google-cloud-logging
-grpcio==1.67.0
+grpcio==1.67.1
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -98,7 +98,7 @@ protobuf==4.25.5
     #   grpc-google-iam-v1
     #   grpcio-status
     #   proto-plus
-pyarrow==17.0.0
+pyarrow==18.0.0
     # via -r requirements.in
 pyasn1==0.6.1
     # via
