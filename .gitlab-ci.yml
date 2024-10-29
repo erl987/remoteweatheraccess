@@ -141,7 +141,7 @@ default:
 
 .gcp_cloud_run_delete: &gcp_cloud_run_delete
   - gcloud run services delete ${SERVICE_NAME}
-    --region=${GCP_REGION_ID}
+    --region=${REGION_ID}
     --platform=managed
     --quiet
 
@@ -151,12 +151,15 @@ default:
     - *gcp_cloud_login
     - gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet --location ${GCP_REGION}
     - SERVICE_NAME=${FRONTEND_SERVICE_NAME}
+    - REGION_ID=${GCP_FRONTEND_REGION}
     - *gcp_cloud_run_delete
     - *gcp_image_delete
     - SERVICE_NAME=${BACKEND_SERVICE_NAME}
+    - REGION_ID=${GCP_REGION}
     - *gcp_cloud_run_delete
     - *gcp_image_delete
     - SERVICE_NAME=${EXPORTER_SERVICE_NAME}
+    - REGION_ID=${GCP_REGION}
     - *gcp_cloud_run_delete
     - *gcp_image_delete
 
