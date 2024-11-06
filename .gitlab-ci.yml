@@ -92,7 +92,7 @@ default:
     --location ${GCP_REGION}
 
 .gcp_deploy: &gcp_deploy
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:499.0.0
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:500.0.0
   resource_group: deploy
   script:
     - *gcp_cloud_login
@@ -146,7 +146,7 @@ default:
     --quiet
 
 .gcp_delete: &gcp_delete
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:499.0.0
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:500.0.0
   script:
     - *gcp_cloud_login
     - gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet --location ${GCP_REGION}
@@ -273,7 +273,7 @@ unittests client:
 
 build backend:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:499.0.0
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:500.0.0
   services:
     - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.3.1-dind
       alias: docker
@@ -285,7 +285,7 @@ build backend:
 
 build frontend:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:499.0.0
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:500.0.0
   services:
     - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.3.1-dind
       alias: docker
@@ -298,7 +298,7 @@ build frontend:
 
 build exporter:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:499.0.0
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:500.0.0
   services:
     - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.3.1-dind
       alias: docker
