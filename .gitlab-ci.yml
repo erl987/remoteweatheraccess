@@ -103,8 +103,8 @@ default:
     - TIER=backend
     - CLOUD_RUN_INVOKER="allUsers"
     - CURR_GCP_REGION=${GCP_REGION}
-    - GCP_ARTIFACT_REGISTRY=${GCP_BACKEND_ARTIFACT_REGISTRY}
-    - DOCKER_REPOSITORY=backend
+    - export GCP_ARTIFACT_REGISTRY=${GCP_BACKEND_ARTIFACT_REGISTRY}
+    - export DOCKER_REPOSITORY=backend
     - *gcp_cloud_run_deploy
     - export BACKEND_URL_BASE=$(basename ${BACKEND_URL})
     - TIER=frontend
@@ -112,16 +112,16 @@ default:
     - export EXPORTER_BUCKET=$(gcloud storage ls | grep ${EXPORTER_BUCKET_ID})
     - CLOUD_RUN_INVOKER="allUsers"
     - CURR_GCP_REGION=${GCP_FRONTEND_REGION}
-    - GCP_ARTIFACT_REGISTRY=${GCP_FRONTEND_ARTIFACT_REGISTRY}
-    - DOCKER_REPOSITORY=frontend
+    - export GCP_ARTIFACT_REGISTRY=${GCP_FRONTEND_ARTIFACT_REGISTRY}
+    - export DOCKER_REPOSITORY=frontend
     - *gcp_django_migration
     - *gcp_cloud_run_deploy
     - echo "FRONTEND_URL=${FRONTEND_URL}" > frontend_deploy.env
     - TIER=exporter
     - CLOUD_RUN_INVOKER="serviceAccount:${EXPORTER_SERVICE_ACCOUNT_NAME}"
     - CURR_GCP_REGION=${GCP_REGION}
-    - GCP_ARTIFACT_REGISTRY=${GCP_BACKEND_ARTIFACT_REGISTRY}
-    - DOCKER_REPOSITORY=backend
+    - export GCP_ARTIFACT_REGISTRY=${GCP_BACKEND_ARTIFACT_REGISTRY}
+    - export DOCKER_REPOSITORY=backend
     - *gcp_cloud_run_deploy
     - *gcp_cloud_scheduler_job
 
