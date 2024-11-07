@@ -91,40 +91,48 @@ default:
     --max-retry-attempts=1
     --location ${GCP_REGION}
 
+.gcp_backend_deploy: &gcp_backend_deploy
+  - TIER=backend
+  - export SQL_DATABASE_ID=${GCP_REGION}:$(gcloud sql instances list --format 'value(name)')
+  - num_databases=$(wc -w <<< "$SQL_DATABASE_ID")
+  - if [ $num_databases != 1 ]; then echo "ERROR, not exactly one database in GCP-project"; exit 1; fi
+  - CLOUD_RUN_INVOKER="allUsers"
+  - CURR_GCP_REGION=${GCP_REGION}
+  - export GCP_ARTIFACT_REGISTRY=${GCP_BACKEND_ARTIFACT_REGISTRY}
+  - export DOCKER_REPOSITORY=backend
+  - *gcp_cloud_run_deploy
+  - export BACKEND_URL_BASE=$(basename ${BACKEND_URL})
+
+.gcp_frontend_deploy: &gcp_frontend_deploy
+  - TIER=frontend
+  - export FRONTEND_BUCKET=$(gcloud storage ls | grep ${FRONTEND_BUCKET_ID})
+  - export EXPORTER_BUCKET=$(gcloud storage ls | grep ${EXPORTER_BUCKET_ID})
+  - CLOUD_RUN_INVOKER="allUsers"
+  - CURR_GCP_REGION=${GCP_FRONTEND_REGION}
+  - export GCP_ARTIFACT_REGISTRY=${GCP_FRONTEND_ARTIFACT_REGISTRY}
+  - export DOCKER_REPOSITORY=frontend
+  - *gcp_django_migration
+  - *gcp_cloud_run_deploy
+  - echo "FRONTEND_URL=${FRONTEND_URL}" > frontend_deploy.env
+
+.gcp_exporter_deploy: &gcp_exporter_deploy
+  - TIER=exporter
+  - CLOUD_RUN_INVOKER="serviceAccount:${EXPORTER_SERVICE_ACCOUNT_NAME}"
+  - CURR_GCP_REGION=${GCP_REGION}
+  - export GCP_ARTIFACT_REGISTRY=${GCP_BACKEND_ARTIFACT_REGISTRY}
+  - export DOCKER_REPOSITORY=backend
+  - *gcp_cloud_run_deploy
+  - *gcp_cloud_scheduler_job
+
 .gcp_deploy: &gcp_deploy
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:500.0.0
   resource_group: deploy
   script:
     - *gcp_cloud_login
     - *install_gettext
-    - export SQL_DATABASE_ID=${GCP_REGION}:$(gcloud sql instances list --format 'value(name)')
-    - num_databases=$(wc -w <<< "$SQL_DATABASE_ID")
-    - if [ $num_databases != 1 ]; then echo "ERROR, not exactly one database in GCP-project"; exit 1; fi
-    - TIER=backend
-    - CLOUD_RUN_INVOKER="allUsers"
-    - CURR_GCP_REGION=${GCP_REGION}
-    - export GCP_ARTIFACT_REGISTRY=${GCP_BACKEND_ARTIFACT_REGISTRY}
-    - export DOCKER_REPOSITORY=backend
-    - *gcp_cloud_run_deploy
-    - export BACKEND_URL_BASE=$(basename ${BACKEND_URL})
-    - TIER=frontend
-    - export FRONTEND_BUCKET=$(gcloud storage ls | grep ${FRONTEND_BUCKET_ID})
-    - export EXPORTER_BUCKET=$(gcloud storage ls | grep ${EXPORTER_BUCKET_ID})
-    - CLOUD_RUN_INVOKER="allUsers"
-    - CURR_GCP_REGION=${GCP_FRONTEND_REGION}
-    - export GCP_ARTIFACT_REGISTRY=${GCP_FRONTEND_ARTIFACT_REGISTRY}
-    - export DOCKER_REPOSITORY=frontend
-    - *gcp_django_migration
-    - *gcp_cloud_run_deploy
-    - echo "FRONTEND_URL=${FRONTEND_URL}" > frontend_deploy.env
-    - TIER=exporter
-    - CLOUD_RUN_INVOKER="serviceAccount:${EXPORTER_SERVICE_ACCOUNT_NAME}"
-    - CURR_GCP_REGION=${GCP_REGION}
-    - export GCP_ARTIFACT_REGISTRY=${GCP_BACKEND_ARTIFACT_REGISTRY}
-    - export DOCKER_REPOSITORY=backend
-    - *gcp_cloud_run_deploy
-    - *gcp_cloud_scheduler_job
-
+    - *gcp_backend_deploy
+    - *gcp_frontend_deploy
+    - *gcp_exporter_deploy
   artifacts:
     reports:
       dotenv: frontend_deploy.env
