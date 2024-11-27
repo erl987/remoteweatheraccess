@@ -106,7 +106,7 @@ This project supports continuous delivery of the server components to Google Clo
 It is expecting that the infrastructure is up and running, the most important expected components are:
 
 * Google Cloud Run API activated
-* Cloud-SQL (Postgres)
+* Google Cloud-SQL (Postgres)
 * Google Secrets (for storing the database credentials)
 * Google Cloud Storage (for storing the static files of `django`)
 
@@ -125,12 +125,15 @@ the following roles:
 * `Editor`
 * `Cloud Run Admin`
 * `Storage Admin`
+* `Artifact Registry Reader`
 * `Viewer`
+
+This service account requires the same permissions also for the *GCP-project containing the server*. 
 
 The *seed project* requires the same APIs being activated as the project running the server components. These are:
 
 * `secretmanager.googleapis.com`
-* `containerregistry.googleapis.com`
+* `artifactregistry.googleapis.com`
 * `run.googleapis.com`
 * `sqladmin.googleapis.com`
 
@@ -138,7 +141,6 @@ The *seed project* requires the same APIs being activated as the project running
 
 The following variables need to be defined in the GitLab project:
 
-* `GCP_CONTAINER_REGISTRY` (for example `eu.gcr.io`)
 * `GCP_PROJECT_ID_PRODUCTION` (for example `weather-production-123456`)
 * `GCP_PROJECT_ID_TESTING` (for example `weather-testing-123456`)
 * `GCP_REGION_ID` (for example `europe-west3`)
