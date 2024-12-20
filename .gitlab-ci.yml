@@ -298,7 +298,7 @@ build backend:
   stage: build containers
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:504.0.1
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.4.0-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.4.1-dind
       alias: docker
   script:
     - export SERVICE_NAME=${BACKEND_SERVICE_NAME}
@@ -312,7 +312,7 @@ build frontend:
   stage: build containers
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:504.0.1
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.4.0-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.4.1-dind
       alias: docker
   script:
     - export SERVICE_NAME=${FRONTEND_SERVICE_NAME}
@@ -327,7 +327,7 @@ build exporter:
   stage: build containers
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:504.0.1
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.4.0-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.4.1-dind
       alias: docker
   script:
     - export SERVICE_NAME=${EXPORTER_SERVICE_NAME}
