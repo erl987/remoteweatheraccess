@@ -65,7 +65,7 @@ pydantic-core==2.27.2
     # via pydantic
 pydantic-extra-types==2.10.1
     # via fastapi
-pydantic-settings==2.7.0
+pydantic-settings==2.7.1
     # via fastapi
 pytest==8.3.4
     # via -r dev-requirements.in
