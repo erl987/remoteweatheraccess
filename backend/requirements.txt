@@ -72,7 +72,7 @@ markupsafe==3.0.2
     # via
     #   jinja2
     #   werkzeug
-marshmallow==3.23.3
+marshmallow==3.24.0
     # via
     #   -r requirements.in
     #   flask-marshmallow
