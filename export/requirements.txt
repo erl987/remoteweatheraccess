@@ -16,7 +16,7 @@ charset-normalizer==3.4.1
     # via requests
 click==8.1.8
     # via uvicorn
-fastapi==0.115.7
+fastapi==0.115.8
     # via -r requirements.in
 google-api-core[grpc]==2.24.1
     # via
