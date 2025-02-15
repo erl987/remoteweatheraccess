@@ -130,7 +130,7 @@ sqlalchemy==2.0.38
     #   marshmallow-sqlalchemy
 typing-extensions==4.12.2
     # via sqlalchemy
-tzdata==2024.2
+tzdata==2025.1
     # via pandas
 urllib3==2.3.0
     # via requests
