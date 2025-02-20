@@ -37,7 +37,7 @@ google-api-core[grpc]==2.24.1
     # via google-cloud-secret-manager
 google-auth==2.38.0
     # via google-api-core
-google-cloud-secret-manager==2.23.0
+google-cloud-secret-manager==2.23.1
     # via -r requirements.in
 googleapis-common-protos[grpc]==1.67.0
     # via
