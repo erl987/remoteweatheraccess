@@ -98,7 +98,7 @@ google-crc32c==1.6.0
     #   google-resumable-media
 google-resumable-media==2.7.2
     # via google-cloud-storage
-googleapis-common-protos[grpc]==1.67.0
+googleapis-common-protos[grpc]==1.68.0
     # via
     #   google-api-core
     #   google-cloud-audit-log
