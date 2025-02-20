@@ -8,7 +8,7 @@ annotated-types==0.7.0
     # via pydantic
 anyio==4.8.0
     # via starlette
-cachetools==5.5.1
+cachetools==5.5.2
     # via google-auth
 certifi==2024.12.14
     # via requests

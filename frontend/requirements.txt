@@ -18,7 +18,7 @@ botocore==1.34.74
     #   s3transfer
 cacheout==0.16.0
     # via -r requirements.in
-cachetools==5.5.1
+cachetools==5.5.2
     # via google-auth
 certifi==2024.12.14
     # via requests
