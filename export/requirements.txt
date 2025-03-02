@@ -98,7 +98,7 @@ protobuf==4.25.6
     #   grpc-google-iam-v1
     #   grpcio-status
     #   proto-plus
-pyarrow==18.1.0
+pyarrow==19.0.1
     # via -r requirements.in
 pyasn1==0.6.1
     # via
