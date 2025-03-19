@@ -10,7 +10,7 @@ charset-normalizer==3.4.1
     # via requests
 idna==3.10
     # via requests
-iniconfig==2.0.0
+iniconfig==2.1.0
     # via pytest
 packaging==24.2
     # via pytest
