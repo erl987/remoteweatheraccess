@@ -33,7 +33,7 @@ dash==2.9.3
     #   -r requirements.in
     #   dash-bootstrap-components
     #   django-plotly-dash
-dash-bootstrap-components==1.7.1
+dash-bootstrap-components==2.0.0
     # via
     #   -r requirements.in
     #   django-plotly-dash
