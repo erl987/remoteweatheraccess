@@ -50,7 +50,7 @@ jinja2==3.1.6
     # via fastapi
 markupsafe==3.0.2
     # via jinja2
-orjson==3.10.15
+orjson==3.10.16
     # via fastapi
 packaging==24.2
     # via pytest
