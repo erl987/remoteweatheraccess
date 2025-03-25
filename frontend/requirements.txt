@@ -28,7 +28,7 @@ charset-normalizer==3.4.1
     # via requests
 click==8.1.8
     # via flask
-dash==2.9.3
+dash==3.0.0
     # via
     #   -r requirements.in
     #   dash-bootstrap-components
