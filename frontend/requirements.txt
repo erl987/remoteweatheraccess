@@ -187,7 +187,7 @@ sqlparse==0.5.3
     # via django
 stream-zip==0.0.83
     # via -r requirements.in
-tenacity==9.0.0
+tenacity==9.1.2
     # via plotly
 urllib3==2.3.0
     # via
