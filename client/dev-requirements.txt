@@ -99,7 +99,7 @@ typing-extensions==4.13.2
     #   pydantic-core
 ujson==5.10.0
     # via fastapi
-urllib3==2.3.0
+urllib3==2.4.0
     # via requests
 uvicorn[standard]==0.34.0
     # via fastapi
