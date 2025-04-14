@@ -35,7 +35,7 @@ gevent==24.11.1
     # via -r requirements.in
 google-api-core[grpc]==2.24.2
     # via google-cloud-secret-manager
-google-auth==2.38.0
+google-auth==2.39.0
     # via google-api-core
 google-cloud-secret-manager==2.23.2
     # via -r requirements.in
