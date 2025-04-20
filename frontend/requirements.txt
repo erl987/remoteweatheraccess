@@ -134,7 +134,7 @@ markupsafe==3.0.2
     #   werkzeug
 numpy==2.2.5
     # via -r requirements.in
-packaging==24.2
+packaging==25.0
     # via
     #   gunicorn
     #   plotly
