@@ -26,7 +26,7 @@ email-validator==2.2.0
     # via fastapi
 fastapi[all]==0.115.12
     # via -r dev-requirements.in
-h11==0.14.0
+h11==0.16.0
     # via
     #   httpcore
     #   uvicorn
