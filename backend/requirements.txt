@@ -128,7 +128,7 @@ sqlalchemy==2.0.41
     #   -r requirements.in
     #   flask-sqlalchemy
     #   marshmallow-sqlalchemy
-typing-extensions==4.13.2
+typing-extensions==4.14.0
     # via sqlalchemy
 tzdata==2025.2
     # via pandas
