@@ -14,7 +14,7 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-FROM python:3.11.12-slim-bookworm
+FROM python:3.11.13-slim-bookworm
 
 ENV PYTHONUNBUFFERED True
 ENV PYTHONPATH /app:/app/frontend/django_frontend
