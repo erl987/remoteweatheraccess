@@ -80,7 +80,7 @@ pyyaml==6.0.2
     # via
     #   fastapi
     #   uvicorn
-requests==2.32.3
+requests==2.32.4
     # via requests-mock
 requests-mock==1.12.1
     # via -r dev-requirements.in
