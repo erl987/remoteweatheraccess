@@ -31,7 +31,7 @@ google-auth==2.40.3
     #   google-cloud-appengine-logging
     #   google-cloud-core
     #   google-cloud-storage
-google-cloud-appengine-logging==1.6.1
+google-cloud-appengine-logging==1.6.2
     # via google-cloud-logging
 google-cloud-audit-log==0.3.2
     # via google-cloud-logging
