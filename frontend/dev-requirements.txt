@@ -34,7 +34,7 @@ requests-mock==1.12.1
     # via -r dev-requirements.in
 six==1.17.0
     # via requests-mock
-urllib3==2.4.0
+urllib3==2.5.0
     # via
     #   -r dev-requirements.in
     #   requests
