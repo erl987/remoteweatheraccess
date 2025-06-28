@@ -100,7 +100,7 @@ ujson==5.10.0
     # via fastapi
 urllib3==2.5.0
     # via requests
-uvicorn[standard]==0.34.3
+uvicorn[standard]==0.35.0
     # via fastapi
 uvloop==0.21.0
     # via uvicorn
