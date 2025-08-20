@@ -97,7 +97,7 @@ typing-extensions==4.14.1
     #   fastapi
     #   pydantic
     #   pydantic-core
-ujson==5.10.0
+ujson==5.11.0
     # via fastapi
 urllib3==2.5.0
     # via requests
