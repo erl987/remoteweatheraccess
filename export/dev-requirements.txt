@@ -48,7 +48,7 @@ itsdangerous==2.2.0
     # via fastapi
 jinja2==3.1.6
     # via fastapi
-markupsafe==3.0.2
+markupsafe==3.0.3
     # via jinja2
 orjson==3.11.3
     # via fastapi
