@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements.in
 #
-bcrypt==4.3.0
+bcrypt==5.0.0
     # via bcrypt-flask
 bcrypt-flask==1.0.2
     # via -r requirements.in
