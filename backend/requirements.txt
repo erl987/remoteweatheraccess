@@ -50,7 +50,7 @@ greenlet==3.2.4
     #   sqlalchemy
 grpc-google-iam-v1==0.14.3
     # via google-cloud-secret-manager
-grpcio==1.75.1
+grpcio==1.76.0
     # via
     #   google-api-core
     #   googleapis-common-protos
