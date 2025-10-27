@@ -69,7 +69,7 @@ pydantic-settings==2.11.0
     # via fastapi
 pytest==8.4.2
     # via -r dev-requirements.in
-python-dotenv==1.2.0
+python-dotenv==1.2.1
     # via
     #   pydantic-settings
     #   uvicorn
