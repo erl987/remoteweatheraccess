@@ -147,7 +147,7 @@ proto-plus==1.26.1
     #   google-cloud-appengine-logging
     #   google-cloud-logging
     #   google-cloud-secret-manager
-protobuf==6.33.0
+protobuf==6.33.1
     # via
     #   google-api-core
     #   google-cloud-appengine-logging
