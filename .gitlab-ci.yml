@@ -226,7 +226,7 @@ unittests backend:
       - .cache/pip
       - venv/
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/postgres:13.22-alpine
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/postgres:13.23-alpine
       alias: postgres
   before_script:
     - *python_prepare
