@@ -22,7 +22,7 @@ cachetools==6.2.2
     # via google-auth
 certifi==2025.11.12
     # via requests
-channels==4.3.1
+channels==4.3.2
     # via django-plotly-dash
 charset-normalizer==3.4.4
     # via requests
