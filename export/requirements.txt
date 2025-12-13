@@ -134,7 +134,7 @@ typing-extensions==4.15.0
     #   fastapi
     #   pydantic
     #   pydantic-core
-tzdata==2025.2
+tzdata==2025.3
     # via pandas
 urllib3==2.6.2
     # via requests
