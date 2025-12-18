@@ -86,7 +86,7 @@ google-cloud-core==2.5.0
     #   google-cloud-storage
 google-cloud-logging==3.13.0
     # via -r requirements.in
-google-cloud-secret-manager==2.25.0
+google-cloud-secret-manager==2.26.0
     # via -r requirements.in
 google-cloud-storage==2.19.0
     # via
