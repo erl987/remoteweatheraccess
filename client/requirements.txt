@@ -49,5 +49,5 @@ typing-extensions==4.15.0
     #   pydantic-core
 urllib3==2.6.2
     # via requests
-uvicorn==0.38.0
+uvicorn==0.39.0
     # via -r requirements.in
