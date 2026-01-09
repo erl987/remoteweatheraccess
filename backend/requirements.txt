@@ -33,7 +33,7 @@ flask-sqlalchemy==3.1.1
     # via -r requirements.in
 gevent==25.9.1
     # via -r requirements.in
-google-api-core[grpc]==2.28.1
+google-api-core[grpc]==2.29.0
     # via google-cloud-secret-manager
 google-auth==2.47.0
     # via google-api-core
