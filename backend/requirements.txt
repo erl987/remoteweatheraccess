@@ -140,7 +140,7 @@ werkzeug==3.1.5
     #   flask-jwt-extended
 zope-event==6.1
     # via gevent
-zope-interface==8.1.1
+zope-interface==8.2
     # via gevent
 
 # The following packages are considered to be unsafe in a requirements file:
