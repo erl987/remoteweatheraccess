@@ -12,7 +12,7 @@ anyio==4.12.1
     #   starlette
 cerberus==1.3.8
     # via -r requirements.in
-certifi==2025.11.12
+certifi==2026.1.4
     # via requests
 charset-normalizer==3.4.4
     # via requests
