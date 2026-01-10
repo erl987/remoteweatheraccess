@@ -132,7 +132,7 @@ markupsafe==3.0.3
     # via
     #   jinja2
     #   werkzeug
-numpy==2.4.0
+numpy==2.4.1
     # via -r requirements.in
 packaging==25.0
     # via
