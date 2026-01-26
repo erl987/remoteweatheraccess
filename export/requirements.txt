@@ -25,7 +25,7 @@ google-api-core[grpc]==2.29.0
     #   google-cloud-error-reporting
     #   google-cloud-logging
     #   google-cloud-storage
-google-auth==2.47.0
+google-auth==2.48.0
     # via
     #   google-api-core
     #   google-cloud-appengine-logging

@@ -70,7 +70,7 @@ google-api-core[grpc]==2.29.0
     #   google-cloud-logging
     #   google-cloud-secret-manager
     #   google-cloud-storage
-google-auth==2.47.0
+google-auth==2.48.0
     # via
     #   -r requirements.in
     #   google-api-core
