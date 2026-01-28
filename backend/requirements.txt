@@ -83,7 +83,7 @@ numpy==2.4.1
     # via
     #   -r requirements.in
     #   pandas
-packaging==25.0
+packaging==26.0
     # via
     #   flask-marshmallow
     #   gunicorn
