@@ -20,7 +20,7 @@ cacheout==0.16.0
     # via -r requirements.in
 cachetools==6.2.6
     # via google-auth
-certifi==2025.11.12
+certifi==2026.1.4
     # via requests
 channels==4.3.2
     # via django-plotly-dash
