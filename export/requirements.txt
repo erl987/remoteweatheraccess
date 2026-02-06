@@ -16,7 +16,7 @@ charset-normalizer==3.4.4
     # via requests
 click==8.3.1
     # via uvicorn
-fastapi==0.128.0
+fastapi==0.128.3
     # via -r requirements.in
 google-api-core[grpc]==2.29.0
     # via
@@ -127,7 +127,7 @@ six==1.17.0
     # via python-dateutil
 sniffio==1.3.1
     # via anyio
-starlette==0.50.0
+starlette==0.52.1
     # via fastapi
 typing-extensions==4.15.0
     # via
