@@ -80,7 +80,7 @@ numpy==2.4.2
     #   -r requirements.in
     #   pandas
     #   pyarrow
-pandas==2.3.3
+pandas==3.0.0
     # via -r requirements.in
 proto-plus==1.27.1
     # via
