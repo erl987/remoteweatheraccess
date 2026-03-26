@@ -256,7 +256,6 @@ unittests frontend:
     - pip3 install -r frontend/dev-requirements.txt
   script:
     - export PYTHONPATH=${CI_PROJECT_DIR}/frontend
-    - export PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
     - pytest frontend/tests --junitxml=report.xml
   artifacts:
     <<: *publish_test_artifacts
