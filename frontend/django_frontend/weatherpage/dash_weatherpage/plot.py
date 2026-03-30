@@ -42,9 +42,11 @@ class FigureLayout(object):
                     'dtickrange': [36000000, None],
                     'value': '%a\n%d.%m.%Y'
                 }],
-                'titlefont': {
-                    'family': DIAGRAM_FONT_FAMILY,
-                    'size': DIAGRAM_FONT_SIZE
+                'title': {
+                    'font': {
+                        'family': DIAGRAM_FONT_FAMILY,
+                        'size': DIAGRAM_FONT_SIZE
+                    }
                 },
                 'tickfont': {
                     'family': DIAGRAM_FONT_FAMILY,
@@ -89,11 +91,13 @@ class FigureLayout(object):
         axis_name = _get_axis_name(sensor_index)
 
         self._figure_layout[axis_name] = {
-            'title': '{} / {}'.format(sensor_description, sensor_unit),
-            'titlefont': {
-                'family': DIAGRAM_FONT_FAMILY,
-                'color': COLOR_LIST[color_index],
-                'size': DIAGRAM_FONT_SIZE
+            'title': {
+                'text': '{} / {}'.format(sensor_description, sensor_unit),
+                'font': {
+                    'family': DIAGRAM_FONT_FAMILY,
+                    'color': COLOR_LIST[color_index],
+                    'size': DIAGRAM_FONT_SIZE
+                }
             },
             'tickfont': {
                 'family': DIAGRAM_FONT_FAMILY,
@@ -134,7 +138,9 @@ class FigureLayout(object):
         current_date = get_current_date(USER_TIME_ZONE)
 
         self._figure_layout['yaxis'] = {
-            'title': '',
+            'title': {
+                'text': '',
+            },
             'tickfont': {
                 'color': GRAPH_FRONT_COLOR,
                 'size': DIAGRAM_FONT_SIZE
