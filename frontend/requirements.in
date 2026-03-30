@@ -16,7 +16,7 @@
 
 boto3
 dash
-dash-bootstrap-components<=1.7.1
+dash-bootstrap-components
 dash-breakpoints
 cacheout
 django<5  # required because Postgres 13 is deployed
