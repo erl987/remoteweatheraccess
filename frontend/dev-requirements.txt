@@ -32,7 +32,7 @@ pytest-mock==3.15.1
     # via -r dev-requirements.in
 python-dotenv==1.2.2
     # via pytest-env
-requests==2.33.0
+requests==2.33.1
     # via requests-mock
 requests-mock==1.12.1
     # via -r dev-requirements.in
