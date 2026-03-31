@@ -19,4 +19,3 @@ pytest-env
 pytest-mock
 pytest-django
 requests-mock
-urllib3<2.0  # required to be compatible with the main requirements file
