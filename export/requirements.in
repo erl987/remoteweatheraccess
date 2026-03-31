@@ -15,12 +15,12 @@
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 numpy
-pandas
-pyarrow  # dependency of pandas 3.0+, added to silene a warning
+pandas<3  # large change
+pyarrow  # dependency of pandas 3.0+, added to silence a warning
 requests
 uvicorn
 python-dateutil
 fastapi
 google-cloud-error-reporting
 google-cloud-logging
-google-cloud-storage
+google-cloud-storage<3  # needs manual testing

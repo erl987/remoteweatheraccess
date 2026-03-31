@@ -26,7 +26,7 @@ json-logging-py
 marshmallow
 marshmallow-sqlalchemy
 numpy
-pandas
+pandas<3  # large change
 psycogreen
 psycopg2-binary
 sqlalchemy
