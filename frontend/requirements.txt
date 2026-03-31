@@ -75,7 +75,7 @@ google-auth==2.49.1
     #   google-cloud-logging
     #   google-cloud-secret-manager
     #   google-cloud-storage
-google-cloud-appengine-logging==1.8.0
+google-cloud-appengine-logging==1.9.0
     # via google-cloud-logging
 google-cloud-audit-log==0.5.0
     # via google-cloud-logging
