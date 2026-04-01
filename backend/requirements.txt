@@ -52,7 +52,7 @@ greenlet==3.3.2
     # via
     #   gevent
     #   sqlalchemy
-grpc-google-iam-v1==0.14.3
+grpc-google-iam-v1==0.14.4
     # via google-cloud-secret-manager
 grpcio==1.80.0
     # via
