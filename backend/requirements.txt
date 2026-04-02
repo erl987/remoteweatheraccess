@@ -83,7 +83,7 @@ marshmallow==4.2.3
     #   -r requirements.in
     #   flask-marshmallow
     #   marshmallow-sqlalchemy
-marshmallow-sqlalchemy==1.4.2
+marshmallow-sqlalchemy==1.5.0
     # via -r requirements.in
 numpy==2.4.4
     # via
