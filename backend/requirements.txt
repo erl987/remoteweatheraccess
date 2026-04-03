@@ -125,7 +125,7 @@ requests==2.33.1
     # via google-api-core
 six==1.17.0
     # via python-dateutil
-sqlalchemy==2.0.48
+sqlalchemy==2.0.49
     # via
     #   -r requirements.in
     #   flask-sqlalchemy
