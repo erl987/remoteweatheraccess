@@ -84,7 +84,7 @@ idna==3.11
     # via
     #   anyio
     #   requests
-importlib-metadata==8.7.1
+importlib-metadata==9.0.0
     # via opentelemetry-api
 numpy==2.4.4
     # via
