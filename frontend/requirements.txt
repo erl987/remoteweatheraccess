@@ -28,7 +28,7 @@ charset-normalizer==3.4.7
     # via requests
 click==8.3.2
     # via flask
-cryptography==46.0.6
+cryptography==46.0.7
     # via google-auth
 dash==4.1.0
     # via
