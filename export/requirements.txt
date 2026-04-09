@@ -90,7 +90,7 @@ numpy==2.4.4
     # via
     #   -r requirements.in
     #   pandas
-opentelemetry-api==1.40.0
+opentelemetry-api==1.41.0
     # via google-cloud-logging
 pandas==2.3.3
     # via -r requirements.in
