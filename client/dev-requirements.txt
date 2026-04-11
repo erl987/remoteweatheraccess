@@ -108,7 +108,7 @@ requests==2.33.1
     # via requests-mock
 requests-mock==1.12.1
     # via -r dev-requirements.in
-rich==14.3.3
+rich==14.3.4
     # via
     #   rich-toolkit
     #   typer
