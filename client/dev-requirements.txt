@@ -72,7 +72,7 @@ markupsafe==3.0.3
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
-packaging==26.0
+packaging==26.1
     # via pytest
 pluggy==1.6.0
     # via pytest

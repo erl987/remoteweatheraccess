@@ -147,7 +147,7 @@ numpy==2.4.4
     # via -r requirements.in
 opentelemetry-api==1.41.0
     # via google-cloud-logging
-packaging==26.0
+packaging==26.1
     # via
     #   gunicorn
     #   plotly
