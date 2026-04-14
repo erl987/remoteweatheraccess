@@ -218,7 +218,7 @@ werkzeug==3.1.8
     #   dash
     #   django-plotly-dash
     #   flask
-zipp==3.23.0
+zipp==3.23.1
     # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
