@@ -76,13 +76,13 @@ packaging==26.1
     # via pytest
 pluggy==1.6.0
     # via pytest
-pydantic[email]==2.13.1
+pydantic[email]==2.13.2
     # via
     #   fastapi
     #   fastapi-cloud-cli
     #   pydantic-extra-types
     #   pydantic-settings
-pydantic-core==2.46.1
+pydantic-core==2.46.2
     # via pydantic
 pydantic-extra-types==2.11.2
     # via fastapi
