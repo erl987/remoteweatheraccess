@@ -139,7 +139,7 @@ markupsafe==3.0.3
     #   flask
     #   jinja2
     #   werkzeug
-narwhals==2.19.0
+narwhals==2.20.0
     # via plotly
 nest-asyncio==1.6.0
     # via dash
