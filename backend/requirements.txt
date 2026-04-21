@@ -107,7 +107,7 @@ protobuf==6.33.6
     #   proto-plus
 psycogreen==1.0.2
     # via -r requirements.in
-psycopg2-binary==2.9.11
+psycopg2-binary==2.9.12
     # via -r requirements.in
 pyasn1==0.6.3
     # via pyasn1-modules
