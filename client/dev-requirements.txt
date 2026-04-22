@@ -124,7 +124,7 @@ shellingham==1.5.4
     # via typer
 starlette==1.0.0
     # via fastapi
-typer==0.24.1
+typer==0.24.2
     # via
     #   fastapi-cli
     #   fastapi-cloud-cli
