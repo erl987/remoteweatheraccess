@@ -144,5 +144,5 @@ werkzeug==3.1.8
     #   flask-jwt-extended
 zope-event==6.1
     # via gevent
-zope-interface==8.3
+zope-interface==8.4
     # via gevent
