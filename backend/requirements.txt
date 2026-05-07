@@ -93,7 +93,7 @@ packaging==26.2
     # via gunicorn
 pandas==2.3.3
     # via -r requirements.in
-proto-plus==1.27.2
+proto-plus==1.28.0
     # via
     #   google-api-core
     #   google-cloud-secret-manager
