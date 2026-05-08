@@ -27,7 +27,7 @@ flask==3.1.3
     #   flask-jwt-extended
     #   flask-marshmallow
     #   flask-sqlalchemy
-flask-jwt-extended==4.7.1
+flask-jwt-extended==4.7.3
     # via -r requirements.in
 flask-marshmallow==1.5.0
     # via -r requirements.in
