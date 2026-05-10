@@ -86,7 +86,7 @@ pydantic-core==2.46.4
     # via pydantic
 pydantic-extra-types==2.11.2
     # via fastapi
-pydantic-settings==2.14.0
+pydantic-settings==2.14.1
     # via fastapi
 pygments==2.20.0
     # via
