@@ -121,7 +121,7 @@ python-dateutil==2.9.0.post0
     # via pandas
 pytz==2026.2
     # via pandas
-requests==2.33.1
+requests==2.34.0
     # via google-api-core
 six==1.17.0
     # via python-dateutil
