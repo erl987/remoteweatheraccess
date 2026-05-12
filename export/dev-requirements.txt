@@ -112,7 +112,7 @@ rich==15.0.0
     # via
     #   rich-toolkit
     #   typer
-rich-toolkit==0.19.7
+rich-toolkit==0.19.8
     # via
     #   fastapi-cli
     #   fastapi-cloud-cli
