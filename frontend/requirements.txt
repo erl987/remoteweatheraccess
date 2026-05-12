@@ -49,7 +49,7 @@ django==4.2.30
     #   django-storages
 django-environ==0.13.0
     # via -r requirements.in
-django-plotly-dash==2.5.0
+django-plotly-dash==2.5.1
     # via -r requirements.in
 django-storages[google]==1.14.6
     # via -r requirements.in
