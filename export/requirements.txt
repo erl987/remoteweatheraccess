@@ -129,7 +129,7 @@ python-dateutil==2.9.0.post0
     #   pandas
 pytz==2026.2
     # via pandas
-requests==2.34.0
+requests==2.34.2
     # via
     #   -r requirements.in
     #   google-api-core
