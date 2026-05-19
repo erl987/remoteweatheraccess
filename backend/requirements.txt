@@ -85,7 +85,7 @@ marshmallow==4.3.0
     #   marshmallow-sqlalchemy
 marshmallow-sqlalchemy==1.5.0
     # via -r requirements.in
-numpy==2.4.5
+numpy==2.4.6
     # via
     #   -r requirements.in
     #   pandas

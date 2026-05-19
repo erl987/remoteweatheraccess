@@ -143,7 +143,7 @@ narwhals==2.21.2
     # via plotly
 nest-asyncio==1.6.0
     # via dash
-numpy==2.4.5
+numpy==2.4.6
     # via -r requirements.in
 opentelemetry-api==1.41.1
     # via google-cloud-logging
