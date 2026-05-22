@@ -122,7 +122,7 @@ sentry-sdk==2.60.0
     # via fastapi-cloud-cli
 shellingham==1.5.4
     # via typer
-starlette==1.0.0
+starlette==1.0.1
     # via fastapi
 typer==0.25.1
     # via
