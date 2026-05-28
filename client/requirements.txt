@@ -38,7 +38,7 @@ requests==2.34.2
     # via -r requirements.in
 schedule==1.2.2
     # via -r requirements.in
-starlette==1.1.0
+starlette==1.2.0
     # via fastapi
 typing-extensions==4.15.0
     # via
