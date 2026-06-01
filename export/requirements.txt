@@ -67,7 +67,7 @@ googleapis-common-protos[grpc]==1.75.0
     #   grpcio-status
 grpc-google-iam-v1==0.14.4
     # via google-cloud-logging
-grpcio==1.80.0
+grpcio==1.81.0
     # via
     #   google-api-core
     #   google-cloud-appengine-logging
