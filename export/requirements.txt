@@ -80,7 +80,7 @@ grpcio-status==1.81.0
     # via google-api-core
 h11==0.16.0
     # via uvicorn
-idna==3.17
+idna==3.18
     # via
     #   anyio
     #   requests

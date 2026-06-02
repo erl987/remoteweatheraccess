@@ -120,7 +120,7 @@ grpcio-status==1.81.0
     # via google-api-core
 gunicorn==26.0.0
     # via -r requirements.in
-idna==3.17
+idna==3.18
     # via requests
 importlib-metadata==8.7.1
     # via
