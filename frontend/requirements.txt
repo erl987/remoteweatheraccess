@@ -151,7 +151,7 @@ packaging==26.2
     # via
     #   gunicorn
     #   plotly
-plotly==6.7.0
+plotly==6.8.0
     # via
     #   dash
     #   django-plotly-dash
