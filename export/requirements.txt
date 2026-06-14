@@ -158,5 +158,5 @@ urllib3==2.7.0
     # via requests
 uvicorn==0.49.0
     # via -r requirements.in
-zipp==3.23.1
+zipp==4.1.0
     # via importlib-metadata
