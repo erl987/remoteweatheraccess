@@ -47,7 +47,7 @@ django==4.2.30
     #   channels
     #   django-plotly-dash
     #   django-storages
-django-environ==0.13.0
+django-environ==0.14.0
     # via -r requirements.in
 django-plotly-dash==2.5.1
     # via -r requirements.in
