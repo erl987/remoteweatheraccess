@@ -23,7 +23,7 @@ certifi==2026.6.17
     #   sentry-sdk
 charset-normalizer==3.4.7
     # via requests
-click==8.4.1
+click==8.4.2
     # via
     #   rich-toolkit
     #   typer
