@@ -24,7 +24,7 @@ cffi==2.0.0
     # via cryptography
 channels==4.3.2
     # via django-plotly-dash
-charset-normalizer==3.4.7
+charset-normalizer==3.4.8
     # via requests
 click==8.4.2
     # via flask
