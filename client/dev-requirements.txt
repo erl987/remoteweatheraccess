@@ -147,7 +147,7 @@ urllib3==2.7.0
     # via
     #   requests
     #   sentry-sdk
-uvicorn[standard]==0.50.1
+uvicorn[standard]==0.50.2
     # via
     #   fastapi
     #   fastapi-cli
