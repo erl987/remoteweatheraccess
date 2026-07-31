@@ -4,7 +4,7 @@
 #
 #    pip-compile dev-requirements.in
 #
-annotated-doc==0.0.4
+annotated-doc==0.0.5
     # via
     #   fastapi
     #   typer
