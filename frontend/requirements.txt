@@ -155,7 +155,7 @@ plotly==6.8.0
     # via
     #   dash
     #   django-plotly-dash
-proto-plus==1.28.1
+proto-plus==1.28.3
     # via
     #   google-api-core
     #   google-cloud-appengine-logging
