@@ -30,7 +30,7 @@ click==8.4.2
     # via flask
 cryptography==48.0.1
     # via google-auth
-dash==4.4.0
+dash==4.4.1
     # via
     #   -r requirements.in
     #   dash-bootstrap-components
