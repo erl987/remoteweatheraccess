@@ -128,7 +128,7 @@ default:
   - *gcp_cloud_scheduler_job
 
 .gcp_deploy: &gcp_deploy
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:530.0.0
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:575.0.1
   resource_group: deploy
   script:
     - *gcp_cloud_login
@@ -141,11 +141,15 @@ default:
       dotenv: frontend_deploy.env
 
 .gcp_build_image: &gcp_build_image
-  - gcloud auth activate-service-account --key-file ${GOOGLE_APPLICATION_CREDENTIALS}
-  - gcloud config set project ${GCP_PROJECT_ID}
-  - gcloud auth configure-docker ${GCP_ARTIFACT_REGISTRY}
+  # the build jobs run on the docker image, as the Google Cloud SDK images do not contain the
+  # docker CLI any more (removed in gcloud 531.0.0), hence the login is done without gcloud
+  - docker login -u _json_key --password-stdin https://${GCP_ARTIFACT_REGISTRY}
+    < ${GOOGLE_APPLICATION_CREDENTIALS}
+  # docker >= 23 builds with BuildKit, --provenance=false keeps the pushed image a plain
+  # manifest instead of an OCI index with an additional attestation manifest
   - docker build .
     --file=Dockerfile.${DOCKER_FILE_ENDING}
+    --provenance=false
     -t ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${SERVICE_NAME}:${CI_COMMIT_SHA}
     -t ${GCP_ARTIFACT_REGISTRY}/${GCP_PROJECT_ID}/${DOCKER_REPOSITORY}/${SERVICE_NAME}:latest
     --build-arg BUILDKIT_INLINE_CACHE=1
@@ -163,7 +167,7 @@ default:
     --quiet
 
 .gcp_delete: &gcp_delete
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:530.0.0
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:575.0.1
   script:
     - *gcp_cloud_login
     - gcloud scheduler jobs delete ${EXPORTER_SCHEDULER_JOB_NAME} --quiet --location ${GCP_REGION}
@@ -197,18 +201,18 @@ default:
     junit: report.xml
 
 before_script:
-  - if [ ${CI_COMMIT_REF_NAME} == master ];
-    then source deployment/environments/.production.env;
-    else source deployment/environments/.testing.env;
+  - if [ "${CI_COMMIT_REF_NAME}" = master ];
+    then . deployment/environments/.production.env;
+    else . deployment/environments/.testing.env;
     fi
   - export FRONTEND_SERVICE_ACCOUNT_NAME=weather-frontend@${GCP_PROJECT_ID}.iam.gserviceaccount.com
   - export BACKEND_SERVICE_ACCOUNT_NAME=weather-backend@${GCP_PROJECT_ID}.iam.gserviceaccount.com
   - export EXPORTER_SERVICE_ACCOUNT_NAME=weather-exporter@${GCP_PROJECT_ID}.iam.gserviceaccount.com
-  - export FRONTEND_SERVICE_NAME=${FRONTEND_SERVICE_NAME:0:63}
+  - export FRONTEND_SERVICE_NAME=$(printf %.63s "${FRONTEND_SERVICE_NAME}")
   - export FRONTEND_SERVICE_NAME=${FRONTEND_SERVICE_NAME%-}
-  - export BACKEND_SERVICE_NAME=${BACKEND_SERVICE_NAME:0:63}
+  - export BACKEND_SERVICE_NAME=$(printf %.63s "${BACKEND_SERVICE_NAME}")
   - export BACKEND_SERVICE_NAME=${BACKEND_SERVICE_NAME%-}
-  - export EXPORTER_SERVICE_NAME=${EXPORTER_SERVICE_NAME:0:63}
+  - export EXPORTER_SERVICE_NAME=$(printf %.63s "${EXPORTER_SERVICE_NAME}")
   - export EXPORTER_SERVICE_NAME=${EXPORTER_SERVICE_NAME%-}
 
 stages:
@@ -296,7 +300,7 @@ unittests client:
 
 build backend:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:530.0.0
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:29.3.1-cli
   services:
     - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:29.6.2-dind
       alias: docker
@@ -310,7 +314,7 @@ build backend:
 
 build frontend:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:530.0.0
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:29.3.1-cli
   services:
     - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:29.6.2-dind
       alias: docker
@@ -325,7 +329,7 @@ build frontend:
 
 build exporter:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/google/cloud-sdk:530.0.0
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:29.3.1-cli
   services:
     - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:29.6.2-dind
       alias: docker
