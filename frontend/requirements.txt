@@ -200,7 +200,7 @@ s3transfer==0.16.0
     # via boto3
 six==1.17.0
     # via python-dateutil
-sqlparse==0.5.5
+sqlparse==0.6.0
     # via django
 stream-zip==0.0.84
     # via -r requirements.in
