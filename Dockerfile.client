@@ -35,7 +35,7 @@ RUN cd te923tool \
 
 FROM balenalib/raspberry-pi-python:3.11.2-bookworm
 
-ENV PYTHONUNBUFFERED True
+ENV PYTHONUNBUFFERED=True
 
 WORKDIR /app
 
@@ -66,4 +66,4 @@ ENV GIT_COMMIT=$GIT_COMMIT
 
 VOLUME /app/config
 
-CMD exec python3 /app/client_main.py --config-file=/app/config/client_config.yaml --data-dir=/tmp/data/ --weather-data-reader-file=/app/te923con
+CMD ["sh", "-c", "exec python3 /app/client_main.py --config-file=/app/config/client_config.yaml --data-dir=/tmp/data/ --weather-data-reader-file=/app/te923con"]
