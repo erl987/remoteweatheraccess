@@ -30,7 +30,7 @@ pydantic==2.13.4
     # via fastapi
 pydantic-core==2.46.4
     # via pydantic
-pytz==2026.2
+pytz==2026.3.post1
     # via -r requirements.in
 pyyaml==6.0.3
     # via -r requirements.in
