@@ -89,7 +89,7 @@ numpy==2.4.6
     # via
     #   -r requirements.in
     #   pandas
-packaging==26.2
+packaging==26.3
     # via gunicorn
 pandas==2.3.3
     # via -r requirements.in
