@@ -16,7 +16,7 @@
 
 FROM python:3.11.16-slim-bookworm
 
-ENV PYTHONUNBUFFERED True
+ENV PYTHONUNBUFFERED=True
 
 WORKDIR /app
 
@@ -32,4 +32,4 @@ USER exporter
 
 ENV CSV_FILE_DIR=/tmp
 
-CMD exec uvicorn export_app:app --proxy-headers --host=0.0.0.0 --port=$PORT
+CMD ["sh", "-c", "exec uvicorn export_app:app --proxy-headers --host=0.0.0.0 --port=$PORT"]
