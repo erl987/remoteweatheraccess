@@ -4,6 +4,9 @@
     "config:recommended"
   ],
   "labels": ["dependency-update"],
+  "constraints": {
+    "python": "==3.12"
+  },
   "packageRules": [
     {
       "description": "Automatically merge minor and patch-level updates",
