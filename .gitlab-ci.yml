@@ -300,9 +300,9 @@ unittests client:
 
 build backend:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:29.3.1-cli
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:29.7.2-cli
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:29.6.2-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:29.7.2-dind
       alias: docker
   script:
     - export SERVICE_NAME=${BACKEND_SERVICE_NAME}
@@ -314,9 +314,9 @@ build backend:
 
 build frontend:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:29.3.1-cli
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:29.7.2-cli
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:29.6.2-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:29.7.2-dind
       alias: docker
   script:
     - export SERVICE_NAME=${FRONTEND_SERVICE_NAME}
@@ -329,9 +329,9 @@ build frontend:
 
 build exporter:
   stage: build containers
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:29.3.1-cli
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:29.7.2-cli
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:29.6.2-dind
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:29.7.2-dind
       alias: docker
   script:
     - export SERVICE_NAME=${EXPORTER_SERVICE_NAME}
