@@ -156,5 +156,5 @@ uvloop==0.22.1
     # via uvicorn
 watchfiles==1.2.0
     # via uvicorn
-websockets==16.1.1
+websockets==17.1
     # via uvicorn
