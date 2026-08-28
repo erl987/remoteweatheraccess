@@ -156,7 +156,7 @@ tzdata==2026.3
     # via pandas
 urllib3==2.7.0
     # via requests
-uvicorn==0.51.0
+uvicorn==0.52.4
     # via -r requirements.in
 zipp==4.1.0
     # via importlib-metadata
