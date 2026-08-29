@@ -20,3 +20,17 @@ from django.apps import AppConfig
 class WeatherpageConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'weatherpage'
+
+    def ready(self):
+        _provide_a_secret_key_to_the_dash_apps()
+
+
+def _provide_a_secret_key_to_the_dash_apps():
+    """Dash signs its callback handles with the `secret_key` of the server it runs on. The `PseudoFlask` server
+    provided by django-plotly-dash does not initialize the Flask configuration, so that reading the key raises a
+    `KeyError` instead of returning `None` and rendering any page fails. Setting the key on the class provides it
+    to all instances, as django-plotly-dash creates one server per Dash app when handling a request."""
+    from django.conf import settings
+    from django_plotly_dash.dash_wrapper import PseudoFlask
+
+    PseudoFlask.secret_key = settings.SECRET_KEY
