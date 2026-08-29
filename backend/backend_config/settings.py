@@ -176,7 +176,7 @@ class DevConfig(Config):
         'weather-data': 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, quote_plus(DB_PASSWORD), DB_URL,
                                                                       Config.DB_PORT, DB_DATABASE)
     }
-    JWT_SECRET_KEY = 'SECRET-KEY'
+    JWT_SECRET_KEY = 'LOCAL-DEVELOPMENT-ONLY-JWT-SECRET-KEY'
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
 
 
@@ -194,7 +194,7 @@ class TestConfig(Config):
         'weather-data': 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(DB_USER, quote_plus(DB_PASSWORD), DB_URL,
                                                                       Config.DB_PORT, DB_DATABASE)
     }
-    JWT_SECRET_KEY = 'SECRET-KEY'
+    JWT_SECRET_KEY = 'LOCAL-DEVELOPMENT-ONLY-JWT-SECRET-KEY'
     BCRYPT_LOG_ROUNDS = 4  # for faster tests; needs at least 4 to avoid 'ValueError: Invalid rounds'
     JWT_HEADER_TYPE = 'Bearer'
     JWT_BLACKLIST_ENABLED = False

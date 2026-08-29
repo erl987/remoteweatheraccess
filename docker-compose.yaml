@@ -89,7 +89,7 @@ services:
     environment:
       - DOCKER_COMPOSE_APP=true
       - PORT=8000
-      - JWT_SECRET_KEY=SECRET-KEY
+      - JWT_SECRET_KEY=LOCAL-DEVELOPMENT-ONLY-JWT-SECRET-KEY
       - DB_URL=database
       - DB_PORT=5432
       - DB_USER_DB_USER=userdb
