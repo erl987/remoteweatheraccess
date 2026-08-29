@@ -151,7 +151,7 @@ opentelemetry-api==1.44.0
     # via google-cloud-logging
 packaging==26.3
     # via plotly
-plotly==6.9.0
+plotly==7.0.0
     # via
     #   dash
     #   django-plotly-dash
