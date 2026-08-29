@@ -1,3 +1,4 @@
 fastapi[all]
+httpx2  # required by `starlette.testclient`, which deprecated the use of `httpx`
 pytest
 requests-mock
