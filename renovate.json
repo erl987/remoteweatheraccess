@@ -51,11 +51,12 @@
       "enabled": false
     },
     {
+      "description": "Postgres major updates need a Cloud SQL instance upgrade first, so they must never be merged automatically",
       "matchPackagePatterns": ["postgres"],
       "matchUpdateTypes": [
         "major"
       ],
-      "enabled": false
+      "automerge": false
     },
     {
       "matchPackageNames": [

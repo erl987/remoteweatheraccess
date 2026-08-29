@@ -75,7 +75,7 @@ persistent.
 This starts a simple database, the data lifetime is identical to that of the container:
 
 ```shell script
-  docker run -d -e POSTGRES_PASSWORD=passwd -p 127.0.0.1:5432:5432 postgres
+  docker run -d -e POSTGRES_PASSWORD=passwd -p 127.0.0.1:5432:5432 postgres:18-alpine
 ```
 
 #### Backend
@@ -354,7 +354,7 @@ If running the tests manually, they are expecting a running `postgres` database 
 provide an empty database is to start a `postgres` container:
 
 ```shell script
-  docker run -d -e POSTGRES_PASSWORD=passwd -p 5432:5432 postgres
+  docker run -d -e POSTGRES_PASSWORD=passwd -p 5432:5432 postgres:18-alpine
 ```
 
 # License

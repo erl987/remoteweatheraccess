@@ -16,17 +16,19 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 -- DO NOT DEFINE THE PASSWORDS LIKE THIS IN PRODUCTION
+-- each database is owned by its application user: since Postgres 15 a user that only holds
+-- database-level privileges cannot create objects in the `public` schema of that database
 CREATE USER userdb;
 ALTER USER userdb WITH PASSWORD 'passwd1';
-CREATE DATABASE users;
+CREATE DATABASE users OWNER userdb;
 GRANT ALL PRIVILEGES ON DATABASE users TO userdb;
 
 CREATE USER weatherdatadb;
 ALTER USER weatherdatadb WITH PASSWORD 'passwd2';
-CREATE DATABASE weatherdata;
+CREATE DATABASE weatherdata OWNER weatherdatadb;
 GRANT ALL PRIVILEGES ON DATABASE weatherdata TO weatherdatadb;
 
 CREATE USER frontenddb;
 ALTER USER frontenddb WITH PASSWORD 'passwd3';
-CREATE DATABASE frontend;
+CREATE DATABASE frontend OWNER frontenddb;
 GRANT ALL PRIVILEGES ON DATABASE frontend TO frontenddb;

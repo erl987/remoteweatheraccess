@@ -22,7 +22,7 @@ All test commands are run **from the repository root**; each component needs its
 
 ```shell
 # backend - REQUIRES a running Postgres on localhost:5432 (user postgres / password passwd)
-docker run -d -e POSTGRES_PASSWORD=passwd -p 5432:5432 postgres
+docker run -d -e POSTGRES_PASSWORD=passwd -p 5432:5432 postgres:18-alpine
 PYTHONPATH=$PWD/backend pytest backend/tests/unit_tests
 
 # frontend (no database needed, uses SQLite + frontend/environments/.frontend.testing.env via pytest.ini)
