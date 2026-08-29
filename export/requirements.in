@@ -23,4 +23,4 @@ python-dateutil
 fastapi
 google-cloud-error-reporting
 google-cloud-logging
-google-cloud-storage<3  # needs manual testing
+google-cloud-storage
