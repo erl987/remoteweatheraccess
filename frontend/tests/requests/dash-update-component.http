@@ -3,11 +3,17 @@ Content-Type: application/json
 
 
 {
-  "output": "weather-data-graph.figure",
-  "outputs": {
-    "id": "weather-data-graph",
-    "property": "figure"
-  },
+  "output": "..weather-data-graph.figure...is-init-memory.data..",
+  "outputs": [
+    {
+      "id": "weather-data-graph",
+      "property": "figure"
+    },
+    {
+      "id": "is-init-memory",
+      "property": "data"
+    }
+  ],
   "inputs": [
     {
       "id": "time-period-picker",
@@ -33,6 +39,18 @@ Content-Type: application/json
         "OUT1_temp",
         "OUT1_humid"
       ]
+    },
+    {
+      "id": "breakpoint-memory",
+      "property": "data",
+      "value": "lg"
+    }
+  ],
+  "state": [
+    {
+      "id": "is-init-memory",
+      "property": "data",
+      "value": null
     }
   ],
   "changedPropIds": [
