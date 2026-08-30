@@ -19,7 +19,7 @@ dash
 dash-bootstrap-components
 dash-breakpoints
 cacheout
-django<5  # required because Postgres 13 is deployed
+django<6  # 5.2 is the current LTS, `django-plotly-dash` does not declare support for Django 6 yet
 django-environ
 django-plotly-dash
 django-storages[google]
