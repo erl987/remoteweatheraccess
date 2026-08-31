@@ -26,7 +26,9 @@ json-logging-py
 marshmallow
 marshmallow-sqlalchemy
 numpy
-pandas<3  # large change
+pandas
 psycogreen
 psycopg2-binary
+pytz  # directly imported by `backend_src/utils.py`, was a transitive dependency of pandas 2
 sqlalchemy
+tzdata  # required by pandas for `tz_convert`, was a transitive dependency of pandas 2

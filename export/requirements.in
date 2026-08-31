@@ -15,8 +15,7 @@
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 numpy
-pandas<3  # large change
-pyarrow  # dependency of pandas 3.0+, added to silence a warning
+pandas
 requests
 uvicorn
 python-dateutil
