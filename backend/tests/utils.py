@@ -421,8 +421,7 @@ def client_without_permissions():
     try:
         yield client
     finally:
-        with app.test_request_context():
-            db.drop_all()
+        _tear_down(app)
 
 
 @pytest.fixture
@@ -444,8 +443,7 @@ def client_with_push_user_permissions():
     try:
         yield client
     finally:
-        with app.test_request_context():
-            db.drop_all()
+        _tear_down(app)
 
 
 @pytest.fixture
@@ -467,8 +465,17 @@ def client_with_admin_permissions():
     try:
         yield client
     finally:
-        with app.test_request_context():
-            db.drop_all()
+        _tear_down(app)
+
+
+def _tear_down(app):
+    with app.test_request_context():
+        db.drop_all()
+        db.session.remove()
+        # every test builds its own app, and therefore its own engine per bind; without disposing them here their
+        # pooled connections stay open until the process ends and exhaust the `max_connections` of the server
+        for engine in db.engines.values():
+            engine.dispose()
 
 
 def _create_mock_weather_stations():
