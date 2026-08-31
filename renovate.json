@@ -19,7 +19,7 @@
     },
     {
       "description": "Disables the creation of branches/PRs for any minor/patch updates etc. of Renovate bot",
-      "matchPaths": [
+      "matchFileNames": [
         "renovate-update-notification/Dockerfile"
       ],
       "matchUpdateTypes": [
@@ -33,7 +33,7 @@
     },
     {
       "description": "Causes the bot to create a PR (and thus, an email notification), whenever there is a new major Renovate version",
-      "matchPaths": [
+      "matchFileNames": [
         "renovate-update-notification/Dockerfile"
       ],
       "matchUpdateTypes": [
@@ -43,20 +43,26 @@
       "prCreation": "immediate"
     },
     {
-      "matchPackagePatterns": ["^boto"],
-      "enabled": false
+      "enabled": false,
+      "matchPackageNames": [
+        "/^boto/"
+      ]
     },
     {
-      "matchPackagePatterns": ["s3transfer"],
-      "enabled": false
+      "enabled": false,
+      "matchPackageNames": [
+        "/s3transfer/"
+      ]
     },
     {
       "description": "Postgres major updates need a Cloud SQL instance upgrade first, so they must never be merged automatically",
-      "matchPackagePatterns": ["postgres"],
       "matchUpdateTypes": [
         "major"
       ],
-      "automerge": false
+      "automerge": false,
+      "matchPackageNames": [
+        "/postgres/"
+      ]
     },
     {
       "matchPackageNames": [
@@ -85,15 +91,15 @@
     },
     {
       "groupName": "pydantic",
-      "matchPackagePrefixes": [
-        "pydantic"
+      "matchPackageNames": [
+        "pydantic{/,}**"
       ]
     },
     {
       "groupName": "fastapi_starlette",
-      "matchPackagePrefixes": [
-        "fastapi",
-        "starlette"
+      "matchPackageNames": [
+        "fastapi{/,}**",
+        "starlette{/,}**"
       ]
     }
   ],
