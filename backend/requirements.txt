@@ -91,7 +91,7 @@ numpy==2.5.2
     #   pandas
 packaging==26.3
     # via gunicorn
-pandas==2.3.3
+pandas==3.0.5
     # via -r requirements.in
 proto-plus==1.28.4
     # via
@@ -120,7 +120,7 @@ pyjwt==2.13.0
 python-dateutil==2.9.0.post0
     # via pandas
 pytz==2026.3.post1
-    # via pandas
+    # via -r requirements.in
 requests==2.34.2
     # via google-api-core
 six==1.17.0
@@ -135,7 +135,7 @@ typing-extensions==4.16.0
     #   grpcio
     #   sqlalchemy
 tzdata==2026.3
-    # via pandas
+    # via -r requirements.in
 urllib3==2.7.0
     # via requests
 werkzeug==3.1.8
