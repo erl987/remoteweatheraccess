@@ -30,7 +30,7 @@ click==8.5.0
     # via
     #   rich-toolkit
     #   uvicorn
-detect-installer==0.1.0
+detect-installer==0.2.1
     # via fastapi-cloud-cli
 dnspython==2.8.0
     # via email-validator
