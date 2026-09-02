@@ -4,7 +4,7 @@
 #
 #    pip-compile dev-requirements.in
 #
-agent-detector==1.1.0
+agent-detector==1.1.2
     # via fastapi-cloud-cli
 annotated-doc==0.0.5
     # via
