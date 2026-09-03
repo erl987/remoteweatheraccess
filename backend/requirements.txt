@@ -37,7 +37,7 @@ gevent==26.8.0
     # via
     #   -r requirements.in
     #   gunicorn
-google-api-core[grpc]==2.34.0
+google-api-core[grpc]==2.36.0
     # via google-cloud-secret-manager
 google-auth==2.57.0
     # via
