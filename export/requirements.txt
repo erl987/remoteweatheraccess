@@ -90,7 +90,7 @@ numpy==2.5.3
     #   pandas
 opentelemetry-api==1.44.0
     # via google-cloud-logging
-pandas==3.0.5
+pandas==3.0.6
     # via -r requirements.in
 proto-plus==1.28.4
     # via
