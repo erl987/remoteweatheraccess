@@ -130,7 +130,7 @@ requests==2.34.2
     #   google-cloud-storage
 six==1.17.0
     # via python-dateutil
-starlette==1.6.0
+starlette==1.7.0
     # via fastapi
 typing-extensions==4.16.0
     # via
