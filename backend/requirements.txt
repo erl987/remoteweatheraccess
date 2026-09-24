@@ -119,7 +119,7 @@ pyjwt==2.15.0
     # via flask-jwt-extended
 python-dateutil==2.9.0.post0
     # via pandas
-pytz==2026.3.post1
+pytz==2026.4
     # via -r requirements.in
 requests==2.34.2
     # via google-api-core

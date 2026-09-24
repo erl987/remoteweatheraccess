@@ -192,7 +192,7 @@ python-dateutil==2.9.0.post0
     # via
     #   -r requirements.in
     #   botocore
-pytz==2026.3.post1
+pytz==2026.4
     # via -r requirements.in
 requests==2.34.2
     # via
