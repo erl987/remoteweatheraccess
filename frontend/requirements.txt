@@ -224,7 +224,7 @@ urllib3==2.8.0
     # via
     #   botocore
     #   requests
-werkzeug==3.1.8
+werkzeug==3.1.9
     # via
     #   dash
     #   django-plotly-dash
