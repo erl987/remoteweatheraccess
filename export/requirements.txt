@@ -45,7 +45,7 @@ google-cloud-core==2.8.0
     # via
     #   google-cloud-logging
     #   google-cloud-storage
-google-cloud-error-reporting==1.16.1
+google-cloud-error-reporting==1.17.0
     # via -r requirements.in
 google-cloud-logging==3.16.3
     # via
