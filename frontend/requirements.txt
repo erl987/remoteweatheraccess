@@ -79,7 +79,7 @@ google-auth==2.59.1
     #   google-cloud-logging
     #   google-cloud-secret-manager
     #   google-cloud-storage
-google-cloud-appengine-logging==1.10.0
+google-cloud-appengine-logging==1.11.0
     # via google-cloud-logging
 google-cloud-audit-log==0.6.2
     # via google-cloud-logging
