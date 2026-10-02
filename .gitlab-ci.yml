@@ -293,7 +293,7 @@ unittests exporter:
 unittests client:
   stage: test
   # the client image is still based on Python 3.11 (see Dockerfile.client)
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.11.16-bookworm
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.11.17-bookworm
   cache:
     key:
       prefix: client
