@@ -39,7 +39,7 @@ gevent==26.9.0
     #   gunicorn
 google-api-core[grpc]==2.40.0
     # via google-cloud-secret-manager
-google-auth==2.59.1
+google-auth==2.60.0
     # via
     #   google-api-core
     #   google-cloud-secret-manager
