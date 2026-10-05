@@ -22,7 +22,7 @@ cryptography==50.0.2
     # via google-auth
 fastapi==0.142.2
     # via -r requirements.in
-google-api-core[grpc]==2.40.0
+google-api-core[grpc]==2.41.0
     # via
     #   google-cloud-appengine-logging
     #   google-cloud-core
