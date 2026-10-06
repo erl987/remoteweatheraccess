@@ -45,7 +45,7 @@ dash-bootstrap-components==2.0.4
     #   django-plotly-dash
 dash-breakpoints==0.1.0
     # via -r requirements.in
-django==5.2.17
+django==5.2.18
     # via
     #   -r requirements.in
     #   channels
