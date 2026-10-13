@@ -132,7 +132,7 @@ sentry-sdk==2.72.0
     # via fastapi-cloud-cli
 shellingham==1.5.4
     # via typer
-starlette==1.7.0
+starlette==1.8.0
     # via fastapi
 truststore==0.10.5
     # via
