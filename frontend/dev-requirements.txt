@@ -28,7 +28,7 @@ pytest-django==4.14.0
     # via -r dev-requirements.in
 pytest-env==1.8.0
     # via -r dev-requirements.in
-pytest-mock==3.16.0
+pytest-mock==3.16.1
     # via -r dev-requirements.in
 python-dotenv==1.2.4
     # via pytest-env
