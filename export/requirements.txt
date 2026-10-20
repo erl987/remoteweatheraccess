@@ -20,7 +20,7 @@ click==8.5.0
     # via uvicorn
 cryptography==50.0.2
     # via google-auth
-fastapi==0.149.0
+fastapi==0.150.0
     # via -r requirements.in
 google-api-core[grpc]==2.42.0
     # via
