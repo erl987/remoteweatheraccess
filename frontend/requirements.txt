@@ -20,7 +20,7 @@ botocore==1.42.78
     #   s3transfer
 cacheout==0.17.0
     # via -r requirements.in
-certifi==2026.10.18
+certifi==2026.10.19
     # via requests
 cffi==2.1.1
     # via cryptography
