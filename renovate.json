@@ -5,7 +5,7 @@
   ],
   "labels": ["dependency-update"],
   "constraints": {
-    "python": "=3.15.0"
+    "python": "=3.15.2"
   },
   "packageRules": [
     {
