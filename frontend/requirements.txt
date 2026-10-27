@@ -6,7 +6,7 @@
 #
 annotated-types==0.8.0
     # via pydantic
-asgiref==3.12.1
+asgiref==3.13.0
     # via
     #   channels
     #   django
