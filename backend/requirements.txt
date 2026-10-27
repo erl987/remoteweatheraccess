@@ -91,7 +91,7 @@ numpy==2.5.4
     #   pandas
 packaging==26.3
     # via gunicorn
-pandas==3.0.6
+pandas==3.1.0
     # via -r requirements.in
 proto-plus==1.29.0
     # via
