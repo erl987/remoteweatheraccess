@@ -28,7 +28,7 @@ channels==4.3.2
     # via django-plotly-dash
 charset-normalizer==3.5.2
     # via requests
-click==8.5.0
+click==8.5.1
     # via flask
 comm==0.2.3
     # via dash
